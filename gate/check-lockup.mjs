@@ -13,6 +13,9 @@ const BASE = process.env.LOCKUP_BASE || "/calc";
 const PATHS = (process.env.LOCKUP_PATHS || "/,/gamma-shielding/,/methods/").split(",");
 const LAB = process.env.LOCKUP_LAB || "RadCalc";
 
+/** ★ 정적 산출물이 없는 lab(Next 서버 빌드)도 잴 수 있어야 한다 —
+ *  LOCKUP_ORIGIN 을 주면 내장 서버를 띄우지 않고 그 주소를 그대로 친다. */
+const ORIGIN = process.env.LOCKUP_ORIGIN;
 const MIME = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript", ".svg": "image/svg+xml" };
 const srv = createServer((q, r) => {
   let p = decodeURIComponent(q.url.split("?")[0]);
@@ -23,7 +26,8 @@ const srv = createServer((q, r) => {
   r.writeHead(200, { "content-type": MIME[extname(f)] || "application/octet-stream" });
   r.end(readFileSync(f));
 });
-await new Promise((r) => srv.listen(4322, r));
+if (!ORIGIN) await new Promise((r) => srv.listen(4322, r));
+const ROOT_URL = ORIGIN || "http://localhost:4322";
 
 const fail = [];
 /** 크로미움 경로 — 원격 컨테이너는 미리 깔린 것을 쓰고, CI 는 `playwright install` 이
@@ -36,7 +40,7 @@ for (const theme of ["light", "dark"]) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, colorScheme: theme });
     for (const p of PATHS) {
       const pg = await ctx.newPage();
-      await pg.goto(`http://localhost:4322${BASE}${p}`, { waitUntil: "networkidle" });
+      await pg.goto(`${ROOT_URL}${BASE}${p}`, { waitUntil: "networkidle" });
       await pg.waitForTimeout(350);
       const m = await pg.evaluate((lab) => {
         const head = document.querySelector("header") || document.body;
@@ -86,7 +90,7 @@ for (const theme of ["light", "dark"]) {
     await ctx.close();
   }
 }
-await browser.close(); srv.close();
+await browser.close(); if (!ORIGIN) srv.close();
 console.log(fail.length ? `\n❌ ${fail.length}건\n` + fail.map((x) => "   " + x).join("\n")
                         : `\n✅ 잠금장치 통과 — ${LAB} · 2테마 × 2뷰포트 × ${PATHS.length}쪽`);
 process.exit(fail.length ? 1 : 0);
