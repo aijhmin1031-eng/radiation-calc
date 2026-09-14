@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import { u, DATA_SOURCES } from "../lib/site";
 import { TOOLS, toolBySlug } from "../lib/tools";
+import { SAVE_ENABLED } from "../lib/features";
 import ToolIcon from "./ToolIcon.astro";
 interface Props { slug: string }
 const { slug } = Astro.props;
@@ -125,13 +126,18 @@ const tool = toolBySlug(slug)!;
           </p>
         </div>
 
-        <div class="xl:border-t xl:border-line xl:pt-4">
-          <p class="label">Keep a result</p>
-          <p class="mt-1.5 leading-snug text-ink-muted">
-            Saving a calculation needs a Google sign-in. Everything else works without an account.
-          </p>
-          <a href={u("/saved/")} class="mt-2 inline-block underline hover:text-ink">Saved results</a>
-        </div>
+        {/* ★ 저장이 꺼져 있으면 이 묶음도 걸지 않는다 — 머리글 칸만 막았다가
+            **여기서 같은 거짓말이 새어 나왔다**(2026-09-14 실측). 「Google 로그인이 필요하다」고
+            읽고 계산기를 봐도 저장 단추가 없다. 없는 기능을 말하는 자리는 **하나도 남기지 않는다.** */}
+        {SAVE_ENABLED ? (
+          <div class="xl:border-t xl:border-line xl:pt-4">
+            <p class="label">Keep a result</p>
+            <p class="mt-1.5 leading-snug text-ink-muted">
+              Saving a calculation needs a Google sign-in. Everything else works without an account.
+            </p>
+            <a href={u("/saved/")} class="mt-2 inline-block underline hover:text-ink">Saved results</a>
+          </div>
+        ) : null}
 
         {/* ★ 도구 목록은 **세 곳에 두지 않는다** — xl 은 왼쪽 레일, 그 아래는 머리글의
             `Calculators` 칸·빵부스러기·꼬리말이 맡는다. 여기 또 두면 같은 말을 세 번 한다. */}

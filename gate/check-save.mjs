@@ -42,12 +42,22 @@ const fail = [];
 /* 도구 쪽 — 저장으로 이어지는 조작부가 있는가 */
 await page.goto(`http://127.0.0.1:${PORT}/calc/gamma-shielding/`, { waitUntil: "networkidle" });
 await page.waitForTimeout(700);
-const tool = await page.evaluate(() => ({
-  navSaved: !!document.querySelector('header a[href$="/saved/"]'),
-  controls: [...document.querySelectorAll("main button, main a")]
-    .map((b) => b.textContent.trim())
-    .filter((t) => /^(save result|sign in with google|saving…)$/i.test(t)),
-}));
+/* ★★ **머리글만 보면 샌다**(2026-09-14 실측으로 잡았다). 머리글 칸을 막았더니
+   우측 레일의 「Keep a result」 묶음이 그대로 남아 「Google 로그인이 필요하다」고 말하고
+   있었다. 저장을 **말하는 자리 전부**를 센다 — 머리글·레일·꼬리말 어디든. */
+const tool = await page.evaluate(() => {
+  const links = [...document.querySelectorAll('a[href$="/saved/"]')];
+  return {
+    navSaved: links.length > 0,
+    where: links.map((a) => (a.closest("header") ? "머리글"
+      : a.closest("aside") ? "우측 레일"
+      : a.closest("footer") ? "꼬리말" : "본문")),
+    saysSignIn: /needs a google sign-in/i.test(document.body.innerText),
+    controls: [...document.querySelectorAll("main button, main a")]
+      .map((b) => b.textContent.trim())
+      .filter((t) => /^(save result|sign in with google|saving…)$/i.test(t)),
+  };
+});
 
 /* 낱장 — 무엇을 말하고 있는가 */
 await page.goto(`http://127.0.0.1:${PORT}/calc/saved/`, { waitUntil: "networkidle" });
@@ -64,20 +74,22 @@ const saved = await page.evaluate(() => {
 await browser.close(); srv.close();
 
 const on = tool.navSaved;
-console.log(`   저장 기능: ${on ? "켜짐" : "꺼짐"}`);
+console.log(`   저장 기능: ${on ? "켜짐" : "꺼짐"} · 저장을 말하는 자리 ${tool.where.length}곳${tool.where.length ? ` (${tool.where.join(", ")})` : ""}`);
 console.log(`   도구 쪽 저장 조작부 ${tool.controls.length}개${tool.controls.length ? ` (${tool.controls.join(", ")})` : ""}`);
 console.log(`   낱장: 참조번호 설명 ${saved.claimsRefNumbers ? "있음" : "없음"} · 꺼졌다고 밝힘 ${saved.admitsOff ? "예" : "아니오"} · 로그인 단추 ${saved.controls}개`);
 
 if (on) {
   if (!tool.controls.length)
-    fail.push("머리글이 `Saved` 를 걸었는데 **도구 쪽에 저장 조작부가 없다** — 없는 기능을 광고한다");
+    fail.push(`저장 링크가 ${tool.where.join("·")}에 있는데 **도구 쪽에 저장 조작부가 없다** — 없는 기능을 광고한다`);
   if (!saved.claimsRefNumbers)
     fail.push("기능이 켜졌는데 낱장이 참조번호를 설명하지 않는다");
   if (!saved.controls)
     fail.push("기능이 켜졌는데 낱장에 로그인 단추가 없다");
 } else {
   if (tool.controls.length)
-    fail.push("머리글에 `Saved` 가 없는데 도구 쪽에 저장 조작부가 있다");
+    fail.push("저장 링크가 없는데 도구 쪽에 저장 조작부가 있다");
+  if (tool.saysSignIn)
+    fail.push("저장이 꺼졌는데 쪽이 아직 **「Google 로그인이 필요하다」**고 말한다");
   if (saved.claimsRefNumbers)
     fail.push("기능이 꺼졌는데 낱장이 여전히 **참조번호가 붙는다고 설명한다** — 거짓말이다");
   if (!saved.admitsOff)
