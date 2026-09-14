@@ -121,7 +121,7 @@ export default function Mda() {
           <Headline label="Minimum detectable activity" value={asUnit(fixed.mda)} unit={unit}
             note={`Anything below this cannot be reliably distinguished from background in a ${fmt(timeS)} s count.`} />
           <Rows rows={[
-            { k: "Background counts collected", v: fmt(fixed.bgCounts, 5), hint: `${bgCpm} cpm × ${fmt(timeS)} s` },
+            { k: "Background counts collected", v: fmt(fixed.bgCounts, 5), hint: `${fmt(bgCpm)} cpm × ${fmt(timeS)} s` },
             { k: "Critical level L_C", v: `${fmt(fixed.lc, 4)} counts`, hint: "the decision threshold — above it you report a detection" },
             { k: "Detection limit L_D", v: `${fmt(fixed.ld, 4)} counts`, hint: "the true amount that will exceed L_C with the chosen confidence" },
             { k: "Total efficiency used", v: `${fmt(totalEff * 100, 4)}%` },

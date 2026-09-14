@@ -40,8 +40,13 @@ export default function Alara() {
     return tasks.reduce((s, t) => s + t.hours * t.rate * TO_MSV[rateU], 0);
   }, [tasks, rateU]);
 
+  /* ★ 「무한대」와 「모름」을 가른다 — 둘 다 `!Number.isFinite` 였다(2026-09-14 실측).
+     선량률 칸을 비우거나 음수를 넣으면 h 가 NaN 인데 화면은 체류시간을 **「unlimited」**
+     라고 답했다. 안전 도구에서 「모름」을 「무제한」으로 읽히게 하는 것이 가장 나쁘다.
+     선량률이 진짜 0 일 때만(h === Infinity) 무제한이다. */
   const showTime = (h: number) =>
-    !Number.isFinite(h) ? "unlimited"
+    Number.isNaN(h) ? "—"
+      : h === Infinity ? "unlimited"
       : h < 1 / 60 ? `${fmt(h * 3600)} s`
       : h < 2 ? `${fmt(h * 60)} min`
       : h < 48 ? `${fmt(h)} h`
@@ -122,7 +127,9 @@ export default function Alara() {
                       <td key={f} className="text-right">
                         <input className="field num !min-h-0 !py-1 !text-right !text-[13px]" inputMode="decimal" value={t[f]}
                           onChange={(e) => { const v = Number(e.target.value);
-                            if (Number.isFinite(v)) setTasks((x) => x.map((y) => y.id === t.id ? { ...y, [f]: v } : y)); }} />
+                            /* 음수는 받지 않는다 — 인원·시간·선량률에 음수가 들어가면
+                               집단선량이 조용히 줄어들어 **더 안전해 보이는 답**이 나온다. */
+                            if (Number.isFinite(v) && v >= 0) setTasks((x) => x.map((y) => y.id === t.id ? { ...y, [f]: v } : y)); }} />
                       </td>
                     ))}
                     <td className="num text-right text-ink">{fmt(t.workers * t.hours * t.rate * TO_MSV[rateU], 4)}</td>

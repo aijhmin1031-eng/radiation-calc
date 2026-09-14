@@ -77,7 +77,9 @@ export default function GammaShielding() {
   const mu = Number.isFinite(eRep) ? linearAttenuation(A[mat], eRep, mat, customRho ? rho : undefined) : NaN;
 
   const toUnit = (mGyPerH: number) => mGyPerH * RATE_FACTOR[rateU];
-  const noGamma = n.lines.filter((l) => l[0] >= delta).length === 0;
+  /* ★ δ 가 무효(NaN)이면 「광자가 없다」가 아니라 **입력이 아직 없는 것**이다.
+     예전 판은 `l[0] >= NaN` 이 늘 false 라 경고가 켜졌고 문구에 **NaN** 이 박혀 나갔다. */
+  const noGamma = Number.isFinite(delta) && n.lines.filter((l) => l[0] >= delta).length === 0;
 
   // 역산 — 목표 선량률을 만드는 두께 / 활성도
   const solved = useMemo(() => {
@@ -116,7 +118,7 @@ export default function GammaShielding() {
       </div>
 
       <NuclidePicker nuclides={N} value={nuclide} onChange={setNuclide} require={["gamma", "xray"]} />
-      {noGamma ? <Warn>{nuclide} emits no photons above {delta} keV — lower the cutoff or pick another nuclide.</Warn> : null}
+      {noGamma ? <Warn>{nuclide} emits no photons above {fmt(delta)} keV — lower the cutoff or pick another nuclide.</Warn> : null}
 
       <div className="grid gap-3 sm:grid-cols-2">
         {mode !== "activity" ? (

@@ -8,7 +8,7 @@
     "preview": "astro preview",
     "test": "tsx --test src/engine/*.test.ts src/lib/*.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json && astro check",
-    "gate": "node gate/check-output.mjs && node gate/check-render.mjs && node gate/check-lockup.mjs"
+    "gate": "node gate/check-output.mjs && node gate/check-render.mjs && node gate/check-lockup.mjs && node gate/check-inputs.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.2.0",

@@ -11,8 +11,12 @@ export const distanceForRate = (rate1: number, d1: number, target: number) =>
   target > 0 ? d1 * Math.sqrt(rate1 / target) : NaN;
 
 /** 체류가능시간 [h] = 선량한도 / 선량률 */
+/** ★ 「모름」과 「0」을 가른다 — `NaN > 0` 은 false 라 예전 판은 **선량률이 NaN 이어도
+ *  Infinity 를 돌려주었고**, 화면은 그것을 체류시간 「unlimited」로 그렸다(2026-09-14 실측).
+ *  선량률이 진짜 0 일 때만 무제한이고, 입력이 비었거나 무효이면 답이 없다(NaN). */
 export const stayTime = (doseLimit: number, doseRate: number) =>
-  doseRate > 0 ? doseLimit / doseRate : Infinity;
+  !Number.isFinite(doseLimit) || !Number.isFinite(doseRate) ? NaN
+    : doseRate > 0 ? doseLimit / doseRate : Infinity;
 
 /** 작업 한 묶음의 집단선량 [person·mSv] */
 export function collectiveDose(tasks: { workers: number; hours: number; rate: number }[]): number {

@@ -8,7 +8,7 @@ const tool = toolBySlug(slug)!;
 const others = TOOLS.filter((t) => t.slug !== slug).slice(0, 3);
 ---
 <Base title={tool.name} description={tool.blurb}>
-  <nav class="mb-4 text-[12px] text-ink-faint">
+  <nav class="tap-list mb-4 flex flex-wrap items-center gap-x-1.5 text-[12px] text-ink-faint">
     <a href={u("/")} class="hover:text-ink">Calculators</a> <span aria-hidden>/</span> {tool.name}
   </nav>
 

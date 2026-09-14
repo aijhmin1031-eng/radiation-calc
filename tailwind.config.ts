@@ -13,6 +13,7 @@ export default {
         panel: c("--c-panel"),
         line: c("--c-line"),
         accent: { DEFAULT: c("--c-accent"), soft: c("--c-accent-soft") },
+        warn: c("--c-warn"),
       },
       fontFamily: {
         sans: ["system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],

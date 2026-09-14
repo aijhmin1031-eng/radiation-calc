@@ -48,7 +48,10 @@ const full = `${title} · ${SITE_NAME}`;
       </div>
     </header>
 
-    <main id="main" class="mx-auto max-w-content px-4 py-8"><slot /></main>
+    {/* ★ tabindex="-1" 이 없으면 건너뛰기 링크가 **절반만 듣는다** — 주소는 #main 으로 가고
+        화면도 내려가지만 **초점은 body 에 남아**, 다음 Tab 이 다시 쪽 맨 위로 돌아간다.
+        키보드 이용자에게는 링크가 아무 일도 안 한 것과 같다(2026-09-14 실측으로 잡았다). */}
+    <main id="main" tabindex="-1" class="mx-auto max-w-content px-4 py-8 focus:outline-none"><slot /></main>
 
     <footer class="mt-16 border-t border-line bg-panel">
       <div class="mx-auto max-w-content space-y-5 px-4 py-8 text-[13px]">
