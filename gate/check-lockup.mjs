@@ -26,7 +26,11 @@ const srv = createServer((q, r) => {
 await new Promise((r) => srv.listen(4322, r));
 
 const fail = [];
-const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
+/** 크로미움 경로 — 원격 컨테이너는 미리 깔린 것을 쓰고, CI 는 `playwright install` 이
+ *  받아 둔 기본 경로를 쓴다(그때는 executablePath 를 주지 않는다). */
+const EXE = process.env.PW_CHROMIUM || process.env.CHROMIUM_PATH
+  || (existsSync("/opt/pw-browsers/chromium") ? "/opt/pw-browsers/chromium" : undefined);
+const browser = await chromium.launch(EXE ? { executablePath: EXE } : {});
 for (const theme of ["light", "dark"]) {
   for (const [w, h, tag] of [[1280, 900, "데스크톱"], [390, 844, "모바일"]]) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, colorScheme: theme });
