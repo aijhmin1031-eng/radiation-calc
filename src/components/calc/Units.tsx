@@ -42,7 +42,7 @@ export default function Units() {
 
       {/* ★ 「어느 단위로 바꿀까」를 묻지 않는다 — 전부 한 번에 보여 주는 편이 빠르다.
           참고 사이트는 from/to 를 둘 다 고르게 하는데, 실제로는 표 하나면 끝난다. */}
-      <div className="card overflow-hidden">
+      <div className="card overflow-x-auto">
         <table>
           <thead><tr><th>Unit</th><th className="text-right">Value</th></tr></thead>
           <tbody>

@@ -1,0 +1,31 @@
+name: CI
+on:
+  push: { branches: ["**"] }
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15      # ★ 안 걸면 기본값이 6시간이다
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22", cache: npm }
+      - run: npm ci
+
+      - name: 엔진 골든 벡터
+        run: npm test
+
+      - name: 타입
+        run: npx tsc --noEmit -p tsconfig.json
+
+      - name: 빌드
+        run: npm run build
+
+      # ★ 빌드 통과는 아무것도 보장하지 않는다 — 산출물을 직접 본다
+      - name: 산출물 점검
+        run: node gate/check-output.mjs
+
+      - name: 조판·동작 실측 (Chromium)
+        run: |
+          npx playwright install --with-deps chromium
+          node gate/check-render.mjs
