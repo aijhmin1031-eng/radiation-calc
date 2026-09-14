@@ -1,0 +1,51 @@
+---
+/**
+ * 플랫폼 잠금장치 — **세 lab 이 똑같이 든다**(2026-09-14 소유주 지시
+ * 「로고도 다 동일한 거 · Radiation Lab 문구 그대로 · 하단에 작게 랩 이름」).
+ *
+ * ★ 실측으로 드러난 문제: 세 lab 중 둘은 **우산으로 돌아갈 링크가 아예 없었고**
+ *   RadCalc 은 마크가 없었다. 셋이 각각 다른 사이트로 보였다.
+ *
+ * ★ 위 줄(마크 + Radiation Lab)은 **항상 `/` 로 간다** — 어느 lab 에 있든 한 번에 우산으로.
+ *   아래 줄은 그 lab 홈이다. 「Radiation Lab 안의 RadiMeter」가 한눈에 읽힌다.
+ *
+ * ★★ 마크는 우산 `public/favicon.svg` 와 **같은 좌표**다(팔각 궤도 R=25.8 + 흑연 구 r=15).
+ *   좌표를 고치면 세 lab 과 우산을 함께 고친다 — 어긋나면 각 lab 의 게이트가 잡는다.
+ *   색은 **토큰으로** 칠한다. 고정색으로 두면 어두운 테마에서 통째로 묻힌다.
+ */
+interface Props { labName: string; labHref: string; umbrellaHref?: string }
+const { labName, labHref, umbrellaHref = "/" } = Astro.props;
+---
+<div class="lockup">
+  <a class="lockup-top" href={umbrellaHref} aria-label="Radiation Lab — platform home">
+    <svg class="lockup-mark" viewBox="0 0 64 64" aria-hidden="true">
+      <polygon points="32.00,6.20 50.24,13.76 57.80,32.00 50.24,50.24 32.00,57.80 13.76,50.24 6.20,32.00 13.76,13.76"
+               fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="miter" />
+      <circle cx="32" cy="32" r="15" fill="currentColor" opacity="0.82" />
+    </svg>
+    <span class="lockup-umbrella">Radiation Lab</span>
+  </a>
+  <a class="lockup-lab" href={labHref}>{labName}</a>
+</div>
+
+<style>
+  /* ★ 블록 하나로 보이되 **두 목적지**다 — 위는 우산, 아래는 이 lab 의 홈. */
+  .lockup { display: flex; flex-direction: column; gap: 1px; line-height: 1.15; }
+  .lockup-top { display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit; }
+  .lockup-mark { width: 24px; height: 24px; flex: none; color: rgb(var(--c-ink)); }
+  .lockup-umbrella { font-size: 16px; font-weight: 650; letter-spacing: -0.012em; color: rgb(var(--c-ink)); }
+  /* ★ lab 이름은 마크 폭(24) + 간격(8) 만큼 들여 우산 이름과 왼쪽을 맞춘다.
+     ★ 대문자로 바꾸지 않는다 — 「RADCALC」는 이름이 아니라 분류처럼 읽힌다.
+       이것들은 고유명사이므로 브랜드 표기를 그대로 살린다. */
+  .lockup-lab {
+    margin-left: 32px; font-size: 12px; font-weight: 550; letter-spacing: 0.005em;
+    color: rgb(var(--c-ink-faint)); text-decoration: none;
+  }
+  .lockup-top:hover .lockup-umbrella, .lockup-lab:hover { text-decoration: underline; }
+  .lockup-top:focus-visible, .lockup-lab:focus-visible { outline: 2px solid rgb(var(--c-accent)); outline-offset: 2px; }
+  @media (max-width: 420px) {
+    .lockup-umbrella { font-size: 15px; }
+    .lockup-mark { width: 22px; height: 22px; }
+    .lockup-lab { margin-left: 30px; font-size: 11.5px; }
+  }
+</style>
