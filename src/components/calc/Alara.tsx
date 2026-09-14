@@ -107,7 +107,7 @@ export default function Alara() {
         </>
       ) : (
         <>
-          <div className="card overflow-hidden">
+          <div className="card overflow-x-auto">
             <table>
               <thead><tr><th>Task</th><th className="text-right">Workers</th><th className="text-right">Hours</th>
                 <th className="text-right">Rate ({rateU})</th><th className="text-right">person·mSv</th></tr></thead>

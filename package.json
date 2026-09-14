@@ -7,7 +7,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "test": "tsx --test src/engine/*.test.ts src/lib/*.test.ts",
-    "typecheck": "tsc --noEmit -p tsconfig.json && astro check"
+    "typecheck": "tsc --noEmit -p tsconfig.json && astro check",
+    "gate": "node gate/check-output.mjs && node gate/check-render.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.2.0",
@@ -24,6 +25,7 @@
     "@types/node": "^22.10.0",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
+    "playwright": "^1.63.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }

@@ -92,7 +92,7 @@ export default function Beta() {
             { k: "Transmission", v: trans === 0 ? "0 — stopped" : `${fmt(trans * 100, 3)}%` },
           ]} />
 
-          <div className="card overflow-hidden">
+          <div className="card overflow-x-auto">
             <table>
               <thead><tr><th>Absorber</th><th className="text-right">Thickness to stop</th><th className="text-right">Bremsstrahlung</th></tr></thead>
               <tbody>

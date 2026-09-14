@@ -3,7 +3,7 @@
     .ink { fill: #1c1d20 } .amber { fill: #b06f14 }
     @media (prefers-color-scheme: dark) { .ink { fill: #e8e8e6 } .amber { fill: #e0a34a } }
   </style>
-  <!-- 감쇠 곡선과 기준선. 앰버는 기준선에만 쓴다(판정 의미로 쓰지 않는다). -->
+  <!-- Attenuation curve with a reference line. Amber marks the reference only. -->
   <path class="ink" d="M8 52 C 20 52, 26 40, 30 28 C 34 16, 40 10, 56 10 L 56 16 C 44 16, 39 20, 35 31 C 30 45, 22 58, 8 58 Z"/>
   <rect class="amber" x="6" y="44" width="52" height="3.5" rx="1.75"/>
 </svg>
