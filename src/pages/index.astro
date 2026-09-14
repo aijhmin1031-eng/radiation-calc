@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import { u, SITE_NAME } from "../lib/site";
 import { TOOLS } from "../lib/tools";
+import ToolIcon from "../components/ToolIcon.astro";
 ---
 <Base title="Radiation protection calculators"
       description="Seven calculators for routine radiation protection work — dose rate and shielding, decay, detection limits, unit conversion, specific activity, beta shielding and job planning. Free, no sign-in.">
@@ -26,7 +27,10 @@ import { TOOLS } from "../lib/tools";
     {TOOLS.map((t) => (
       <li class="card p-4 transition-colors hover:border-accent/50">
         <a href={u(`/${t.slug}/`)} class="block no-underline">
-          <h2 class="text-[16px] font-semibold text-ink">{t.name}</h2>
+          <h2 class="flex items-start gap-2 text-[16px] font-semibold text-ink">
+            <ToolIcon slug={t.slug} class="mt-[3px] text-ink-muted" />
+            <span>{t.name}</span>
+          </h2>
           <p class="mt-1.5 text-[14px] leading-snug text-ink-muted">{t.question}</p>
           <p class="mt-2 text-[12px] leading-snug text-ink-faint">{t.blurb}</p>
         </a>

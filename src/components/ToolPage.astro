@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import { u, DATA_SOURCES } from "../lib/site";
 import { TOOLS, toolBySlug } from "../lib/tools";
+import ToolIcon from "./ToolIcon.astro";
 interface Props { slug: string }
 const { slug } = Astro.props;
 const tool = toolBySlug(slug)!;
@@ -34,10 +35,13 @@ const tool = toolBySlug(slug)!;
           return (
             <li>
               <a href={u(`/${t.slug}/`)} aria-current={on ? "page" : undefined}
-                 class:list={["block rounded-md px-2 py-1.5 text-[13px] leading-snug no-underline transition-colors",
+                 class:list={["flex items-start gap-2 rounded-md px-2 py-1.5 text-[13px] leading-snug no-underline transition-colors",
                    on ? "border border-accent/50 bg-accent-soft font-semibold text-ink"
                       : "border border-transparent text-ink-muted hover:border-line hover:text-ink"]}>
-                {t.name}
+                {/* ★ 표식은 글자와 **첫 줄 기준선**을 맞춘다 — 이름이 두 줄로 감기는 칸이
+                    있어(「Gamma dose rate and shielding」) 가운데 맞춤으로 두면 표식만 아래로 처진다. */}
+                <ToolIcon slug={t.slug} class="mt-[1px]" />
+                <span>{t.name}</span>
               </a>
             </li>
           );
