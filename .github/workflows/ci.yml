@@ -29,3 +29,7 @@ jobs:
         run: |
           npx playwright install --with-deps chromium
           node gate/check-render.mjs
+
+      # ★ 플랫폼 잠금장치 — 세 lab 이 똑같이 답해야 하는 다섯 가지
+      - name: 잠금장치 (우산으로 가는 길)
+        run: node gate/check-lockup.mjs

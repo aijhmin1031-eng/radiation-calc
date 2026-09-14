@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import { SITE_NAME, SITE_TAGLINE, UMBRELLA_NAME, DATA_SOURCES, u, canonical } from "../lib/site";
 import { TOOLS } from "../lib/tools";
+import Lockup from "../components/brand/Lockup.astro";
 interface Props { title: string; description: string; noindex?: boolean }
 const { title, description, noindex } = Astro.props;
 const here = Astro.url.pathname;
@@ -34,13 +35,10 @@ const full = `${title} · ${SITE_NAME}`;
 
     <header class="border-b border-line bg-panel">
       <div class="mx-auto flex max-w-content flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
-        <a href={u("/")} class="flex items-baseline gap-2 no-underline">
-          <span class="text-[17px] font-semibold tracking-tight text-ink">{SITE_NAME}</span>
-          <span class="hidden text-[12px] text-ink-faint sm:inline">{SITE_TAGLINE}</span>
-        </a>
+        <Lockup labName={SITE_NAME} labHref={u("/")} />
         <nav class="ml-auto flex flex-wrap gap-x-3 gap-y-1 text-[13px]">
-          <a href="/" class="text-ink-muted hover:text-ink">{UMBRELLA_NAME}</a>
           <a href="/radimeter/" class="text-ink-muted hover:text-ink">RadiMeter</a>
+          <a href="/disposal" class="text-ink-muted hover:text-ink">M-Phreefiteq</a>
           <a href={u("/saved/")} class="text-ink-muted hover:text-ink">Saved</a>
           <a href={u("/methods/")} class="text-ink-muted hover:text-ink">Methods</a>
         </nav>
