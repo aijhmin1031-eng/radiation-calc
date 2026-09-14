@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { minimumDetectableActivity, scanMdc } from "../../engine/mda";
 import { convert } from "../../engine/units";
 import { Field, NumberInput, Select, RadioRow, Check } from "../ui/Field";
+import { SaveBar } from "../ui/SaveBar";
+import { initialState, pick as pickState } from "../../lib/restore";
 import { Headline, Rows, fmt, Warn } from "../ui/Result";
 
 type Mode = "scaler" | "scan";
@@ -13,21 +15,22 @@ const CONF = [
 const OUT = ["Bq", "dpm", "Bq/cm²", "dpm/100cm²", "pCi"] as const;
 
 export default function Mda() {
-  const [mode, setMode] = useState<Mode>("scaler");
-  const [k, setK] = useState("1.645");
+  const restored = initialState();
+  const [mode, setMode] = useState<Mode>(pickState(restored, "mode", "scaler"));
+  const [k, setK] = useState(pickState(restored, "k", "1.645"));
   // 고정 계수
-  const [bgCpm, setBgCpm] = useState(300);
-  const [timeS, setTimeS] = useState(600);
-  const [eff, setEff] = useState(25);
-  const [useSurface, setUseSurface] = useState(false);
-  const [surfEff, setSurfEff] = useState(50);
-  const [areaCm2, setAreaCm2] = useState(100);
-  const [unit, setUnit] = useState<typeof OUT[number]>("Bq");
+  const [bgCpm, setBgCpm] = useState(pickState(restored, "bgCpm", 300));
+  const [timeS, setTimeS] = useState(pickState(restored, "timeS", 600));
+  const [eff, setEff] = useState(pickState(restored, "eff", 25));
+  const [useSurface, setUseSurface] = useState(pickState(restored, "useSurface", false));
+  const [surfEff, setSurfEff] = useState(pickState(restored, "surfEff", 50));
+  const [areaCm2, setAreaCm2] = useState(pickState(restored, "areaCm2", 100));
+  const [unit, setUnit] = useState<typeof OUT[number]>(pickState(restored, "unit", "Bq"));
   // 스캔
-  const [speed, setSpeed] = useState(5);
-  const [width, setWidth] = useState(10);
-  const [obsEff, setObsEff] = useState(50);
-  const [dPrime, setDPrime] = useState(1.38);
+  const [speed, setSpeed] = useState(pickState(restored, "speed", 5));
+  const [width, setWidth] = useState(pickState(restored, "width", 10));
+  const [obsEff, setObsEff] = useState(pickState(restored, "obsEff", 50));
+  const [dPrime, setDPrime] = useState(pickState(restored, "dPrime", 1.38));
 
   const kk = Number(k);
   const totalEff = (eff / 100) * (useSurface ? surfEff / 100 : 1);
@@ -151,6 +154,11 @@ export default function Mda() {
           </Warn>
         </>
       )}
+
+      <SaveBar tool="mda"
+        inputs={{ mode, k, bgCpm, timeS, eff, useSurface, surfEff, areaCm2, unit, speed, width, obsEff, dPrime }}
+        outputs={mode === "scaler" ? { ...fixed } : { ...scan }}
+        summary={`${mode === "scaler" ? `${fmt(timeS)} s count` : `scan ${fmt(speed)} cm/s`} — ${fmt(bgCpm)} cpm bg`} />
     </div>
   );
 }

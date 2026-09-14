@@ -7,6 +7,8 @@ import { DENSITY_G_CM3 } from "../../engine/gamma";
 import { convert, UNITS } from "../../engine/units";
 import { NuclidePicker } from "../ui/NuclidePicker";
 import { Field, NumberInput, Select, RadioRow } from "../ui/Field";
+import { SaveBar } from "../ui/SaveBar";
+import { initialState, pick as pickState } from "../../lib/restore";
 import { Headline, Rows, fmt, Warn } from "../ui/Result";
 
 const N = nuclides as unknown as NuclideMap;
@@ -25,14 +27,15 @@ type AbsKey = typeof ABSORBERS[number]["value"];
 type Mode = "shield" | "dose";
 
 export default function Beta() {
-  const [mode, setMode] = useState<Mode>("shield");
-  const [key, setKey] = useState("Y-90");
-  const [absK, setAbsK] = useState<AbsKey>("acrylic");
-  const [thick, setThick] = useState(2);
-  const [act, setAct] = useState(37); const [actU, setActU] = useState("MBq");
-  const [massKg, setMassKg] = useState(1);
+  const restored = initialState();
+  const [mode, setMode] = useState<Mode>(pickState(restored, "mode", "shield"));
+  const [nuclide, setNuclide] = useState(pickState(restored, "nuclide", "Y-90"));
+  const [absK, setAbsK] = useState<AbsKey>(pickState(restored, "absK", "acrylic"));
+  const [thick, setThick] = useState(pickState(restored, "thick", 2));
+  const [act, setAct] = useState(pickState(restored, "act", 37)); const [actU, setActU] = useState(pickState(restored, "actU", "MBq"));
+  const [massKg, setMassKg] = useState(pickState(restored, "massKg", 1));
 
-  const n = N[key];
+  const n = N[nuclide];
   const abs = ABSORBERS.find((a) => a.value === absK)!;
   const eMax = (n.beta_max_keV ?? 0) / 1000;
   const eMean = (n.beta_mean_keV ?? 0) / 1000;
@@ -52,8 +55,8 @@ export default function Beta() {
   if (!hasBeta) {
     return (
       <div className="space-y-4">
-        <NuclidePicker nuclides={N} value={key} onChange={setKey} require={["beta"]} />
-        <Warn>{key} has no tabulated beta emission — pick a beta emitter.</Warn>
+        <NuclidePicker nuclides={N} value={nuclide} onChange={setNuclide} require={["beta"]} />
+        <Warn>{nuclide} has no tabulated beta emission — pick a beta emitter.</Warn>
       </div>
     );
   }
@@ -68,7 +71,7 @@ export default function Beta() {
         ]} />
       </div>
 
-      <NuclidePicker nuclides={N} value={key} onChange={setKey} require={["beta"]} />
+      <NuclidePicker nuclides={N} value={nuclide} onChange={setNuclide} require={["beta"]} />
 
       {mode === "shield" ? (
         <>
@@ -77,7 +80,7 @@ export default function Beta() {
             <Field label="Thickness"><NumberInput value={Number.isFinite(thick) ? thick : ""} onChange={setThick} min={0} suffix="mm" /></Field>
           </div>
 
-          <Headline label={`${abs.label} needed to stop ${key} beta`} value={needMm} unit="mm"
+          <Headline label={`${abs.label} needed to stop ${nuclide} beta`} value={needMm} unit="mm"
             note={`Full range of a ${fmt(eMax * 1000, 4)} keV beta. At ${fmt(thick)} mm the transmission is ${trans === 0 ? "zero — fully stopped" : `${fmt(trans * 100, 3)}%`}.`} />
 
           <Rows rows={[
@@ -141,6 +144,11 @@ export default function Beta() {
           </Warn>
         </>
       )}
+
+      <SaveBar tool="beta"
+        inputs={{ mode, nuclide, absorber: absK, thick, act, actU, massKg }}
+        outputs={{ rangeGcm2, rangeCm, transmission: trans, eMaxKeV: n.beta_max_keV, eMeanKeV: n.beta_mean_keV, infiniteMediumGyPerH: dInf }}
+        summary={`${nuclide} in ${abs.label}`} />
     </div>
   );
 }

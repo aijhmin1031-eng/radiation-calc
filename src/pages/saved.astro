@@ -1,0 +1,19 @@
+---
+import Base from "../layouts/Base.astro";
+import SavedResults from "../components/SavedResults.tsx";
+import { u } from "../lib/site";
+---
+<Base title="Saved results"
+      description="Look up calculations you saved to your account by reference number, name or nuclide, and reopen them with the original conditions restored."
+      noindex>
+  <nav class="mb-4 text-[12px] text-ink-faint">
+    <a href={u("/")} class="hover:text-ink">Calculators</a> <span aria-hidden>/</span> Saved results
+  </nav>
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">Saved results</h1>
+  <p class="mt-2 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    Every saved calculation gets a reference number such as <span class="num">RC-GAM-20260914-0001</span> —
+    the calculator, the date and a serial number. Opening one restores the conditions exactly as they
+    were, so the result recomputes rather than being read back from a stored number.
+  </p>
+  <div class="mt-8"><SavedResults client:only="react" /></div>
+</Base>

@@ -3,7 +3,7 @@ import ToolPage from "../components/ToolPage.astro";
 import Units from "../components/calc/Units.tsx";
 ---
 <ToolPage slug="units">
-  <Units slot="tool" client:load />
+  <Units slot="tool" client:only="react" />
   <Fragment slot="prose">
     <h2>Why conversions go wrong</h2>
     <p>

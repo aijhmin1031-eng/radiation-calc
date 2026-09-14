@@ -3,7 +3,7 @@ import ToolPage from "../components/ToolPage.astro";
 import Mda from "../components/calc/Mda.tsx";
 ---
 <ToolPage slug="mda">
-  <Mda slot="tool" client:load />
+  <Mda slot="tool" client:only="react" />
   <Fragment slot="prose">
     <h2>Three numbers that are not the same</h2>
     <p>

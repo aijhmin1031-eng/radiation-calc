@@ -3,7 +3,7 @@ import ToolPage from "../components/ToolPage.astro";
 import Decay from "../components/calc/Decay.tsx";
 ---
 <ToolPage slug="decay">
-  <Decay slot="tool" client:load />
+  <Decay slot="tool" client:only="react" />
   <Fragment slot="prose">
     <h2>The one equation</h2>
     <p>

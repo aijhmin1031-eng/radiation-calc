@@ -3,7 +3,7 @@ import ToolPage from "../components/ToolPage.astro";
 import SpecificActivity from "../components/calc/SpecificActivity.tsx";
 ---
 <ToolPage slug="specific-activity">
-  <SpecificActivity slot="tool" client:load />
+  <SpecificActivity slot="tool" client:only="react" />
   <Fragment slot="prose">
     <h2>Where the number comes from</h2>
     <p>

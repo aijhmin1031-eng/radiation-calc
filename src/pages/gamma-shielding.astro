@@ -3,7 +3,7 @@ import ToolPage from "../components/ToolPage.astro";
 import GammaShielding from "../components/calc/GammaShielding.tsx";
 ---
 <ToolPage slug="gamma-shielding">
-  <GammaShielding slot="tool" client:load />
+  <GammaShielding slot="tool" client:only="react" />
   <Fragment slot="prose">
     <h2>How the dose rate is obtained</h2>
     <p>

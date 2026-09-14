@@ -3,7 +3,7 @@ import ToolPage from "../components/ToolPage.astro";
 import Alara from "../components/calc/Alara.tsx";
 ---
 <ToolPage slug="alara">
-  <Alara slot="tool" client:load />
+  <Alara slot="tool" client:only="react" />
   <Fragment slot="prose">
     <h2>Time, distance, shielding — in order of cost</h2>
     <p>

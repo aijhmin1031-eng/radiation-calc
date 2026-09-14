@@ -16,7 +16,17 @@ const others = TOOLS.filter((t) => t.slug !== slug).slice(0, 3);
   <p class="mt-2 max-w-3xl text-[15px] leading-relaxed text-ink-muted">{tool.blurb}</p>
   <p class="mt-1.5 text-[13px] text-ink-faint">No sign-in needed. Nothing you type leaves your browser.</p>
 
-  <section class="card mt-6 p-4 sm:p-6"><slot name="tool" /></section>
+  {/* ★ 아일랜드는 client:only 다 — 서버가 안 그리므로 자리 표시가 필요하다.
+      JS 가 막힌 환경에서는 이 안내가 그대로 남는다(빈 상자보다 낫다). */}
+  <section class="card mt-6 min-h-[18rem] p-4 sm:p-6">
+    <slot name="tool" />
+    <noscript>
+      <p class="text-[14px] leading-relaxed text-ink-muted">
+        This calculator runs in your browser and needs JavaScript enabled. The method and the data it
+        uses are described below, and on the <a href={u("/methods/")} class="underline">methods page</a>.
+      </p>
+    </noscript>
+  </section>
 
   <section class="prose-doc mt-12 max-w-3xl space-y-4 text-[15px] leading-relaxed text-ink-muted">
     <slot name="prose" />

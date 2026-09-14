@@ -3,7 +3,7 @@ import ToolPage from "../components/ToolPage.astro";
 import Beta from "../components/calc/Beta.tsx";
 ---
 <ToolPage slug="beta">
-  <Beta slot="tool" client:load />
+  <Beta slot="tool" client:only="react" />
   <Fragment slot="prose">
     <h2>Maximum energy and mean energy do different jobs</h2>
     <p>

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { UNITS, convert, exposureToAirKerma, type Quantity } from "../../engine/units";
 import { Field, NumberInput, Select, RadioRow } from "../ui/Field";
+import { SaveBar } from "../ui/SaveBar";
+import { initialState, pick as pickState } from "../../lib/restore";
 import { fmt, Warn } from "../ui/Result";
 
 const QUANTITIES: { value: Quantity; label: string; hint: string }[] = [
@@ -13,9 +15,10 @@ const QUANTITIES: { value: Quantity; label: string; hint: string }[] = [
 ];
 
 export default function Units() {
-  const [q, setQ] = useState<Quantity>("activity");
-  const [from, setFrom] = useState("mCi");
-  const [val, setVal] = useState(1);
+  const restored = initialState();
+  const [q, setQ] = useState<Quantity>(pickState(restored, "q", "activity"));
+  const [from, setFrom] = useState(pickState(restored, "from", "mCi"));
+  const [val, setVal] = useState(pickState(restored, "val", 1));
 
   const units = Object.keys(UNITS[q].u);
   const pick = (nq: Quantity) => { setQ(nq); setFrom(Object.keys(UNITS[nq].u)[0]); };
@@ -79,6 +82,11 @@ export default function Units() {
           (1 for photons and electrons, up to 20 for alpha). This tool converts only within one quantity.
         </Warn>
       ) : null}
+
+      <SaveBar tool="units"
+        inputs={{ quantity: q, unit: safeFrom, value: val }}
+        outputs={Object.fromEntries(units.map((x) => [x, convert(Number.isFinite(val) ? val : 0, safeFrom, x, q)]))}
+        summary={`${fmt(val)} ${safeFrom}`} />
     </div>
   );
 }

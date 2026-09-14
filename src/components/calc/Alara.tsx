@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { inverseSquare, distanceForRate, stayTime, collectiveDose, hvlFromMu, tvlFromMu } from "../../engine/alara";
 import { Field, NumberInput, Select, RadioRow } from "../ui/Field";
+import { SaveBar } from "../ui/SaveBar";
+import { initialState, pick as pickState } from "../../lib/restore";
 import { Headline, Rows, fmt, Warn } from "../ui/Result";
 
 type Mode = "stay" | "distance" | "job";
@@ -11,13 +13,14 @@ const TO_MSV: Record<typeof RATE[number], number> = { "µSv/h": 1e-3, "mSv/h": 1
 interface Task { id: number; name: string; workers: number; hours: number; rate: number }
 
 export default function Alara() {
-  const [mode, setMode] = useState<Mode>("stay");
-  const [rateU, setRateU] = useState<typeof RATE[number]>("µSv/h");
-  const [rate, setRate] = useState(250);
-  const [d1, setD1] = useState(1); const [d1u, setD1u] = useState<keyof typeof DIST>("m");
-  const [d2, setD2] = useState(3);
-  const [budget, setBudget] = useState(1);          // mSv
-  const [targetRate, setTargetRate] = useState(20); // rateU
+  const restored = initialState();
+  const [mode, setMode] = useState<Mode>(pickState(restored, "mode", "stay"));
+  const [rateU, setRateU] = useState<typeof RATE[number]>(pickState(restored, "rateU", "µSv/h"));
+  const [rate, setRate] = useState(pickState(restored, "rate", 250));
+  const [d1, setD1] = useState(pickState(restored, "d1", 1)); const [d1u, setD1u] = useState<keyof typeof DIST>(pickState(restored, "d1u", "m"));
+  const [d2, setD2] = useState(pickState(restored, "d2", 3));
+  const [budget, setBudget] = useState(pickState(restored, "budget", 1));          // mSv
+  const [targetRate, setTargetRate] = useState(pickState(restored, "targetRate", 20)); // rateU
   const [tasks, setTasks] = useState<Task[]>([
     { id: 1, name: "Setup", workers: 2, hours: 0.5, rate: 80 },
     { id: 2, name: "Main work", workers: 3, hours: 2, rate: 250 },
@@ -152,6 +155,11 @@ export default function Alara() {
           </Warn>
         </>
       )}
+
+      <SaveBar tool="alara"
+        inputs={{ mode, rateU, rate, d1, d1u, d2, budget, targetRate, tasks }}
+        outputs={{ stayTimeH: hours, rateAtD2: at2, distanceNeeded: needD, collective, perWorker }}
+        summary={`${mode} — ${fmt(rate)} ${rateU}`} />
     </div>
   );
 }

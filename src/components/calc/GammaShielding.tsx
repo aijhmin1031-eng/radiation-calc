@@ -8,6 +8,8 @@ import { convert, UNITS } from "../../engine/units";
 import { hvlFromMu, tvlFromMu } from "../../engine/alara";
 import { NuclidePicker } from "../ui/NuclidePicker";
 import { Field, NumberInput, Select, RadioRow, Check } from "../ui/Field";
+import { SaveBar } from "../ui/SaveBar";
+import { initialState, pick as pickState } from "../../lib/restore";
 import { Headline, Rows, fmt, Warn } from "../ui/Result";
 
 const N = nuclides as unknown as NuclideMap;
@@ -36,21 +38,22 @@ const MATERIALS: { value: Material; label: string }[] = [
 type Mode = "dose" | "activity" | "thickness";
 
 export default function GammaShielding() {
-  const [mode, setMode] = useState<Mode>("dose");
-  const [key, setKey] = useState("Ir-192");
-  const [act, setAct] = useState(37); const [actU, setActU] = useState("GBq");
-  const [dist, setDist] = useState(1); const [distU, setDistU] = useState<keyof typeof DIST>("m");
-  const [mat, setMat] = useState<Material>("lead");
-  const [thick, setThick] = useState(0); const [thickU, setThickU] = useState<keyof typeof THICK>("mm");
-  const [shieldMode, setShieldMode] = useState<ShieldMode>("attenuation");
-  const [bergerA, setBergerA] = useState(0); const [bergerB, setBergerB] = useState(0.05);
-  const [delta, setDelta] = useState(20);
-  const [rateU, setRateU] = useState<RateUnit>("µSv/h");
-  const [targetRate, setTargetRate] = useState(20);
-  const [customRho, setCustomRho] = useState(false);
-  const [rho, setRho] = useState(DENSITY_G_CM3.lead);
+  const restored = initialState();
+  const [mode, setMode] = useState<Mode>(pickState(restored, "mode", "dose"));
+  const [nuclide, setNuclide] = useState(pickState(restored, "nuclide", "Ir-192"));
+  const [act, setAct] = useState(pickState(restored, "act", 37)); const [actU, setActU] = useState(pickState(restored, "actU", "GBq"));
+  const [dist, setDist] = useState(pickState(restored, "dist", 1)); const [distU, setDistU] = useState<keyof typeof DIST>(pickState(restored, "distU", "m"));
+  const [mat, setMat] = useState<Material>(pickState(restored, "mat", "lead"));
+  const [thick, setThick] = useState(pickState(restored, "thick", 0)); const [thickU, setThickU] = useState<keyof typeof THICK>(pickState(restored, "thickU", "mm"));
+  const [shieldMode, setShieldMode] = useState<ShieldMode>(pickState(restored, "shieldMode", "attenuation"));
+  const [bergerA, setBergerA] = useState(pickState(restored, "bergerA", 0)); const [bergerB, setBergerB] = useState(pickState(restored, "bergerB", 0.05));
+  const [delta, setDelta] = useState(pickState(restored, "delta", 20));
+  const [rateU, setRateU] = useState<RateUnit>(pickState(restored, "rateU", "µSv/h"));
+  const [targetRate, setTargetRate] = useState(pickState(restored, "targetRate", 20));
+  const [customRho, setCustomRho] = useState(pickState(restored, "customRho", false));
+  const [rho, setRho] = useState(pickState(restored, "rho", DENSITY_G_CM3.lead));
 
-  const n = N[key];
+  const n = N[nuclide];
   const gbq = convert(act, actU, "Bq", "activity") / 1e9;
   const d = dist * DIST[distU];
   const tcm = thick * THICK[thickU];
@@ -63,14 +66,14 @@ export default function GammaShielding() {
     thicknessCm: tcm, mode: shieldMode,
     berger: shieldMode === "buildup" ? { a: bergerA, b: bergerB } : undefined,
     deltaKeV: delta,
-  }), [key, mat, gbq, d, tcm, shieldMode, bergerA, bergerB, delta, mode, customRho, rho]);
+  }), [nuclide, mat, gbq, d, tcm, shieldMode, bergerA, bergerB, delta, mode, customRho, rho]);
 
   // 대표 에너지 — 방출강도 가중 평균. HVL·TVL 을 그 에너지에서 보여 준다.
   const eRep = useMemo(() => {
     const L = n.lines.filter((l) => l[0] >= delta);
     const w = L.reduce((s, l) => s + l[1], 0);
     return w > 0 ? L.reduce((s, l) => s + l[0] * l[1], 0) / w / 1000 : NaN;
-  }, [key, delta]);
+  }, [nuclide, delta]);
   const mu = Number.isFinite(eRep) ? linearAttenuation(A[mat], eRep, mat, customRho ? rho : undefined) : NaN;
 
   const toUnit = (mGyPerH: number) => mGyPerH * RATE_FACTOR[rateU];
@@ -99,7 +102,7 @@ export default function GammaShielding() {
       return (lo + hi) / 2;                             // cm
     }
     return NaN;
-  }, [mode, targetRate, rateU, calc.doseRate, key, mat, gbq, d, shieldMode, bergerA, bergerB, delta, customRho, rho]);
+  }, [mode, targetRate, rateU, calc.doseRate, nuclide, mat, gbq, d, shieldMode, bergerA, bergerB, delta, customRho, rho]);
 
   return (
     <div className="space-y-5">
@@ -112,8 +115,8 @@ export default function GammaShielding() {
         ]} />
       </div>
 
-      <NuclidePicker nuclides={N} value={key} onChange={setKey} require={["gamma", "xray"]} />
-      {noGamma ? <Warn>{key} emits no photons above {delta} keV — lower the cutoff or pick another nuclide.</Warn> : null}
+      <NuclidePicker nuclides={N} value={nuclide} onChange={setNuclide} require={["gamma", "xray"]} />
+      {noGamma ? <Warn>{nuclide} emits no photons above {delta} keV — lower the cutoff or pick another nuclide.</Warn> : null}
 
       <div className="grid gap-3 sm:grid-cols-2">
         {mode !== "activity" ? (
@@ -242,6 +245,11 @@ export default function GammaShielding() {
         Point-source geometry in air. No scatter from room surfaces, no source self-absorption, no
         capsule, no dose buildup in tissue. This does not replace a shielding design or a survey.
       </Warn>
+
+      <SaveBar tool="gamma-shielding"
+        inputs={{ mode, nuclide, act, actU, dist, distU, mat, thick, thickU, shieldMode, bergerA, bergerB, delta, rateU, targetRate, customRho, rho }}
+        outputs={{ doseRate: calc.doseRate, unshielded: calc.unshielded, transmission: calc.transmission, gammaConstant: n.gamma_const, solved, unit: rateU }}
+        summary={`${nuclide} — ${fmt(act)} ${actU} at ${fmt(dist)} ${distU}`} />
     </div>
   );
 }

@@ -5,6 +5,8 @@ import { massFromActivity, activityFromMass } from "../../engine/decay";
 import { convert, UNITS } from "../../engine/units";
 import { NuclidePicker } from "../ui/NuclidePicker";
 import { Field, NumberInput, Select, RadioRow } from "../ui/Field";
+import { SaveBar } from "../ui/SaveBar";
+import { initialState, pick as pickState } from "../../lib/restore";
 import { Headline, Rows, fmt, Warn } from "../ui/Result";
 
 const N = nuclides as unknown as NuclideMap;
@@ -12,12 +14,13 @@ const ACT = Object.keys(UNITS.activity.u);
 const MASS = { ng: 1e-9, µg: 1e-6, mg: 1e-3, g: 1, kg: 1e3 } as const;
 
 export default function SpecificActivity() {
-  const [dir, setDir] = useState<"toMass" | "toActivity">("toMass");
-  const [key, setKey] = useState("Pu-239");
-  const [act, setAct] = useState(1); const [actU, setActU] = useState("GBq");
-  const [mass, setMass] = useState(1); const [massU, setMassU] = useState<keyof typeof MASS>("g");
+  const restored = initialState();
+  const [dir, setDir] = useState<"toMass" | "toActivity">(pickState(restored, "dir", "toMass"));
+  const [nuclide, setNuclide] = useState(pickState(restored, "nuclide", "Pu-239"));
+  const [act, setAct] = useState(pickState(restored, "act", 1)); const [actU, setActU] = useState(pickState(restored, "actU", "GBq"));
+  const [mass, setMass] = useState(pickState(restored, "mass", 1)); const [massU, setMassU] = useState<keyof typeof MASS>(pickState(restored, "massU", "g"));
 
-  const n = N[key];
+  const n = N[nuclide];
   const bq = convert(act, actU, "Bq", "activity");
   const grams = mass * MASS[massU];
   const outGrams = massFromActivity(bq, n.sa_bq_g);
@@ -44,7 +47,7 @@ export default function SpecificActivity() {
         ]} />
       </div>
 
-      <NuclidePicker nuclides={N} value={key} onChange={setKey} />
+      <NuclidePicker nuclides={N} value={nuclide} onChange={setNuclide} />
 
       <div className="grid gap-3 sm:grid-cols-2">
         {dir === "toMass" ? (
@@ -61,10 +64,10 @@ export default function SpecificActivity() {
       </div>
 
       {dir === "toMass" ? (
-        <Headline label={`Mass of ${key}`} value={m.v} unit={m.u}
-          note={`Pure ${key} only. Real material is a mixture of isotopes — see the note below.`} />
+        <Headline label={`Mass of ${nuclide}`} value={m.v} unit={m.u}
+          note={`Pure ${nuclide} only. Real material is a mixture of isotopes — see the note below.`} />
       ) : (
-        <Headline label={`Activity of ${fmt(grams)} g of ${key}`} value={convert(outBq, "Bq", actU, "activity")} unit={actU}
+        <Headline label={`Activity of ${fmt(grams)} g of ${nuclide}`} value={convert(outBq, "Bq", actU, "activity")} unit={actU}
           note={`${fmt(outBq, 4)} Bq — ${fmt(convert(outBq, "Bq", "Ci", "activity"), 4)} Ci.`} />
       )}
 
@@ -82,6 +85,11 @@ export default function SpecificActivity() {
         and other isotopes in the mixture add their own activity. The molar mass is approximated by the
         mass number, which is within 0.03% for every nuclide here.
       </Warn>
+
+      <SaveBar tool="specific-activity"
+        inputs={{ direction: dir, nuclide, act, actU, mass, massU }}
+        outputs={{ specificActivity: n.sa_bq_g, grams: outGrams, bq: outBq }}
+        summary={`${nuclide} — ${dir === "toMass" ? `${fmt(act)} ${actU}` : `${fmt(mass)} ${massU}`}`} />
     </div>
   );
 }

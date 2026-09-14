@@ -5,6 +5,8 @@ import { decayActivity, elapsedFromRatio, halfLifeFromTwoPoints } from "../../en
 import { convert, UNITS } from "../../engine/units";
 import { NuclidePicker } from "../ui/NuclidePicker";
 import { Field, NumberInput, Select, RadioRow } from "../ui/Field";
+import { SaveBar } from "../ui/SaveBar";
+import { initialState, pick as pickState } from "../../lib/restore";
 import { Headline, Rows, fmt, Warn } from "../ui/Result";
 
 const N = nuclides as unknown as NuclideMap;
@@ -20,16 +22,17 @@ const MODES: { value: Mode; label: string; hint: string }[] = [
 ];
 
 export default function Decay() {
-  const [mode, setMode] = useState<Mode>("remaining");
-  const [key, setKey] = useState("Co-60");
-  const [a0, setA0] = useState(37);
-  const [unit, setUnit] = useState("GBq");
-  const [t, setT] = useState(5);
-  const [tu, setTu] = useState<TimeUnit>("y");
-  const [target, setTarget] = useState(1);
-  const [a1, setA1] = useState(18.5);
+  const restored = initialState();
+  const [mode, setMode] = useState<Mode>(pickState(restored, "mode", "remaining"));
+  const [nuclide, setNuclide] = useState(pickState(restored, "nuclide", "Co-60"));
+  const [a0, setA0] = useState(pickState(restored, "a0", 37));
+  const [unit, setUnit] = useState(pickState(restored, "unit", "GBq"));
+  const [t, setT] = useState(pickState(restored, "t", 5));
+  const [tu, setTu] = useState<TimeUnit>(pickState(restored, "tu", "y"));
+  const [target, setTarget] = useState(pickState(restored, "target", 1));
+  const [a1, setA1] = useState(pickState(restored, "a1", 18.5));
 
-  const n = N[key];
+  const n = N[nuclide];
   const T = n.t_half_s;
   const seconds = t * TIME[tu];
 
@@ -61,7 +64,7 @@ export default function Decay() {
         <RadioRow name="Mode" value={mode} onChange={setMode} options={MODES} />
       </div>
 
-      <NuclidePicker nuclides={N} value={key} onChange={setKey} />
+      <NuclidePicker nuclides={N} value={nuclide} onChange={setNuclide} />
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label={mode === "halflife" ? "First measurement" : "Starting activity"}>
@@ -122,7 +125,7 @@ export default function Decay() {
         <>
           <Headline label="Half-life from your two measurements" value={showTime(out.th!)}
             note={a1 >= a0 ? "The second measurement must be lower than the first."
-              : `Published value for ${key}: ${n.hl} ${n.hl_unit}.`} />
+              : `Published value for ${nuclide}: ${n.hl} ${n.hl_unit}.`} />
           <Rows rows={[
             { k: "Published half-life", v: `${n.hl} ${n.hl_unit}` },
             { k: "Difference", v: Number.isFinite(out.th!) ? `${fmt((out.th! - T) / T * 100, 3)}%` : "—",
@@ -135,6 +138,11 @@ export default function Decay() {
           </Warn>
         </>
       )}
+
+      <SaveBar tool="decay"
+        inputs={{ mode, nuclide, a0, unit, t, tu, target, a1 }}
+        outputs={{ ...out }}
+        summary={`${nuclide} — ${fmt(a0)} ${unit}`} />
     </div>
   );
 }
