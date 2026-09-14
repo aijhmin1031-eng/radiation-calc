@@ -7,6 +7,8 @@ import { NuclidePicker } from "../ui/NuclidePicker";
 import { Field, NumberInput, Select, RadioRow } from "../ui/Field";
 import { SaveBar } from "../ui/SaveBar";
 import { initialState, pick as pickState } from "../../lib/restore";
+import { useCommitted } from "../../lib/commit";
+import { CalcButton } from "../ui/CalcButton";
 import { Headline, Rows, fmt, Warn } from "../ui/Result";
 
 const N = nuclides as unknown as NuclideMap;
@@ -20,9 +22,13 @@ export default function SpecificActivity() {
   const [act, setAct] = useState(pickState(restored, "act", 1)); const [actU, setActU] = useState(pickState(restored, "actU", "GBq"));
   const [mass, setMass] = useState(pickState(restored, "mass", 1)); const [massU, setMassU] = useState<keyof typeof MASS>(pickState(restored, "massU", "g"));
 
-  const n = N[nuclide];
-  const bq = convert(act, actU, "Bq", "activity");
-  const grams = mass * MASS[massU];
+  /* ★ 아래 계산은 전부 **커밋된 스냅숏**(c)에서 나온다 — 칸(act·mass…)이 아니다.
+     칸을 고쳐도 답은 그대로 서 있고, 계산 단추가 켜진다. */
+  const { c, dirty, invalid, commit, keys } = useCommitted({ dir, nuclide, act, actU, mass, massU });
+
+  const n = N[c.nuclide];
+  const bq = convert(c.act, c.actU, "Bq", "activity");
+  const grams = c.mass * MASS[c.massU];
   const outGrams = massFromActivity(bq, n.sa_bq_g);
   const outBq = activityFromMass(grams, n.sa_bq_g);
 
@@ -38,7 +44,7 @@ export default function SpecificActivity() {
   const m = nice(outGrams);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" {...keys}>
       <div>
         <span className="label">Direction</span>
         <RadioRow name="Direction" value={dir} onChange={setDir} options={[
@@ -63,11 +69,13 @@ export default function SpecificActivity() {
         )}
       </div>
 
-      {dir === "toMass" ? (
-        <Headline label={`Mass of ${nuclide}`} value={m.v} unit={m.u}
-          note={`Pure ${nuclide} only. Real material is a mixture of isotopes — see the note below.`} />
+      <CalcButton dirty={dirty} invalid={invalid} onClick={commit} />
+
+      {c.dir === "toMass" ? (
+        <Headline stale={dirty} label={`Mass of ${c.nuclide}`} value={m.v} unit={m.u}
+          note={`Pure ${c.nuclide} only. Real material is a mixture of isotopes — see the note below.`} />
       ) : (
-        <Headline label={`Activity of ${fmt(grams)} g of ${nuclide}`} value={convert(outBq, "Bq", actU, "activity")} unit={actU}
+        <Headline stale={dirty} label={`Activity of ${fmt(grams)} g of ${c.nuclide}`} value={convert(outBq, "Bq", c.actU, "activity")} unit={c.actU}
           note={`${fmt(outBq, 4)} Bq — ${fmt(convert(outBq, "Bq", "Ci", "activity"), 4)} Ci.`} />
       )}
 
@@ -87,9 +95,9 @@ export default function SpecificActivity() {
       </Warn>
 
       <SaveBar tool="specific-activity"
-        inputs={{ direction: dir, nuclide, act, actU, mass, massU }}
+        inputs={{ direction: c.dir, nuclide: c.nuclide, act: c.act, actU: c.actU, mass: c.mass, massU: c.massU }}
         outputs={{ specificActivity: n.sa_bq_g, grams: outGrams, bq: outBq }}
-        summary={`${nuclide} — ${dir === "toMass" ? `${fmt(act)} ${actU}` : `${fmt(mass)} ${massU}`}`} />
+        summary={`${c.nuclide} — ${c.dir === "toMass" ? `${fmt(c.act)} ${c.actU}` : `${fmt(c.mass)} ${c.massU}`}`} />
     </div>
   );
 }

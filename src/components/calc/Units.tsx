@@ -3,6 +3,8 @@ import { UNITS, convert, exposureToAirKerma, type Quantity } from "../../engine/
 import { Field, NumberInput, Select, RadioRow } from "../ui/Field";
 import { SaveBar } from "../ui/SaveBar";
 import { initialState, pick as pickState } from "../../lib/restore";
+import { useCommitted } from "../../lib/commit";
+import { CalcButton } from "../ui/CalcButton";
 import { fmt, Warn } from "../ui/Result";
 
 const QUANTITIES: { value: Quantity; label: string; hint: string }[] = [
@@ -24,8 +26,13 @@ export default function Units() {
   const pick = (nq: Quantity) => { setQ(nq); setFrom(Object.keys(UNITS[nq].u)[0]); };
   const safeFrom = units.includes(from) ? from : units[0];
 
+  /* 표는 **커밋된 값**에서 그린다 — 칸을 고쳐도 누르기 전까지 표는 직전 답이다. */
+  const { c, dirty, invalid, commit, keys } = useCommitted({ q, from: safeFrom, val });
+  const cUnits = Object.keys(UNITS[c.q].u);
+  const cFrom = cUnits.includes(c.from) ? c.from : cUnits[0];
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" {...keys}>
       <div>
         <span className="label">Quantity</span>
         <RadioRow name="Quantity" value={q} onChange={pick} options={QUANTITIES} />
@@ -40,15 +47,17 @@ export default function Units() {
         </Field>
       </div>
 
+      <CalcButton dirty={dirty} invalid={invalid} onClick={commit} verb="Convert" />
+
       {/* ★ 「어느 단위로 바꿀까」를 묻지 않는다 — 전부 한 번에 보여 주는 편이 빠르다.
           참고 사이트는 from/to 를 둘 다 고르게 하는데, 실제로는 표 하나면 끝난다. */}
-      <div className="card overflow-x-auto">
+      <div className={`card overflow-x-auto transition-opacity ${dirty ? "opacity-60" : ""}`}>
         <table>
           <thead><tr><th>Unit</th><th className="text-right">Value</th></tr></thead>
           <tbody>
-            {units.map((u) => {
-              const out = convert(Number.isFinite(val) ? val : 0, safeFrom, u, q);
-              const same = u === safeFrom;
+            {cUnits.map((u) => {
+              const out = convert(Number.isFinite(c.val) ? c.val : 0, cFrom, u, c.q);
+              const same = u === cFrom;
               return (
                 <tr key={u} className={same ? "bg-accent-soft/50" : ""}>
                   <td className={same ? "font-semibold" : ""}>{u}</td>
@@ -60,11 +69,11 @@ export default function Units() {
         </table>
       </div>
 
-      {q === "exposure" ? (
+      {c.q === "exposure" ? (
         <div className="card p-4">
           <p className="label mb-2">Exposure to air kerma</p>
           <p className="num text-[20px] font-semibold text-ink">
-            {fmt(exposureToAirKerma(convert(val, safeFrom, "C/kg", "exposure")) * 1000, 4)}
+            {fmt(exposureToAirKerma(convert(c.val, cFrom, "C/kg", "exposure")) * 1000, 4)}
             <span className="ml-1.5 text-[14px] font-normal text-ink-muted">mGy (air)</span>
           </p>
           <Warn>
@@ -75,7 +84,7 @@ export default function Units() {
         </div>
       ) : null}
 
-      {(q === "dose" || q === "equivalent") ? (
+      {(c.q === "dose" || c.q === "equivalent") ? (
         <Warn>
           Gray and sievert are <strong>never interchangeable by a factor</strong>. Going from absorbed
           dose to dose equivalent needs a radiation weighting factor that depends on the radiation type
@@ -84,9 +93,9 @@ export default function Units() {
       ) : null}
 
       <SaveBar tool="units"
-        inputs={{ quantity: q, unit: safeFrom, value: val }}
-        outputs={Object.fromEntries(units.map((x) => [x, convert(Number.isFinite(val) ? val : 0, safeFrom, x, q)]))}
-        summary={`${fmt(val)} ${safeFrom}`} />
+        inputs={{ quantity: c.q, unit: cFrom, value: c.val }}
+        outputs={Object.fromEntries(cUnits.map((x) => [x, convert(Number.isFinite(c.val) ? c.val : 0, cFrom, x, c.q)]))}
+        summary={`${fmt(c.val)} ${cFrom}`} />
     </div>
   );
 }

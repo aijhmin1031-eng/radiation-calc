@@ -4,6 +4,8 @@ import { convert } from "../../engine/units";
 import { Field, NumberInput, Select, RadioRow, Check } from "../ui/Field";
 import { SaveBar } from "../ui/SaveBar";
 import { initialState, pick as pickState } from "../../lib/restore";
+import { useCommitted } from "../../lib/commit";
+import { CalcButton } from "../ui/CalcButton";
 import { Headline, Rows, fmt, Warn } from "../ui/Result";
 
 type Mode = "scaler" | "scan";
@@ -32,30 +34,34 @@ export default function Mda() {
   const [obsEff, setObsEff] = useState(pickState(restored, "obsEff", 50));
   const [dPrime, setDPrime] = useState(pickState(restored, "dPrime", 1.38));
 
-  const kk = Number(k);
-  const totalEff = (eff / 100) * (useSurface ? surfEff / 100 : 1);
+  /* ★ 답은 **커밋된 스냅숏**(c)에서만 나온다 — 칸 상태는 그리는 데만 쓴다. */
+  const { c, dirty, invalid, commit, keys } = useCommitted({
+    mode, k, bgCpm, timeS, eff, useSurface, surfEff, areaCm2, unit, speed, width, obsEff, dPrime });
+
+  const kk = Number(c.k);
+  const totalEff = (c.eff / 100) * (c.useSurface ? c.surfEff / 100 : 1);
 
   const fixed = useMemo(() => minimumDetectableActivity({
-    bgCps: bgCpm / 60, countTimeS: timeS, efficiency: totalEff,
-    sampleQty: useSurface ? areaCm2 / 100 : 1, k: kk,
-  }), [bgCpm, timeS, totalEff, areaCm2, useSurface, kk]);
+    bgCps: c.bgCpm / 60, countTimeS: c.timeS, efficiency: totalEff,
+    sampleQty: c.useSurface ? c.areaCm2 / 100 : 1, k: kk,
+  }), [c.bgCpm, c.timeS, totalEff, c.areaCm2, c.useSurface, kk]);
 
   const scan = useMemo(() => scanMdc({
-    bgCps: bgCpm / 60, scanSpeedCmPerS: speed, detectorWidthCm: width,
-    efficiency: eff / 100, surfaceEfficiency: surfEff / 100,
-    probeAreaCm2: areaCm2, observerEff: obsEff / 100, dPrime,
-  }), [bgCpm, speed, width, eff, surfEff, areaCm2, obsEff, dPrime]);
+    bgCps: c.bgCpm / 60, scanSpeedCmPerS: c.speed, detectorWidthCm: c.width,
+    efficiency: c.eff / 100, surfaceEfficiency: c.surfEff / 100,
+    probeAreaCm2: c.areaCm2, observerEff: c.obsEff / 100, dPrime: c.dPrime,
+  }), [c.bgCpm, c.speed, c.width, c.eff, c.surfEff, c.areaCm2, c.obsEff, c.dPrime]);
 
   const asUnit = (bqOrBqCm2: number) => {
-    if (unit === "Bq") return bqOrBqCm2;
-    if (unit === "dpm") return bqOrBqCm2 * 60;
-    if (unit === "pCi") return convert(bqOrBqCm2, "Bq", "pCi", "activity");
-    if (unit === "Bq/cm²") return bqOrBqCm2 / (useSurface ? 1 : areaCm2);
-    return bqOrBqCm2 * 60 * 100 / (useSurface ? areaCm2 : areaCm2);
+    if (c.unit === "Bq") return bqOrBqCm2;
+    if (c.unit === "dpm") return bqOrBqCm2 * 60;
+    if (c.unit === "pCi") return convert(bqOrBqCm2, "Bq", "pCi", "activity");
+    if (c.unit === "Bq/cm²") return bqOrBqCm2 / (c.useSurface ? 1 : c.areaCm2);
+    return bqOrBqCm2 * 60 * 100 / (c.useSurface ? c.areaCm2 : c.areaCm2);
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" {...keys}>
       <div>
         <span className="label">Measurement type</span>
         <RadioRow name="Mode" value={mode} onChange={setMode} options={[
@@ -116,16 +122,18 @@ export default function Mda() {
 
       <Field label="Report the answer in"><Select value={unit} onChange={setUnit} options={OUT as unknown as typeof OUT[number][]} /></Field>
 
-      {mode === "scaler" ? (
+      <CalcButton dirty={dirty} invalid={invalid} onClick={commit} />
+
+      {c.mode === "scaler" ? (
         <>
-          <Headline label="Minimum detectable activity" value={asUnit(fixed.mda)} unit={unit}
-            note={`Anything below this cannot be reliably distinguished from background in a ${fmt(timeS)} s count.`} />
+          <Headline stale={dirty} label="Minimum detectable activity" value={asUnit(fixed.mda)} unit={c.unit}
+            note={`Anything below this cannot be reliably distinguished from background in a ${fmt(c.timeS)} s count.`} />
           <Rows rows={[
-            { k: "Background counts collected", v: fmt(fixed.bgCounts, 5), hint: `${fmt(bgCpm)} cpm × ${fmt(timeS)} s` },
+            { k: "Background counts collected", v: fmt(fixed.bgCounts, 5), hint: `${fmt(c.bgCpm)} cpm × ${fmt(c.timeS)} s` },
             { k: "Critical level L_C", v: `${fmt(fixed.lc, 4)} counts`, hint: "the decision threshold — above it you report a detection" },
             { k: "Detection limit L_D", v: `${fmt(fixed.ld, 4)} counts`, hint: "the true amount that will exceed L_C with the chosen confidence" },
             { k: "Total efficiency used", v: `${fmt(totalEff * 100, 4)}%` },
-            { k: "Counting four times as long", v: `${fmt(asUnit(minimumDetectableActivity({ bgCps: bgCpm / 60, countTimeS: timeS * 4, efficiency: totalEff, sampleQty: useSurface ? areaCm2 / 100 : 1, k: kk }).mda), 4)} ${unit}`,
+            { k: "Counting four times as long", v: `${fmt(asUnit(minimumDetectableActivity({ bgCps: c.bgCpm / 60, countTimeS: c.timeS * 4, efficiency: totalEff, sampleQty: c.useSurface ? c.areaCm2 / 100 : 1, k: kk }).mda), 4)} ${c.unit}`,
               hint: "MDA improves only with the square root of time" },
           ]} />
           <Warn>
@@ -137,14 +145,14 @@ export default function Mda() {
         </>
       ) : (
         <>
-          <Headline label="Scan MDC" value={scan.scanMdc} unit="Bq/cm²"
-            note={`At ${fmt(speed)} cm/s the probe sees any one spot for ${fmt(scan.observationIntervalS, 3)} s.`} />
+          <Headline stale={dirty} label="Scan MDC" value={scan.scanMdc} unit="Bq/cm²"
+            note={`At ${fmt(c.speed)} cm/s the probe sees any one spot for ${fmt(scan.observationIntervalS, 3)} s.`} />
           <Rows rows={[
-            { k: "Observation interval", v: `${fmt(scan.observationIntervalS, 4)} s`, hint: `${fmt(width)} cm ÷ ${fmt(speed)} cm/s` },
+            { k: "Observation interval", v: `${fmt(scan.observationIntervalS, 4)} s`, hint: `${fmt(c.width)} cm ÷ ${fmt(c.speed)} cm/s` },
             { k: "Ideal MDCR", v: `${fmt(scan.mdcr, 4)} cpm`, hint: "what a perfect observer would notice" },
-            { k: "MDCR with observer efficiency", v: `${fmt(scan.mdcrSurveyor, 4)} cpm`, hint: `divided by √${fmt(obsEff / 100, 2)}` },
+            { k: "MDCR with observer efficiency", v: `${fmt(scan.mdcrSurveyor, 4)} cpm`, hint: `divided by √${fmt(c.obsEff / 100, 2)}` },
             { k: "In dpm/100 cm²", v: fmt(scan.scanMdc * 60 * 100, 4) },
-            { k: "Halving the scan speed", v: `${fmt(scanMdc({ bgCps: bgCpm / 60, scanSpeedCmPerS: speed / 2, detectorWidthCm: width, efficiency: eff / 100, surfaceEfficiency: surfEff / 100, probeAreaCm2: areaCm2, observerEff: obsEff / 100, dPrime }).scanMdc, 4)} Bq/cm²`,
+            { k: "Halving the scan speed", v: `${fmt(scanMdc({ bgCps: c.bgCpm / 60, scanSpeedCmPerS: c.speed / 2, detectorWidthCm: c.width, efficiency: c.eff / 100, surfaceEfficiency: c.surfEff / 100, probeAreaCm2: c.areaCm2, observerEff: c.obsEff / 100, dPrime: c.dPrime }).scanMdc, 4)} Bq/cm²`,
               hint: "scanning slower is the cheapest way to lower the MDC" },
           ]} />
           <Warn>
@@ -156,9 +164,9 @@ export default function Mda() {
       )}
 
       <SaveBar tool="mda"
-        inputs={{ mode, k, bgCpm, timeS, eff, useSurface, surfEff, areaCm2, unit, speed, width, obsEff, dPrime }}
-        outputs={mode === "scaler" ? { ...fixed } : { ...scan }}
-        summary={`${mode === "scaler" ? `${fmt(timeS)} s count` : `scan ${fmt(speed)} cm/s`} — ${fmt(bgCpm)} cpm bg`} />
+        inputs={{ mode: c.mode, k: c.k, bgCpm: c.bgCpm, timeS: c.timeS, eff: c.eff, useSurface: c.useSurface, surfEff: c.surfEff, areaCm2: c.areaCm2, unit: c.unit, speed: c.speed, width: c.width, obsEff: c.obsEff, dPrime: c.dPrime }}
+        outputs={c.mode === "scaler" ? { ...fixed } : { ...scan }}
+        summary={`${c.mode === "scaler" ? `${fmt(c.timeS)} s count` : `scan ${fmt(c.speed)} cm/s`} — ${fmt(c.bgCpm)} cpm bg`} />
     </div>
   );
 }

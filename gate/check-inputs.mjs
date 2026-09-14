@@ -35,7 +35,7 @@ const PORT = srv.address().port;
 const TOOLS = ["gamma-shielding", "decay", "mda", "units", "alara", "beta", "specific-activity"];
 const BAD = ["", "-5", "abc", "-0.001"];
 const fail = [];
-let checked = 0, reasons = 0;
+let checked = 0, reasons = 0, blocked = 0;
 
 const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
 const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
@@ -75,6 +75,22 @@ for (const tool of TOOLS) {
         s.call(el, v); el.dispatchEvent(new Event("input", { bubbles: true }));
       }, bad);
       await page.waitForTimeout(180);
+
+      /* ★★ **계산 단추를 실제로 누른다**(2026-09-14 계산 단추 도입과 함께 고쳤다).
+         답이 커밋된 스냅숏에서만 나오게 된 뒤로, 값만 넣고 마는 검사는 **아무것도 못 본다** —
+         나쁜 값이 엔진에 닿지 않으니 답이 그대로여서 늘 통과한다. 막는 것은 `NumberInput` 의
+         범위 검사 하나인데, 그것이 깨지면 단추가 눌리고 나쁜 답이 커밋된다.
+         그래서 **막히지 않은 단추는 누르고** 그 결과를 본다. 막혔으면 그 자체가 올바른 방어다. */
+      const btn = await page.$("main button[aria-disabled='true']");
+      if (!btn) {
+        const calc = await page.$$("main button");
+        for (const b of calc) {
+          const t = (await b.evaluate((e) => e.textContent || "")).trim();
+          if (/^(Calculate|Convert)$/.test(t)) { await b.click(); break; }
+        }
+        await page.waitForTimeout(220);
+      } else { blocked++; }
+
       const r = await read();
       checked++;
 
@@ -93,7 +109,7 @@ for (const tool of TOOLS) {
 
 await browser.close(); srv.close();
 
-console.log(`\n   잰 조합 ${checked}건 · 이유가 화면에 뜬 경우 ${reasons}건`);
+console.log(`\n   잰 조합 ${checked}건 · 이유가 화면에 뜬 경우 ${reasons}건 · 단추가 막은 경우 ${blocked}건`);
 if (fail.length) {
   console.error(`\n❌ 입력 방어 ${fail.length}건 실패`);
   fail.slice(0, 25).forEach((f) => console.error("   " + f));
@@ -104,4 +120,9 @@ if (reasons === 0) {
   console.error("\n❌ 무효 입력에 이유가 한 번도 뜨지 않았다 — 검사가 헛돌고 있다");
   process.exit(1);
 }
-console.log("\n✅ 입력 방어 — 음수 답 0 · 기계값 누출 0 · 「모름」을 「무제한」으로 답하지 않음");
+/* 나쁜 값을 넣었는데 단추가 한 번도 안 막혔다면 방어가 통째로 빠진 것이다 */
+if (blocked === 0) {
+  console.error("\n❌ 무효 입력에 계산 단추가 한 번도 막지 않았다 — 방어가 빠졌다");
+  process.exit(1);
+}
+console.log(`\n✅ 입력 방어 — 음수 답 0 · 기계값 누출 0 · 「모름」을 「무제한」으로 답하지 않음 · 단추가 ${blocked}번 막았다`);

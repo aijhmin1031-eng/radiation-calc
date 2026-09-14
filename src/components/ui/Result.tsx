@@ -16,11 +16,14 @@ const sup = (n: number) =>
   (n < 0 ? SUP[0] : "") + String(Math.abs(n)).split("").map((d) => SUP[Number(d) + 1]).join("");
 
 /** 으뜸 답 — 화면에서 제일 큰 것 하나. 「무엇을 보러 왔는가」가 여기 있어야 한다. */
-export function Headline({ value, unit, label, note }: {
-  value: number | string; unit?: string; label: string; note?: ReactNode;
+/** ★ `stale` — 칸은 고쳤는데 아직 계산을 안 누른 상태. 답을 지우지 않고 **낡았다고 말한다.**
+ *  지우면 화면이 비어 고장으로 읽히고, 그대로 두면 지금 칸의 답으로 오해된다. */
+export function Headline({ value, unit, label, note, stale }: {
+  value: number | string; unit?: string; label: string; note?: ReactNode; stale?: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-accent/40 bg-accent-soft px-4 py-4">
+    <div className={`rounded-lg border px-4 py-4 transition-opacity ${
+      stale ? "border-line bg-panel opacity-60" : "border-accent/40 bg-accent-soft"}`}>
       <p className="label mb-1.5">{label}</p>
       <p className="flex flex-wrap items-baseline gap-1.5">
         <span className="num text-[30px] font-semibold leading-none text-ink sm:text-[36px]">

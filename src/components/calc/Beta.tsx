@@ -9,6 +9,8 @@ import { NuclidePicker } from "../ui/NuclidePicker";
 import { Field, NumberInput, Select, RadioRow } from "../ui/Field";
 import { SaveBar } from "../ui/SaveBar";
 import { initialState, pick as pickState } from "../../lib/restore";
+import { useCommitted } from "../../lib/commit";
+import { CalcButton } from "../ui/CalcButton";
 import { Headline, Rows, fmt, Warn } from "../ui/Result";
 
 const N = nuclides as unknown as NuclideMap;
@@ -35,20 +37,23 @@ export default function Beta() {
   const [act, setAct] = useState(pickState(restored, "act", 37)); const [actU, setActU] = useState(pickState(restored, "actU", "MBq"));
   const [massKg, setMassKg] = useState(pickState(restored, "massKg", 1));
 
-  const n = N[nuclide];
-  const abs = ABSORBERS.find((a) => a.value === absK)!;
+  /* ★ 답은 **커밋된 스냅숏**(c)에서만 나온다. 칸 상태(nuclide·thick…)는 그리는 데만 쓴다. */
+  const { c, dirty, invalid, commit, keys } = useCommitted({ mode, nuclide, absK, thick, act, actU, massKg });
+
+  const n = N[c.nuclide];
+  const abs = ABSORBERS.find((a) => a.value === c.absK)!;
   const eMax = (n.beta_max_keV ?? 0) / 1000;
   const eMean = (n.beta_mean_keV ?? 0) / 1000;
   const hasBeta = !!n.beta?.length && eMax > 0;
 
   const rangeGcm2 = useMemo(() => betaRange(eMax), [eMax]);
   const rangeCm = useMemo(() => betaRangeCm(eMax, abs.rho), [eMax, abs.rho]);
-  const tGcm2 = thick * abs.rho / 10;               // mm → g/cm²
+  const tGcm2 = c.thick * abs.rho / 10;               // mm → g/cm²
   const trans = useMemo(() => betaTransmission(eMax, tGcm2), [eMax, tGcm2]);
   const needMm = rangeCm * 10;
 
-  const bq = convert(act, actU, "Bq", "activity");
-  const conc = massKg > 0 ? bq / massKg : NaN;
+  const bq = convert(c.act, c.actU, "Bq", "activity");
+  const conc = c.massKg > 0 ? bq / c.massKg : NaN;
   const dInf = infiniteMediumDoseRate(n.beta_mean_keV ?? 0, conc);
   const brems = ABSORBERS.map((a) => ({ ...a, f: bremsstrahlungYield(a.z, eMax) }));
 
@@ -62,7 +67,7 @@ export default function Beta() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" {...keys}>
       <div>
         <span className="label">What do you want to find</span>
         <RadioRow name="Mode" value={mode} onChange={setMode} options={[
@@ -80,15 +85,17 @@ export default function Beta() {
             <Field label="Thickness"><NumberInput value={Number.isFinite(thick) ? thick : ""} onChange={setThick} min={0} suffix="mm" /></Field>
           </div>
 
-          <Headline label={`${abs.label} needed to stop ${nuclide} beta`} value={needMm} unit="mm"
-            note={`Full range of a ${fmt(eMax * 1000, 4)} keV beta. At ${fmt(thick)} mm the transmission is ${trans === 0 ? "zero — fully stopped" : `${fmt(trans * 100, 3)}%`}.`} />
+          <CalcButton dirty={dirty} invalid={invalid} onClick={commit} />
+
+          <Headline stale={dirty} label={`${abs.label} needed to stop ${c.nuclide} beta`} value={needMm} unit="mm"
+            note={`Full range of a ${fmt(eMax * 1000, 4)} keV beta. At ${fmt(c.thick)} mm the transmission is ${trans === 0 ? "zero — fully stopped" : `${fmt(trans * 100, 3)}%`}.`} />
 
           <Rows rows={[
             { k: "Maximum beta energy", v: `${fmt(n.beta_max_keV ?? 0, 5)} keV` },
             { k: "Mean beta energy", v: `${fmt(n.beta_mean_keV ?? 0, 5)} keV`, hint: "dose follows the mean, not the maximum" },
             { k: "Range (mass thickness)", v: `${fmt(rangeGcm2, 4)} g/cm²`, hint: "Katz–Penfold — independent of material" },
             { k: `Range in ${abs.label}`, v: `${fmt(needMm, 4)} mm` },
-            { k: "Your absorber", v: `${fmt(tGcm2, 4)} g/cm²`, hint: `${fmt(thick)} mm × ${abs.rho} g/cm³` },
+            { k: "Your absorber", v: `${fmt(tGcm2, 4)} g/cm²`, hint: `${fmt(c.thick)} mm × ${abs.rho} g/cm³` },
             { k: "Transmission", v: trans === 0 ? "0 — stopped" : `${fmt(trans * 100, 3)}%` },
           ]} />
 
@@ -97,7 +104,7 @@ export default function Beta() {
               <thead><tr><th>Absorber</th><th className="text-right">Thickness to stop</th><th className="text-right">Bremsstrahlung</th></tr></thead>
               <tbody>
                 {brems.map((a) => (
-                  <tr key={a.value} className={a.value === absK ? "bg-accent-soft/50" : ""}>
+                  <tr key={a.value} className={a.value === c.absK ? "bg-accent-soft/50" : ""}>
                     <td>{a.label}</td>
                     <td className="num text-right">{fmt(betaRangeCm(eMax, a.rho) * 10, 3)} mm</td>
                     <td className="num text-right">{fmt(a.f * 100, 3)}%</td>
@@ -125,7 +132,9 @@ export default function Beta() {
             </Field>
           </div>
 
-          <Headline label="Infinite-medium dose rate" value={dInf * 1000} unit="mGy/h"
+          <CalcButton dirty={dirty} invalid={invalid} onClick={commit} />
+
+          <Headline stale={dirty} label="Infinite-medium dose rate" value={dInf * 1000} unit="mGy/h"
             note="Exact by energy conservation — every beta deposits its energy locally. This is the dose inside a large uniformly contaminated volume." />
 
           <Rows rows={[
@@ -146,9 +155,9 @@ export default function Beta() {
       )}
 
       <SaveBar tool="beta"
-        inputs={{ mode, nuclide, absorber: absK, thick, act, actU, massKg }}
+        inputs={{ mode: c.mode, nuclide: c.nuclide, absorber: c.absK, thick: c.thick, act: c.act, actU: c.actU, massKg: c.massKg }}
         outputs={{ rangeGcm2, rangeCm, transmission: trans, eMaxKeV: n.beta_max_keV, eMeanKeV: n.beta_mean_keV, infiniteMediumGyPerH: dInf }}
-        summary={`${nuclide} in ${abs.label}`} />
+        summary={`${c.nuclide} in ${abs.label}`} />
     </div>
   );
 }
