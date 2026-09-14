@@ -41,7 +41,13 @@ const full = `${title} · ${SITE_NAME}`;
             **lab 을 고르는 자리는 우산이다** — 잠금장치가 그리로 보낸다.
             여기에 두면 ① 다른 두 lab 에는 없어 불균형이고 ② lab 이 늘 때마다
             세 머리글을 다 고쳐야 하며 ③ 잠금장치와 같은 말을 두 번 한다. */}
+        {/* ★ **도구 목록으로 돌아가는 칸이 없었다**(2026-09-14 소유주 지적
+            「radcalc 상단 메뉴에 다시 첫 계산도구 선택하는 화면으로 못 돌아가잖아」).
+            허브로 가는 길이 로고 글자와 빵부스러기 둘뿐이었는데 **둘 다 눈에 안 띄는 자리**다.
+            도구를 고르는 것은 이 lab 에서 가장 자주 하는 이동이므로 첫 칸을 준다. */}
         <nav class="ml-auto flex flex-wrap gap-x-3 gap-y-1 text-[13px]">
+          <a href={u("/")} aria-current={here === u("/") ? "page" : undefined}
+             class:list={["hover:text-ink", here === u("/") ? "font-semibold text-ink" : "text-ink-muted"]}>Calculators</a>
           <a href={u("/saved/")} class="text-ink-muted hover:text-ink">Saved</a>
           <a href={u("/methods/")} class="text-ink-muted hover:text-ink">Methods</a>
         </nav>

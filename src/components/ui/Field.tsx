@@ -41,8 +41,14 @@ export function NumberInput({ value, onChange, step, min = 0, max, suffix, ...re
     : draftNum < min ? (min === 0 ? "Cannot be negative." : `Must be at least ${min}.`)
     : `Must be at most ${max}.`;
 
+  /* ★ 숫자 칸에 **폭 상한**을 둔다(2026-09-14 실측). 세 칸 구성 전에는 활성도 한 칸이
+     **1036px** 였고, 세 칸으로 좁힌 뒤에도 격자 밖 단독 칸이 542px 였다. 「1」을 넣는 상자가
+     화면 가로를 먹으면 **여기에 많이 써야 하는 것**으로 읽힌다 — 칸은 들어올 값의 크기로 짓는다.
+     ★ 고르는 칸(Select)에는 걸지 않는다 — 보기 글자가 길어 넓은 편이 낫다.
+     ★ **좁은 화면(sm 미만)에는 걸지 않는다** — 옆의 Select 는 전폭인데 숫자 칸만 256px 이면
+       줄이 들쭉날쭉해 보인다(실측 스크린숏으로 잡았다). 거기서는 전폭이 오히려 단정하다. */
   return (
-    <span className="relative block">
+    <span className="relative block sm:max-w-[16rem]">
       <span className="relative block">
         <input
           {...rest}
