@@ -1,0 +1,60 @@
+---
+import ToolPage from "../components/ToolPage.astro";
+import Units from "../components/calc/Units.tsx";
+---
+<ToolPage slug="units">
+  <Units slot="tool" client:only="react" />
+  <Fragment slot="prose">
+    <h2>Why conversions go wrong</h2>
+    <p>
+      Most conversion mistakes in radiation protection are not arithmetic. They happen when two
+      numbers that look interchangeable describe different physical quantities. A becquerel counts
+      nuclear transformations per second. A gray counts joules deposited per kilogram. A sievert is a
+      gray multiplied by a weighting factor chosen for biological effect. A roentgen counts charge
+      liberated per kilogram of dry air. Converting inside any one of those is a fixed factor.
+      Converting between them is physics, and it needs information the number itself does not carry.
+    </p>
+    <p>
+      This converter therefore refuses to cross between quantities. Pick what you have, and every
+      unit of that quantity appears at once. The one bridge it does offer — exposure to air kerma —
+      is labelled as a physical step rather than a conversion, because it multiplies by W/e, the
+      mean energy expended per ion pair formed in dry air, 33.97 joules per coulomb.
+    </p>
+
+    <h2>The factors, and which are exact</h2>
+    <p>
+      The curie is defined as exactly 3.7 × 10¹⁰ becquerel. The rad is exactly 0.01 gray and the rem
+      exactly 0.01 sievert. The roentgen is exactly 2.58 × 10⁻⁴ coulomb per kilogram. None of these
+      is rounded, so a conversion between them loses nothing. The disintegration per minute is
+      exactly one sixtieth of a becquerel, which is why 6000 dpm per 100 cm² is exactly 1 Bq/cm² —
+      a coincidence worth memorising, because those two units appear on the same survey report more
+      often than any other pair.
+    </p>
+
+    <h3>Surface contamination</h3>
+    <p>
+      Surface units carry a hidden area. dpm/100 cm² is quoted per probe window, Bq/cm² per single
+      square centimetre, and Bq/m² per square metre. A factor of 100 between the first two and 10⁴
+      between the last two is the single most common error on a decommissioning record. If a number
+      looks two orders of magnitude out of place, this is usually why.
+    </p>
+
+    <h3>Gray and sievert</h3>
+    <p>
+      For photons and electrons the radiation weighting factor is 1, so a dose in gray and a dose
+      equivalent in sievert are numerically equal. That equality tempts people to treat the units as
+      synonyms. They are not. For alpha particles the factor is 20, for neutrons it varies with
+      energy from about 2 to 20, and applying the wrong one changes a compliance decision by more
+      than an order of magnitude. A converter cannot know which particle you mean, so it does not
+      guess.
+    </p>
+
+    <h2>What this tool does not do</h2>
+    <p>
+      It does not convert absorbed dose to effective dose, which additionally needs tissue weighting
+      factors and an exposure geometry. It does not convert air kerma to a personal dose equivalent
+      such as H*(10), which needs a conversion coefficient that depends on photon energy. Both of
+      those are answered by published coefficient sets, not by a fixed factor.
+    </p>
+  </Fragment>
+</ToolPage>

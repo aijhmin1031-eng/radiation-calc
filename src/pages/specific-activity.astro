@@ -1,0 +1,62 @@
+---
+import ToolPage from "../components/ToolPage.astro";
+import SpecificActivity from "../components/calc/SpecificActivity.tsx";
+---
+<ToolPage slug="specific-activity">
+  <SpecificActivity slot="tool" client:only="react" />
+  <Fragment slot="prose">
+    <h2>Where the number comes from</h2>
+    <p>
+      Specific activity follows from two facts and no measurements. A gram of a pure nuclide contains
+      N<sub>A</sub>/M atoms, where M is the molar mass in grams per mole. Each atom decays with
+      probability λ = ln 2 / T½ per second. Multiplying gives a = ln 2 · N<sub>A</sub> / (T½ · M)
+      becquerel per gram. The only inputs are the half-life and the molar mass, and the calculator
+      approximates the molar mass by the mass number, which is within 0.03% for every nuclide here.
+    </p>
+    <p>
+      The inverse relationship with half-life is the whole story. Tritium, with a half-life of 12.3
+      years, has a specific activity of 3.6 × 10¹⁴ Bq/g. Uranium-238, at 4.5 billion years, has
+      1.2 × 10⁴ Bq/g — ten orders of magnitude lower. A microgram of tritium is a serious source; a
+      kilogram of depleted uranium is a paperweight that happens to be radioactive.
+    </p>
+
+    <h2>Why plutonium and uranium need care</h2>
+    <p>
+      The calculator returns the mass of the <em>pure isotope</em>. Real nuclear material never is
+      one. Weapons-grade plutonium is mostly Pu-239 with several percent Pu-240 and smaller
+      quantities of Pu-238, Pu-241 and Am-241 grown in from Pu-241 decay. Reactor-grade plutonium has
+      far more of the heavier isotopes. Because Pu-238 and Pu-241 have specific activities thousands
+      of times higher than Pu-239, a few percent of them dominates the total activity of the mixture
+      even though they contribute almost nothing to its mass.
+    </p>
+    <p>
+      The consequence for accountancy is that grams and becquerels are not interchangeable through a
+      single number unless the isotopic vector is known. To convert a real sample, apply this
+      calculation to each isotope with its own mass fraction and add the activities. The reverse
+      direction — inferring a total mass from a measured total activity — requires the vector too,
+      and is much more sensitive to it.
+    </p>
+
+    <h3>Americium ingrowth</h3>
+    <p>
+      Pu-241 beta-decays with a 14-year half-life to Am-241, which is a strong 59.5 keV photon
+      emitter. Plutonium that was almost purely an alpha and low-energy problem when it was
+      separated becomes a measurable gamma source over a couple of decades. Any mass-to-activity
+      figure for aged plutonium that omits the americium is wrong in a way that grows with time.
+    </p>
+
+    <h2>Practical uses</h2>
+    <p>
+      Three come up constantly. Converting a waste inventory between the mass basis used by a
+      chemical process and the activity basis used by a disposal limit. Checking whether a quoted
+      source strength is physically possible for the stated mass — a claim that fails this check is
+      usually a units error. And estimating the carrier mass in a tracer preparation, where the
+      radioactive atoms may be a vanishing fraction of the material actually present.
+    </p>
+    <p>
+      The last case is where intuition fails most often. A 37 MBq Tc-99m generator elution contains
+      about two nanograms of Tc-99m. Everything else in the vial is carrier, saline and the long-lived
+      Tc-99 ground state that the metastable state decays into.
+    </p>
+  </Fragment>
+</ToolPage>

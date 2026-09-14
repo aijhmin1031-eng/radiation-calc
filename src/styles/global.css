@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ★ 토큰을 **채널 삼값**으로 둔다 — 완성색(#hex)으로 두면 Tailwind 의 투명도 수식어
+   (`bg-accent/40`)가 빌드에서 통째로 실패한다. rgb(var(--x) / <alpha-value>) 로 받는다. */
+:root {
+  --c-ink: 28 29 32;
+  --c-ink-muted: 85 88 95;
+  --c-ink-faint: 139 143 152;
+  --c-surface: 251 251 250;
+  --c-panel: 255 255 255;
+  --c-line: 226 226 223;
+  --c-accent: 176 111 20;
+  --c-accent-soft: 253 243 227;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --c-ink: 232 232 230; --c-ink-muted: 164 167 174; --c-ink-faint: 116 120 127;
+    --c-surface: 23 24 26; --c-panel: 31 32 35; --c-line: 48 50 55;
+    --c-accent: 224 163 74; --c-accent-soft: 42 33 24;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --c-ink: 232 232 230; --c-ink-muted: 164 167 174; --c-ink-faint: 116 120 127;
+  --c-surface: 23 24 26; --c-panel: 31 32 35; --c-line: 48 50 55;
+  --c-accent: 224 163 74; --c-accent-soft: 42 33 24;
+  color-scheme: dark;
+}
+
+html { scroll-padding-top: 72px; }
+body { background: rgb(var(--c-surface)); color: rgb(var(--c-ink)); }
+a { color: inherit; }
+
+.num { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+/* 폼 — 손가락으로 누르는 크기를 기본으로 둔다(모바일 우선) */
+.field {
+  @apply w-full rounded-md border border-line bg-panel px-3 py-2 text-[15px] text-ink;
+  @apply focus:outline-none focus:border-accent;
+  min-height: 42px;
+}
+.field:focus { box-shadow: 0 0 0 3px rgb(var(--c-accent) / 0.28); }
+select.field { @apply pr-8; }
+.label { @apply block text-[12px] font-medium uppercase tracking-wide text-ink-faint mb-1; }
+.card { @apply rounded-lg border border-line bg-panel; }
+.btn {
+  @apply inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-panel;
+  @apply px-3 py-2 text-[14px] font-medium text-ink hover:bg-accent-soft;
+  min-height: 42px;
+}
+.btn-primary { @apply bg-accent-soft font-semibold; border-color: rgb(var(--c-accent) / 0.5); }
+
+/* 표 — 머리글 음영 + 행 사이 실선. 줄무늬는 쓰지 않는다(소유주 지시). */
+table { @apply w-full text-[14px] border-collapse; }
+thead th { @apply text-left font-semibold text-ink px-3 py-2 border-b border-line; background: rgb(var(--c-accent-soft) / 0.6); }
+tbody td { @apply px-3 py-2 border-b border-line text-ink-muted; }
+tbody td:first-child { @apply text-ink font-medium; }
+tbody tr:hover td { background: rgb(var(--c-accent-soft) / 0.35); }
+
+/* 본문 — 절 번호는 조판이 매긴다. 본문에 손으로 쓰지 않는다. */
+.prose-doc { counter-reset: h2sec; }
+.prose-doc h2 { @apply mt-10 mb-3 text-[20px] font-semibold text-ink; counter-increment: h2sec; counter-reset: h3sec; }
+.prose-doc h2::before { content: counter(h2sec) ". "; @apply text-ink-faint font-normal; }
+.prose-doc h3 { @apply mt-6 mb-2 text-[16px] font-semibold text-ink; counter-increment: h3sec; }
+.prose-doc h3::before { content: counter(h2sec) "." counter(h3sec) " "; @apply text-ink-faint font-normal; }
+.prose-doc p { @apply my-3; }
+.prose-doc strong { @apply text-ink font-semibold; }

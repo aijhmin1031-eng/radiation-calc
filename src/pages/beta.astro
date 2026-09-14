@@ -1,0 +1,73 @@
+---
+import ToolPage from "../components/ToolPage.astro";
+import Beta from "../components/calc/Beta.tsx";
+---
+<ToolPage slug="beta">
+  <Beta slot="tool" client:only="react" />
+  <Fragment slot="prose">
+    <h2>Maximum energy and mean energy do different jobs</h2>
+    <p>
+      A beta spectrum is continuous. The decay energy is shared between the electron and a neutrino,
+      so electrons emerge with every energy from zero up to a maximum set by the transition. The mean
+      is roughly a third of the maximum, though the exact ratio depends on the shape of the spectrum
+      and the nuclear charge.
+    </p>
+    <p>
+      Two numbers, two uses. <strong>Shielding follows the maximum</strong>, because a shield must stop
+      the fastest electron that will ever be emitted, not the average one. <strong>Dose follows the
+      mean</strong>, because dose is deposited energy and what is deposited is the average over many
+      decays. Using the maximum for dose overestimates by about a factor of three; using the mean for
+      shielding leaves a shield that most of the spectrum passes through.
+    </p>
+
+    <h2>Range, and why it is quoted per gram</h2>
+    <p>
+      Electron range is tabulated as a mass thickness in g/cm² rather than a distance, because to
+      first order a given mass of material stops electrons regardless of what the material is. The
+      Katz–Penfold relation, R = 0.412 E<sup>1.265 − 0.0954 ln E</sup> for energies from 0.01 to 3
+      MeV, is the standard empirical fit and is accurate to roughly 10%. Dividing by density converts
+      it to a thickness.
+    </p>
+    <p>
+      The consequence is that any material works if you use enough of it, and the practical choice is
+      about convenience and about what comes out the other side. Y-90, the highest-energy common beta
+      emitter at 2.28 MeV, needs about 11 mm of water, 9 mm of acrylic, 4 mm of aluminium or 1 mm of
+      lead. Below the full range, transmission through an absorber is roughly exponential, but the
+      exponential is only an approximation: past the range the transmission is exactly zero, and a
+      naive exponential never reaches zero. This calculator truncates it there.
+    </p>
+
+    <h2>Why lead is the wrong beta shield</h2>
+    <p>
+      Lead stops beta particles in the least thickness, which makes it the obvious choice and the
+      wrong one. Decelerating electrons radiate, and the fraction of the beta energy converted into
+      bremsstrahlung X-rays rises with the atomic number of the absorber. The thick-target
+      approximation, f ≈ 3.5 × 10⁻⁴ · Z · E<sub>max</sub>, puts lead an order of magnitude worse than
+      acrylic for the same beta.
+    </p>
+    <p>
+      The bremsstrahlung is a continuous X-ray spectrum reaching up to the full beta energy, with a
+      mean around a third of it, and it is far more penetrating than the beta it came from. You can
+      convert a shielding problem that a few millimetres of plastic would have solved into a photon
+      problem that needs centimetres of lead. The correct order is to stop the beta in a low-Z
+      absorber — acrylic, polyethylene, aluminium — and then, only if the residual bremsstrahlung
+      matters, add a high-Z layer outside it.
+    </p>
+
+    <h2>The dose rate offered here, and the one that is not</h2>
+    <p>
+      The infinite-medium dose rate is exact, and it is exact for a reason worth stating: if activity
+      is distributed uniformly through a volume large compared with the beta range, every emitted
+      electron deposits its energy inside that volume. Energy conservation then gives the dose rate
+      directly as the mean beta energy times the activity concentration. At a plane surface of a
+      semi-infinite medium it is exactly half, because nothing above the surface returns energy.
+    </p>
+    <p>
+      <strong>Skin dose from surface contamination is deliberately not calculated.</strong> It needs a
+      point kernel integrated over the actual source geometry, the air gap, any covering, and the
+      depth of the basal layer at 7 mg/cm². The answer is extremely sensitive to all of them, and a
+      single number presented without those inputs would be confidently wrong. Codes such as VARSKIN
+      exist for this and should be used for it.
+    </p>
+  </Fragment>
+</ToolPage>
