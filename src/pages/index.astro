@@ -5,25 +5,38 @@ import { TOOLS } from "../lib/tools";
 ---
 <Base title="Radiation protection calculators"
       description="Seven calculators for routine radiation protection work — dose rate and shielding, decay, detection limits, unit conversion, specific activity, beta shielding and job planning. Free, no sign-in.">
+  {/* ★ 머리는 **이름**이고 문장이 아니다(2026-09-14 실측으로 바꿨다).
+        전에는 h1 이 「The calculations you actually repeat…」 한 문장이었고, 그 아래
+        석 줄짜리 설명이 더 붙어 **첫 도구가 536px 에서 시작했다** — 390px 화면에서
+        일곱 중 **둘**만 보였다. 처음 온 사람은 무엇이 있는 곳인지 알기 전에 문장부터
+        해석해야 했다. 아래 「Why the constants are computed」 절이 같은 설명을 전문으로
+        들고 있으므로 머리에서 덜어내도 내용은 잃지 않는다. */}
   <h1 class="max-w-3xl text-[28px] font-semibold leading-tight tracking-tight text-ink sm:text-[36px]">
-    The calculations you actually repeat, with the data behind them shown.
+    Radiation protection calculators
   </h1>
-  <p class="mt-4 max-w-2xl text-[16px] leading-relaxed text-ink-muted">
-    Seven tools for routine radiation protection work. Every constant is computed from open primary
-    data — IAEA evaluated nuclear data and NIST attenuation coefficients — rather than copied from a
-    handbook table, so you can see which assumptions produced the number.
+  <p class="mt-3 max-w-2xl text-[16px] leading-relaxed text-ink-muted">
+    The calculations you actually repeat — with every constant computed from IAEA and NIST primary
+    data rather than copied from a handbook table, so you can see what produced the number.
   </p>
-  <p class="mt-3 text-[14px] text-ink-faint">
-    Free and open. No sign-in, no account, nothing you type leaves your browser.
+  <p class="mt-2 text-[14px] text-ink-faint">
+    Free. No sign-in, no account, nothing you type leaves your browser.
   </p>
 
-  <ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {TOOLS.map((t) => (
       <li class="card p-4 transition-colors hover:border-accent/50">
-        <a href={u(`/${t.slug}/`)} class="block no-underline">
-          <h2 class="text-[16px] font-semibold text-ink">{t.name}</h2>
-          <p class="mt-1.5 text-[14px] leading-snug text-ink-muted">{t.question}</p>
-          <p class="mt-2 text-[12px] leading-snug text-ink-faint">{t.blurb}</p>
+        {/* ★ 그림을 **글 옆**에 둔다 — 위에 띠로 얹으면 카드마다 68px 이 붙어
+            첫 화면에 서던 도구가 셋에서 둘로 준다(진입장벽 작업을 되돌리는 셈이다).
+            옆에 두면 글이 이미 56px 보다 높아 **카드 높이가 늘지 않는다**. */}
+        <a href={u(`/${t.slug}/`)} class="flex gap-3 no-underline">
+          <img src={u(`/img/tools/${t.slug}.webp`)} width="56" height="56" alt="" aria-hidden="true"
+               loading="lazy" decoding="async"
+               class="h-14 w-14 shrink-0 rounded-lg border border-line" />
+          <div class="min-w-0">
+            <h2 class="text-[16px] font-semibold text-ink">{t.name}</h2>
+            <p class="mt-1 text-[14px] leading-snug text-ink-muted">{t.question}</p>
+            <p class="mt-2 text-[12px] leading-snug text-ink-faint">{t.blurb}</p>
+          </div>
         </a>
       </li>
     ))}

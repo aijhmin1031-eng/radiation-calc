@@ -30,8 +30,11 @@ const { labName, labHref, umbrellaHref = "/" } = Astro.props;
 
 <style>
   /* ★ 블록 하나로 보이되 **두 목적지**다 — 위는 우산, 아래는 이 lab 의 홈. */
-  .lockup { display: flex; flex-direction: column; gap: 1px; line-height: 1.15; }
-  .lockup-top { display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit; }
+  .lockup { display: flex; flex-direction: column; line-height: 1.15; }
+  /* ★ 두 줄 모두 손가락 크기(24px)를 넘게 둔다 — 실측에서 22px·13px 이었다.
+     세로 여백으로 표적만 넓히고 **글자 크기와 줄 간격은 건드리지 않는다**
+     (머리글 높이 예산이 있다 — 여백이 겹쳐 보이지 않게 음수 마진으로 되돌린다). */
+  .lockup-top { display: flex; align-items: center; gap: 8px; min-height: 26px; text-decoration: none; color: inherit; }
   .lockup-mark { width: 24px; height: 24px; flex: none; color: rgb(var(--c-ink)); }
   .lockup-umbrella { font-size: 16px; font-weight: 650; letter-spacing: -0.012em; color: rgb(var(--c-ink)); }
   /* ★ lab 이름은 마크 폭(24) + 간격(8) 만큼 들여 우산 이름과 왼쪽을 맞춘다.
@@ -40,6 +43,7 @@ const { labName, labHref, umbrellaHref = "/" } = Astro.props;
   .lockup-lab {
     margin-left: 32px; font-size: 12px; font-weight: 550; letter-spacing: 0.005em;
     color: rgb(var(--c-ink-faint)); text-decoration: none;
+    display: inline-flex; align-items: center; min-height: 24px; margin-top: -3px;
   }
   .lockup-top:hover .lockup-umbrella, .lockup-lab:hover { text-decoration: underline; }
   .lockup-top:focus-visible, .lockup-lab:focus-visible { outline: 2px solid rgb(var(--c-accent)); outline-offset: 2px; }

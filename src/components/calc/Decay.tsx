@@ -7,6 +7,8 @@ import { NuclidePicker } from "../ui/NuclidePicker";
 import { Field, NumberInput, Select, RadioRow } from "../ui/Field";
 import { SaveBar } from "../ui/SaveBar";
 import { initialState, pick as pickState } from "../../lib/restore";
+import { useCommitted } from "../../lib/commit";
+import { CalcButton } from "../ui/CalcButton";
 import { Headline, Rows, fmt, Warn } from "../ui/Result";
 
 const N = nuclides as unknown as NuclideMap;
@@ -32,22 +34,25 @@ export default function Decay() {
   const [target, setTarget] = useState(pickState(restored, "target", 1));
   const [a1, setA1] = useState(pickState(restored, "a1", 18.5));
 
-  const n = N[nuclide];
+  /* ★ 답은 **커밋된 스냅숏**(c)에서만 나온다 — 칸을 고쳐도 누르기 전까지 움직이지 않는다. */
+  const { c, dirty, invalid, commit, keys } = useCommitted({ mode, nuclide, a0, unit, t, tu, target, a1 });
+
+  const n = N[c.nuclide];
   const T = n.t_half_s;
-  const seconds = t * TIME[tu];
+  const seconds = c.t * TIME[c.tu];
 
   const out = useMemo(() => {
-    if (mode === "remaining") {
-      const a = decayActivity(a0, T, seconds);
-      return { a, frac: a0 > 0 ? a / a0 : NaN, halves: seconds / T };
+    if (c.mode === "remaining") {
+      const a = decayActivity(c.a0, T, seconds);
+      return { a, frac: c.a0 > 0 ? a / c.a0 : NaN, halves: seconds / T };
     }
-    if (mode === "when") {
-      const s = elapsedFromRatio(target / a0, T);
+    if (c.mode === "when") {
+      const s = elapsedFromRatio(c.target / c.a0, T);
       return { s, halves: s / T };
     }
-    const th = halfLifeFromTwoPoints(a0, a1, seconds);
+    const th = halfLifeFromTwoPoints(c.a0, c.a1, seconds);
     return { th, halves: th > 0 ? seconds / th : NaN };
-  }, [mode, a0, a1, target, T, seconds]);
+  }, [c.mode, c.a0, c.a1, c.target, T, seconds]);
 
   const showTime = (s: number) =>
     !Number.isFinite(s) ? "—"
@@ -58,7 +63,7 @@ export default function Decay() {
       : `${fmt(s / TIME.y)} y`;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" {...keys}>
       <div>
         <span className="label">What do you want to find</span>
         <RadioRow name="Mode" value={mode} onChange={setMode} options={MODES} />
@@ -99,38 +104,40 @@ export default function Decay() {
         ) : null}
       </div>
 
-      {mode === "remaining" ? (
+      <CalcButton dirty={dirty} invalid={invalid} onClick={commit} />
+
+      {c.mode === "remaining" ? (
         <>
-          <Headline label="Activity remaining" value={out.a!} unit={unit}
+          <Headline stale={dirty} label="Activity remaining" value={out.a!} unit={c.unit}
             note={`${fmt((out.frac ?? 0) * 100, 3)}% of the starting activity — ${fmt(out.halves!, 3)} half-lives elapsed.`} />
           <Rows rows={[
             { k: "Half-life", v: `${n.hl} ${n.hl_unit}` },
-            { k: "Decayed away", v: `${fmt(a0 - out.a!, 4)} ${unit}` },
-            { k: "In becquerels", v: `${fmt(convert(out.a!, unit, "Bq", "activity"), 4)} Bq` },
+            { k: "Decayed away", v: `${fmt(c.a0 - out.a!, 4)} ${c.unit}` },
+            { k: "In becquerels", v: `${fmt(convert(out.a!, c.unit, "Bq", "activity"), 4)} Bq` },
             { k: "Decay mode", v: n.decay ?? "—" },
           ]} />
         </>
-      ) : mode === "when" ? (
+      ) : c.mode === "when" ? (
         <>
-          <Headline label="Time to reach the target" value={showTime(out.s!)}
-            note={target >= a0 ? "The target must be below the starting activity." :
+          <Headline stale={dirty} label="Time to reach the target" value={showTime(out.s!)}
+            note={c.target >= c.a0 ? "The target must be below the starting activity." :
               `${fmt(out.halves!, 3)} half-lives. Decay only — this ignores removal, dilution and ingrowth.`} />
           <Rows rows={[
             { k: "Half-life", v: `${n.hl} ${n.hl_unit}` },
-            { k: "Fraction remaining", v: `${fmt((target / a0) * 100, 3)}%` },
+            { k: "Fraction remaining", v: `${fmt((c.target / c.a0) * 100, 3)}%` },
             { k: "Reached on", v: Number.isFinite(out.s!) ? new Date(Date.now() + out.s! * 1000).toISOString().slice(0, 10) : "—" },
           ]} />
         </>
       ) : (
         <>
-          <Headline label="Half-life from your two measurements" value={showTime(out.th!)}
-            note={a1 >= a0 ? "The second measurement must be lower than the first."
-              : `Published value for ${nuclide}: ${n.hl} ${n.hl_unit}.`} />
+          <Headline stale={dirty} label="Half-life from your two measurements" value={showTime(out.th!)}
+            note={c.a1 >= c.a0 ? "The second measurement must be lower than the first."
+              : `Published value for ${c.nuclide}: ${n.hl} ${n.hl_unit}.`} />
           <Rows rows={[
             { k: "Published half-life", v: `${n.hl} ${n.hl_unit}` },
             { k: "Difference", v: Number.isFinite(out.th!) ? `${fmt((out.th! - T) / T * 100, 3)}%` : "—",
               hint: "Your result against the published value" },
-            { k: "Ratio measured", v: `${fmt(a1 / a0, 4)}` },
+            { k: "Ratio measured", v: `${fmt(c.a1 / c.a0, 4)}` },
           ]} />
           <Warn>
             Two points cannot separate decay from anything else that removed activity — leakage,
@@ -140,9 +147,9 @@ export default function Decay() {
       )}
 
       <SaveBar tool="decay"
-        inputs={{ mode, nuclide, a0, unit, t, tu, target, a1 }}
+        inputs={{ mode: c.mode, nuclide: c.nuclide, a0: c.a0, unit: c.unit, t: c.t, tu: c.tu, target: c.target, a1: c.a1 }}
         outputs={{ ...out }}
-        summary={`${nuclide} — ${fmt(a0)} ${unit}`} />
+        summary={`${c.nuclide} — ${fmt(c.a0)} ${c.unit}`} />
     </div>
   );
 }

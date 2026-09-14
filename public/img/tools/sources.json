@@ -1,0 +1,34 @@
+{
+  "model": "openai/gpt-image-2-0 (Pollo AI)",
+  "note": "프롬프트 정본은 scripts/make-tool-art.py 다. 다시 구우려면 POLLO_API_KEY 를 환경변수로 준다.",
+  "images": {
+    "units": {
+      "sha256": "c16728c63108f75730df33cb53f12f20662f5e970e977f034771af32c22f6f6f",
+      "bytes": 4608
+    },
+    "decay": {
+      "sha256": "6f624a6fd78c65ee34e26534bad0de654087600e053cb4bedd2cfea1b44cd3fe",
+      "bytes": 3918
+    },
+    "gamma-shielding": {
+      "sha256": "486efc7da58aad1dceebc02eefb85ad9fd7a6b228797b441e01e4ef406cbed70",
+      "bytes": 4456
+    },
+    "specific-activity": {
+      "sha256": "9ebf36e343b91c7d753beb287b2b1993cd9ad1ae4cdd98ffd1036fde379a2de3",
+      "bytes": 2340
+    },
+    "mda": {
+      "sha256": "646e84d00d5c5d9e466828c00f99e8e68bf0485239e2a343b937132ac0abf20b",
+      "bytes": 4180
+    },
+    "beta": {
+      "sha256": "72b21ea6f8bfe6f161aafc39eed2f1cefee62af42bbb21578ad62badb1392653",
+      "bytes": 1696
+    },
+    "alara": {
+      "sha256": "e55731a2ace5a13e7227be0c801a0c30992566a96490d7a48af29b44aeafd2ea",
+      "bytes": 3510
+    }
+  }
+}

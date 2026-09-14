@@ -1,0 +1,13 @@
+---
+import { TOOL_ICON } from "../lib/tool-icons";
+interface Props { slug: string; class?: string }
+const { slug, class: cls = "" } = Astro.props;
+const d = TOOL_ICON[slug];
+---
+{/* ★ 색을 정하지 않는다 — `currentColor` 를 물려받아야 활성 칸(앰버)·어두운 판이 저절로 따라온다.
+    ★ `aria-hidden` — 바로 옆에 도구 이름이 글자로 있다. 표식이 이름을 한 번 더 읽으면 소음이다. */}
+{d ? (
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+       stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+       aria-hidden="true" focusable="false" class={`shrink-0 ${cls}`} set:html={d} />
+) : null}

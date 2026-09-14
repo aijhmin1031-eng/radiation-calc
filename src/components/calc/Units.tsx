@@ -24,6 +24,12 @@ export default function Units() {
   const pick = (nq: Quantity) => { setQ(nq); setFrom(Object.keys(UNITS[nq].u)[0]); };
   const safeFrom = units.includes(from) ? from : units[0];
 
+  /* ★ **이 도구만 실시간이다**(2026-09-14 소유주 결정). 다른 여섯은 계산 단추를 거친다 —
+     으뜸 답이 큰 숫자 하나라 「계산이 된 건지」가 안 보이기 때문이다.
+     환산표는 그 문제가 없다: **모든 단위가 한 번에 서 있고 넣은 단위 줄이 강조**되어 있어
+     화면과 입력이 어긋날 자리가 없다. 여기에 단추를 두면 「1 mCi 가 몇 Bq 인가」를 보는 데
+     손이 한 번 더 든다 — 이 lab 에서 진입장벽이 가장 낮아야 할 도구다. */
+
   return (
     <div className="space-y-5">
       <div>
