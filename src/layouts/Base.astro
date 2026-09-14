@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import { SITE_NAME, SITE_TAGLINE, UMBRELLA_NAME, DATA_SOURCES, u, canonical } from "../lib/site";
 import { TOOLS } from "../lib/tools";
+import { SAVE_ENABLED } from "../lib/features";
 import Lockup from "../components/brand/Lockup.astro";
 interface Props { title: string; description: string; noindex?: boolean }
 const { title, description, noindex } = Astro.props;
@@ -48,7 +49,10 @@ const full = `${title} · ${SITE_NAME}`;
         <nav class="ml-auto flex flex-wrap gap-x-3 gap-y-1 text-[13px]">
           <a href={u("/")} aria-current={here === u("/") ? "page" : undefined}
              class:list={["hover:text-ink", here === u("/") ? "font-semibold text-ink" : "text-ink-muted"]}>Calculators</a>
-          <a href={u("/saved/")} class="text-ink-muted hover:text-ink">Saved</a>
+          {/* ★ **없는 기능을 광고하지 않는다**(2026-09-14). 환경변수가 없으면 저장 막대가
+              통째로 사라지는데 이 칸만 남아 있었다 — 눌러 가면 저장하는 법을 설명하는 낱장이
+              나오고, 계산기로 돌아오면 저장 단추가 없다. 환경변수가 들어오면 저절로 켜진다. */}
+          {SAVE_ENABLED ? <a href={u("/saved/")} class="text-ink-muted hover:text-ink">Saved</a> : null}
           <a href={u("/methods/")} class="text-ink-muted hover:text-ink">Methods</a>
         </nav>
       </div>

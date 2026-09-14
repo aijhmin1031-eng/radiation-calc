@@ -38,3 +38,7 @@ jobs:
       #   따로 재야 한다(활성도 −5 가 −546.7 µSv/h 를 냈고 아무 게이트도 못 봤다)
       - name: 입력 방어 실측 (Chromium)
         run: node gate/check-inputs.mjs
+
+      # ★ 다른 게이트는 「있는 것」을 잰다 — 이것은 **없는 것을 있다고 말하는지**를 잰다
+      - name: 저장 기능의 말과 행동 (Chromium)
+        run: node gate/check-save.mjs

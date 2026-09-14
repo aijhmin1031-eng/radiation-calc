@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import SavedResults from "../components/SavedResults.tsx";
 import { u } from "../lib/site";
+import { SAVE_ENABLED } from "../lib/features";
 ---
 <Base title="Saved results"
       description="Look up calculations you saved to your account by reference number, name or nuclide, and reopen them with the original conditions restored."
@@ -10,10 +11,28 @@ import { u } from "../lib/site";
     <a href={u("/")} class="hover:text-ink">Calculators</a> <span aria-hidden>/</span> Saved results
   </nav>
   <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">Saved results</h1>
-  <p class="mt-2 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
-    Every saved calculation gets a reference number such as <span class="num">RC-GAM-20260914-0001</span> —
-    the calculator, the date and a serial number. Opening one restores the conditions exactly as they
-    were, so the result recomputes rather than being read back from a stored number.
-  </p>
-  <div class="mt-8"><SavedResults client:only="react" /></div>
+  {SAVE_ENABLED ? (
+    <>
+      <p class="mt-2 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+        Every saved calculation gets a reference number such as <span class="num">RC-GAM-20260914-0001</span> —
+        the calculator, the date and a serial number. Opening one restores the conditions exactly as they
+        were, so the result recomputes rather than being read back from a stored number.
+      </p>
+      <div class="mt-8"><SavedResults client:only="react" /></div>
+    </>
+  ) : (
+    /* ★ 기능이 없을 때 **설명을 그대로 두면 거짓말이 된다.** 참조번호가 붙는다고 읽고
+       계산기로 갔다가 저장 단추를 못 찾는다. 사실을 적고 갈 곳을 준다. */
+    <div class="mt-4 max-w-2xl">
+      <p class="text-[15px] leading-relaxed text-ink-muted">
+        Saving is not enabled on this deployment, so there is nothing to look up here yet.
+        Every calculator works in full without an account — nothing you type leaves your browser.
+      </p>
+      <p class="mt-4 text-[14px] text-ink-faint">
+        When saving is switched on, a calculation can be kept against a Google sign-in and reopened
+        later by reference number, with its conditions restored.
+      </p>
+      <a href={u("/")} class="btn mt-6 inline-block">Back to the calculators</a>
+    </div>
+  )}
 </Base>
