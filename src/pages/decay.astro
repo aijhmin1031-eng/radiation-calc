@@ -1,0 +1,70 @@
+---
+import ToolPage from "../components/ToolPage.astro";
+import Decay from "../components/calc/Decay.tsx";
+---
+<ToolPage slug="decay">
+  <Decay slot="tool" client:load />
+  <Fragment slot="prose">
+    <h2>The one equation</h2>
+    <p>
+      Radioactive decay is a first-order process: the number of transformations per second is
+      proportional to the number of atoms present, and nothing else. Temperature, pressure, chemical
+      form and dilution do not change it. That gives A(t) = A₀·e<sup>−λt</sup>, where λ is the decay
+      constant, ln 2 divided by the half-life. Every mode of this calculator is that equation solved
+      for a different unknown.
+    </p>
+    <p>
+      Because the exponent depends only on the ratio of elapsed time to half-life, it is often easier
+      to think in half-lives than in years. One half-life leaves 50%, two leave 25%, seven leave
+      under 1%, and ten leave about one part in a thousand. The rule of ten half-lives is why waste
+      storage periods are quoted the way they are.
+    </p>
+
+    <h2>Finding a half-life from two measurements</h2>
+    <p>
+      Two activity measurements separated by a known interval determine a half-life exactly:
+      T½ = ln 2 · Δt / ln(A₀/A₁). The arithmetic is trivial and the interpretation is not. The
+      calculation cannot distinguish decay from anything else that removed activity between the two
+      readings — a source leaking, a tracer adsorbing onto the container wall, a detector drifting,
+      or a geometry that changed when the sample was repositioned. All of those produce an apparent
+      half-life shorter than the true one.
+    </p>
+    <p>
+      For that reason the result here is shown against the published half-life for the nuclide you
+      picked. A difference of a few percent over a short interval usually means measurement
+      uncertainty. A difference of tens of percent usually means something other than decay is
+      happening, and the useful response is to look for it rather than to report a new half-life.
+    </p>
+
+    <h3>Choosing the interval</h3>
+    <p>
+      An interval much shorter than the half-life gives a ratio close to 1, and the logarithm of a
+      number close to 1 amplifies counting uncertainty enormously. An interval much longer than the
+      half-life drives the second measurement into background. The best precision comes from an
+      interval of roughly one to three half-lives, where the ratio is between about 2 and 8.
+    </p>
+
+    <h2>Decay chains and ingrowth</h2>
+    <p>
+      When a daughter is itself radioactive, its activity starts at zero, rises as the parent feeds
+      it, peaks, and then follows the parent down. The Bateman equations describe this, and the shape
+      depends on which half-life is longer. When the parent is much longer-lived, the daughter
+      reaches secular equilibrium and the two activities become equal — this is why a sealed Cs-137
+      source is really emitting the 662 keV photon of its daughter Ba-137m, and why a Sr-90 source
+      is a Y-90 beta source in practice.
+    </p>
+    <p>
+      The chain calculation here assumes a simple series with no branching. Real chains in the
+      uranium and thorium series branch, and a branching ratio has to be carried through each step.
+    </p>
+
+    <h2>What the answer assumes</h2>
+    <p>
+      A single nuclide, no ingrowth from a parent unless you build the chain explicitly, no losses
+      other than decay, and a half-life taken from the evaluated nuclear data. Half-life values
+      themselves carry uncertainty, and for a few nuclides different evaluations differ by enough to
+      matter — Sr-90 is quoted between about 28.8 and 28.9 years depending on the compilation, which
+      shifts a thirty-year projection by roughly half a percent.
+    </p>
+  </Fragment>
+</ToolPage>

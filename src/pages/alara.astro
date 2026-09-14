@@ -1,0 +1,73 @@
+---
+import ToolPage from "../components/ToolPage.astro";
+import Alara from "../components/calc/Alara.tsx";
+---
+<ToolPage slug="alara">
+  <Alara slot="tool" client:load />
+  <Fragment slot="prose">
+    <h2>Time, distance, shielding — in order of cost</h2>
+    <p>
+      The three controls are usually recited as equals. They are not. Distance is free and acts as the
+      square: stepping from one metre to two cuts the dose rate to a quarter, and the same job can
+      then be done in four times the time for the same dose. Time costs schedule but no money.
+      Shielding costs money, weight, and the handling dose incurred putting it in place — which is
+      why a lead blanket installed to save 50 µSv can cost more dose than it saves.
+    </p>
+    <p>
+      This ordering is why a planning calculation should start by asking how far back the work can be
+      done, and only then how long it will take and what needs shielding.
+    </p>
+
+    <h2>Where inverse square stops working</h2>
+    <p>
+      The 1/d² law is a statement about a point source radiating into open space. It is an excellent
+      approximation once you are several source dimensions away, and a poor one closer in. Near a line
+      source — a contaminated pipe run, a loaded transfer line — the falloff is closer to 1/d. Near a
+      large contaminated plane or a tank wall it is nearly flat, because moving back brings more of
+      the surface into view at the same time as it increases the distance to each part of it.
+      Backing away from a spill on the floor buys far less than the same step away from a sealed
+      source.
+    </p>
+    <p>
+      The practical test is whether the distance you are moving to is large compared with the size of
+      the source. If it is not, measure rather than calculate.
+    </p>
+
+    <h2>Stay time and its honest use</h2>
+    <p>
+      Stay time is the dose budget divided by the dose rate, and it is the simplest calculation in
+      radiation protection. Its failure mode is not arithmetic but the assumption that the dose rate
+      is constant. Rates change when a shield is opened, when a source is moved, when a worker leans
+      in, or when the job goes differently than planned. A stay time computed from a single
+      pre-job reading is a planning figure, not a control — the control is a dosimeter with an alarm.
+    </p>
+    <p>
+      Building in margin is normal practice: plan to a fraction of the budget so that an unexpected
+      rate does not immediately consume it.
+    </p>
+
+    <h2>Collective dose, and what it hides</h2>
+    <p>
+      Collective dose sums the dose over everyone involved, in person-millisieverts. It is the right
+      quantity for comparing two ways of doing the same job, and it is the quantity an ALARA
+      programme is usually judged on. It also contains an incentive worth being aware of: because it
+      adds people together, it can be reduced by using fewer workers for longer, which pushes
+      individual doses up while the total falls.
+    </p>
+    <p>
+      Optimisation that only looks at the collective figure will drift in that direction. The correct
+      practice is to check both — the collective total for comparing options, and the highest
+      individual dose against the individual constraint. The per-worker figure alongside the total in
+      this calculator is there for that reason.
+    </p>
+
+    <h3>Half- and tenth-value layers</h3>
+    <p>
+      A half-value layer halves the dose rate and therefore doubles the stay time; a tenth-value layer
+      divides by ten. Both are quoted at a specific photon energy and depend strongly on it, and
+      handbook values are broad-beam figures that already include scattered radiation. Narrow-beam
+      values computed from attenuation coefficients alone are thinner and will underestimate the
+      shielding a real installation needs.
+    </p>
+  </Fragment>
+</ToolPage>

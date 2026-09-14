@@ -1,0 +1,67 @@
+---
+import ToolPage from "../components/ToolPage.astro";
+import GammaShielding from "../components/calc/GammaShielding.tsx";
+---
+<ToolPage slug="gamma-shielding">
+  <GammaShielding slot="tool" client:load />
+  <Fragment slot="prose">
+    <h2>How the dose rate is obtained</h2>
+    <p>
+      Most calculators of this kind look up a gamma constant in a table. This one computes it. For
+      each photon line of the nuclide, the energy and the emission probability come from the
+      evaluated nuclear data, and the mass energy-absorption coefficient of air at that energy comes
+      from the NIST tables. Summing E·y·(µ<sub>en</sub>/ρ) over the lines and dividing by 4π gives
+      the air kerma rate constant directly. The result agrees with published constants to within
+      about 2% for the well-characterised nuclides.
+    </p>
+    <p>
+      Computing rather than copying has a practical benefit beyond provenance: the low-energy cutoff
+      becomes a control you can move. Published constants apply a cutoff, usually 20 keV, to exclude
+      photons that the source encapsulation absorbs before they reach anyone. That choice is
+      invisible in a table and decisive in the answer. For Am-241 a 10 keV cutoff instead of 20 keV
+      raises the constant by roughly a factor of eight, because the 17 keV neptunium L X-rays are
+      absorbed strongly in air and dominate the kerma integral while contributing nothing at a metre
+      through any real capsule.
+    </p>
+
+    <h2>Attenuation, and why it is not enough</h2>
+    <p>
+      A shield removes photons following exp(−µx), where µ is the linear attenuation coefficient —
+      the mass attenuation coefficient at that energy multiplied by the density. The calculator
+      applies this line by line, so a nuclide with a broad spectrum hardens correctly as it passes
+      through: the low-energy lines are removed preferentially and the average energy behind the
+      shield is higher than in front of it.
+    </p>
+    <p>
+      Exponential attenuation alone describes a narrow beam, where any photon that interacts is gone.
+      A real shield is a broad beam. Photons Compton-scatter inside the material, change direction,
+      and a substantial fraction still emerge toward the receptor. Ignoring them can underestimate
+      the dose rate behind a thick shield by a factor of several. The half-value layers this tool
+      reports are therefore narrow-beam values, noticeably thinner than the broad-beam figures in
+      shielding handbooks — 5.5 mm rather than about 6.5 mm of lead at 662 keV.
+    </p>
+
+    <h3>Buildup factors</h3>
+    <p>
+      The correction is the buildup factor B, the ratio of the true dose rate to the attenuated-only
+      dose rate. It grows with the number of mean free paths and depends on material, energy and
+      geometry. This calculator implements the two-parameter Berger form B = 1 + a·µx·e<sup>b·µx</sup>
+      but ships no coefficients. The most widely used tabulation, the geometric-progression fit, is
+      the body of a paid consensus standard, and reproducing it here would not be legitimate. Enter
+      a and b from the reference you are working to, and the tool will show what difference they make.
+    </p>
+    <p>
+      With attenuation only, the shield thickness this calculator returns is a lower bound. Treat it
+      as the starting point for a design, never as the design.
+    </p>
+
+    <h2>Geometry assumptions</h2>
+    <p>
+      A point source in air, radiating isotropically, with a receptor at a stated distance and the
+      shield between them. No room scatter, no skyshine, no source self-absorption, no capsule, and
+      no correction from air kerma to a dose quantity in tissue. Real sources are extended, and close
+      to an extended source the inverse-square falloff does not hold — near a large plane the dose
+      rate barely falls with distance at all.
+    </p>
+  </Fragment>
+</ToolPage>

@@ -75,3 +75,30 @@ test("빌드업을 켜면 선량률이 올라간다 — 끄면 과소평가라�
   const on  = shieldedDoseRate({ ...base, mode: "buildup", berger: { a: 1.5, b: 0.05 } });
   assert.ok(on.doseRate > off.doseRate, `켠 쪽 ${on.doseRate} > 끈 쪽 ${off.doseRate}`);
 });
+
+// ★ 현장 경험칙 — 실무자가 외우고 있는 값이라 어긋나면 바로 의심받는다.
+//   좁은빔(빌드업 없음) 계산이므로 2~3% 낮게 나오는 것이 정상이다.
+const MGY_PER_R = 2.58e-4 * 33.97 * 1e3;   // 1 R 의 공기커마 = 8.764 mGy
+test("현장 경험칙 — 1 Ci 를 1 m 에서", () => {
+  const at1m = (k: string) => shieldedDoseRate({
+    lines: N[k].lines, air: A.air, shield: A.lead, material: "lead",
+    activityGBq: 37, distanceM: 1, thicknessCm: 0, mode: "none", deltaKeV: 20,
+  }).doseRate / MGY_PER_R;
+  near(at1m("Co-60"), 1.32, 4, "Co-60 ≈ 1.32 R/h");
+  near(at1m("Cs-137"), 0.33, 4, "Cs-137 ≈ 0.33 R/h");
+});
+
+test("★ 조사선량률 환산 — mR/h 는 R/h 의 정확히 1000배다", () => {
+  const perR = 1 / MGY_PER_R, permR = 1e3 / MGY_PER_R;
+  near(permR / perR, 1000, 1e-9, "mR/h : R/h");
+  near(1 * MGY_PER_R, 8.764, 0.1, "1 R = 8.76 mGy(공기)");
+});
+
+test("반가층이 재료 순서대로 는다 (662 keV)", () => {
+  const hvl = (m: "lead" | "iron" | "concrete" | "water") =>
+    Math.LN2 / linearAttenuation(A[m], 0.6617, m) * 10;   // mm
+  assert.ok(hvl("lead") < hvl("iron"), `납 ${hvl("lead").toFixed(1)} < 철 ${hvl("iron").toFixed(1)}`);
+  assert.ok(hvl("iron") < hvl("concrete"), "철 < 콘크리트");
+  assert.ok(hvl("concrete") < hvl("water"), "콘크리트 < 물");
+  near(hvl("lead"), 5.5, 10, "납 반가층 ≈5.5 mm (좁은빔)");
+});

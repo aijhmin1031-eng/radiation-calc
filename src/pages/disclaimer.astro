@@ -1,0 +1,49 @@
+---
+import Base from "../layouts/Base.astro";
+import { SITE_NAME, UMBRELLA_NAME } from "../lib/site";
+---
+<Base title="Disclaimer" description={`What ${SITE_NAME} is for, what it is not for, and the limits of the results it produces.`}>
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">Disclaimer</h1>
+  <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <h2>These results do not replace professional work</h2>
+    <p>
+      {SITE_NAME} produces indicative figures for orientation and cross-checking. They
+      <strong> do not replace</strong> an accredited calibration, a shielding design, a dose
+      assessment, a radiation survey, or the judgement of a qualified radiation protection
+      professional. Decisions affecting the safety of people must rest on measurements and on
+      assessments made by someone competent and accountable for them.
+    </p>
+
+    <h2>Every result carries assumptions</h2>
+    <p>
+      Each calculator states the geometry and the physical assumptions it applies. Those assumptions
+      are simplifications of real situations. A point-source dose rate does not describe an extended
+      source. Attenuation without buildup underestimates. An empirical range formula carries about
+      ten percent uncertainty. Where an assumption dominates the answer, the calculator says so on
+      the page rather than in a footnote.
+    </p>
+
+    <h2>Data and accuracy</h2>
+    <p>
+      Nuclear and attenuation data come from IAEA and NIST as described under
+      <a href="/calc/methods/" class="underline">Methods and data</a>. Evaluated data are revised
+      over time and different compilations differ. The computed values are tested against published
+      figures and agree within the tolerances stated there, but no warranty of accuracy, fitness for
+      any purpose, or freedom from error is given.
+    </p>
+
+    <h2>No relationship with standards bodies</h2>
+    <p>
+      {SITE_NAME} and {UMBRELLA_NAME} are independent. They are not affiliated with, endorsed by, or
+      accredited by the IAEA, NIST, the IEC, the ISO, or any regulatory authority. References to
+      published standards are made for identification only, and no text or table from any standard is
+      reproduced here.
+    </p>
+
+    <h2>Liability</h2>
+    <p>
+      The site is provided as is. To the fullest extent permitted by law, no liability is accepted
+      for any loss or damage arising from the use of, or reliance on, anything produced by it.
+    </p>
+  </section>
+</Base>

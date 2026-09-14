@@ -1,0 +1,72 @@
+---
+import Base from "../layouts/Base.astro";
+import { DATA_SOURCES, SITE_NAME } from "../lib/site";
+---
+<Base title="Methods and data"
+      description="Where the nuclear and attenuation data come from, how the gamma constants are computed, how the results are validated, and the known limitations.">
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">Methods and data</h1>
+  <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <h2>Sources</h2>
+    <p>
+      Nuclear decay data — half-lives, decay modes, photon energies and emission probabilities, beta
+      maximum and mean energies with branch intensities, and alpha energies and intensities — are
+      retrieved from the IAEA Nuclear Data Section's Livechart interface, which serves the evaluated
+      nuclear structure data file (ENSDF). Photon mass attenuation coefficients and mass
+      energy-absorption coefficients are taken from the NIST X-Ray Mass Attenuation Coefficients
+      tables, covering 1 keV to 20 MeV, and are interpolated logarithmically in both energy and
+      coefficient.
+    </p>
+    <ul class="my-3 space-y-1">
+      {DATA_SOURCES.map((d) => <li><a href={d.url} rel="noopener" class="underline">{d.name}</a></li>)}
+    </ul>
+    <p>
+      Both datasets are harvested once and committed to the source repository rather than fetched at
+      runtime. Results therefore do not change between visits, the site does not depend on an
+      external service being up, and the data version is fixed and auditable.
+    </p>
+
+    <h2>Gamma constants</h2>
+    <p>
+      The air kerma rate constant is computed as Γ = Σ E<sub>i</sub>·y<sub>i</sub>·(µ<sub>en</sub>/ρ)<sub>air</sub>(E<sub>i</sub>) / 4π,
+      summed over photon lines above the low-energy cutoff δ. The default δ is 20 keV, the
+      conventional value used by published compilations. Because the sum is performed at calculation
+      time rather than baked into the data, δ is adjustable in the shielding calculator.
+    </p>
+
+    <h2>Validation</h2>
+    <p>
+      The engine is covered by 48 automated tests that run on every change. Computed gamma constants
+      are checked against published values for Cs-137, I-131, Cs-134, Co-60 and Ir-192 and agree
+      within 2%. Specific activities for Co-60, Cs-137, Pu-239, U-238, Am-241, Sr-90 and H-3 agree
+      within 1%. Beta maximum energies for fifteen nuclides and alpha principal energies for eight
+      agree within 1% and 0.01% respectively. Attenuation coefficients are checked at five points
+      against published values within 0.5%. Field rules of thumb are also tested: one curie of Co-60
+      at one metre computes to 1.29 R/h against the remembered 1.32, and Cs-137 to 0.326 against
+      0.33, the small deficit being the absence of buildup.
+    </p>
+    <p>
+      Analytic identities are tested rather than asserted — one half-life leaves exactly half, one
+      half-value layer transmits exactly 0.5, doubling the distance quarters the dose rate, and
+      quadrupling the count time improves the detection limit by exactly two.
+    </p>
+
+    <h2>Known limitations</h2>
+    <ul class="my-3 list-disc space-y-1 pl-5">
+      <li>Point-source geometry in air. No room scatter, skyshine, source self-absorption or capsule.</li>
+      <li>Attenuation without buildup is a narrow-beam result and underestimates behind thick shields.</li>
+      <li>Buildup coefficients are not supplied; the Berger form accepts values you provide.</li>
+      <li>Skin dose from surface contamination is not calculated.</li>
+      <li>Molar mass is approximated by mass number — within 0.03% for every nuclide included.</li>
+      <li>Decay chains assume a simple unbranched series.</li>
+      <li>Beta range uses the Katz–Penfold empirical fit, accurate to roughly 10%.</li>
+      <li>Bremsstrahlung yield uses a thick-target approximation and is an order-of-magnitude guide.</li>
+    </ul>
+
+    <h2>Corrections</h2>
+    <p>
+      If a value here disagrees with a source you trust, the disagreement is worth reporting — several
+      figures in the test suite exist because a check found an error during development. Contact
+      details are on the <a href="/radimeter/contact/" class="underline">contact page</a>.
+    </p>
+  </section>
+</Base>

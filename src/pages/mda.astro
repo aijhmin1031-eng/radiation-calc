@@ -1,0 +1,76 @@
+---
+import ToolPage from "../components/ToolPage.astro";
+import Mda from "../components/calc/Mda.tsx";
+---
+<ToolPage slug="mda">
+  <Mda slot="tool" client:load />
+  <Fragment slot="prose">
+    <h2>Three numbers that are not the same</h2>
+    <p>
+      Detection limits are widely quoted and widely confused, because three distinct quantities all
+      get called "the detection limit". Currie's framework separates them, and keeping them apart is
+      the difference between a defensible measurement report and an argument.
+    </p>
+    <p>
+      The <strong>critical level</strong> L<sub>C</sub> is a decision threshold applied after the
+      measurement. You compare a single net count against it and declare "detected" or "not
+      detected". It is set so that a blank sample exceeds it only with the false-positive rate you
+      chose — 5% at the usual k = 1.645. L<sub>C</sub> = k√(2B) when the background is counted for
+      the same time as the sample.
+    </p>
+    <p>
+      The <strong>detection limit</strong> L<sub>D</sub> is a property of the method decided before
+      the measurement. It is the true amount that will produce a result above L<sub>C</sub> with
+      your chosen confidence, so it accounts for false negatives as well: L<sub>D</sub> = k² + 2L<sub>C</sub>,
+      the familiar 2.71 + 4.65√B at k = 1.645.
+    </p>
+    <p>
+      The <strong>minimum detectable activity</strong> is L<sub>D</sub> converted into units someone
+      can act on, by dividing by the counting efficiency, the count time, and any yield or aliquot
+      factor. It is the only one of the three that can be compared against a regulatory limit.
+      Reporting L<sub>C</sub> as "the MDA" understates the method's capability by roughly a factor of
+      two and is the single most common error in this area.
+    </p>
+
+    <h2>What actually improves an MDA</h2>
+    <p>
+      Because L<sub>D</sub> grows with the square root of the background counts while the denominator
+      grows linearly with time, MDA improves only as 1/√t. Counting four times as long buys a factor
+      of two. Counting sixteen times as long buys a factor of four. This is why chasing a lower MDA
+      by extending count times reaches a practical wall quickly.
+    </p>
+    <p>
+      Efficiency, by contrast, enters linearly. Doubling the counting efficiency halves the MDA
+      outright. Moving the detector closer, choosing a better geometry, or using a detector matched
+      to the emission is almost always a better investment than a longer count. Reducing background
+      helps as 1/√B, so shielding a counter is worth roughly as much as counting longer, and usually
+      costs less in throughput.
+    </p>
+
+    <h2>Scanning is a different problem</h2>
+    <p>
+      A fixed count has a defined observation time. A scan does not: the probe passes over any given
+      spot for only as long as it takes to traverse its own width. That observation interval, the
+      detector width divided by the scan speed, sets the number of background counts available to
+      distinguish a source from noise, and it is usually one or two seconds.
+    </p>
+    <p>
+      The scan MDC then includes something no instrument specification can supply — the surveyor.
+      The detectability index d′ describes an ideal observer's ability to notice a brief change in
+      signal, and the observer efficiency p accounts for the fact that a real person listening to a
+      rate meter while walking does not achieve it. MARSSIM conventionally takes p = 0.5, which
+      raises the required count rate by √2. Halving the scan speed doubles the observation interval
+      and improves the MDC by √2 — usually the cheapest improvement available, and the reason a
+      documented scan speed belongs in the survey plan.
+    </p>
+
+    <h3>Surface efficiency</h3>
+    <p>
+      Contamination measurements carry a second efficiency: the fraction of emissions that actually
+      leave the surface rather than being absorbed in it or directed inward. Conventional values are
+      0.5 for most situations and 0.25 where beta absorption in the substrate is significant. Both
+      efficiencies multiply, so a 20% detector efficiency and a 0.25 surface efficiency give a total
+      of 5% and an MDC twenty times the naive figure.
+    </p>
+  </Fragment>
+</ToolPage>

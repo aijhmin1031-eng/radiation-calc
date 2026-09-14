@@ -1,0 +1,78 @@
+---
+import "../styles/global.css";
+import { SITE_NAME, SITE_TAGLINE, UMBRELLA_NAME, DATA_SOURCES, u, canonical } from "../lib/site";
+import { TOOLS } from "../lib/tools";
+interface Props { title: string; description: string; noindex?: boolean }
+const { title, description, noindex } = Astro.props;
+const here = Astro.url.pathname;
+const full = `${title} · ${SITE_NAME}`;
+---
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{full}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href={u("/favicon.svg")} type="image/svg+xml" />
+    <link rel="canonical" href={canonical(here)} />
+    {noindex ? <meta name="robots" content="noindex,follow" /> : null}
+    <meta property="og:title" content={full} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical(here)} />
+    {/* 그리기 전에 테마를 적용한다 — JS 로 글자를 넣으면 첫 그림에 반대 상태가 보인다 */}
+    <script is:inline>
+      try {
+        const s = JSON.parse(localStorage.getItem("radmeter-v2-theme") || "null");
+        const m = s && s.state && s.state.mode;
+        if (m === "dark" || m === "light") document.documentElement.dataset.theme = m;
+      } catch (e) {}
+    </script>
+  </head>
+  <body class="min-h-screen antialiased">
+    <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-panel focus:px-3 focus:py-2">Skip to content</a>
+
+    <header class="border-b border-line bg-panel">
+      <div class="mx-auto flex max-w-content flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+        <a href={u("/")} class="flex items-baseline gap-2 no-underline">
+          <span class="text-[17px] font-semibold tracking-tight text-ink">{SITE_NAME}</span>
+          <span class="hidden text-[12px] text-ink-faint sm:inline">{SITE_TAGLINE}</span>
+        </a>
+        <nav class="ml-auto flex flex-wrap gap-x-3 gap-y-1 text-[13px]">
+          <a href="/" class="text-ink-muted hover:text-ink">{UMBRELLA_NAME}</a>
+          <a href="/radimeter/" class="text-ink-muted hover:text-ink">RadiMeter</a>
+          <a href={u("/methods/")} class="text-ink-muted hover:text-ink">Methods</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main" class="mx-auto max-w-content px-4 py-8"><slot /></main>
+
+    <footer class="mt-16 border-t border-line bg-panel">
+      <div class="mx-auto max-w-content space-y-5 px-4 py-8 text-[13px]">
+        <nav class="flex flex-wrap gap-x-4 gap-y-1.5">
+          {TOOLS.map((t) => <a href={u(`/${t.slug}/`)} class="text-ink-muted hover:text-ink">{t.name}</a>)}
+        </nav>
+        <div>
+          <p class="label">Data sources</p>
+          <ul class="mt-1 space-y-0.5 text-ink-muted">
+            {DATA_SOURCES.map((d) => (
+              <li><a href={d.url} rel="noopener" class="hover:text-ink">{d.name}</a></li>
+            ))}
+          </ul>
+        </div>
+        <p class="text-ink-faint leading-relaxed">
+          {SITE_NAME} is part of {UMBRELLA_NAME}. These calculators are for orientation and
+          cross-checking. They <strong>do not replace</strong> an accredited calibration, a shielding
+          design, a dose assessment, or a radiation survey by a qualified person.
+        </p>
+        <nav class="flex flex-wrap gap-x-4 gap-y-1.5 text-ink-faint">
+          <a href={u("/disclaimer/")} class="hover:text-ink">Disclaimer</a>
+          <a href={u("/methods/")} class="hover:text-ink">Methods and data</a>
+          <a href="/privacy/" class="hover:text-ink">Privacy</a>
+          <a href="/terms/" class="hover:text-ink">Terms</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

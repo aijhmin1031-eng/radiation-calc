@@ -1,0 +1,73 @@
+---
+import Base from "../layouts/Base.astro";
+import { u, SITE_NAME } from "../lib/site";
+import { TOOLS } from "../lib/tools";
+---
+<Base title="Radiation protection calculators"
+      description="Seven calculators for routine radiation protection work — dose rate and shielding, decay, detection limits, unit conversion, specific activity, beta shielding and job planning. Free, no sign-in.">
+  <h1 class="max-w-3xl text-[28px] font-semibold leading-tight tracking-tight text-ink sm:text-[36px]">
+    The calculations you actually repeat, with the data behind them shown.
+  </h1>
+  <p class="mt-4 max-w-2xl text-[16px] leading-relaxed text-ink-muted">
+    Seven tools for routine radiation protection work. Every constant is computed from open primary
+    data — IAEA evaluated nuclear data and NIST attenuation coefficients — rather than copied from a
+    handbook table, so you can see which assumptions produced the number.
+  </p>
+  <p class="mt-3 text-[14px] text-ink-faint">
+    Free and open. No sign-in, no account, nothing you type leaves your browser.
+  </p>
+
+  <ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {TOOLS.map((t) => (
+      <li class="card p-4 transition-colors hover:border-accent/50">
+        <a href={u(`/${t.slug}/`)} class="block no-underline">
+          <h2 class="text-[16px] font-semibold text-ink">{t.name}</h2>
+          <p class="mt-1.5 text-[14px] leading-snug text-ink-muted">{t.question}</p>
+          <p class="mt-2 text-[12px] leading-snug text-ink-faint">{t.blurb}</p>
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  <section class="prose-doc mt-16 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <h2>Why the constants are computed, not copied</h2>
+    <p>
+      A gamma dose rate constant taken from a table is a single number whose assumptions are
+      invisible. You cannot see which photon lines were included, which low-energy cutoff was
+      applied, or which evaluation of the decay data it came from — and those choices change the
+      answer. For Am-241, moving the cutoff from 20 keV to 10 keV raises the constant roughly
+      eightfold.
+    </p>
+    <p>
+      So this site computes the constants instead. Photon energies and emission probabilities come
+      from the IAEA Livechart interface to the evaluated nuclear structure data; mass attenuation and
+      mass energy-absorption coefficients come from the NIST tables. Summing over the spectrum gives
+      the constant directly, and the cutoff becomes a control you can move rather than a hidden
+      assumption. The computed values agree with published constants to within about 2% for the
+      well-characterised nuclides, and that comparison is part of the test suite.
+    </p>
+
+    <h2>What is covered</h2>
+    <p>
+      147 nuclides, of which 96 emit photons and 45 emit only beta or alpha radiation — the pure beta
+      and alpha emitters that dominate waste characterisation and decommissioning work, including
+      H-3, C-14, Ni-63, Sr-90, Tc-99, I-129, Zr-93, Se-79 and the transuranics. Eight shielding
+      materials with attenuation data from 1 keV to 20 MeV.
+    </p>
+
+    <h2>What is deliberately absent</h2>
+    <p>
+      Skin dose from surface contamination is not calculated, because doing it properly needs a point
+      kernel over the source geometry and the answer is very sensitive to inputs a simple form cannot
+      capture. Buildup factor coefficients are not shipped, because the standard tabulation is the
+      body of a paid consensus standard; the buildup form is implemented and takes coefficients you
+      supply. Where a calculation would be misleading without information the tool does not have, it
+      says so rather than returning a number.
+    </p>
+    <p>
+      None of this replaces an accredited calibration, a shielding design, a dose assessment or a
+      survey. It is for orientation, for cross-checking something you have already calculated, and
+      for seeing how an answer moves when an assumption does.
+    </p>
+  </section>
+</Base>
