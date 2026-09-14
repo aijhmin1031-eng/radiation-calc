@@ -36,9 +36,12 @@ const full = `${title} · ${SITE_NAME}`;
     <header class="border-b border-line bg-panel">
       <div class="mx-auto flex max-w-content flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
         <Lockup labName={SITE_NAME} labHref={u("/")} />
+        {/* ★ 다른 lab 으로 가는 칸을 두지 않는다(2026-09-14 소유주 지적
+            「radcalc 페이지 메뉴에만 왜 radimeter 연결 탭이 있어?」).
+            **lab 을 고르는 자리는 우산이다** — 잠금장치가 그리로 보낸다.
+            여기에 두면 ① 다른 두 lab 에는 없어 불균형이고 ② lab 이 늘 때마다
+            세 머리글을 다 고쳐야 하며 ③ 잠금장치와 같은 말을 두 번 한다. */}
         <nav class="ml-auto flex flex-wrap gap-x-3 gap-y-1 text-[13px]">
-          <a href="/radimeter/" class="text-ink-muted hover:text-ink">RadiMeter</a>
-          <a href="/disposal" class="text-ink-muted hover:text-ink">M-Phreefiteq</a>
           <a href={u("/saved/")} class="text-ink-muted hover:text-ink">Saved</a>
           <a href={u("/methods/")} class="text-ink-muted hover:text-ink">Methods</a>
         </nav>
@@ -68,8 +71,12 @@ const full = `${title} · ${SITE_NAME}`;
         <nav class="flex flex-wrap gap-x-4 gap-y-1.5 text-ink-faint">
           <a href={u("/disclaimer/")} class="hover:text-ink">Disclaimer</a>
           <a href={u("/methods/")} class="hover:text-ink">Methods and data</a>
-          <a href="/privacy/" class="hover:text-ink">Privacy</a>
-          <a href="/terms/" class="hover:text-ink">Terms</a>
+          {/* ★ 개인정보·약관은 **플랫폼 층**이고 오리진 루트에는 없다 —
+              `/privacy/`·`/terms/` 로 걸었다가 라이브에서 404 가 났다(2026-09-14 실측).
+              플랫폼 문서가 사는 자리를 그대로 가리킨다. */}
+          <a href="/radimeter/privacy/" class="hover:text-ink">Privacy</a>
+          <a href="/radimeter/terms/" class="hover:text-ink">Terms</a>
+          <a href="/radimeter/contact/" class="hover:text-ink">Contact</a>
         </nav>
       </div>
     </footer>

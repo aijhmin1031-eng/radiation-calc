@@ -29,13 +29,22 @@ console.log(`\n① 쪽 ${pages.length}장`);
    ★ Astro 가 base 를 붙여 주지 않는 자리가 여럿이다 — 손으로 적은 href, redirects 의
      목적지, 스프레드 속성, is:inline 스크립트, og:image. 전부 빌드는 통과한다. */
 console.log("\n② base 경로 — 내부 링크가 /calc/ 밖을 가리키지 않는가");
-const EXTERNAL_OK = ["/", "/radimeter/", "/disposal", "/privacy/", "/terms/", "/robots.txt"];
+/** ★ base 밖으로 나가는 내부 링크는 **실제로 있는 것만** 허용한다.
+ *  `/privacy/`·`/terms/` 를 오리진 루트로 걸었다가 **라이브에서 404** 가 났다
+ *  (2026-09-14 실측) — 그 문서들은 플랫폼 층이지만 우산 루트에는 없고
+ *  `/radimeter/` 아래에 산다. 「있을 법한 주소」를 적어 두면 게이트가 그것을 승인한다. */
+/** ★★ 접두 일치로만 보면 **`"/"` 가 모든 절대경로를 통과시킨다** — 이 검사가 그렇게
+ *  죽어 있었고, 역테스트로 잡았다(2026-09-14). 우산 루트는 **정확 일치**로만 허용하고
+ *  나머지는 접두로 본다. */
+const EXACT_OK = ["/", "/robots.txt"];
+const PREFIX_OK = ["/radimeter/", "/disposal"];
 let stray = 0;
 for (const p of pages) {
   for (const m of p.s.matchAll(/(?:href|src)="(\/[^"#?]*)"/g)) {
     const h = m[1];
     if (h.startsWith(BASE_PATH)) continue;
-    if (EXTERNAL_OK.some((x) => h === x || h.startsWith(x))) continue;
+    if (EXACT_OK.includes(h)) continue;
+    if (PREFIX_OK.some((x) => h.startsWith(x))) continue;
     fail.push(`${p.path}: base 밖을 가리킨다 — ${h}`); stray++;
   }
 }
