@@ -73,14 +73,42 @@ const tool = toolBySlug(slug)!;
     </div>
 
     {/* ── 우: 참고. 계산에 딸리지만 계산의 일부는 아닌 것 ── */}
-    <aside aria-label="Reference" class="mt-12 xl:mt-0 xl:sticky xl:top-4">
+    {/* ★ 붙박이(sticky) 인데 **화면보다 크면 아래가 영영 안 보인다** — 위 가장자리가
+        top-4 에 박히고 나머지는 화면 밖에 남아 스크롤로도 닿지 않는다. 신뢰도 삼항을
+        넣으면서 레일이 344 → 884px 이 되어 800px 화면에서 그 함정에 들어갔다.
+        화면 높이로 상한을 두고 넘치면 레일 안에서 스크롤한다. */}
+    <aside aria-label="Reference"
+           class="mt-12 xl:mt-0 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto">
       <div class="card space-y-5 p-4 text-[13px]">
+        {/* ★★ 신뢰도 삼항 — 정본은 `lib/tools.ts` 다. 쪽마다 적지 않는다.
+            계산기를 믿을지는 **답이 아니라 답이 선 자리**를 보고 정한다.
+            ★ 「다루지 않는 것」을 함께 드는 것이 핵심이다 — 경계를 밝히지 않는 계산기는
+              쓰는 사람이 **범위 밖에서 쓴 줄도 모르게** 만든다. */}
+        <div>
+          <p class="label">What this assumes</p>
+          <ul class="mt-1.5 space-y-1.5 text-ink-muted">
+            {tool.assumes.map((x) => <li class="leading-snug">{x}</li>)}
+          </ul>
+        </div>
+
+        <div class="border-t border-line pt-4">
+          <p class="label">What it does not answer</p>
+          <ul class="mt-1.5 space-y-1.5 text-ink-muted">
+            {tool.excludes.map((x) => <li class="leading-snug">{x}</li>)}
+          </ul>
+        </div>
+
+        <div class="border-t border-line pt-4">
+          <p class="label">Checked against</p>
+          <p class="mt-1.5 leading-snug text-ink-muted">{tool.checked}</p>
+        </div>
+
         <slot name="aside" />
 
         {/* ★ 좁은 화면에서는 **꼬리말이 이미** 데이터 출처와 도구 일곱을 들고 있다.
             레일을 그대로 흘려보내면 같은 목록이 한 쪽에 두 번 서고 쪽이 800px 길어진다.
             xl 에서만 든다 — 거기서는 꼬리말이 한참 아래라 손에 닿지 않는다. */}
-        <div class="hidden xl:block">
+        <div class="hidden border-t border-line pt-4 xl:block">
           <p class="label">Data sources</p>
           <ul class="mt-1.5 space-y-1 text-ink-muted">
             {DATA_SOURCES.map((d) => (
