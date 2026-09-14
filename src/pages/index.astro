@@ -2,7 +2,6 @@
 import Base from "../layouts/Base.astro";
 import { u, SITE_NAME } from "../lib/site";
 import { TOOLS } from "../lib/tools";
-import ToolIcon from "../components/ToolIcon.astro";
 ---
 <Base title="Radiation protection calculators"
       description="Seven calculators for routine radiation protection work — dose rate and shielding, decay, detection limits, unit conversion, specific activity, beta shielding and job planning. Free, no sign-in.">
@@ -26,13 +25,18 @@ import ToolIcon from "../components/ToolIcon.astro";
   <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {TOOLS.map((t) => (
       <li class="card p-4 transition-colors hover:border-accent/50">
-        <a href={u(`/${t.slug}/`)} class="block no-underline">
-          <h2 class="flex items-start gap-2 text-[16px] font-semibold text-ink">
-            <ToolIcon slug={t.slug} class="mt-[3px] text-ink-muted" />
-            <span>{t.name}</span>
-          </h2>
-          <p class="mt-1.5 text-[14px] leading-snug text-ink-muted">{t.question}</p>
-          <p class="mt-2 text-[12px] leading-snug text-ink-faint">{t.blurb}</p>
+        {/* ★ 그림을 **글 옆**에 둔다 — 위에 띠로 얹으면 카드마다 68px 이 붙어
+            첫 화면에 서던 도구가 셋에서 둘로 준다(진입장벽 작업을 되돌리는 셈이다).
+            옆에 두면 글이 이미 56px 보다 높아 **카드 높이가 늘지 않는다**. */}
+        <a href={u(`/${t.slug}/`)} class="flex gap-3 no-underline">
+          <img src={u(`/img/tools/${t.slug}.webp`)} width="56" height="56" alt="" aria-hidden="true"
+               loading="lazy" decoding="async"
+               class="h-14 w-14 shrink-0 rounded-lg border border-line" />
+          <div class="min-w-0">
+            <h2 class="text-[16px] font-semibold text-ink">{t.name}</h2>
+            <p class="mt-1 text-[14px] leading-snug text-ink-muted">{t.question}</p>
+            <p class="mt-2 text-[12px] leading-snug text-ink-faint">{t.blurb}</p>
+          </div>
         </a>
       </li>
     ))}

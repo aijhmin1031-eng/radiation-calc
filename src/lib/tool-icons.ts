@@ -17,9 +17,8 @@ export const TOOL_ICON: Record<string, string> = {
   /* 환산 — 서로 바꾸는 두 화살 */
   units: `<path d="M4 9h14M15 6l3 3-3 3"/><path d="M20 15H6M9 12l-3 3 3 3"/>`,
 
-  /* 반감기 — **반이 찬 원**. 처음에 축과 지수 곡선을 그렸다가 버렸다:
-     16px 에서 곡선이 뭉쳐 축과 한 덩어리로 보였다. 반쪽 원은 「반」을 곧바로 읽힌다. */
-  decay: `<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor" stroke="none"/>`,
+  /* 반감기 — 모래시계. 허브 카드의 그림과 **같은 소재**다. */
+  decay: `<path d="M7 4h10M7 20h10"/><path d="M8.5 4v2.6L12 12l-3.5 5.4V20M15.5 4v2.6L12 12l3.5 5.4V20"/>`,
 
   /* 감마 차폐 — 선원에서 나온 광자가 벽을 **지나간다**(오른쪽에 남는 획) */
   "gamma-shielding": `<circle cx="4" cy="12" r="2"/><path d="M7.5 12h3.5M7 8.6l3 1.9M7 15.4l3-1.9"/><path d="M14 4.5v15"/><path d="M17.5 12h3"/>`,
@@ -27,13 +26,13 @@ export const TOOL_ICON: Record<string, string> = {
   /* 질량과 방사능 — 덩어리(등축 상자). 저울을 그렸다가 버렸다: 받침·접시·팔이 16px 에서 뭉친다. */
   "specific-activity": `<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>`,
 
-  /* 검출한계 — 바닥잡음 위의 봉우리와 결정 문턱(점선) */
-  mda: `<path d="M3 18.5h4.5l2-8 2 8h9"/><path d="M3 11h18" stroke-dasharray="4 3"/>`,
+  /* 검출한계 — 아주 작은 것을 찾는다. 돋보기와 점 하나. */
+  mda: `<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.2 15.2L20.5 20.5"/><circle cx="10.5" cy="10.5" r="1.1" fill="currentColor" stroke="none"/>`,
 
-  /* 베타 — 전자(원 안의 −)가 나아간다. 벽을 그리지 않는다:
-     ★ 감마도 벽을 들고 있어 **둘 다 「뭔가 + 벽」으로 보여 헷갈렸다**(16px 실측).
-       감마는 「막는 것」, 베타는 「나가는 알갱이」로 갈랐다. */
-  beta: `<circle cx="7.5" cy="12" r="4"/><path d="M5.7 12h3.6"/><path d="M14 12h6M17.5 8.5l3.5 3.5-3.5 3.5"/>`,
+  /* 베타 — 지나온 자국이 판에서 **멎는다**. 허브 그림과 같은 소재.
+     ★ 감마와 헷갈리지 않게 갈랐다 — 감마는 곧은 빛살이 판을 **지나가고**(오른쪽에 획이 남는다),
+       베타는 굽은 자국이 판 앞에서 **멈춘다**(오른쪽에 아무것도 없다). */
+  beta: `<path d="M2.5 13c2-2.5 3.5 2.5 5.5 0s3.5-2.5 5.5 0" stroke-dasharray="3 2"/><circle cx="15" cy="13" r="1.9" fill="currentColor" stroke="none"/><path d="M18 4.5v15"/>`,
 
   /* ALARA — 시간이 선량을 만든다 */
   alara: `<circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3.2 2"/>`,
