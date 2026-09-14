@@ -38,3 +38,12 @@ export const TOOLS: Tool[] = [
 
 export const toolBySlug = (slug: string) => TOOLS.find((t) => t.slug === slug);
 export const toolPath = (slug: string) => `/${slug}/`;
+
+/** 고유번호의 도구 약자 — RC-**GAM**-20260914-0001.
+ *  ★ 약자를 표로 두지 않는다. DB 의 `calc_tool_code()` 와 **같은 규칙**이고,
+ *    둘이 어긋나면 화면이 DB 가 발급한 번호와 다른 코드를 보여 준다. */
+export const toolCode = (slug: string) =>
+  slug.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 3).toUpperCase();
+
+/** 저장본 고유번호의 생김새 — 화면에서 붙여넣은 번호를 검사할 때 쓴다. */
+export const REF_PATTERN = /^RC-[A-Z0-9]{2,3}-\d{8}-\d{4,}$/;

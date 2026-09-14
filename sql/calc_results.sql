@@ -7,7 +7,7 @@
 
 create table if not exists public.calc_results (
   id          bigint generated always as identity primary key,
-  ref         text not null unique,                       -- RC-20260914-0001
+  ref         text not null unique,                       -- RC-GAM-20260914-0001
   user_id     uuid not null references auth.users(id) on delete cascade,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now(),
@@ -23,7 +23,8 @@ create table if not exists public.calc_results (
 create index if not exists calc_results_user_created on public.calc_results (user_id, created_at desc);
 create index if not exists calc_results_user_tool    on public.calc_results (user_id, tool);
 
--- 고유번호 — 날짜별 일련번호. ON CONFLICT DO UPDATE 라 동시 저장에도 번호가 겹치지 않는다.
+-- 고유번호 — 날짜·도구별 일련번호. ON CONFLICT DO UPDATE 라 동시 저장에도 겹치지 않는다.
+-- ★ 약자는 표로 두지 않고 슬러그에서 뽑는다(002_tool_ref.sql 참조) — 두 벌이 되지 않는다.
 create table if not exists public.calc_ref_counter (
   day date primary key,
   n   integer not null default 0
@@ -94,3 +95,5 @@ grant select, insert, update, delete on public.calc_results to authenticated;
 grant usage on schema public to authenticated;
 -- anon 에게는 아무것도 주지 않는다. 저장은 로그인한 사람만 한다.
 revoke all on public.calc_results from anon;
+
+-- ※ 고유번호에 도구 약자를 붙이는 변경은 sql/002_tool_ref.sql 에 있다. 새 환경에서는 둘 다 실행한다.
