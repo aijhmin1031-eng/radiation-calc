@@ -48,3 +48,9 @@ jobs:
       #   처음부터 켬 · scroll-padding-top 제거).
       - name: 압축 고정 바 (Chromium)
         run: node gate/check-sticky.mjs
+
+      # ★ 로그인 **상태별** 화면은 저장소를 채워야만 생긴다 — 다른 게이트는 전부
+      #   로그아웃 상태만 본다. 역테스트 셋으로 확인했다(칩 제거 · 부팅 표식 제거 ·
+      #   모바일 줄 배치 되돌림). 환경변수가 없는 빌드에서는 「표시가 없는 것」을 잰다.
+      - name: 머리글 계정·테마 (Chromium)
+        run: node gate/check-header.mjs
