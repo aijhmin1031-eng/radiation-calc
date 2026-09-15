@@ -7,8 +7,15 @@ import ogManifest from "../data/og-manifest.json";
 import Lockup from "../components/brand/Lockup.astro";
 import ThemeToggle from "../components/ThemeToggle.astro";
 import AccountChip from "../components/AccountChip.astro";
-interface Props { title: string; description: string; noindex?: boolean }
-const { title, description, noindex } = Astro.props;
+import ShareRow from "../components/ShareRow.astro";
+interface Props {
+  title: string;
+  description: string;
+  noindex?: boolean;
+  /** 남에게 권할 쪽이 아닌 곳(개인 저장 목록)은 끈다 */
+  share?: boolean;
+}
+const { title, description, noindex, share = true } = Astro.props;
 const here = Astro.url.pathname;
 const full = `${title} · ${SITE_NAME}`;
 /* 압축 바가 드는 「지금 어디」 — 쪽마다 적게 하지 않는다(쪽 제목에서 파생한다).
@@ -166,7 +173,12 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
     {/* ★ tabindex="-1" 이 없으면 건너뛰기 링크가 **절반만 듣는다** — 주소는 #main 으로 가고
         화면도 내려가지만 **초점은 body 에 남아**, 다음 Tab 이 다시 쪽 맨 위로 돌아간다.
         키보드 이용자에게는 링크가 아무 일도 안 한 것과 같다(2026-09-14 실측으로 잡았다). */}
-    <main id="main" tabindex="-1" class="mx-auto max-w-content px-4 py-8 focus:outline-none"><slot /></main>
+    {/* ★ 공유 줄은 본문 끝에 둔다 — 읽고 난 뒤에 권하는 것이지 읽기 전에 권하는 것이 아니다.
+        저장 목록처럼 **개인 화면**에는 두지 않는다(남에게 권할 쪽이 아니다). */}
+    <main id="main" tabindex="-1" class="mx-auto max-w-content px-4 py-8 focus:outline-none">
+      <slot />
+      {share ? <ShareRow title={title} /> : null}
+    </main>
 
     <footer class="mt-16 border-t border-line bg-panel">
       <div class="mx-auto max-w-content space-y-5 px-4 py-8 text-[13px]">
