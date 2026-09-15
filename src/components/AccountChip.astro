@@ -21,14 +21,14 @@
  *   화면으로 오는거야? 이건 radimeter lab 의 툴 화면에서 로그인하는건데」).
  *   플랫폼 계정 화면이 지금은 **RadiMeter 의 껍데기**를 입고 있어(그 lab 의 내비·빵부스러기·
  *   법무 띠), RadCalc 에서 누른 사람이 **다른 lab 안에 떨어진다.**
- *   ★ 그래서 임시로 **이 lab 의 저장 쪽**을 가리킨다 — 거기에도 구글 로그인 단추가 있고
- *     로그인한 사람에게는 자기 저장 목록이 나온다. **RadCalc 안에 머문다.**
- *   ★ 정본 계획: 어느 lab 에도 속하지 않는 `radiation-lab.com/account/` 를 세우고
- *     세 lab 의 칩을 한꺼번에 그리로 돌린다(`?next=` 로 원래 자리에 돌아온다).
+ *   ★ 이제 **어느 lab 에도 속하지 않는 `/account/`** 가 있다(우산이 든다). 세 lab 의 칩이
+ *     전부 그리로 가고, `?next=` 로 **원래 보던 쪽에 돌아온다** — 로그인하러 갔다가
+ *     남의 집에 남지 않는다.
+ *   ★ `next` 는 **경로만** 넘긴다(오리진은 같다). 받는 쪽이 `/` 로 시작하고 `//` 가 아닌
+ *     것만 받아들여 열린 리다이렉트를 막는다.
  */
-import { u } from "../lib/site";
 const REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z0-9]+)\.supabase\.co/)?.[1] ?? "";
-const ACCOUNT = u("/saved/");
+const ACCOUNT = `/account/?next=${encodeURIComponent(Astro.url.pathname)}`;
 ---
 
 {REF && (
