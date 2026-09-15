@@ -1,0 +1,66 @@
+---
+/**
+ * 플랫폼 계정 표시 — **로그인 여부를 언제나 보여 준다.**
+ *
+ * ★★ 계기(2026-09-15 소유주 지적 「여기서는 내가 로그인 상태인지 그냥 비로그인 상태인지
+ *   알 수가 없네」). 그전에는 RadCalc 머리글에 계정 표시가 **하나도 없었고**, 로그인 입구가
+ *   `/saved/` 와 계산기 쪽 본문(1041px 스크롤 아래)뿐이었다. 우산과 RadiMeter 는 머리글에
+ *   이것을 들고 있었으므로 **세 lab 중 이 lab 만 달랐다.**
+ *
+ * ★★ **네트워크를 쓰지 않는다.** Supabase 세션은 같은 오리진의 localStorage 한 칸
+ *   (`sb-<ref>-auth-token`)이므로 **읽기만** 하면 된다 — 쪽마다 supabase-js 를 싣지 않는다.
+ *   세션 만료·갱신은 계정 화면과 저장 막대가 그대로 맡는다.
+ *
+ * ★★ **보이는 글자는 CSS 가 정한다.** 판정은 `Base.astro` 의 부팅 스크립트가 `<html>` 에
+ *   `data-acct="in"` 으로 세워 두고 여기서는 둘 중 하나만 보이게 한다. JS 로 글자를 갈아
+ *   끼우면 로그인한 사람에게 **첫 그림에 「Sign in」** 이 한 박자 보인다(테마에서 밟은 함정).
+ *   ★ 이름만은 빌드 시점에 값이 없으므로 **속성**(`data-who`)으로 옮겨 `::after` 로 그린다.
+ *   ★ 표식이 없으면(JS 꺼짐·저장소 막힘) **로그아웃으로 그린다** — 안전한 기본값이다.
+ *
+ * ★ 두 상태 모두 **플랫폼 계정 화면**으로 간다. 그 화면은 RadiMeter 가 들고 있고
+ *   (`/radimeter/account/`) 우산 머리글도 같은 곳을 가리킨다 — 로그인·표시 이름·로그아웃이
+ *   거기 한 곳에 있다. lab 마다 계정 화면을 따로 두면 **같은 계정이 세 얼굴**이 된다.
+ */
+const REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z0-9]+)\.supabase\.co/)?.[1] ?? "";
+const ACCOUNT = "/radimeter/account/";
+---
+
+{REF && (
+  <>
+    <a
+      href={ACCOUNT}
+      data-acct-chip
+      class="shrink-0 inline-flex items-center gap-1 rounded-lg px-1.5 py-2 sm:gap-1.5 sm:px-2 sm:py-1.5 text-ink-muted hover:bg-accent-soft hover:text-ink transition-colors"
+    >
+      {/* ★ 앰버를 쓰지 않는다 — 앰버는 활성·포커스·기준선 전용이다. */}
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.2" stroke-linecap="round" class="shrink-0" aria-hidden="true">
+        <circle cx="12" cy="8" r="3.6" /><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6" />
+      </svg>
+      {/* ★ 글리프만 두면 로그인·로그아웃이 똑같아 보여 표시가 뜻을 잃는다 — 글자를 둘 다 낸다. */}
+      <span data-acct-out class="text-[13px] whitespace-nowrap">Sign in</span>
+      <span data-acct-in class="text-[13px] max-w-[13ch] truncate"></span>
+    </a>
+
+    {/* ★ `<html>` 의 표식을 보므로 **전역**이어야 한다(범위 지정 스타일은 조상에 못 닿는다). */}
+    <style is:global>
+      html[data-acct="in"] [data-acct-out] { display: none; }
+      html:not([data-acct="in"]) [data-acct-in] { display: none; }
+      html[data-acct="in"] [data-acct-in]::after { content: attr(data-who); }
+    </style>
+
+    {/* 이름을 **속성**으로 옮긴다 — 글자가 아니라 속성이라 첫 그림의 글자를 바꾸지 않는다. */}
+    <script is:inline>
+      (function () {
+        var a = document.querySelector("[data-acct-chip]");
+        if (!a) return;
+        var who = document.documentElement.dataset.acctWho || "";
+        var el = a.querySelector("[data-acct-in]");
+        if (el && who) el.setAttribute("data-who", who);
+        var label = who ? "Signed in as " + who + " — account settings" : "Sign in";
+        a.setAttribute("aria-label", label);
+        a.title = label;
+      })();
+    </script>
+  </>
+)}
