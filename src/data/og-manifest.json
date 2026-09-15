@@ -1,0 +1,42 @@
+{
+  "/": {
+    "slug": "home",
+    "title": "Radiation protection calculators · RadCalc"
+  },
+  "/alara/": {
+    "slug": "alara",
+    "title": "ALARA and job planning · RadCalc"
+  },
+  "/beta/": {
+    "slug": "beta",
+    "title": "Beta dose rate and shielding · RadCalc"
+  },
+  "/decay/": {
+    "slug": "decay",
+    "title": "Decay and half-life · RadCalc"
+  },
+  "/disclaimer/": {
+    "slug": "disclaimer",
+    "title": "Disclaimer · RadCalc"
+  },
+  "/gamma-shielding/": {
+    "slug": "gamma-shielding",
+    "title": "Gamma dose rate and shielding · RadCalc"
+  },
+  "/mda/": {
+    "slug": "mda",
+    "title": "Detection limits (MDA / MDC) · RadCalc"
+  },
+  "/methods/": {
+    "slug": "methods",
+    "title": "Methods and data · RadCalc"
+  },
+  "/specific-activity/": {
+    "slug": "specific-activity",
+    "title": "Mass and activity · RadCalc"
+  },
+  "/units/": {
+    "slug": "units",
+    "title": "Unit converter · RadCalc"
+  }
+}

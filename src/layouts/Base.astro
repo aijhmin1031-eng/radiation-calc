@@ -1,8 +1,9 @@
 ---
 import "../styles/global.css";
-import { SITE_NAME, SITE_TAGLINE, UMBRELLA_NAME, DATA_SOURCES, u, canonical } from "../lib/site";
+import { SITE_NAME, SITE_TAGLINE, UMBRELLA_NAME, DATA_SOURCES, SITE_URL, u, canonical, canonicalPath } from "../lib/site";
 import { TOOLS } from "../lib/tools";
 import { SAVE_ENABLED } from "../lib/features";
+import ogManifest from "../data/og-manifest.json";
 import Lockup from "../components/brand/Lockup.astro";
 import ThemeToggle from "../components/ThemeToggle.astro";
 import AccountChip from "../components/AccountChip.astro";
@@ -13,6 +14,12 @@ const full = `${title} · ${SITE_NAME}`;
 /* 압축 바가 드는 「지금 어디」 — 쪽마다 적게 하지 않는다(쪽 제목에서 파생한다).
    ★ 허브에서는 비운다 — 칸 「Calculators」 가 이미 켜져 있어 같은 말이 두 번 나온다. */
 const barLabel = here === u("/") ? "" : title;
+/* ★★ 공유 그림 — **커밋된 산출물**이고 `scripts/make-og.mjs` 가 굽는다.
+   ★ 조회는 반드시 `canonicalPath()`(base 없음)로 한다 — base 가 붙은 pathname 으로 찾으면
+     매니페스트와 안 맞아 **전 쪽이 조용히 폴백으로 떨어진다**(이웃 lab 이 밟은 함정).
+   ★ 사이트맵에 없는 쪽(noindex 인 `/saved/`)은 그림이 없으므로 홈 카드로 받는다. */
+const ogSlug = (ogManifest as Record<string, { slug: string }>)[canonicalPath(here)]?.slug ?? "home";
+const ogImage = new URL(u(`/og/${ogSlug}.png`), SITE_URL).href;
 /* 세션 표식을 그리기 전에 세우려면 부팅 스크립트가 저장소 칸 이름을 알아야 한다.
    ★ 이름을 글자로 박지 않고 **환경변수에서 뽑는다** — 프로젝트가 바뀌면 저절로 따라온다. */
 const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z0-9]+)\.supabase\.co/)?.[1] ?? "";
@@ -30,6 +37,12 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical(here)} />
+    <meta property="og:site_name" content={UMBRELLA_NAME} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={ogImage} />
     {/* 그리기 전에 테마를 적용한다 — JS 로 글자를 넣으면 첫 그림에 반대 상태가 보인다 */}
     <script is:inline>
       try {

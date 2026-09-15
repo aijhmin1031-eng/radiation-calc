@@ -54,3 +54,8 @@ jobs:
       #   모바일 줄 배치 되돌림). 환경변수가 없는 빌드에서는 「표시가 없는 것」을 잰다.
       - name: 머리글 계정·테마 (Chromium)
         run: node gate/check-header.mjs
+
+      # ★ 커밋된 산출물은 반드시 낡는다 — 그림에 제목이 구워져 있다.
+      #   역테스트: 도구 이름을 바꾸자 「제목이 바뀌었는데 그림이 그대로다」로 잡혔다.
+      - name: 공유 이미지 대조
+        run: node gate/check-og.mjs
