@@ -67,7 +67,10 @@ for (const vp of [{ w: 1280, h: 900, tag: "데스크톱" }, { w: 360, h: 780, ta
     // ★ 쪽이 짧으면 머리글을 지나칠 수가 없다(/saved/ 데스크톱). 그때 바가 안 뜨는 것은
     //   결함이 아니라 설계대로다 — **실제로 지나쳤는지 재고** 아니면 건너뛴다.
     const passed = await pg.evaluate(async () => {
-      window.scrollTo(0, Math.max(600, document.documentElement.scrollHeight));
+      // ★ 쪽 **맨 아래**에서 재지 말 것 — 붙박이는 자기 격자 칸이 끝나면 위로 밀려나는 것이
+      //   정상이라, 거기서 재면 「바가 덮었다」로 잘못 읽힌다(역테스트 없이 7건이 헛돌았다).
+      //   머리글은 지나치고 붙박이는 붙어 있는 **중간**에서 잰다.
+      window.scrollTo(0, 400);
       await new Promise((r) => setTimeout(r, 300));
       return document.getElementById("hdr-sentinel").getBoundingClientRect().bottom <= 0;
     });
@@ -90,7 +93,21 @@ for (const vp of [{ w: 1280, h: 900, tag: "데스크톱" }, { w: 360, h: 780, ta
         .filter((e) => e.getBoundingClientRect().width > 0)
         .map((e) => { const q = e.getBoundingClientRect(); return Math.abs(q.top + q.height / 2 - mid); });
       const rows = off.every((d) => d <= 4) ? 1 : 2;
-      return { vis: s.visibility, top: Math.round(r.top), h: Math.round(r.height),
+      // ★★ 바는 **다른 붙박이(sticky)를 덮는다**. 실제로 레일 제목이 18px 가려져 있었고
+      //   레일은 제대로 붙어 있었으므로 「안 붙는다」로는 안 보였다 — 가린 것은 바다.
+      //   붙박이가 멈추는 자리는 반드시 **바 아래**여야 한다.
+      // ★★ **`top` 이 auto 인 붙박이는 붙지 않는다** — 그런데 「덮였다」 검사에는
+      //   안 걸린다(아예 화면 밖으로 흘러가므로). Tailwind 임의값 안의 calc 는
+      //   공백을 `_` 로 써야 하고, 안 쓰면 CSS 가 통째로 무효가 되는데 **빌드는 통과한다.**
+      const loose = [...document.querySelectorAll("*")]
+        .filter((e) => getComputedStyle(e).position === "sticky" && getComputedStyle(e).top === "auto")
+        .map((e) => `${e.tagName.toLowerCase()}[${e.getAttribute("aria-label") || e.className.toString().slice(0, 18)}]`);
+      const under = [...document.querySelectorAll("*")]
+        .filter((e) => getComputedStyle(e).position === "sticky")
+        .map((e) => ({ e, q: e.getBoundingClientRect() }))
+        .filter(({ q }) => q.height > 0 && q.top < r.bottom - 1 && q.bottom > r.top)
+        .map(({ e, q }) => `${e.tagName.toLowerCase()}[${e.getAttribute("aria-label") || e.className.toString().slice(0, 18)}] ${Math.round(r.bottom - q.top)}px 가림`);
+      return { loose, under, vis: s.visibility, top: Math.round(r.top), h: Math.round(r.height),
                bg: s.backgroundColor, z: s.zIndex, links, rows, maxOff: Math.round(Math.max(...off)),
                overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
                innerH: Math.round(inner.height) };
@@ -102,6 +119,8 @@ for (const vp of [{ w: 1280, h: 900, tag: "데스크톱" }, { w: 360, h: 780, ta
     if (!(Number(on.z) >= 10)) fail.push(`${vp.tag} ${p}: 바 z-index ${on.z} — 본문에 가린다`);
     if (on.overflow > 1) fail.push(`${vp.tag} ${p}: 바가 뜬 뒤 가로 넘침 ${on.overflow}px`);
     if (on.rows !== 1) fail.push(`${vp.tag} ${p}: 바 내용이 ${on.rows} 줄 — 한 줄이어야 한다`);
+    for (const u of on.under) fail.push(`${vp.tag} ${p}: 바가 붙박이를 덮는다 — ${u}`);
+    for (const l of on.loose) fail.push(`${vp.tag} ${p}: 붙박이인데 top 이 auto 다(안 붙는다) — ${l}`);
     // ④ 칸이 실제로 눌리는가 + 손가락 표적 24px
     for (const l of on.links) {
       if (!l.hit) fail.push(`${vp.tag} ${p}: 바의 「${l.text}」 가 무언가에 덮여 안 눌린다`);
@@ -121,7 +140,7 @@ for (const vp of [{ w: 1280, h: 900, tag: "데스크톱" }, { w: 360, h: 780, ta
       fail.push(`${vp.tag} ${p}: 앵커 #${anchored.id} 가 바 아래 ${anchored.top}px — 가린다`);
 
     if (p === "/" || p === "/gamma-shielding/")
-      note(`${p} 바 ${on.h}px · 칸 ${on.links.length} · 중심선 어긋남 ${on.maxOff}px · scroll-padding ${at0.sp}px` +
+      note(`${p} 바 ${on.h}px · 덮은 붙박이 ${on.under.length} · 칸 ${on.links.length} · 중심선 어긋남 ${on.maxOff}px · scroll-padding ${at0.sp}px` +
            (anchored ? ` · 앵커 #${anchored.id} top ${anchored.top}px`
                      : " · 앵커 대상 없음(쪽 안 앵커가 생기면 그때부터 잰다)"));
     await pg.close();

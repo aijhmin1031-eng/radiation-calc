@@ -13,6 +13,10 @@
  *  ★ `lib/auth.ts` 가 supabase 라이브러리를 들고 오므로 여기서 **따로** 판정한다 —
  *    Astro 낱장 머리말이 그 무거운 것을 빌드에 끌어들이지 않게.
  */
-export const SAVE_ENABLED = Boolean(
-  import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY,
-);
+/*  ★★ **주소 꼴까지 본다**(2026-09-15 게이트가 잡았다). 「있는가」만 물으면 오타 하나가
+ *    계산기 일곱을 통째로 죽인다 — supabase-js 는 주소가 주소가 아니면 생성자에서 던지고,
+ *    그 예외가 아일랜드 **수화(hydration)를 통째로 실패**시켜 **계산기 자체가 안 뜬다**
+ *    (실측: `Error hydrating … Invalid supabaseUrl` × 7쪽). 저장은 곁가지 기능인데
+ *    그것 때문에 본체가 죽는 것은 값이 안 맞는다 — 꼴이 틀리면 **저장만 꺼진다.** */
+const URL_OK = /^https?:\/\/[^\s]+$/.test(import.meta.env.VITE_SUPABASE_URL ?? "");
+export const SAVE_ENABLED = Boolean(URL_OK && import.meta.env.VITE_SUPABASE_ANON_KEY);
