@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import GoogleMark from "./GoogleMark";
 import type { User } from "@supabase/supabase-js";
 import { supabase, signInWithGoogle, currentUser, displayName, authConfigured } from "../../lib/auth";
 import { saveResult, stash, type SaveInput } from "../../lib/saved";
@@ -61,6 +62,7 @@ export function SaveBar({ tool, inputs, outputs, summary }: {
             number you can look up later. The calculator itself never needs an account.
           </p>
           <button type="button" className="btn btn-primary shrink-0" onClick={onSignIn}>
+            <GoogleMark />
             Sign in with Google
           </button>
         </div>
