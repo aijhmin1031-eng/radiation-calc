@@ -62,6 +62,11 @@ for (const vp of [{ w: 1280, h: 900, tag: "데스크톱" }, { w: 390, h: 844, ta
             // ★ sr-only 는 **일부러** 1px 로 숨긴 접근성 패턴이다 — 거짓 양성이 되면
             //   게이트가 늘 빨개져 아무도 안 본다. 보이지 않는 크기는 세지 않는다.
             if (e.clientWidth <= 1 || e.clientHeight <= 1) return false;
+            // ★ 말줄임(…)은 **알리면서 자르는 것**이다 — 잘렸다는 사실이 화면에 보이고
+            //   전문(全文)은 DOM 에 남는다. 이 게이트가 잡으려는 것은 **아무 표시 없이**
+            //   사라지는 내용이므로, 두 조건(ellipsis + nowrap)을 다 갖춘 것만 뺀다.
+            //   한쪽만으로 빼면 그냥 hidden 인 것까지 새 나간다.
+            if (s.textOverflow === "ellipsis" && /nowrap/.test(s.whiteSpace)) return false;
             return e.scrollWidth - e.clientWidth > 1;
           })
           .map((e) => `${e.tagName.toLowerCase()}.${(e.className || "").toString().slice(0, 24)}(${e.scrollWidth - e.clientWidth}px)`),

@@ -42,3 +42,9 @@ jobs:
       # ★ 다른 게이트는 「있는 것」을 잰다 — 이것은 **없는 것을 있다고 말하는지**를 잰다
       - name: 저장 기능의 말과 행동 (Chromium)
         run: node gate/check-save.mjs
+
+      # ★ 다른 게이트는 전부 **스크롤 0 에서만** 잰다 — 스크롤한 뒤에만 존재하는 것은
+      #   통째로 시야 밖이다. 역테스트 넷으로 확인했다(fixed 제거 · 관찰자 제거 ·
+      #   처음부터 켬 · scroll-padding-top 제거).
+      - name: 압축 고정 바 (Chromium)
+        run: node gate/check-sticky.mjs
