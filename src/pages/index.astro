@@ -29,9 +29,13 @@ import { TOOLS } from "../lib/tools";
             첫 화면에 서던 도구가 셋에서 둘로 준다(진입장벽 작업을 되돌리는 셈이다).
             옆에 두면 글이 이미 56px 보다 높아 **카드 높이가 늘지 않는다**. */}
         <a href={u(`/${t.slug}/`)} class="flex gap-3 no-underline">
-          <img src={u(`/img/tools/${t.slug}.webp`)} width="56" height="56" alt="" aria-hidden="true"
+          {/* ★ 112px 이다 — 세선 잉크 그림은 **크기가 있어야 디테일이 읽힌다.** 56px 에서는
+              해칭이 뭉개져 회색 덩어리가 된다(실측으로 두 크기를 나란히 놓고 골랐다).
+              ★ 그런데도 **카드는 안 커진다** — 가장 짧은 글 블록이 124px 이라 112px 타일이
+              그 안에 들어간다. 이보다 키우면 카드가 늘고 첫 화면 도구 수가 준다. */}
+          <img src={u(`/img/tools/${t.slug}.webp`)} width="112" height="112" alt="" aria-hidden="true"
                loading="lazy" decoding="async"
-               class="h-14 w-14 shrink-0 rounded-lg border border-line" />
+               class="h-28 w-28 shrink-0 rounded-lg border border-line" />
           <div class="min-w-0">
             <h2 class="text-[16px] font-semibold text-ink">{t.name}</h2>
             <p class="mt-1 text-[14px] leading-snug text-ink-muted">{t.question}</p>
