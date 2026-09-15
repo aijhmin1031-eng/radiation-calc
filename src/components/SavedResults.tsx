@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import GoogleMark from "./ui/GoogleMark";
 import type { User } from "@supabase/supabase-js";
 import { supabase, signInWithGoogle, currentUser, displayName, authConfigured } from "../lib/auth";
 import { listResults, deleteResult, renameResult, readStash, clearStash, saveResult,
@@ -71,6 +72,7 @@ export default function SavedResults() {
         only saving and looking things up later needs one.
       </p>
       <button type="button" className="btn btn-primary mt-4" onClick={() => void signInWithGoogle()}>
+        <GoogleMark />
         Sign in with Google
       </button>
       {pending.length ? (
