@@ -1,0 +1,22 @@
+---
+import { KEYWORD } from "../data/keywords";
+interface Props { slug: string; cap?: number }
+const { slug, cap = 12 } = Astro.props;
+const k = KEYWORD[slug];
+---
+{/* 도판 캡션 — 각판화 판 아래에 새겨 넣은 한 낱말.
+    ★ **웹폰트가 아니라 경로다**(`src/data/keywords.ts`, 생성 파일). 이 사이트는 제3자 폰트를
+      한 건도 부르지 않는다 — 글자를 떠서 박으면 기기마다 얼굴이 달라지지 않고, 어떤 배율에서도
+      또렷하다. 활자는 Libre Caslon Text(OFL), 1배 13px 로 네 후보를 구워 눈으로 골랐다.
+    ★ 괘선을 위에 단다 — 이것이 없으면 그냥 흘러든 글자로 보이고, 있어야 **캡션**으로 읽힌다.
+    ★ 색을 토큰에서 받지 않는다 — 판 바탕이 테마와 무관하게 늘 미색이므로 잉크도 고정이다.
+      #5a4c30 은 판 바탕(#faf5e6) 대비 8.6:1 로 AA 를 넉넉히 넘는다. */}
+{k ? (
+  <span class="flex flex-col items-center gap-[5px]" aria-hidden="true">
+    <span class="block h-px w-7 bg-[#d3c5a4]"></span>
+    <svg viewBox={`0 -100 ${k.w} 100`} width={Math.round(k.w * cap / 100)} height={cap}
+         fill="#5a4c30" role="presentation" focusable="false">
+      <path d={k.d} />
+    </svg>
+  </span>
+) : null}
