@@ -34,9 +34,20 @@ import Keyword from "../components/Keyword.astro";
               그 아래에 **112 × 31~108px 의 구멍**이 남았다(카드마다 글 길이가 달라 크기도 제각각).
               판으로 세우면 구멍이 「빈 곳」이 아니라 **판의 여백**이 되고, 각판화의 관용구와 맞는다.
               ★ 카드 높이·첫 화면 카드 수는 그대로다(실측: 254px · 데스크톱 7/7 · 모바일 3/7). */}
-          <div class="flex w-28 shrink-0 flex-col items-center justify-between self-stretch rounded-lg border border-line bg-[#faf5e6] pb-2.5">
-            <img src={u(`/img/tools/${t.slug}.webp`)} width="112" height="112" alt="" aria-hidden="true"
-                 loading="lazy" decoding="async" class="h-28 w-28" />
+          {/* ★★ 판에 **최소 높이**를 준다. 없으면 글이 짧은 카드에서 판이 내용보다 작아지고,
+              고정 112px 그림이 **캡션 위로 넘쳐 괘선이 그림에 겹친다**(화면으로 잡았다).
+              ★ 160px 은 **가장 짧은 판의 숨통**으로 골랐다 — 위 여백이 11px 이 되어 캡션 아래
+              여백(11px)과 같아진다. 150 이면 6px 으로 답답하고, 168 은 쪽만 길어진다.
+              긴 판에서는 남는 자리가 위아래로 **똑같이** 갈린다(실측 차이 1px). */}
+          <div class="flex min-h-[160px] w-28 shrink-0 flex-col items-center self-stretch rounded-lg border border-line bg-[#faf5e6] pb-2.5">
+            {/* ★ 그림을 **캡션 위 공간의 가운데**에 둔다(2026-09-15 소유주 지시 「이미지는
+                세로방향 중앙」). 위아래 양끝에 붙여 놓았더니 **카드가 길수록 가운데가 비었다** —
+                긴 카드는 그림과 캡션 사이가 110px 까지 벌어졌다. 가운데로 모으면 그 여백이
+                위아래로 갈려 판이 균형을 잡는다. */}
+            <span class="flex flex-1 items-center justify-center">
+              <img src={u(`/img/tools/${t.slug}.webp`)} width="112" height="112" alt="" aria-hidden="true"
+                   loading="lazy" decoding="async" class="h-28 w-28 shrink-0" />
+            </span>
             <Keyword slug={t.slug} />
           </div>
           <div class="min-w-0">
