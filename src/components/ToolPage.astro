@@ -28,7 +28,7 @@ const tool = toolBySlug(slug)!;
   <div class="xl:grid xl:grid-cols-[13rem_minmax(0,1fr)_16rem] xl:items-start xl:gap-8">
 
     {/* ── 좌: 도구 목록. 이 lab 에서 가장 자주 하는 이동이다 ── */}
-    <nav aria-label="Calculators" class="hidden xl:block xl:sticky xl:top-4">
+    <nav aria-label="Calculators" class="hidden xl:block xl:sticky xl:top-[calc(var(--bar-h)_+_12px)] xl:max-h-[calc(100vh_-_var(--bar-h)_-_24px)] xl:overflow-y-auto">
       <p class="label">Calculators</p>
       <ul class="mt-2 space-y-0.5">
         {TOOLS.map((t) => {
@@ -83,7 +83,7 @@ const tool = toolBySlug(slug)!;
         넣으면서 레일이 344 → 884px 이 되어 800px 화면에서 그 함정에 들어갔다.
         화면 높이로 상한을 두고 넘치면 레일 안에서 스크롤한다. */}
     <aside aria-label="Reference"
-           class="mt-12 xl:mt-0 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto">
+           class="mt-12 xl:mt-0 xl:sticky xl:top-[calc(var(--bar-h)_+_12px)] xl:max-h-[calc(100vh_-_var(--bar-h)_-_24px)] xl:overflow-y-auto">
       <div class="card space-y-5 p-4 text-[13px]">
         {/* ★★ 신뢰도 삼항 — 정본은 `lib/tools.ts` 다. 쪽마다 적지 않는다.
             계산기를 믿을지는 **답이 아니라 답이 선 자리**를 보고 정한다.

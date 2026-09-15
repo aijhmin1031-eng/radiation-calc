@@ -14,11 +14,14 @@ const KEY_ = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
 /* ★ 판정은 `lib/features.ts` 한 곳이다 — 내비·낱장·저장막대가 **같은 답**을 봐야
    「저장은 못 하는데 메뉴에는 있는」 어긋난 상태가 안 생긴다. */
+import { SAVE_ENABLED } from "./features";
 export { SAVE_ENABLED as authConfigured } from "./features";
 
+/* ★ **같은 판정을 쓴다.** 여기서 원시 값의 참/거짓만 보면 꼴이 틀린 주소로도
+   생성자를 불러 던지고, 그 예외가 아일랜드 수화를 통째로 깨뜨려 계산기가 안 뜬다. */
 export const supabase: SupabaseClient | null =
-  URL_ && KEY_
-    ? createClient(URL_, KEY_, {
+  SAVE_ENABLED
+    ? createClient(URL_ as string, KEY_ as string, {
         auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "implicit" },
       })
     : null;

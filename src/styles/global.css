@@ -39,7 +39,10 @@
   color-scheme: dark;
 }
 
-html { scroll-padding-top: 72px; }
+/* ★★ **압축 고정 바의 높이는 여기 한 곳**이다. 바 자신 · 붙박이 레일의 top ·
+   scroll-padding-top 셋이 이 값을 읽는다 — 세 곳에 숫자를 두면 바를 키울 때
+   둘만 고쳐지고 나머지 하나가 조용히 어긋난다(레일 제목이 18px 가려져 있었다). */
+html { --bar-h: 46px; scroll-padding-top: calc(var(--bar-h) + 26px); }
 body { background: rgb(var(--c-surface)); color: rgb(var(--c-ink)); }
 a { color: inherit; }
 
