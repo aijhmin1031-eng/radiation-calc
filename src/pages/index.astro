@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import { u, SITE_NAME } from "../lib/site";
 import { TOOLS } from "../lib/tools";
+import Keyword from "../components/Keyword.astro";
 ---
 <Base title="Radiation protection calculators"
       description="Seven calculators for routine radiation protection work — dose rate and shielding, decay, detection limits, unit conversion, specific activity, beta shielding and job planning. Free, no sign-in.">
@@ -29,9 +30,15 @@ import { TOOLS } from "../lib/tools";
             첫 화면에 서던 도구가 셋에서 둘로 준다(진입장벽 작업을 되돌리는 셈이다).
             옆에 두면 글이 이미 56px 보다 높아 **카드 높이가 늘지 않는다**. */}
         <a href={u(`/${t.slug}/`)} class="flex gap-3 no-underline">
-          <img src={u(`/img/tools/${t.slug}.webp`)} width="56" height="56" alt="" aria-hidden="true"
-               loading="lazy" decoding="async"
-               class="h-14 w-14 shrink-0 rounded-lg border border-line" />
+{/* ★★ 그림 칸을 **카드 높이만큼** 세운다(2026-09-15). 112px 정사각 타일만 두었더니
+              그 아래에 **112 × 31~108px 의 구멍**이 남았다(카드마다 글 길이가 달라 크기도 제각각).
+              판으로 세우면 구멍이 「빈 곳」이 아니라 **판의 여백**이 되고, 각판화의 관용구와 맞는다.
+              ★ 카드 높이·첫 화면 카드 수는 그대로다(실측: 254px · 데스크톱 7/7 · 모바일 3/7). */}
+          <div class="flex w-28 shrink-0 flex-col items-center justify-between self-stretch rounded-lg border border-line bg-[#faf5e6] pb-2.5">
+            <img src={u(`/img/tools/${t.slug}.webp`)} width="112" height="112" alt="" aria-hidden="true"
+                 loading="lazy" decoding="async" class="h-28 w-28" />
+            <Keyword slug={t.slug} />
+          </div>
           <div class="min-w-0">
             <h2 class="text-[16px] font-semibold text-ink">{t.name}</h2>
             <p class="mt-1 text-[14px] leading-snug text-ink-muted">{t.question}</p>

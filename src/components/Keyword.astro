@@ -1,0 +1,27 @@
+---
+import { KEYWORD } from "../data/keywords";
+interface Props { slug: string; cap?: number }
+const { slug, cap = 12 } = Astro.props;
+const k = KEYWORD[slug];
+/* viewBox 의 폭·높이에서 화면 치수를 낸다 — cap(100)이 `cap`px 이 되도록. */
+const [, , vw, vh] = k ? k.vb.split(" ").map(Number) : [0, 0, 0, 0];
+---
+{/* 도판 캡션 — 각판화 판 아래에 새겨 넣은 한 낱말.
+    ★ **웹폰트가 아니라 경로다**(`src/data/keywords.ts`, 생성 파일). 이 사이트는 제3자 폰트를
+      한 건도 부르지 않는다 — 글자를 떠서 박으면 기기마다 얼굴이 달라지지 않고 어떤 배율에서도
+      또렷하다. 활자는 Libre Caslon Text(OFL), 1배 13px 로 네 후보를 구워 눈으로 골랐다.
+    ★ 자간은 **쌍마다 흰 면적을 재서** 잡았다(`AY` −20.8 · `SS` +5.7 …). 균일 자간으로 두면
+      `HI` 는 좁아 보이고 `AY` 는 사이가 뻥 뚫린다.
+    ★ 괘선은 **부풀린 괘선**(swelled rule) — 가운데가 두껍고 끝이 바늘처럼 가늘어진다.
+      19세기 표제지의 관용 장식이고, 직선 한 줄보다 손으로 판 것처럼 읽힌다. 두께는
+      4.5·7.2·10 을 실제 12px 로 구워 비교해 7.2 로 정했다.
+    ★ 색을 토큰에서 받지 않는다 — 판 바탕이 테마와 무관하게 늘 미색이므로 잉크도 고정이다.
+      #5a4c30 은 판 바탕(#faf5e6) 대비 7.67:1 로 AA 를 넉넉히 넘는다.
+    ★ `aria-hidden` — 바로 옆에 도구 이름이 글자로 있다. 한 번 더 읽으면 소음이다. */}
+{k ? (
+  <svg viewBox={k.vb} width={Math.round(vw * cap / 100)} height={Math.round(vh * cap / 100)}
+       fill="#5a4c30" aria-hidden="true" role="presentation" focusable="false" class="block">
+    <path d={k.rule} />
+    <path d={k.d} />
+  </svg>
+) : null}

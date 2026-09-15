@@ -12,8 +12,11 @@
 ★ **키를 레포에 두지 않는다** — 환경변수로만 받는다. 명령줄 인자로도 받지 않는다
   (셸 기록에 남는다).
 
-필요: Pillow. Pollo AI 의 GPT Image 2 를 쓴다(quality=low 로 충분하다 — 평면 일러스트에서
-low 와 medium 의 차이가 보이지 않고 값은 1/9 이다: 0.11 vs 0.97 credit).
+필요: Pillow. Pollo AI 의 GPT Image 2 를 쓴다.
+
+★★ **quality=medium 을 쓴다**(2026-09-15 소유주 지시 「더 고급지게 … 전문가가 그린 것처럼
+  디테일 살려줘」). 평면 도형 그림일 때는 low 로 충분했지만, **해칭으로 계조를 쌓는 각판화
+  기법은 low 에서 뭉갠다.** 값은 0.11 → 0.97 credit(장당 약 $0.06).
 """
 import hashlib, json, os, sys, time, urllib.request
 from io import BytesIO
@@ -27,37 +30,50 @@ OUT = os.path.join(os.path.dirname(__file__), "..", "public", "img", "tools")
 #   일곱이 **나란히 놓이면 그 차이가 보인다.**
 GROUND = (250, 245, 230)   # #faf5e6
 
-# ★ 공통 문체. 팔레트 규약을 문장으로 못 박는다 —
-#   「앰버는 정확히 하나」가 이 사이트의 규칙이고, 모델은 두 곳을 칠하려 든다.
+# ★★ 공통 문체 — **각판화(engraving) 기법**이다(2026-09-15 개정).
+#   그전에는 「둥근 도형 두셋」이었는데 고급스러움과는 반대 방향이었다. 우산의 lab 그림
+#   (`calc.webp`)이 이미 세선 잉크인데 도구 타일만 납작해 **한 집안으로 안 보였다.**
+#   ★ 팔레트 규약을 문장으로 못 박는다 — 「앰버는 정확히 하나」가 이 사이트의 규칙이고
+#     모델은 두 곳을 칠하려 든다.
+#   ★ **방사선 삼엽 표지를 막는다** — 안 막으면 선원 캡슐에 그려 넣는다(실측). 플랫폼은
+#     그 기호를 브랜드로 쓰지 않는다: 「위험을 경고하는 곳」으로 읽히고 용도가 규제된다.
 STYLE = (
-    "Friendly, simple flat 2D illustration. Warm off-white paper background. Drawn in soft warm "
-    "graphite grey ink with a calm, even, slightly rounded line weight. EXACTLY ONE element is "
-    "coloured, in a warm amber ochre — every other part is grey ink on the off-white paper, with no "
-    "other colour anywhere. Only two or three simple shapes in total. The subject fills about 70 "
-    "percent of the frame with small even margins, centred. Friendly and approachable rather than "
-    "technical. Absolutely no text, no letters, no numerals, no watermark, no signature. No "
-    "photorealism, no 3D rendering, no drop shadows, no gradients."
+    "A finely detailed technical pen-and-ink illustration in the manner of a classic "
+    "nineteenth-century scientific instrument engraving. Drawn entirely in fine hatching and "
+    "cross-hatching with a sharp nib, in warm graphite grey ink on warm off-white laid paper. "
+    "Precise draughtsman's linework with confident contour lines and tonal shading built only from "
+    "line work — no flat fills, no airbrush, no soft shading. Exactly ONE element is picked out in a "
+    "warm amber ochre; every other part is grey ink on the off-white paper, with no other colour "
+    "anywhere. Centred composition, the subject filling most of the frame with a small even margin. "
+    "IMPORTANT: no radiation trefoil, no hazard symbols, no warning signs, no logos of any kind. "
+    "No text, no letters, no numerals, no watermark, no signature. Square format, plain paper "
+    "background with no scenery."
 )
 
 # ★ 소재는 `lib/tool-icons.ts` 의 16px 기호와 **짝을 이룬다** — 같은 도구가 두 곳에서
 #   다른 그림이면 한쪽에서 배운 것이 다른 쪽에서 쓸모없다. 하나를 바꾸면 둘 다 바꾼다.
+#   기법을 각판화로 올리면서 **소재는 그대로 두었다** — 짝이 깨지지 않게.
 SUBJECTS = {
-    "units": "Two rounded measuring beakers of different sizes standing side by side, with one simple "
+    "units": "Two graduated glass measuring cylinders of different heights standing side by side on a "
+             "level bench, each with finely etched scale rings and a poured lip, and one slender "
              "two-way arrow curving between them. THE AMBER ELEMENT IS: the two-way arrow.",
-    "decay": "A softly rounded hourglass with the sand gathered in the lower bulb and a few grains "
-             "falling. THE AMBER ELEMENT IS: the sand.",
-    "gamma-shielding": "A thick rounded upright shield slab, with three soft wavy rays arriving from "
-             "the left and stopping against it. THE AMBER ELEMENT IS: the three rays.",
-    "specific-activity": "A small solid rounded cube resting on one pan of a simple two-pan balance "
-             "scale. THE AMBER ELEMENT IS: the cube.",
-    "mda": "A round magnifying glass with a friendly rounded handle, held over one very small dot. "
-             "THE AMBER ELEMENT IS: the small dot.",
-    "beta": "A tall upright rounded rectangular panel standing vertically on the right, like a small "
-             "screen or sheet seen edge-on. One small round particle approaches it from the left along "
-             "a gentle wavy dashed path and comes to rest against the panel's left face. "
-             "THE AMBER ELEMENT IS: the small round particle.",
-    "alara": "A simple round wall clock with a plain friendly face and two hands, with no numerals and "
-             "no markings on the face. THE AMBER ELEMENT IS: the minute hand.",
+    "decay": "An hourglass with turned hardwood posts, brass collars and blown glass bulbs, the sand "
+             "gathered in the lower bulb with a fine thread still falling through the waist. "
+             "THE AMBER ELEMENT IS: the sand.",
+    "gamma-shielding": "A small cylindrical sealed source capsule standing on a machined flanged "
+             "pedestal at the left, and a neatly interlocked stack of lead shielding bricks rising at "
+             "the right, with a narrow fan of rays travelling from the capsule and striking the brick "
+             "face. THE AMBER ELEMENT IS: the fan of rays.",
+    "specific-activity": "A precision two-pan analytical balance with a slender beam, knife-edge pivot "
+             "and hanging pans, a small machined metal block resting on the left pan. "
+             "THE AMBER ELEMENT IS: the machined block.",
+    "mda": "A magnifying lens with a brass rim and a turned hardwood handle, held above a plain plate "
+             "on which sits one single very small speck. THE AMBER ELEMENT IS: the small speck.",
+    "beta": "A thin flat absorber sheet standing upright in a slotted machined holder, with the curved "
+             "track of a single particle approaching from the left and terminating at the sheet's "
+             "face. THE AMBER ELEMENT IS: the particle at the end of the track.",
+    "alara": "A mechanical stopwatch with a knurled crown, a hinged bezel and a plain dial bearing "
+             "only tick marks and two hands. THE AMBER ELEMENT IS: the long sweep hand.",
 }
 
 
@@ -76,7 +92,7 @@ def generate(slug, key):
     prompt = f"{SUBJECTS[slug]} {STYLE}"
     task = call(f"/generation/{MODEL}/image", key,
                 {"input": {"prompt": prompt, "aspectRatio": "1:1",
-                           "resolution": "1K", "quality": "low"}})["data"]["taskId"]
+                           "resolution": "1K", "quality": "medium"}})["data"]["taskId"]
     for _ in range(40):
         time.sleep(4)
         g = (call(f"/generation/{task}/status", key)["data"].get("generations") or [{}])[0]
@@ -91,8 +107,11 @@ def generate(slug, key):
 def finish(im):
     """바탕을 맞추고 **내용 경계로 자른다.**
 
-    ★ 여백을 그대로 두면 안 된다 — 모델이 주는 여백이 장마다 달라(내용이 프레임의 34~62%),
-      56px 로 줄이면 여백만 큰 장이 **비어 보인다.** 실측으로 두 장이 그랬다.
+    ★ 여백을 그대로 두면 안 된다 — 모델이 주는 여백이 장마다 다르다(내용이 프레임의 52~99%).
+      줄여서 쓰면 여백만 큰 장이 **비어 보인다.**
+    ★ 숨통은 8% 다 — 각판화 판은 이미 프레임을 꽉 채우므로 넓게 주면 도로 작아진다.
+    ★★ 내보내는 크기는 **320px** 이고 화면에서는 112px 로 쓴다. 56px 로 줄이면
+      **해칭이 뭉개져 회색 덩어리**가 된다 — 디테일은 크기를 요구한다.
     """
     w, h = im.size
     corners = [im.getpixel(p) for p in [(5, 5), (w - 6, 5), (5, h - 6), (w - 6, h - 6)]]
@@ -110,13 +129,13 @@ def finish(im):
                 xs.append(x); ys.append(y)
     if xs:
         cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
-        half = max(max(xs) - min(xs), max(ys) - min(ys)) / 2 * 1.18   # 내용 + 18% 숨통
+        half = max(max(xs) - min(xs), max(ys) - min(ys)) / 2 * 1.08   # 내용 + 8% 숨통
         k = im.size[0] / 256
         side = int(min(im.size[0], half * 2 * k))
         L = max(0, min(im.size[0] - side, int(cx * k - side / 2)))
         T = max(0, min(im.size[1] - side, int(cy * k - side / 2)))
         im = im.crop((L, T, L + side, T + side))
-    return im.resize((256, 256), Image.LANCZOS)
+    return im.resize((320, 320), Image.LANCZOS)
 
 
 def main():
@@ -130,7 +149,7 @@ def main():
     for slug in want:
         im = finish(generate(slug, key))
         p = os.path.join(OUT, f"{slug}.webp")
-        im.save(p, "WEBP", quality=88, method=6)
+        im.save(p, "WEBP", quality=86, method=6)
         src["images"][slug] = {
             "subject": SUBJECTS[slug],
             "sha256": hashlib.sha256(open(p, "rb").read()).hexdigest(),
