@@ -1,0 +1,134 @@
+---
+import Base from "../../layouts/Base.astro";
+import { u, DATA_SOURCES } from "../../lib/site";
+import { ALL_KEYS, NUCLIDES, slugOf, longName, halfLifeText, decayWord, emissionKinds } from "../../lib/nuclides";
+
+const rows = ALL_KEYS.map((key) => {
+  const n = NUCLIDES[key];
+  const kinds = emissionKinds(n);
+  return { key, n, kinds, label: kinds.length ? kinds.join(" + ") : "none recorded" };
+});
+const gammaCount = rows.filter((r) => r.kinds.includes("gamma")).length;
+const noPhoton = rows.filter((r) => !r.kinds.includes("gamma"));
+const KIND_WORD: Record<string, string> = { gamma: "photon", xray: "X-ray only", beta: "beta", alpha: "alpha" };
+const words = (ks: string[]) => (ks.length ? ks.map((k) => KIND_WORD[k]).join(", ") : "none recorded");
+const sig = (x: number, d = 3) => (Number.isFinite(x) && x > 0 ? x.toPrecision(d) : "—");
+---
+<Base schema="CollectionPage" title="Nuclide reference — half-lives, emission lines, dose rates and shielding"
+      description={`Reference sheets for ${rows.length} nuclides: half-life, decay mode, specific activity, emission lines with their share of the dose rate, spectrum-solved half- and tenth-value layers, beta range and bremsstrahlung — computed from IAEA decay data and NIST attenuation coefficients.`}>
+  <nav class="tap-list mb-4 flex flex-wrap items-center gap-x-1.5 text-[12px] text-ink-faint">
+    <a href={u("/")} class="hover:text-ink">Calculators</a> <span aria-hidden>/</span> Nuclides
+  </nav>
+
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">Nuclide reference</h1>
+  <p class="mt-2 text-[15px] leading-relaxed text-ink-muted">
+    One sheet per nuclide, for the {rows.length} nuclides this site carries decay data for.
+  </p>
+
+  <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <h2>What is on each sheet, and how it is worked out</h2>
+    <p>
+      Each sheet gives the half-life, decay mode and specific activity, the photon, beta and alpha lines
+      that the evaluated data records, and — where there are photons above the cutoff — the air kerma rate
+      constant and the dose rate a given activity produces at a metre. None of it is copied from a
+      published table of constants. The emission data come from the IAEA evaluated file and the photon
+      interaction coefficients from NIST, and every derived quantity is recomputed from those two.
+    </p>
+
+    <h3>Emission probability is not dose contribution</h3>
+    <p>
+      A line's emission probability says how often it appears per hundred decays. Its share of the dose
+      rate also carries its energy and the absorption coefficient of air at that energy, so the two
+      rankings differ — a weak, hard line can outrank a strong, soft one. Each sheet prints both columns
+      side by side and says how many lines it takes to account for ninety per cent of the dose rate.
+      For most nuclides the answer is one or two out of a list of twenty or more.
+    </p>
+
+    <h3>Half-value layers are solved for the spectrum, not for one energy</h3>
+    <p>
+      The usual shortcut is to pick a representative energy, look the attenuation coefficient up, and
+      divide. That is exact only for a nuclide with a single line. When there are several, each one is
+      attenuated at its own rate, and the thickness that halves the total is not the thickness that
+      halves any one of them. Sodium-22 shows the size of the error plainly: read from its strongest
+      line at 1275 keV the lead half-value layer looks like 10.5 mm, but that line carries only 55% of
+      the kerma and the rest is 511 keV annihilation radiation, so the real figure is 6.5 mm.
+    </p>
+    <p>
+      These sheets solve for the thickness that leaves half — then a tenth — of the whole spectrum's air
+      kerma rate, line by line. The figures are narrow beam: scattered radiation is not added back, so a
+      shield designed to these numbers will let more through than they suggest. The
+      <a href={u("/gamma-shielding/")}>gamma shielding calculator</a> takes a buildup factor when the
+      answer has to be a design figure.
+    </p>
+
+    <h3>When half-value layers stop being additive</h3>
+    <p>
+      For a single energy the tenth-value layer is always 3.32 times the half-value layer, and stacking
+      three half-value layers leaves an eighth. Neither holds for a broad spectrum. The first layer
+      removes the soft part cheaply and what comes through is harder than what went in, so the second
+      layer removes less than the first. Tin-113 is the extreme case here, with a tenth-value layer
+      eighty-four times its half-value layer. Every sheet prints the ratio so the reader can see when
+      the rule of thumb has stopped working.
+    </p>
+
+    <h3>Nuclides with no photon above the cutoff</h3>
+    <p>
+      {noPhoton.length} of the {rows.length} nuclides here have no photon line above the conventional
+      20 keV cutoff, so their air kerma rate constant is zero and no external dose rate can be quoted.
+      They are not rare or exotic — they include tritium, carbon-14, nickel-63, strontium-90,
+      technetium-99 and iodine-129, which is to say most of what matters in waste characterisation and
+      decommissioning. Calculators built around a table of gamma constants either omit them or return
+      zero without saying why. Their sheets give what does apply: beta endpoint and mean, range in
+      common absorbers, bremsstrahlung yield against atomic number, and specific activity.
+    </p>
+
+    <h3>Beta shielding is a low-atomic-number job</h3>
+    <p>
+      Stopping a beta is a matter of enough material, and the range follows from the endpoint energy.
+      What changes with the choice of material is how much of the beta energy leaves again as
+      bremsstrahlung, which rises with atomic number. Shielding a strong beta emitter with lead
+      converts a particle you could have stopped into a photon you now have to stop. Each beta sheet
+      prints the yield in acrylic and in lead so the comparison is in front of the reader.
+    </p>
+  </section>
+
+  <section class="mt-8">
+    <h2 class="text-[20px] font-semibold text-ink">All {rows.length} nuclides</h2>
+    <p class="mt-2 max-w-3xl text-[14px] leading-relaxed text-ink-muted">
+      {gammaCount} emit photons above the cutoff; the rest are listed too. Γ is the air kerma rate
+      constant in mGy·m²/(GBq·h) at δ = 20 keV.
+    </p>
+    {/* ★ 148행 × 6열은 390px 에 못 들어간다 — **스크롤 컨테이너에 넣는다.**
+        1280px 에서는 표가 984px 로 맞으므로 스크롤이 생기지 않는다(데스크톱에서
+        컨테이너 안이 넘치면 `check-render` 가 결함으로 센다). 좁은 화면의 가로
+        스크롤은 이 레포에서 설계된 동작이다. */}
+    <div class="mt-3 overflow-x-auto">
+    <table class="min-w-[44rem]">
+      <thead>
+        <tr><th>Nuclide</th><th>Name</th><th>Half-life</th><th>Decay</th><th>Emissions</th><th>Γ</th></tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr>
+            <td><a href={u(`/nuclides/${slugOf(r.key)}/`)} class="underline">{r.key}</a></td>
+            <td>{longName(r.key)}</td>
+            <td>{halfLifeText(r.n)}</td>
+            <td>{decayWord(r.n.decay)}</td>
+            <td>{words(r.kinds)}</td>
+            <td>{sig(r.n.gamma_const)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="mt-8 max-w-3xl">
+    <p class="text-[14px] text-ink-muted">
+      Decay data from the {DATA_SOURCES[0].name}; attenuation coefficients from the {DATA_SOURCES[1].name}.
+      Both are harvested once and committed to the source repository, so these figures do not change
+      between visits. The derivations and their validation are on the
+      <a href={u("/methods/")} class="underline">methods page</a>.
+    </p>
+  </section>
+</Base>

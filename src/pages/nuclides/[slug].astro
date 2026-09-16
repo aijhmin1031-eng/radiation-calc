@@ -1,0 +1,217 @@
+---
+import Base from "../../layouts/Base.astro";
+import { u, DATA_SOURCES } from "../../lib/site";
+import { ALL_KEYS, NUCLIDES, nuclidePage, slugOf, longName, decayWord, halfLifeText, elementName } from "../../lib/nuclides";
+import { paragraphs } from "../../lib/nuclide-prose";
+
+export function getStaticPaths() {
+  return ALL_KEYS.map((key) => ({ params: { slug: slugOf(key) }, props: { key } }));
+}
+const { key } = Astro.props as { key: string };
+const p = nuclidePage(key);
+const n = p.n;
+
+/** ★ 검색 제목은 **그 핵종이 실제로 들고 있는 것**으로 짓는다 — 감마가 없는 핵종에
+ *  「gamma energies」를 달면 찾아온 사람이 없는 것을 찾게 된다(도구 쪽에서 이미 밟은 함정). */
+const seo = p.gamma > 0
+  ? `${p.key} — half-life, gamma energies, dose rate and shielding`
+  : n.beta?.length
+    ? `${p.key} — half-life, beta energy, range and bremsstrahlung`
+    : n.alpha?.length
+      ? `${p.key} — half-life, alpha energies and specific activity`
+      : `${p.key} — half-life, decay mode and specific activity`;
+
+const sig = (x: number, d = 3) => (Number.isFinite(x) ? x.toPrecision(d) : "—");
+const mm = (cm: number) => (Number.isFinite(cm) ? (cm * 10).toPrecision(3) : "—");
+const prose = paragraphs(p);
+const shown = p.shares.slice(0, 14);
+/** ★★ 계산기로 보내는 링크는 **이미 있는 복원 장치**(`?s=<base64 json>`)를 쓴다.
+ *  처음에 `?n=Co-60` 으로 적었는데 그것을 읽는 코드가 **아무 데도 없었다** — 눌러도
+ *  기본 핵종이 뜬다. 「없는 기능을 광고하지 않는다」(이 lab 이 `Saved` 에서 이미 밟았다).
+ *  `encodeURIComponent` 를 반드시 건다 — base64 의 `+` 가 질의문자열에서 공백이 되면
+ *  복원이 조용히 실패한다(형이 안 맞으면 `pick()` 이 기본값으로 떨어져 티도 안 난다). */
+const prefill = (tool: string, inputs: Record<string, unknown>) =>
+  `/${tool}/?s=${encodeURIComponent(Buffer.from(JSON.stringify(inputs), "utf8").toString("base64"))}`;
+
+const TOOLS_FOR: { href: string; label: string; when: boolean; prefill?: boolean }[] = [
+  { prefill: true, href: prefill("gamma-shielding", { nuclide: p.key }),  label: "Gamma dose rate and shielding", when: p.gamma > 0 },
+  { prefill: true, href: prefill("beta", { nuclide: p.key }),             label: "Beta dose rate and shielding",  when: Boolean(n.beta?.length) },
+  { prefill: true, href: prefill("decay", { nuclide: p.key }),            label: "Decay and half-life",           when: true },
+  { prefill: true, href: prefill("specific-activity", { nuclide: p.key }), label: "Mass and activity",            when: true },
+  { href: "/mda/", label: "Detection limits (MDA / MDC)", when: true },
+];
+const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).slice(0, 8);
+---
+<Base schema="TechArticle" title={seo} description={`${longName(key)} (${p.key}): half-life ${halfLifeText(n)}, ${decayWord(n.decay)}, specific activity, emission lines and ${p.gamma > 0 ? "spectrum-based half-value layers" : "measurement notes"} — computed from IAEA decay data and NIST attenuation coefficients.`}>
+  <nav class="tap-list mb-4 flex flex-wrap items-center gap-x-1.5 text-[12px] text-ink-faint">
+    <a href={u("/")} class="hover:text-ink">Calculators</a> <span aria-hidden>/</span>
+    <a href={u("/nuclides/")} class="hover:text-ink">Nuclides</a> <span aria-hidden>/</span> {p.key}
+  </nav>
+
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">{longName(key)}</h1>
+  <p class="mt-1 text-[15px] text-ink-muted">
+    {p.key} · {elementName(n.sym)}, Z = {n.z}, A = {n.a}{n.iso ? ` · isomeric state ${n.iso}` : ""}
+  </p>
+
+  <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    {prose.map((t) => <p set:html={t} />)}
+  </section>
+
+  <section class="mt-8 max-w-3xl">
+    <h2 class="text-[20px] font-semibold text-ink">Key figures</h2>
+    <table class="mt-3">
+      <tbody>
+        <tr><td>Half-life</td><td>{halfLifeText(n)} ({sig(n.t_half_s, 4)} s)</td></tr>
+        <tr><td>Decay mode</td><td>{decayWord(n.decay)}</td></tr>
+        <tr><td>Specific activity</td><td>{sig(n.sa_bq_g)} Bq/g ({sig(p.saCiPerG)} Ci/g)</td></tr>
+        {p.gamma > 0 && <tr><td>Air kerma rate constant Γ (δ = 20 keV)</td><td>{sig(p.gamma)} mGy·m²/(GBq·h)</td></tr>}
+        {p.gamma > 0 && <tr><td>Dose rate, 1 GBq at 1 m</td><td>{sig(p.doseAt1mPerGBq)} mGy/h</td></tr>}
+        {p.gamma > 0 && <tr><td>Dose rate, 1 Ci at 1 m</td><td>{sig(p.doseAt1mPerCi)} mGy/h</td></tr>}
+        {p.shares.length > 0 && <tr><td>Kerma-weighted mean photon energy</td><td>{sig(p.meanPhotonKeV, 4)} keV</td></tr>}
+        {p.betaMaxMeV && <tr><td>Beta endpoint / mean</td><td>{sig(p.betaMaxMeV)} MeV / {sig((n.beta_mean_keV ?? 0) / 1000)} MeV</td></tr>}
+      </tbody>
+    </table>
+  </section>
+
+  {shown.length > 0 && (
+    <section class="mt-8 max-w-3xl">
+      <h2 class="text-[20px] font-semibold text-ink">Photon lines and what each contributes</h2>
+      <p class="mt-2 text-[14px] leading-relaxed text-ink-muted">
+        Emission probability is how often a line appears per 100 decays. The dose share is that line's
+        part of the air kerma rate — energy and the air absorption coefficient both enter, so the two
+        columns rank differently. Lines below the 20 keV cutoff are excluded from both Γ and this table.
+      </p>
+      <table class="mt-3">
+        <thead><tr><th>Energy (keV)</th><th>Emission probability (%)</th><th>Share of dose rate (%)</th></tr></thead>
+        <tbody>
+          {shown.map((s) => (
+            <tr><td>{s.eKeV.toFixed(2)}</td><td>{s.yPct}</td><td>{(s.share * 100).toFixed(2)}</td></tr>
+          ))}
+        </tbody>
+      </table>
+      {p.shares.length > shown.length && (
+        <p class="mt-2 text-[13px] text-ink-faint">
+          Showing the {shown.length} largest contributors of {p.shares.length} lines above the cutoff; the
+          remainder together carry {((1 - shown.reduce((a, s) => a + s.share, 0)) * 100).toFixed(2)}% of the dose rate.
+        </p>
+      )}
+    </section>
+  )}
+
+  {p.shields.length > 0 && (
+    <section class="mt-8 max-w-3xl">
+      <h2 class="text-[20px] font-semibold text-ink">Half- and tenth-value layers</h2>
+      <p class="mt-2 text-[14px] leading-relaxed text-ink-muted">
+        Solved for this nuclide's whole photon spectrum, not for one representative energy: each line is
+        attenuated with its own coefficient and the thickness that leaves half — then a tenth — of the total
+        air kerma rate is found numerically. Narrow beam, no buildup, so a design shield needs more.
+      </p>
+      <table class="mt-3">
+        <thead><tr><th>Material</th><th>HVL (mm)</th><th>TVL (mm)</th><th>TVL / HVL</th></tr></thead>
+        <tbody>
+          {p.shields.map((s) => (
+            <tr>
+              <td>{s.material}</td><td>{mm(s.hvlCm)}</td><td>{mm(s.tvlCm)}</td><td>{s.ratio.toFixed(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="mt-2 text-[13px] text-ink-faint">
+        A single photon energy always gives TVL / HVL = 3.32. Larger values mean the spectrum hardens as it
+        penetrates, and half-value layers stop being additive.
+      </p>
+    </section>
+  )}
+
+  {p.betaRanges.length > 0 && (
+    <section class="mt-8 max-w-3xl">
+      <h2 class="text-[20px] font-semibold text-ink">Beta range and bremsstrahlung</h2>
+      <p class="mt-2 text-[14px] leading-relaxed text-ink-muted">
+        Range is the Katz–Penfold empirical fit to the endpoint energy, good to roughly ±10% and valid from
+        about 10 keV to 3 MeV. It is a stopping thickness, not an attenuation length: past the range the
+        primary betas are gone.
+      </p>
+      <table class="mt-3">
+        <thead><tr><th>Absorber</th><th>Range for the endpoint (mm)</th></tr></thead>
+        <tbody>
+          {p.betaRanges.map((r) => <tr><td>{r.material}</td><td>{mm(r.cm)}</td></tr>)}
+        </tbody>
+      </table>
+      <table class="mt-4">
+        <thead><tr><th>Shield material</th><th>Fraction of beta energy converted to X-rays</th></tr></thead>
+        <tbody>
+          <tr><td>acrylic (Z ≈ 6)</td><td>{(p.bremsLow * 100).toFixed(2)}%</td></tr>
+          <tr><td>lead (Z = 82)</td><td>{(p.bremsLead * 100).toFixed(2)}%</td></tr>
+        </tbody>
+      </table>
+    </section>
+  )}
+
+  {/* ★ `{n.alpha?.length && …}` 로 두면 배열이 **비었을 때 화면에 「0」이 찍힌다**(JSX 의 오래된
+      함정 — `undefined` 는 안 그려지는데 `0` 은 그려진다). 지금 자료에 빈 배열은 없지만,
+      수확이 한 번 바뀌면 147장 어딘가에 맨 `0` 이 뜨고 **빌드는 통과한다.** */}
+  {Boolean(n.alpha?.length) && (
+    <section class="mt-8 max-w-3xl">
+      <h2 class="text-[20px] font-semibold text-ink">Alpha lines</h2>
+      <table class="mt-3">
+        <thead><tr><th>Energy (MeV)</th><th>Emission probability (%)</th></tr></thead>
+        <tbody>
+          {[...n.alpha].sort((a, b) => b[1] - a[1]).slice(0, 10).map((a) => (
+            <tr><td>{(a[0] / 1000).toPrecision(5)}</td><td>{a[1]}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  )}
+
+  <section class="mt-8 max-w-3xl">
+    <h2 class="text-[20px] font-semibold text-ink">How the activity falls</h2>
+    <table class="mt-3">
+      <thead><tr><th>Elapsed</th><th>Fraction remaining</th></tr></thead>
+      <tbody>
+        {p.decayPoints.map((d) => (
+          <tr><td>{d.label}</td><td>{d.frac < 1e-4 ? d.frac.toExponential(2) : (d.frac * 100).toPrecision(3) + " %"}</td></tr>
+        ))}
+        {p.timeTo.map((t) => <tr><td>Time to fall to {t.label}</td><td>{t.text}</td></tr>)}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="mt-8 max-w-3xl">
+    <h2 class="text-[20px] font-semibold text-ink">What this page does not tell you</h2>
+    <ul class="mt-3 space-y-1.5 text-[15px] leading-relaxed text-ink-muted">
+      <li>Nothing here is an internal dose. Committed effective dose per becquerel taken in depends on
+        chemical form and biokinetics and is not computed anywhere on this site.</li>
+      <li>Dose rates assume a bare point source in air. A real source has self-absorption, a capsule and a
+        geometry, and every one of those lowers what you would measure.</li>
+      <li>Shielding figures are narrow beam. Scatter is not added back, so they underestimate the thickness
+        a design needs.</li>
+      {p.gamma > 0 && <li>Γ is quoted at a 20 keV cutoff. Lowering the cutoff pulls soft lines back in and can
+        change the answer by a large factor for nuclides with strong low-energy emission.</li>}
+      {p.betaMaxMeV && <li>The beta range is an empirical fit, and skin dose from a beta contamination is a
+        different calculation again — it needs source geometry and a point kernel, which this site does not do.</li>}
+    </ul>
+  </section>
+
+  <section class="mt-8 max-w-3xl">
+    <h2 class="text-[20px] font-semibold text-ink">Open {p.key} in a calculator</h2>
+    <ul class="mt-3 space-y-1.5">
+      {TOOLS_FOR.filter((t) => t.when).map((t) => (
+        <li><a href={u(t.href)} data-prefill={t.prefill ? p.key : undefined} class="underline text-[15px]">{t.label}</a></li>
+      ))}
+    </ul>
+    {related.length > 0 && (
+      <p class="mt-4 text-[14px] text-ink-muted">
+        Other {elementName(n.sym)} nuclides:{" "}
+        {related.map((k, i) => (
+          <>{i > 0 ? ", " : ""}<a href={u(`/nuclides/${slugOf(k)}/`)} class="underline">{k}</a></>
+        ))}
+      </p>
+    )}
+    <p class="mt-4 text-[14px] text-ink-muted">
+      Decay data from the {DATA_SOURCES[0].name}; attenuation coefficients from the {DATA_SOURCES[1].name}.
+      Both are harvested once and committed, so the numbers on this page do not move between visits.
+      The derivations are set out on the <a href={u("/methods/")} class="underline">methods page</a>.
+    </p>
+  </section>
+</Base>

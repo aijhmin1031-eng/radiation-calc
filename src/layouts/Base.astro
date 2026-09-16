@@ -14,8 +14,12 @@ interface Props {
   noindex?: boolean;
   /** 남에게 권할 쪽이 아닌 곳(개인 저장 목록)은 끈다 */
   share?: boolean;
+  /** ★★ **이 쪽이 무엇인지 사실대로 적는다.** 기본값은 계산기(`WebApplication`)인데,
+   *  핵종 낱장 147장은 **계산기가 아니라 자료 낱장**이라 그대로 두면 147쪽이 거짓을
+   *  주장하게 된다(「없는 것을 주장하지 않는다」 — 구조화 데이터를 세울 때 정한 규칙이다). */
+  schema?: "WebApplication" | "TechArticle" | "CollectionPage";
 }
-const { title, description, noindex, share = true } = Astro.props;
+const { title, description, noindex, share = true, schema = "WebApplication" } = Astro.props;
 const here = Astro.url.pathname;
 /** ★★ **머리글과 압축 고정 바가 같은 목록을 읽는다**(2026-09-16). 그전에는 링크 세 줄이
  *  두 곳에 복사돼 있었고, 그 바람에 **`Saved`·`Methods` 에는 활성 표시가 아예 없었다** —
@@ -23,6 +27,9 @@ const here = Astro.url.pathname;
  *  칸을 늘릴 때 한쪽만 고쳐지는 사고가 구조적으로 없다. */
 const NAVI = [
   { href: "/", label: "Calculators" },
+  /* ★ 핵종 낱장 147장으로 가는 문. 도구는 「무엇을 계산하는가」로 찾고, 여기는
+     「어느 핵종인가」로 찾는다 — 찾아오는 이유가 다르므로 칸을 따로 준다. */
+  { href: "/nuclides/", label: "Nuclides" },
   ...(SAVE_ENABLED ? [{ href: "/saved/", label: "Saved" }] : []),
   { href: "/methods/", label: "Methods" },
 ];
@@ -129,17 +136,30 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
         inLanguage: "en",
         isPartOf: { "@type": "WebSite", name: UMBRELLA_NAME, url: new URL(SITE_URL).origin },
       },
-      {
-        "@type": "WebApplication",
-        "@id": `${canonical(here)}#app`,
-        name: title,
-        url: canonical(here),
-        applicationCategory: "ScienceApplication",
-        operatingSystem: "Any (web browser)",
-        inLanguage: "en",
-        isAccessibleForFree: true,
-        description,
-      },
+      schema === "WebApplication"
+        ? {
+            "@type": "WebApplication",
+            "@id": `${canonical(here)}#app`,
+            name: title,
+            url: canonical(here),
+            applicationCategory: "ScienceApplication",
+            operatingSystem: "Any (web browser)",
+            inLanguage: "en",
+            isAccessibleForFree: true,
+            description,
+          }
+        : {
+            "@type": schema,
+            "@id": `${canonical(here)}#page`,
+            name: title,
+            headline: title,
+            url: canonical(here),
+            inLanguage: "en",
+            isAccessibleForFree: true,
+            description,
+            /* 자료의 출처를 기계가 읽을 수 있게 단다 — 값이 우리 것이 아니라 IAEA·NIST 의 것이다. */
+            citation: DATA_SOURCES.map((d) => d.name),
+          },
     ],
   })} />
   </head>
