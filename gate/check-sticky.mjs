@@ -30,8 +30,19 @@ const url = (p) => `http://localhost:${PORT}/calc${p}`;
 
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
   e.isDirectory() ? walk(join(d, e.name)) : [join(d, e.name)]);
-const paths = walk(DIST).filter((f) => f.endsWith(".html"))
+/** ★★ **핵종 낱장은 표본만 본다**(2026-09-16, 쪽이 12 → 159장이 되며 정했다).
+ *  이 게이트는 **스크롤한 뒤의 동작**(압축 바 · 앵커 여유 · 덮인 붙박이)을 재는데,
+ *  낱장 147장은 **한 틀에서 나온다** — 147장을 다 돌아도 새로 알게 되는 것이 없고
+ *  한 쪽마다 스크롤·관찰자 대기가 붙어 두 뷰포트에 20분 가까이 걸린다.
+ *  ★ 쪽마다 **내용이 다른 것**은 여기가 아니라 `check-render`(전 쪽)와
+ *    `check-nuclides`(전 쪽)가 본다. 층을 갈라 둔다.
+ *  ★ 표본은 **방출 종류가 서로 다른 넷**이다 — 감마가 많은 쪽 · 베타만 · 알파만 ·
+ *    기록이 아예 없는 쪽. 구획이 붙고 떨어지는 경우를 전부 덮는다. */
+const SAMPLE = ["/nuclides/i-131/", "/nuclides/sr-90/", "/nuclides/am-241/", "/nuclides/ca-41/"];
+const all = walk(DIST).filter((f) => f.endsWith(".html"))
   .map((f) => "/" + relative(DIST, f).replace(/index\.html$/, "").replace(/\\/g, "/"));
+const paths = all.filter((p) => !p.startsWith("/nuclides/") || p === "/nuclides/" || SAMPLE.includes(p));
+console.log(`   쪽 ${paths.length}장 (핵종 낱장 ${all.filter((p) => p.startsWith("/nuclides/")).length - 1}장 중 ${SAMPLE.length}장 표본)`);
 
 const browser = await chromium.launch(
   process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
