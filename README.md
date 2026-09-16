@@ -1,6 +1,12 @@
 # radiation-calc — RadCalc
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22794265.svg)](https://doi.org/10.5281/zenodo.22794265)
+
 `radiation-lab.com` 우산의 셋째 lab. **방사선 실무 계산기** 묶음이고 `/calc/` 에 산다.
+
+★ 위 배지는 **개념 DOI** 다 — **항상 최신 판본**을 가리키므로 릴리스를 내도 낡지 않는다.
+판본 DOI(릴리스마다 새로 발급)는 배지에 쓰지 않는다. 화면 정본은 `brand.ts` 의 `DOI`,
+발급 절차와 밟은 함정은 `docs/zenodo.md` 4절.
 
 우산 정본은 `aijhmin1031-eng/radiation-lab`, 절차는 `radiation-meter-tester/docs/umbrella-setup.md`.
 

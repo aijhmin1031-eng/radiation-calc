@@ -1,8 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
-import { DATA_SOURCES, SOURCE_CITATIONS, SITE_NAME, UMBRELLA_NAME, SITE_URL, u, canonical } from "../lib/site";
-const year = new Date().getUTCFullYear();
-const sheetsUrl = canonical("/nuclides/");
+import { DATA_SOURCES, SOURCE_CITATIONS, SITE_NAME, UMBRELLA_NAME, DOI, DOI_URL } from "../lib/site";
 ---
 <Base title="Methods and data"
       description="Where the nuclear and attenuation data come from, how the gamma constants are computed, how the results are validated, and the known limitations.">
@@ -75,13 +73,22 @@ const sheetsUrl = canonical("/nuclides/");
 
     <h3>This site</h3>
     <p class="my-3 rounded-md border border-line bg-surface px-3 py-2 text-[14px] leading-relaxed">
-      {UMBRELLA_NAME}. <em>{SITE_NAME} — nuclide reference and radiation protection calculators</em>.
-      {sheetsUrl} (accessed {year}).
+      Min, J. <em>{SITE_NAME} — nuclide reference sheets and spectrum-solved shielding for radiation
+      protection</em>. {UMBRELLA_NAME}. <a href={DOI_URL} rel="noopener" class="underline">{DOI}</a>
     </p>
     <p>
-      There is no version number yet. If you need a fixed reference, quote the date you accessed the
-      page: the committed datasets do not change between visits, but they are re-harvested when the
-      upstream evaluations are updated.
+      The source and the data it carries are deposited with Zenodo, which mints the identifier above
+      and keeps a copy independently of this site and of GitHub. Quote that identifier rather than a
+      URL: it is the thing that is meant to still resolve when the address has moved.
+    </p>
+    <p>
+      It is a <em>concept</em> DOI, so it always resolves to the most recent deposit. If you need the
+      exact state you worked from — because a number you quote must stay quotable — take the version
+      DOI of that release from the record page instead. Both are listed there.
+    </p>
+    <p>
+      The committed datasets do not change between visits. They are re-harvested when the upstream
+      evaluations are updated, and each re-harvest is a new release with its own version DOI.
     </p>
 
     <h3>The decay data</h3>
@@ -97,8 +104,10 @@ const sheetsUrl = canonical("/nuclides/");
     <p>{SOURCE_CITATIONS[1].terms}</p>
     <p>
       Note that these tables are a NIST Standard Reference Database rather than a public-domain work
-      of the United States government. They are used here to compute results, which is not the same
-      as republishing the tables; anyone wanting the tables themselves should take them from NIST.
+      of the United States government. A transcription of them is present in the public source tree,
+      because the code computes with them; that file is covered by the NIST terms above and not by
+      the MIT licence this site is released under, and it is not offered as a dataset or as standard
+      reference data. Anyone wanting the tables themselves should take them from NIST.
     </p>
 
     <h2>Corrections</h2>
