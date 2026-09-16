@@ -52,7 +52,7 @@ export function NuclidePicker({ nuclides, value, onChange, require: req, label =
 
       {open ? (
         <div className="relative">
-          <div className="absolute z-20 mt-1 w-full rounded-md border border-line bg-panel shadow-lg">
+          <div className="absolute z-20 mt-1 w-full rounded-md border border-line bg-surface shadow-lg">
             <div className="border-b border-line p-2">
               <input autoFocus className="field" placeholder="Type to filter — e.g. cs137, co-60, pu"
                 value={q} onChange={(e) => setQ(e.target.value)} />
