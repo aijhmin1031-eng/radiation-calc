@@ -5,6 +5,15 @@ export const SITE_TAGLINE = "Radiation protection calculators";
 export const SITE_URL_DEFAULT = "https://radiation-lab.com";
 export const BASE_PATH = "/calc/";
 export const UMBRELLA_NAME = "Radiation Lab";
+
+/** ★★ **이 저작물의 DOI 정본**(2026-09-16 발급). Zenodo 가 GitHub 릴리스에서 만들어 준다.
+ *  · **개념 DOI(`DOI`)가 쪽에 싣는 것**이다 — **항상 최신 판본**을 가리키므로 다음 릴리스에도
+ *    낡지 않는다. **판본 DOI 는 화면에 적지 않는다**(릴리스마다 바뀌어 손으로 고쳐야 한다).
+ *  · 새 릴리스를 내면 판본 DOI 는 새로 발급되지만 **개념 DOI 는 그대로다** — 즉 여기를
+ *    고칠 일이 없다. 고치게 된다면 그것은 저장소를 옮겼다는 뜻이다.
+ *  · 발급 절차와 밟은 함정(스위치가 릴리스보다 먼저여야 한다)은 `docs/zenodo.md` 4절. */
+export const DOI = "10.5281/zenodo.22794265";
+export const DOI_URL = "https://doi.org/10.5281/zenodo.22794265";
 /** 데이터 출처 — 화면과 내보내는 파일이 함께 든다(IAEA 는 출처 표기 조건이다). */
 export const DATA_SOURCES = [
   { name: "IAEA Nuclear Data Section — Livechart API (ENSDF)", url: "https://nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
