@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import att from "../data/attenuation.json" with { type: "json" };
 import nuc from "../data/nuclides.json" with { type: "json" };
 import type { Row } from "./interp.ts";
@@ -26,9 +27,17 @@ test("정말로 단일선인 핵종은 해석해와 정확히 일치한다 (Mn-5
 });
 
 /** ★★ **이 검사가 이 lab 의 주장 그 자체다** — 「주선 하나로 표에서 읽으면 틀린다」.
- *  Na-22 는 1275 keV 가 커마의 55% 뿐이고 나머지가 511 keV 소멸감마다. 주선만 보면
- *  납 10.5 mm 인데 스펙트럼으로는 6.5 mm 로 **38% 다르다.** 이 차이가 사라지면 우리가
- *  스펙트럼을 푸는 이유도 사라진 것이므로 **차이가 있다는 것**을 잰다. */
+ *  Na-22 는 1275 keV 가 커마의 55.4% 뿐이고 나머지(44.6%)가 511 keV 소멸감마다.
+ *  주선만 보면 납 **10.525 mm**, 스펙트럼으로 풀면 **6.530 mm** 다.
+ *  ★★ **이 차이를 %로 옮길 때는 분모를 반드시 밝힐 것**(2026-09-16, 홍보 문안을 쓰다
+ *    한 글 안에서 두 분모를 섞었다) — 같은 한 쌍의 값이 **두 숫자**가 된다:
+ *      · **38.0%** = (10.525−6.530)/**10.525** … 단일선 값이 분모. 「지름길 답의 38% 가 군더더기」
+ *      · **61.2%** = (10.525−6.530)/**6.530**  … 옳은 값이 분모. 「지름길이 61% 두껍다」
+ *    둘 다 산수는 맞다. 틀리는 것은 **한 글 안에 둘을 섞는 것**이다.
+ *    바깥에 내보내는 글은 **「지름길이 몇 % 두꺼운가」(옳은 값 분모)** 로 통일한다 —
+ *    독자가 알고 싶은 것은 「내가 쓰던 값이 얼마나 빗나갔나」이기 때문이다.
+ *  ★ 아래 단정은 **% 값이 아니라 「차이가 크다」** 를 잰다(`> 0.2`). 분모를 바꿔도 안 깨지고,
+ *    차이가 사라지면 우리가 스펙트럼을 푸는 이유도 사라진 것이므로 그때 깨져야 한다. */
 test("선이 섞이면 주선 해석해와 크게 다르다 — 단일에너지 표가 틀리는 자리 (Na-22)", () => {
   const n = N["Na-22"];
   const top = lineShares(n.lines, A.air)[0];
@@ -110,4 +119,43 @@ test("감마 핵종 전수 × 7물질에서 HVL·TVL 이 유한하고 양수다"
     }
   }
   assert.equal(bad.length, 0, `비정상: ${bad.slice(0, 8).join(", ")}`);
+});
+
+/** ★★ **README 의 표는 커밋된 산출물이다 — 게이트 없이 두면 반드시 낡는다.**
+ *  2026-09-16 에 README 에 다섯 핵종의 실측 표(스펙트럼 HVL · 단일선 HVL · 두께 차이 · TVL/HVL)를
+ *  실었다. 원자료를 다시 수확하면 그 값들이 움직이는데 **문서는 조용히 그대로 남는다** —
+ *  이 레포에서 이미 밟은 함정이다(공유 이미지·규격 판 표기). 그래서 **문서를 읽어 엔진과 대조**한다.
+ *  ★ 왜 이 표가 특히 위험한가: 이 숫자들은 **바깥에 내보내는 글의 원천**이다(홍보 문안이 여기서
+ *    숫자를 가져갔고, 분모를 밝히지 않은 탓에 실제로 한 번 틀렸다). **틀린 채로 나가면
+ *    되돌릴 수 없는 종류**다.
+ *  ★ 자릿수까지 맞추지 않고 **표에 인쇄된 자리까지**만 본다(표는 mm 소수 셋째, 비는 둘째).
+ *    더 세게 걸면 마지막 자리 반올림으로 헛돌고, 그러면 아무도 안 본다. */
+test("README 의 실측 표가 엔진과 일치한다", () => {
+  const md = readFileSync(new URL("../../README.md", import.meta.url), "utf8");
+  const rows = [...md.matchAll(
+    /^\s*\|\s*([A-Z][a-z]?-\d+m?)\s*\|\s*([\d.]+)\s*mm\s*\|\s*([\d.]+)\s*mm\s*\|\s*\*\*([^*]+)\*\*[^|]*\|\s*([\d.]+)\s*\|/gm,
+  )];
+  assert.ok(rows.length >= 5, `README 표를 못 읽었다 — 찾은 행 ${rows.length}개 (표 모양이 바뀌었나?)`);
+
+  for (const [, key, specTxt, anaTxt, diffTxt, ratioTxt] of rows) {
+    const n = N[key];
+    assert.ok(n, `${key} 가 데이터에 없다`);
+    const top = lineShares(n.lines, A.air)[0];
+    const spec = spectrumHVL(n.lines, A.air, A.lead, "lead") * 10;   // cm → mm
+    const ana = hvlFromMu(linearAttenuation(A.lead, top.eKeV / 1000, "lead")) * 10;
+    const ratio = (spectrumTVL(n.lines, A.air, A.lead, "lead") * 10) / spec;
+
+    assert.equal(spec.toFixed(3), Number(specTxt).toFixed(3), `${key} 스펙트럼 HVL`);
+    assert.equal(ana.toFixed(3), Number(anaTxt).toFixed(3), `${key} 단일선 HVL`);
+    assert.equal(ratio.toFixed(2), Number(ratioTxt).toFixed(2), `${key} TVL/HVL`);
+
+    // ★ 「두꺼운 정도」는 **옳은 값(스펙트럼)이 분모**다 — README 가 그렇게 통일한다고 적었다.
+    //   단일선 값을 분모로 쓰면 Na-22 가 38% 로 나온다. 그 혼동이 이 검사를 만든 이유다.
+    const over = (ana - spec) / spec;
+    if (diffTxt.endsWith("배")) {
+      assert.equal(Math.round(ana / spec), Number(diffTxt.replace("배", "")), `${key} 배수`);
+    } else {
+      assert.equal(Math.round(over * 100), Number(diffTxt.replace("%", "")), `${key} 두께 차이 %`);
+    }
+  }
 });
