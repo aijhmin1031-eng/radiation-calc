@@ -4,50 +4,34 @@
 
 ---
 
-## 0. 아직 막혀 있는 것 — **저자 이름 하나**
+## 0. 정해진 것과 남은 것
 
-라이선스는 정해졌다(**MIT**, 2026-09-16). 남은 것은 저자다.
+| | 상태 |
+|---|---|
+| **라이선스** | **MIT** (2026-09-16 소유주 결정). `LICENSE` 에 적용 범위를 덧붙였다 — 3절 |
+| **저자** | **Min, Jeho** · Korean Association for Radiation Application (KARA), Seoul, Republic of Korea |
+| ORCID | 아직 없음 — 있으면 두 파일에 한 줄씩 더한다(동명이인과 갈린다. <https://orcid.org> 에서 5분) |
+| **저장소 공개 전환** | **남아 있다** — Zenodo 연동 조건. 4절 |
 
-### 필드마다 사정이 다르다
+### 저자 칸에 무엇을 넣고 무엇을 넣지 않았나
 
-| 항목 | Zenodo | `CITATION.cff` | 판단 |
+| 항목 | Zenodo | `CITATION.cff` | 우리 선택 |
 |---|---|---|---|
-| **이름** | **필수** | **필수** | 실명. **발표될 로마자 표기를 소유주가 정한다** |
-| **소속(affiliation)** | 선택(관행상 필수) | 선택 | `Korean Association for Radiation Application (KARA), Seoul, Republic of Korea` |
-| **ORCID** | 선택 | 선택 | 권장 — 동명이인과 갈린다. 없으면 <https://orcid.org> 에서 5분 |
-| **국가** | **창작자 필드가 없다** | 선택 | 소속에 이미 들어간다. 따로 넣지 않는다 |
-| **주소(번지)** | **없다** | 선택 | ⚠️ **넣지 않기를 권한다** — 아래 |
+| 이름 | 필수 | 필수 | `Min, Jeho` |
+| 소속 | 선택(관행상 필수) | 선택 | KARA, Seoul, Republic of Korea |
+| ORCID | 선택 | 선택 | 아직 없음 |
+| 국가 | **필드가 없다** | 선택 | **넣지 않는다** — 소속에 들어간다 |
+| 주소(번지) | **없다** | 선택 | **넣지 않는다** — 아래 |
 
 · ★★ **DOI 기록은 영구 보관이고 지울 수 없다.** 학술 관행에서 저자에게 필요한 것은
-  **이름 + 소속**이고 번지를 적는 경우는 거의 없다. 소속 기관명만으로 국가·기관이 다 식별된다.
-  개인 주소를 영구 공개 기록에 넣는 것은 되돌릴 수 없는 선택이므로 기본값으로 두지 않는다.
-· ★★ **로마자 표기는 짐작하지 않는다.** 계정 메일에서 머리글자까지는 보이지만
-  `Min, Jae-Hyun` · `Jaehyun Min` · `Min Jae Hyun` 중 어느 것인지는 **본인이 쓰는 표기가 정본**이다.
-  한 번 박히면 바꿀 수 없다.
-· 기관명은 확인했다 — `ri.or.kr` 은 **한국방사선진흥협회**(Korean Association for Radiation
-  Application, KARA), 서울 성동구 성수일로 77 서울숲IT밸리.
-
-### 채울 자리 (두 파일, 값은 같아야 한다)
-
-`CITATION.cff`
-```yaml
-authors:
-  - family-names: "Min"            # ← 성(姓) 로마자
-    given-names: "Jae-Hyun"        # ← 이름 로마자 — 본인 표기로
-    affiliation: "Korean Association for Radiation Application (KARA), Seoul, Republic of Korea"
-    orcid: "https://orcid.org/0000-0000-0000-0000"   # 없으면 이 줄을 지운다
-```
-
-`.zenodo.json`
-```json
-"creators": [
-  { "name": "Min, Jae-Hyun",
-    "affiliation": "Korean Association for Radiation Application (KARA), Seoul, Republic of Korea",
-    "orcid": "0000-0000-0000-0000" }
-]
-```
-★ Zenodo 의 `name` 은 **`성, 이름`** 꼴이다. ORCID 는 **주소 없이 숫자만** 넣는다.
-★ 위 값은 **꼴을 보이는 예시**다 — 실제 표기로 바꾸기 전에는 올리지 않는다.
+  **이름 + 소속**이고 번지를 적는 경우는 거의 없다. 소속 기관명으로 국가·기관이 다 식별된다.
+  개인 주소를 영구 공개 기록에 넣는 것은 되돌릴 수 없으므로 넣지 않는다.
+· ★ **표기를 바꾸려면 지금이다.** `Min, Jeho` 대신 `Min, Je-Ho` 로 쓰는 표기도 흔하다 —
+  DOI 가 발급된 뒤에는 그 기록의 저자명을 고칠 수 없다. 두 파일(`CITATION.cff` · `.zenodo.json`)의
+  값은 **항상 같아야 한다.**
+· ★ `LICENSE` 의 저작권자는 **`Jeho Min`** 이다. ⚠️ **이 작업이 KARA 의 업무 산출물이라면
+  저작권자가 기관일 수 있다** — 그렇다면 그 한 줄을 기관명으로 바꾼다. 확인이 필요하면
+  올리기 전에 정한다(라이선스 문구 자체는 그대로 둔다).
 
 ---
 
