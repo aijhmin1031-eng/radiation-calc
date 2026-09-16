@@ -95,27 +95,35 @@ const sig = (x: number, d = 3) => (Number.isFinite(x) && x > 0 ? x.toPrecision(d
   <section class="mt-8">
     <h2 class="text-[20px] font-semibold text-ink">All {rows.length} nuclides</h2>
     <p class="mt-2 max-w-3xl text-[14px] leading-relaxed text-ink-muted">
-      {gammaCount} emit photons above the cutoff; the rest are listed too. Γ is the air kerma rate
-      constant in mGy·m²/(GBq·h) at δ = 20 keV.
+      {gammaCount} emit photons above the cutoff; the rest are listed too. On a wide screen the table
+      also carries the decay mode and Γ, the air kerma rate constant in mGy·m²/(GBq·h) at δ = 20 keV;
+      on a narrow one both are on the sheet itself rather than squeezed into the list.
     </p>
     {/* ★ 148행 × 6열은 390px 에 못 들어간다 — **스크롤 컨테이너에 넣는다.**
         1280px 에서는 표가 984px 로 맞으므로 스크롤이 생기지 않는다(데스크톱에서
         컨테이너 안이 넘치면 `check-render` 가 결함으로 센다). 좁은 화면의 가로
         스크롤은 이 레포에서 설계된 동작이다. */}
-    <div class="mt-3 overflow-x-auto">
-    <table class="min-w-[44rem]">
+    <div class="pin-first mt-3">
+    <table class="lg:min-w-[44rem]">
       <thead>
-        <tr><th>Nuclide</th><th>Name</th><th>Half-life</th><th>Decay</th><th>Emissions</th><th>Γ</th></tr>
+        <tr><th>Nuclide</th><th class="hidden lg:table-cell">Name</th><th>Half-life</th><th class="hidden lg:table-cell">Decay</th><th>Emissions</th><th class="hidden lg:table-cell">Γ</th></tr>
       </thead>
       <tbody>
         {rows.map((r) => (
           <tr>
             <td><a href={u(`/nuclides/${slugOf(r.key)}/`)} class="underline">{r.key}</a></td>
-            <td>{longName(r.key)}</td>
+            {/* ★ 좁은 화면에서는 뺀다 — 「Ac-227」 옆의 「Actinium-227」 은 중복이고
+                174px 를 먹어 가로 스크롤을 그만큼 늘린다. */}
+            <td class="hidden lg:table-cell">{longName(r.key)}</td>
             <td>{halfLifeText(r.n)}</td>
-            <td>{decayWord(r.n.decay)}</td>
+            {/* ★ 모바일에서 뺀다 — 이 칸이 265px 로 가장 넓은데(「electron capture with
+                beta-plus」) 훑을 때 쓰는 축이 아니다. 낱장을 열면 맨 위에 있다. */}
+            <td class="hidden lg:table-cell">{decayWord(r.n.decay)}</td>
             <td>{words(r.kinds)}</td>
-            <td>{sig(r.n.gamma_const)}</td>
+            {/* ★ 모바일에서 뺀다 — 좁은 화면에서 이 목록의 일은 **찾아서 누르는 것**이고,
+                Γ 는 낱장 맨 위 「Key figures」에 있다. 넷을 넘기면 가로 스크롤이 생기고,
+                스크롤이 생기면 고정 칸 옆으로 글자 꼬리가 삐져나온다(실측으로 봤다). */}
+            <td class="hidden lg:table-cell">{sig(r.n.gamma_const)}</td>
           </tr>
         ))}
       </tbody>

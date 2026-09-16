@@ -144,9 +144,50 @@ for (const [key, slug] of [["Co-60", "co-60"], ["Ir-192", "ir-192"], ["Sr-90", "
     await page.close();
   }
 }
+
+/* ── ⑥ 목록 표를 가로로 밀어도 「어느 행인지」가 남는가 ──────── */
+console.log("\n⑥ 목록 표 — 가로 스크롤과 고정 칸");
+/** ★★ 계기(2026-09-16 소유주가 화면에서 잡았다). 148행을 390px 에 넣으려고 스크롤
+ *  컨테이너에 두었더니, **오른쪽으로 밀면 핵종 이름 칸이 화면 밖으로 나가**
+ *  「beta-minus decay · beta · —」만 남았다 — 그 줄은 아무 뜻이 없다.
+ *  ★★ **기존 게이트가 구조적으로 못 본다** — 전부 스크롤 0 에서 잰다. 압축 고정 바에서
+ *    이미 배운 것과 같다: **스크롤한 뒤에만 존재하는 것은 따로 재야 한다.**
+ *  ★ 두 가지를 잰다 — ① 흔한 폭에서는 **가로 스크롤이 아예 없어야** 하고(칸을 줄여서 푼다)
+ *    ② 그래도 스크롤이 생기는 좁은 폭(320px)에서는 **첫 칸이 끝까지 밀어도 보여야** 한다. */
+const NO_SCROLL_AT = [360, 390, 700, 900, 1024, 1280];
+for (const w of [320, ...NO_SCROLL_AT]) {
+  const c = await browser.newContext({ viewport: { width: w, height: 844 } });
+  const page = await c.newPage();
+  await page.goto(`http://127.0.0.1:${PORT}${BASE}/nuclides/`, { waitUntil: "networkidle" });
+  const m = await page.evaluate(() => {
+    const t = document.querySelector("table"); if (!t) return null;
+    const box = t.closest(".pin-first") ?? t.parentElement;
+    const cell = () => {
+      const td = document.querySelector("tbody tr td:first-child");
+      const r = td.getBoundingClientRect();
+      return { text: td.textContent.trim(), left: Math.round(r.left), visible: r.right > 0 && r.left < innerWidth };
+    };
+    const over = box.scrollWidth - box.clientWidth;
+    const before = cell();
+    box.scrollLeft = box.scrollWidth;
+    const after = cell();
+    box.scrollLeft = 0;
+    return { over, before, after, pos: getComputedStyle(document.querySelector("tbody tr td:first-child")).position };
+  });
+  if (!m) { fail.push(`${w}px: 목록 표를 못 찾았다`); await c.close(); continue; }
+  if (NO_SCROLL_AT.includes(w) && m.over > 0)
+    fail.push(`${w}px: 목록 표에 가로 스크롤 ${m.over}px — 이 폭에서는 칸을 줄여 없애기로 했다`);
+  if (m.over > 0 && !m.after.visible)
+    fail.push(`${w}px: 끝까지 밀면 첫 칸(${m.after.text})이 화면 밖이다 — 행이 무엇인지 알 수 없다`);
+  if (m.over > 0 && m.pos !== "sticky")
+    fail.push(`${w}px: 스크롤이 생기는데 첫 칸이 고정돼 있지 않다 (position: ${m.pos})`);
+  note(`${String(w).padStart(4)}px  넘침 ${String(m.over).padStart(3)}px · 끝까지 민 뒤 첫 칸 「${m.after.text}」 ${m.after.visible ? "보임" : "안 보임"}`);
+  await c.close();
+}
+
 await ctx.close(); await browser.close(); srv.close();
 note(`${checked}개 링크를 눌러 확인`);
 
 console.log(fail.length ? `\n❌ ${fail.length}건\n` + fail.map((x) => "   " + x).join("\n")
-  : `\n✅ 핵종 낱장 — ${dirs.length}장 · 깨진 숫자 0 · 감마 누출 0 · 본문 겹침 중앙 ${(median * 100).toFixed(1)}% · 프리필 ${checked}개 복원`);
+  : `\n✅ 핵종 낱장 — ${dirs.length}장 · 깨진 숫자 0 · 감마 누출 0 · 본문 겹침 중앙 ${(median * 100).toFixed(1)}% · 프리필 ${checked}개 복원 · 목록 표 7폭`);
 process.exit(fail.length ? 1 : 0);

@@ -93,6 +93,31 @@ tbody td { @apply px-3 py-2 border-b border-line text-ink-muted; }
 tbody td:first-child { @apply text-ink font-medium; }
 tbody tr:hover td { background: rgb(var(--c-accent-soft) / 0.35); }
 
+
+/* ★★ **가로로 스크롤하는 표는 첫 칸을 고정해야 한다**(2026-09-16 소유주가 화면에서 잡았다).
+   핵종 목록 148행을 390px 에서 보려고 스크롤 컨테이너에 넣었더니, 오른쪽으로 밀었을 때
+   **핵종 이름 칸이 화면 밖으로 나가** 행이 무엇인지 알 수 없게 됐다(실측 left = −334px).
+   「beta-minus decay · beta · —」만 남으면 그 줄은 아무 뜻이 없다.
+   ★ 다른 게이트가 **구조적으로 못 본다** — 전부 스크롤 0 에서 재기 때문이다.
+     압축 고정 바에서 이미 배운 것과 같다: **스크롤한 뒤에만 존재하는 것은 따로 재야 한다.**
+   ★ 바탕을 반투명으로 두면 안 된다 — 고정된 칸 **밑으로 다른 칸이 비쳐 지나간다.**
+     그래서 `color-mix` 로 같은 배합을 **불투명하게** 만든다(옛 브라우저는 앞 줄로 떨어진다). */
+.pin-first { overflow-x: auto; }
+.pin-first table td:first-child,
+.pin-first table th:first-child {
+  position: sticky; left: 0; z-index: 1;
+  background: rgb(var(--c-paper));
+  border-right: 1px solid rgb(var(--c-line-strong));
+}
+.pin-first table thead th:first-child {
+  background: rgb(var(--c-paper));
+  background: color-mix(in srgb, rgb(var(--c-accent-soft)) 60%, rgb(var(--c-paper)));
+}
+.pin-first table tbody tr:hover td:first-child {
+  background: rgb(var(--c-paper));
+  background: color-mix(in srgb, rgb(var(--c-accent-soft)) 35%, rgb(var(--c-paper)));
+}
+
 /* 본문 — 절 번호는 조판이 매긴다. 본문에 손으로 쓰지 않는다. */
 .prose-doc { counter-reset: h2sec; }
 .prose-doc h2 { @apply mt-10 mb-3 text-[20px] font-semibold text-ink; counter-increment: h2sec; counter-reset: h3sec; }
