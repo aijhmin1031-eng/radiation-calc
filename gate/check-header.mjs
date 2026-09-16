@@ -20,6 +20,7 @@ const MIME = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript
                ".json": "application/json", ".xml": "application/xml" };
 const fail = [];
 const note = (s) => console.log("   " + s);
+const who0 = (signed) => (signed ? "로그인" : "로그아웃");
 
 const srv = createServer((q, r) => {
   let p = decodeURIComponent(q.url.split("?")[0]);
@@ -80,8 +81,39 @@ for (const [w, h, tag] of [[1280, 900, "데스크톱"], [390, 844, "모바일"]]
         themeText: [...hd.querySelectorAll(".rmt-theme-on-light,.rmt-theme-on-dark")]
           .filter((e) => getComputedStyle(e).display !== "none").map((e) => e.textContent.trim()).join("/"),
         overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        /** ★★ **머리글·꼬리말이 본문과 면으로 갈리는가**(2026-09-16 소유주 지적
+         *  「여기는 메뉴와 본문 배경색이 비슷해보여」). 실측 명도차가 **채널당 4**였다.
+         *  ★ 원인은 `bg-panel` 이었다 — 이 lab 에서 `--c-panel` 은 **순백**이고
+         *    「카드가 떠 보이게 하는 색」이다. 본문이 이미 거의 흰색이라 **더 밝아질 데가
+         *    없었다.** 껍데기는 `--c-chrome` 으로 **살짝 어둡게** 간다.
+         *  ★ **선이 아니라 면으로 잰다** — 선만 굵히면 한 바탕 위에 줄이 그어질 뿐이다. */
+        bands: (() => {
+          const px = (v) => (v.match(/\d+/g) || []).slice(0, 3).map(Number);
+          const eff = (el) => { if (!el) return null; let n = el, c = getComputedStyle(n).backgroundColor;
+            while (c === "rgba(0, 0, 0, 0)" && n.parentElement) { n = n.parentElement; c = getComputedStyle(n).backgroundColor; }
+            return c; };
+          const d = (a, b) => { const A = px(a || ""), B = px(b || "");
+            return A.length === 3 && B.length === 3 ? Math.abs(A[0]-B[0]) + Math.abs(A[1]-B[1]) + Math.abs(A[2]-B[2]) : -1; };
+          const body = getComputedStyle(document.body).backgroundColor;
+          const ft = document.querySelector("footer");
+          return { head: d(eff(hd), body), foot: d(eff(ft), body),
+                   headW: Math.round(hd.getBoundingClientRect().width),
+                   footW: ft ? Math.round(ft.getBoundingClientRect().width) : 0,
+                   docW: document.documentElement.clientWidth };
+        })(),
       };
     });
+
+    const BAND_MIN = 18;  // 채널당 6 — 이보다 얕으면 스크롤 중에 경계가 안 읽힌다
+    if (m.bands.head < BAND_MIN)
+      fail.push(`${tag} ${who0(signed)}: 머리글이 본문과 거의 같다(명도차 ${m.bands.head}, 최소 ${BAND_MIN})`);
+    if (m.bands.foot < BAND_MIN)
+      fail.push(`${tag} ${who0(signed)}: 꼬리말이 본문과 거의 같다(명도차 ${m.bands.foot}, 최소 ${BAND_MIN})`);
+    if (m.bands.headW !== m.bands.docW)
+      fail.push(`${tag} ${who0(signed)}: 머리글 띠가 전폭이 아니다 ${m.bands.headW}/${m.bands.docW}px`);
+    if (m.bands.footW !== m.bands.docW)
+      fail.push(`${tag} ${who0(signed)}: 꼬리말 띠가 전폭이 아니다 ${m.bands.footW}/${m.bands.docW}px`);
+    note(`층 대비 — 머리글 ${m.bands.head} · 꼬리말 ${m.bands.foot}(최소 ${BAND_MIN}) · 띠 ${m.bands.headW}px`);
 
     const who = signed ? "로그인" : "로그아웃";
     if (ON && !m.chip) fail.push(`${tag} ${who}: 머리글에 계정 표시가 없다`);
