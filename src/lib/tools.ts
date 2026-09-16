@@ -42,10 +42,11 @@ export const TOOLS: Tool[] = [
   { slug: "units", name: "Unit converter",
     seoTitle: "Radiation unit converter — activity, dose, exposure", needs: ["none"], login: false,
     question: "How many becquerels is 5 µCi? How many Bq/cm² is 6000 dpm/100 cm²?",
-    blurb: "Activity, dose, dose equivalent, exposure and surface contamination — converted within each quantity, never across.",
+    blurb: "Activity, dose, dose equivalent, exposure, surface contamination and concentration — converted within each quantity, never across.",
     assumes: [
       "Conversions stay inside one quantity, using the exact SI definitions rather than rounded factors.",
       "Exposure to air kerma multiplies by W/e = 33.97 J/C, the average energy to make one ion pair in dry air.",
+      "Activity per litre and activity per kilogram are separate quantities. Crossing between them takes a density you supply, not a fixed factor.",
     ],
     excludes: [
       "Gray to sievert. That step needs a radiation weighting factor that depends on the radiation type — there is no single factor.",

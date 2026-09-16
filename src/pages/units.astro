@@ -39,6 +39,23 @@ import Units from "../components/calc/Units.tsx";
       looks two orders of magnitude out of place, this is usually why.
     </p>
 
+    <h3>Per mass and per volume</h3>
+    <p>
+      Activity concentration is quoted two ways. Soil, waste and food are reported per unit mass —
+      Bq/g, Bq/kg, pCi/g. Water, air and source vials are reported per unit volume — Bq/L, Bq/mL,
+      pCi/L. Those are not two spellings of one quantity. They have different denominators, and
+      moving between them requires the density of the material, which the number itself does not
+      carry. This converter therefore keeps them in separate groups and offers the crossing as a
+      separate step with a density you enter.
+    </p>
+    <p>
+      Water hides the distinction, because at 1.00 g/mL a litre weighs a kilogram and the two
+      readings coincide: 1 Bq/L is 1 Bq/kg. That coincidence is exactly what makes the mistake hard
+      to see, since it holds for water and fails for everything else, and it is a factor of a
+      thousand out if the gram is used in place of the kilogram. A drinking-water limit quoted as
+      5 pCi/L is 0.185 Bq/L, which is 0.185 Bq/kg and 0.000185 Bq/g.
+    </p>
+
     <h3>Gray and sievert</h3>
     <p>
       For photons and electrons the radiation weighting factor is 1, so a dose in gray and a dose

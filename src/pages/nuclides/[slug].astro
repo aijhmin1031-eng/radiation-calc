@@ -156,7 +156,10 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
       <table class="mt-3">
         <thead><tr><th>Energy (MeV)</th><th>Emission probability (%)</th></tr></thead>
         <tbody>
-          {[...n.alpha].sort((a, b) => b[1] - a[1]).slice(0, 10).map((a) => (
+          {/* ★ 위 `Boolean(n.alpha?.length)` 가 지키지만 **타입은 그 좁힘을 JSX 경계 밖으로
+              옮기지 못한다** — `astro check` 가 여기서 걸린다(2026-09-16, 게이트를 살리며 드러났다).
+              `?? []` 로 값 쪽에서 풀어 준다. 동작은 그대로다. */}
+          {[...(n.alpha ?? [])].sort((a, b) => b[1] - a[1]).slice(0, 10).map((a) => (
             <tr><td>{(a[0] / 1000).toPrecision(5)}</td><td>{a[1]}</td></tr>
           ))}
         </tbody>
