@@ -5,15 +5,15 @@
   },
   "/alara/": {
     "slug": "alara",
-    "title": "ALARA and job planning · RadCalc"
+    "title": "ALARA calculator — stay time and collective dose · RadCalc"
   },
   "/beta/": {
     "slug": "beta",
-    "title": "Beta dose rate and shielding · RadCalc"
+    "title": "Beta dose rate calculator and shielding · RadCalc"
   },
   "/decay/": {
     "slug": "decay",
-    "title": "Decay and half-life · RadCalc"
+    "title": "Radioactive decay calculator — half-life and activity · RadCalc"
   },
   "/disclaimer/": {
     "slug": "disclaimer",
@@ -21,11 +21,11 @@
   },
   "/gamma-shielding/": {
     "slug": "gamma-shielding",
-    "title": "Gamma dose rate and shielding · RadCalc"
+    "title": "Gamma dose rate calculator and shielding · RadCalc"
   },
   "/mda/": {
     "slug": "mda",
-    "title": "Detection limits (MDA / MDC) · RadCalc"
+    "title": "MDA calculator — detection limits and scan MDC · RadCalc"
   },
   "/methods/": {
     "slug": "methods",
@@ -33,10 +33,10 @@
   },
   "/specific-activity/": {
     "slug": "specific-activity",
-    "title": "Mass and activity · RadCalc"
+    "title": "Specific activity calculator — mass and activity · RadCalc"
   },
   "/units/": {
     "slug": "units",
-    "title": "Unit converter · RadCalc"
+    "title": "Radiation unit converter — activity, dose, exposure · RadCalc"
   }
 }
