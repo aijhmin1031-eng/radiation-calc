@@ -28,10 +28,10 @@ export function CalcButton({ dirty, invalid, onClick, verb = "Calculate" }: {
         onClick={() => { if (!blocked) onClick(); }}
         className={`flex w-full items-center justify-center gap-2 rounded-lg border px-4 text-[15px] font-semibold transition-colors min-h-[48px] ${
           blocked
-            ? "cursor-not-allowed border-line bg-panel text-ink-faint"
+            ? "cursor-not-allowed border-line bg-surface text-ink-faint"
             : dirty
               ? "border-accent bg-accent-soft text-ink hover:border-accent/70"
-              : "border-line bg-panel text-ink-muted hover:border-accent/40"}`}
+              : "border-line bg-surface text-ink-muted hover:border-accent/40"}`}
       >
         {/* ★ 글자는 **늘 같다** — 처음 온 사람에게 「Calculate again」은 거짓말이다
             (아직 아무것도 안 눌렀다). 상태는 색과 아래 한 줄이 든다. */}

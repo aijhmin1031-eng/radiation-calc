@@ -105,7 +105,7 @@ export function RadioRow<T extends string>({ value, onChange, options, name }: {
             onClick={() => onChange(o.value)} title={o.hint}
             className={`rounded-md border px-3 py-1.5 text-[13px] min-h-[38px] transition-colors ${
               on ? "border-accent bg-accent-soft font-semibold text-ink"
-                 : "border-line bg-panel text-ink-muted hover:border-accent/40"}`}>
+                 : "border-line bg-surface text-ink-muted hover:border-accent/40"}`}>
             {o.label}
           </button>
         );

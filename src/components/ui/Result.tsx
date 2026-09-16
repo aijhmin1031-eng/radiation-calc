@@ -23,7 +23,7 @@ export function Headline({ value, unit, label, note, stale }: {
 }) {
   return (
     <div className={`rounded-lg border px-4 py-4 transition-opacity ${
-      stale ? "border-line bg-panel opacity-60" : "border-accent/40 bg-accent-soft"}`}>
+      stale ? "border-line bg-surface opacity-60" : "border-accent/40 bg-accent-soft"}`}>
       <p className="label mb-1.5">{label}</p>
       <p className="flex flex-wrap items-baseline gap-1.5">
         <span className="num text-[30px] font-semibold leading-none text-ink sm:text-[36px]">

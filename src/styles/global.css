@@ -9,22 +9,33 @@
    그 색이었다 — 라벨·힌트·설명·빵부스러기가 전부. 눈이 좋은 사람에게는 「은은한」
    것이 밝은 곳이나 노안에는 **안 읽히는** 것이다. 두 판 모두 하한을 넘게 옮겼다. */
 :root {
-  --c-ink: 28 29 32;
-  --c-ink-muted: 85 88 95;
-  --c-ink-faint: 107 111 120;   /* #6b6f78 — 대비 4.86:1 (전: #8b8f98, 3.13 ❌) */
-  --c-surface: 251 251 250;
-  --c-panel: 255 255 255;
-  --c-line: 226 226 223;
-  /* ★★ 머리글·꼬리말 전용 색이다 — `--c-panel` 을 쓰면 안 된다(2026-09-16 소유주 지적
-     「여기는 메뉴와 본문 배경색이 비슷해보여」). 이 lab 은 본문이 `--c-surface`(251,251,250)
-     이고 `--c-panel` 은 **순백**이다. 즉 panel 은 「카드가 떠 보이게 하는 색」이고,
-     본문이 이미 거의 흰색이라 **더 밝아질 데가 없다** — 실측 명도차가 채널당 4였다.
-     껍데기는 반대 방향으로 **살짝 어둡게** 간다. 값은 우산과 같은 것을 써서
-     오리진을 넘나들 때 띠 색이 이어지게 한다(글줄 폭을 맞춘 것과 같은 이유). */
-  --c-chrome: 241 242 238;
-  --c-line-strong: 200 201 196;
-  --c-accent: 176 111 20;
-  --c-accent-soft: 253 243 227;
+  --c-ink: 25 27 28;
+  --c-ink-muted: 82 87 90;
+  /* ★★ **바탕이 어두워지면 흐린 글자도 함께 내려야 한다**(2026-09-16 실측).
+     본문이 251,251,250 → 232,234,230 으로 바뀌면서 이 색의 대비가 4.86 → **4.16 으로
+     떨어졌다**(AA 하한 4.5). 색은 그대로 두고 바탕만 옮기면 **빌드도 통과하고 눈으로도
+     안 보이는 채로 접근성이 깨진다** — 팔레트를 옮길 때는 대비를 다시 계산할 것.
+     ★ 이 값은 **플랫폼 셋이 함께 쓴다**. 그전에는 우산·RadiMeter 가 116,121,124 였는데
+       같은 바탕에서 **3.64:1 로 진작 하한 미달**이었다(이 lab 만 2026-09-14 에 고쳐 뒀다). */
+  --c-ink-faint: 101 105 114;   /* #656972 — 본문 4.54 · 머리글 4.89 · 카드 5.36 */
+  /* ★★ **중성 네 층은 플랫폼 정본이다 — lab 마다 다른 값을 두지 않는다**(2026-09-16
+     소유주 지적 「radcalc 과 radimeter lab 화면 배경색 구성이 다르네」).
+     실측으로 드러난 원인은 **이름이 한 칸씩 밀린 것**이었다 — 우산·RadiMeter 는
+     `paper`=본문 · `surface`=카드 · `panel`=머리글인데, 이 lab 에는 `paper` 가 없어
+     `surface` 가 본문을 맡고 `panel` 이 순백 카드였다. 그래서 같은 날 오전에 머리글용으로
+     `--c-chrome` 을 따로 만들었는데, **같은 값(241,242,238)이 우산에서는 본문보다 밝고
+     여기서는 어두웠다** — 채널합차 +25 대 −31 로 **방향이 반대**였다.
+     지금은 네 층의 이름과 값이 우산·RadiMeter 와 같다. `--c-chrome` 은 없앴다 —
+     머리글 색의 이름은 플랫폼 어디서나 `--c-panel` 이다.
+     ★ 이름을 맞추는 것이 값을 맞추는 것보다 중요하다: 값만 맞추면 다음 사람이
+       `bg-panel` 을 「카드 색」으로 읽고 다시 어긋난다. */
+  --c-paper: 232 234 230;       /* 본문 바탕 */
+  --c-surface: 252 252 250;     /* 카드·입력·버튼 — 본문 위로 떠 보이는 면 */
+  --c-panel: 241 242 238;       /* 머리글·꼬리말·압축 고정 바 */
+  --c-line: 216 218 211;
+  --c-line-strong: 188 191 182;
+  --c-accent: 168 94 4;
+  --c-accent-soft: 244 232 212;
   /* ★ 입력 오류는 **앰버가 아니다** — DESIGN 규약상 앰버는 활성·포커스·기준선 전용이라
      오류에 쓰면 「지금 고른 칸」과 「틀린 칸」이 같은 색이 된다. 대비 6.5:1 인 붉은색을 따로 둔다. */
   --c-warn: 179 38 30;
@@ -32,19 +43,19 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --c-ink: 232 232 230; --c-ink-muted: 164 167 174; --c-ink-faint: 144 148 156;
-    --c-surface: 23 24 26; --c-panel: 31 32 35; --c-line: 48 50 55;
-    --c-chrome: 32 37 42; --c-line-strong: 70 73 80;
-    --c-accent: 224 163 74; --c-accent-soft: 42 33 24;
+    --c-ink: 230 233 234; --c-ink-muted: 169 176 181; --c-ink-faint: 144 148 156;
+    --c-paper: 18 21 23; --c-surface: 26 30 33; --c-panel: 32 37 42;
+    --c-line: 51 58 65; --c-line-strong: 73 82 90;
+    --c-accent: 242 163 60; --c-accent-soft: 58 46 26;
     --c-warn: 242 137 127;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --c-ink: 232 232 230; --c-ink-muted: 164 167 174; --c-ink-faint: 144 148 156;
-  --c-surface: 23 24 26; --c-panel: 31 32 35; --c-line: 48 50 55;
-  --c-chrome: 32 37 42; --c-line-strong: 70 73 80;
-  --c-accent: 224 163 74; --c-accent-soft: 42 33 24;
+  --c-ink: 230 233 234; --c-ink-muted: 169 176 181; --c-ink-faint: 144 148 156;
+  --c-paper: 18 21 23; --c-surface: 26 30 33; --c-panel: 32 37 42;
+  --c-line: 51 58 65; --c-line-strong: 73 82 90;
+  --c-accent: 242 163 60; --c-accent-soft: 58 46 26;
     --c-warn: 242 137 127;
   color-scheme: dark;
 }
@@ -53,23 +64,23 @@
    scroll-padding-top 셋이 이 값을 읽는다 — 세 곳에 숫자를 두면 바를 키울 때
    둘만 고쳐지고 나머지 하나가 조용히 어긋난다(레일 제목이 18px 가려져 있었다). */
 html { --bar-h: 46px; scroll-padding-top: calc(var(--bar-h) + 26px); }
-body { background: rgb(var(--c-surface)); color: rgb(var(--c-ink)); }
+body { background: rgb(var(--c-paper)); color: rgb(var(--c-ink)); }
 a { color: inherit; }
 
 .num { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 
 /* 폼 — 손가락으로 누르는 크기를 기본으로 둔다(모바일 우선) */
 .field {
-  @apply w-full rounded-md border border-line bg-panel px-3 py-2 text-[15px] text-ink;
+  @apply w-full rounded-md border border-line bg-surface px-3 py-2 text-[15px] text-ink;
   @apply focus:outline-none focus:border-accent;
   min-height: 42px;
 }
 .field:focus { box-shadow: 0 0 0 3px rgb(var(--c-accent) / 0.28); }
 select.field { @apply pr-8; }
 .label { @apply block text-[12px] font-medium uppercase tracking-wide text-ink-faint mb-1; }
-.card { @apply rounded-lg border border-line bg-panel; }
+.card { @apply rounded-lg border border-line bg-surface; }
 .btn {
-  @apply inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-panel;
+  @apply inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-surface;
   @apply px-3 py-2 text-[14px] font-medium text-ink hover:bg-accent-soft;
   min-height: 42px;
 }
