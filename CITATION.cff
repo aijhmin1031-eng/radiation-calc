@@ -68,6 +68,9 @@ references:
     doi: "10.18434/T4D01F"
     notes: >-
       NIST Standard Reference Database 126, copyright 1989, 1990, 1996 by the U.S. Secretary of
-      Commerce on behalf of the United States of America, all rights reserved. These tables are used
-      for computation and are NOT redistributed in this deposit; the harvest script is included so
-      that they can be obtained from NIST directly. NIST does not endorse this work.
+      Commerce on behalf of the United States of America, all rights reserved. A transcription of
+      these tables is present in this repository, at src/data/attenuation.json, because the code
+      computes with them; that file falls under the NIST terms and not under the MIT licence of
+      this work, it is not offered as a dataset or as standard reference data, and the
+      authoritative tables should be obtained from NIST directly (the harvest script is included).
+      NIST does not endorse this work.
