@@ -27,13 +27,16 @@ keywords:
   - bremsstrahlung
   - waste characterisation
 
-# 저자(2026-09-16 소유주 확인: "min jeho"). 소속은 ri.or.kr 로 확인한 기관명이다.
-#   · 국가·주소 필드는 넣지 않는다 — 소속에 국가가 들어가고, 개인 주소는 영구 공개 기록이 된다.
+# 저자(2026-09-16 소유주 확인: "min jeho").
+# ★★ **소속을 넣지 않는다**(2026-09-16 소유주 확인: 「내 개인적인 작품이야. kara와는 상관없어」).
+#   처음에는 계정 도메인에서 확인한 기관명을 넣었는데, **개인 작업에 근무처를 적으면 그 기관이
+#   뒤를 받친다는 인상**을 준다 — 이 저장소가 IAEA·NIST 에 대해 「보증하지 않는다」를 명시한 것과
+#   같은 이유로 여기서도 암시하지 않는다. 기관 일로 바뀌면 그때 `affiliation:` 한 줄을 넣는다.
+#   · 국가·주소 필드는 넣지 않는다 — 개인 주소는 영구 공개 기록이 되고 지울 수 없다.
 #   · ORCID 가 생기면 아래 줄의 주석을 푼다(동명이인과 갈린다. orcid.org 에서 5분).
 authors:
   - family-names: "Min"
     given-names: "Jeho"
-    affiliation: "Korean Association for Radiation Application (KARA), Seoul, Republic of Korea"
     # orcid: "https://orcid.org/0000-0000-0000-0000"
 
 # 소유주 결정(2026-09-16): **MIT**. LICENSE 파일에 적용 범위를 덧붙였다 —
