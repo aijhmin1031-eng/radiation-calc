@@ -36,7 +36,12 @@ console.log("\n② base 경로 — 내부 링크가 /calc/ 밖을 가리키지 �
 /** ★★ 접두 일치로만 보면 **`"/"` 가 모든 절대경로를 통과시킨다** — 이 검사가 그렇게
  *  죽어 있었고, 역테스트로 잡았다(2026-09-14). 우산 루트는 **정확 일치**로만 허용하고
  *  나머지는 접두로 본다. */
-const EXACT_OK = ["/", "/robots.txt"];
+/** ★★ `/track.js` — **플랫폼 방문 집계**(2026-09-15). 우산이 오리진 루트에 두는 파일이고
+ *  lab 넷이 **같은 한 벌**을 읽는다. base 를 붙이면 `/calc/track.js` 가 되어 **404 가 나고
+ *  빌드는 통과하며 집계만 조용히 죽는다** — 그래서 base 밖을 가리키는 것이 **맞다.**
+ *  ★ 「있을 법한 주소」를 적어 두지 않는다는 위 규칙을 지킨다: 이 파일은 우산 저장소의
+ *    `public/track.js` 로 **실재한다**(정본과 경위는 그 레포 README). */
+const EXACT_OK = ["/", "/robots.txt", "/track.js"];
 const PREFIX_OK = ["/radimeter/", "/disposal"];
 let stray = 0;
 for (const p of pages) {

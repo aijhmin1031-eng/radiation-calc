@@ -12,9 +12,23 @@ const MIME = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript
 const fail = [];
 const note = (s) => console.log("   " + s);
 
+/** ★★ **플랫폼 층이 내주는 파일을 여기서 흉내 낸다**(2026-09-15, 방문 집계).
+ *  `/track.js` 는 **우산 저장소**의 파일이고 이 lab 의 `dist/` 에는 없다 — 라이브에서는
+ *  같은 오리진의 우산이 내주므로 200 이지만, 여기 서버는 `dist/calc/` 만 아는지라 404 를 낸다.
+ *  그 404 가 **전 쪽에서 「JS 오류」로 세어져 게이트가 통째로 빨개졌다.**
+ *  ★ 무시하지 않고 **200 으로 답한다** — 「없는 것을 못 본 척」과 「있는 것을 흉내 냄」은
+ *    다르다. 앞엣것은 태그가 사라져도 통과하지만, 뒤엣것은 배포 구조를 그대로 재현한다.
+ *  ★ 집계 자체가 맞게 도는지는 **우산 저장소의 게이트**가 잰다(그 파일의 주인이다). */
+const PLATFORM_ROOT = { "/track.js": ["text/javascript", "/* platform layer stub */"] };
+
 // ★ 서버가 base 를 떼어 파일을 찾는다 — 브라우저가 보는 주소는 /calc/… 그대로다
 const srv = createServer((q, r) => {
   let p = decodeURIComponent(q.url.split("?")[0]);
+  if (PLATFORM_ROOT[p]) {
+    const [type, body] = PLATFORM_ROOT[p];
+    r.writeHead(200, { "content-type": type });
+    return r.end(body);
+  }
   if (p.startsWith("/calc")) p = p.slice(5) || "/";
   let f = join(DIST, p);
   if (existsSync(f) && !extname(f)) f = join(f, "index.html");

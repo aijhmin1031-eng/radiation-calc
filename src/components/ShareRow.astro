@@ -21,17 +21,29 @@ const { title } = Astro.props;
 const url = canonical(Astro.url.pathname);
 const text = `${title} — Radiation Lab`;
 const enc = encodeURIComponent;
+
+/** ★★ **공유 주소에 utm 을 붙인다**(2026-09-15, 플랫폼 방문 집계).
+ *  referrer 만으로는 「어디서 왔는가」가 안 나온다 — 앱 내 브라우저는 referrer 를 비워
+ *  보내는 일이 흔하고, 카카오톡·메신저·이메일로 옮겨 붙인 링크는 원래부터 referrer 가 없다.
+ *  표식은 주소에 남으므로 브라우저가 지워도 살아남는다.
+ *  ★ 낱말 규약의 정본은 **우산 저장소 README** 다 — lab 셋이 같은 낱말을 써야 보고서에서
+ *    한 줄로 모인다(`x`·`threads`·`linkedin`·`facebook`·`copy`). 여기서 지어내지 말 것.
+ *  ★ canonical 은 경로에서 나오므로 질의가 붙어도 중복 주소가 되지 않는다. */
+const tag = (src: string, medium = "social") =>
+  `${url}${url.includes("?") ? "&" : "?"}utm_source=${src}&utm_medium=${medium}&utm_campaign=share`;
+
+const copyUrl = tag("copy", "share");
 const LINKS = [
-  { label: "X", href: `https://x.com/intent/post?text=${enc(text)}&url=${enc(url)}` },
-  { label: "Threads", href: `https://www.threads.net/intent/post?text=${enc(`${text} ${url}`)}` },
-  { label: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${enc(url)}` },
-  { label: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}` },
+  { label: "X", href: `https://x.com/intent/post?text=${enc(text)}&url=${enc(tag("x"))}` },
+  { label: "Threads", href: `https://www.threads.net/intent/post?text=${enc(`${text} ${tag("threads")}`)}` },
+  { label: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${enc(tag("linkedin"))}` },
+  { label: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${enc(tag("facebook"))}` },
 ];
 ---
 
 <aside class="share not-prose" aria-label="Share this page">
   <span class="share-l">Share</span>
-  <button type="button" class="share-b" data-share-copy data-url={url}>Copy link</button>
+  <button type="button" class="share-b" data-share-copy data-url={copyUrl}>Copy link</button>
   {LINKS.map((l) => (
     <a class="share-b" href={l.href} target="_blank" rel="noopener noreferrer">{l.label}</a>
   ))}
