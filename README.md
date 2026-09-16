@@ -154,3 +154,18 @@ mda               MDA calculator — detection limits and scan MDC
 specific-activity Specific activity calculator — mass and activity
 alara             ALARA calculator — stay time and collective dose
 ```
+
+## ★ 구조화 데이터 — 이 lab 10쪽에 0개였다 (2026-09-16)
+
+소유주 질의 「이제는 검색에 유리한 상태야?」 → 라이브 55쪽 전수 감사에서 나왔다.
+RadiMeter 는 34쪽이 들고 있는데 **여기는 0개**였다. 검색이 「이게 무엇인지」를 읽는 자리다.
+
+`Base.astro` 에 `WebSite` + `WebApplication` 을 세워 **10쪽 전부가 받는다**(쪽마다 적지 않는다).
+
+· ★★ **없는 것을 주장하지 않는다** — 평점·리뷰·가격을 넣지 않았다. 우리에게 **없기 때문**이고,
+  넣으면 구조화 데이터가 화면과 어긋난다(구글의 리치 결과 정책 위반이기도 하다).
+  무료라는 것만 `isAccessibleForFree` 로 **사실대로** 적는다.
+· 주소는 `canonical()`·`SITE_URL` 에서 파생시킨다 — 글자로 박지 않는다.
+· `name` 은 그 쪽의 **`seoTitle`**(검색 제목)을 쓴다 — 검색이 읽는 두 자리가 같은 말을 한다.
+· 실측: `/calc/units/` → `WebSite: RadCalc` + `WebApplication: Radiation unit converter — …`,
+  주소 리터럴 **0**.

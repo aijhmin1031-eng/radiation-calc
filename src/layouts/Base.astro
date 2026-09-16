@@ -89,6 +89,36 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
         그래서 `is:inline` 으로 Astro 가 손대지 못하게 둔다.
         ★ 쿠키·localStorage 를 쓰지 않으므로 동의 대상이 아니다(스키마 `sql/visits.sql`). */}
     <script is:inline src="/track.js" data-lab="calc" defer></script>
+  {/* 구조화 데이터 — 2026-09-16 라이브 감사에서 **이 lab 10쪽에 0개**였다
+      (RadiMeter 는 34쪽이 들고 있다). 검색이 「이게 무엇인지」를 읽는 자리다.
+      ★ **없는 것을 주장하지 않는다** — 평점·리뷰·가격은 넣지 않는다(우리에게 없다).
+        무료라는 것만 `isAccessibleForFree` 로 사실대로 적는다.
+      ★ 주소는 `canonical()`·`SITE_URL` 에서 파생시킨다 — 글자로 박지 않는다
+        (`npm run check-address` 가 지킨다). */}
+  <script type="application/ld+json" is:inline set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": `${new URL(u("/"), SITE_URL).href}#website`,
+        name: SITE_NAME,
+        url: new URL(u("/"), SITE_URL).href,
+        inLanguage: "en",
+        isPartOf: { "@type": "WebSite", name: UMBRELLA_NAME, url: new URL(SITE_URL).origin },
+      },
+      {
+        "@type": "WebApplication",
+        "@id": `${canonical(here)}#app`,
+        name: title,
+        url: canonical(here),
+        applicationCategory: "ScienceApplication",
+        operatingSystem: "Any (web browser)",
+        inLanguage: "en",
+        isAccessibleForFree: true,
+        description,
+      },
+    ],
+  })} />
   </head>
   <body class="min-h-screen antialiased">
     <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-panel focus:px-3 focus:py-2">Skip to content</a>
