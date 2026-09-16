@@ -15,6 +15,14 @@
   --c-surface: 251 251 250;
   --c-panel: 255 255 255;
   --c-line: 226 226 223;
+  /* ★★ 머리글·꼬리말 전용 색이다 — `--c-panel` 을 쓰면 안 된다(2026-09-16 소유주 지적
+     「여기는 메뉴와 본문 배경색이 비슷해보여」). 이 lab 은 본문이 `--c-surface`(251,251,250)
+     이고 `--c-panel` 은 **순백**이다. 즉 panel 은 「카드가 떠 보이게 하는 색」이고,
+     본문이 이미 거의 흰색이라 **더 밝아질 데가 없다** — 실측 명도차가 채널당 4였다.
+     껍데기는 반대 방향으로 **살짝 어둡게** 간다. 값은 우산과 같은 것을 써서
+     오리진을 넘나들 때 띠 색이 이어지게 한다(글줄 폭을 맞춘 것과 같은 이유). */
+  --c-chrome: 241 242 238;
+  --c-line-strong: 200 201 196;
   --c-accent: 176 111 20;
   --c-accent-soft: 253 243 227;
   /* ★ 입력 오류는 **앰버가 아니다** — DESIGN 규약상 앰버는 활성·포커스·기준선 전용이라
@@ -26,6 +34,7 @@
   :root:not([data-theme="light"]) {
     --c-ink: 232 232 230; --c-ink-muted: 164 167 174; --c-ink-faint: 144 148 156;
     --c-surface: 23 24 26; --c-panel: 31 32 35; --c-line: 48 50 55;
+    --c-chrome: 32 37 42; --c-line-strong: 70 73 80;
     --c-accent: 224 163 74; --c-accent-soft: 42 33 24;
     --c-warn: 242 137 127;
     color-scheme: dark;
@@ -34,6 +43,7 @@
 :root[data-theme="dark"] {
   --c-ink: 232 232 230; --c-ink-muted: 164 167 174; --c-ink-faint: 144 148 156;
   --c-surface: 23 24 26; --c-panel: 31 32 35; --c-line: 48 50 55;
+  --c-chrome: 32 37 42; --c-line-strong: 70 73 80;
   --c-accent: 224 163 74; --c-accent-soft: 42 33 24;
     --c-warn: 242 137 127;
   color-scheme: dark;
