@@ -211,7 +211,8 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
     <p class="mt-4 text-[14px] text-ink-muted">
       Decay data from the {DATA_SOURCES[0].name}; attenuation coefficients from the {DATA_SOURCES[1].name}.
       Both are harvested once and committed, so the numbers on this page do not move between visits.
-      The derivations are set out on the <a href={u("/methods/")} class="underline">methods page</a>.
+      The derivations, and how to cite these figures, are set out on the
+      <a href={u("/methods/")} class="underline">methods page</a>.
     </p>
   </section>
 </Base>
