@@ -2,7 +2,15 @@
  *  도구를 늘릴 때 쪽마다 적지 않는다. */
 export interface Tool {
   slug: string;
+  /** 내비·카드에 그리는 **짧은** 이름. 화면에서 줄이 바뀌면 안 되므로 길게 쓰지 않는다. */
   name: string;
+  /** ★★ 검색 결과에 나가는 제목(2026-09-16 소유주 지시 「제목 고치자. 사람이 유입이
+   *  될 수 있도록」). **`name` 과 갈라 둔다** — 내비는 짧아야 하고 검색 제목은 사람이
+   *  실제로 치는 낱말을 담아야 한다. 한 값으로 묶으면 둘 중 하나가 반드시 나빠진다.
+   *  ★ 실측 근거: 라이브 10쪽 중 제목에 `calculator` 가 든 쪽이 **1개**뿐이었다.
+   *    「Gamma dose rate and shielding」인데 사람들은 「gamma dose rate **calculator**」를 친다.
+   *  ★ 새 주장을 만들지 않는다 — 전부 그 도구의 `blurb` 가 이미 말하는 범위 안이다. */
+  seoTitle: string;
   /** 한 줄 — 카드와 meta description 이 함께 쓴다. */
   blurb: string;
   /** 「무엇을 답하는가」 — 사용자의 질문 형태로 적는다. 목록에서 고르는 근거가 된다. */
@@ -31,7 +39,8 @@ export interface Tool {
 }
 
 export const TOOLS: Tool[] = [
-  { slug: "units", name: "Unit converter", needs: ["none"], login: false,
+  { slug: "units", name: "Unit converter",
+    seoTitle: "Radiation unit converter — activity, dose, exposure", needs: ["none"], login: false,
     question: "How many becquerels is 5 µCi? How many Bq/cm² is 6000 dpm/100 cm²?",
     blurb: "Activity, dose, dose equivalent, exposure and surface contamination — converted within each quantity, never across.",
     assumes: [
@@ -44,7 +53,8 @@ export const TOOLS: Tool[] = [
     ],
     checked: "Factors are defined constants, not measurements — 1 Ci = 3.7×10¹⁰ Bq exactly.",
   },
-  { slug: "decay", name: "Decay and half-life", needs: ["nuclide"], login: false,
+  { slug: "decay", name: "Decay and half-life",
+    seoTitle: "Radioactive decay calculator — half-life and activity", needs: ["nuclide"], login: false,
     question: "How much is left after 18 months? When does this source drop below the limit?",
     blurb: "Activity after elapsed time, the time to reach a target, half-life from two measurements, and decay chains.",
     assumes: [
@@ -57,7 +67,8 @@ export const TOOLS: Tool[] = [
     ],
     checked: "One half-life returns 50.00% of the starting activity.",
   },
-  { slug: "gamma-shielding", name: "Gamma dose rate and shielding", needs: ["nuclide", "shielding"], login: false,
+  { slug: "gamma-shielding", name: "Gamma dose rate and shielding",
+    seoTitle: "Gamma dose rate calculator and shielding", needs: ["nuclide", "shielding"], login: false,
     question: "What is the dose rate at 2 m from 37 GBq of Ir-192, and how much lead brings it under 20 µSv/h?",
     blurb: "Point-source dose rate from the emission spectrum, with attenuation and buildup, and the shield thickness solved backwards.",
     assumes: [
@@ -71,7 +82,8 @@ export const TOOLS: Tool[] = [
     ],
     checked: "Constants computed from the spectrum agree with published values to within about 2%; 1 Ci of Co-60 at 1 m gives 11.31 mGy/h.",
   },
-  { slug: "specific-activity", name: "Mass and activity", needs: ["nuclide"], login: false,
+  { slug: "specific-activity", name: "Mass and activity",
+    seoTitle: "Specific activity calculator — mass and activity", needs: ["nuclide"], login: false,
     question: "How many grams of Pu-239 is 1 GBq? What is the specific activity of Sr-90?",
     blurb: "Grams to becquerels and back for 147 nuclides, from half-life and mass number.",
     assumes: [
@@ -84,7 +96,8 @@ export const TOOLS: Tool[] = [
     ],
     checked: "The mass-number approximation is within 0.03% of the true molar mass for every nuclide here.",
   },
-  { slug: "mda", name: "Detection limits (MDA / MDC)", needs: ["counting"], login: false,
+  { slug: "mda", name: "Detection limits (MDA / MDC)",
+    seoTitle: "MDA calculator — detection limits and scan MDC", needs: ["counting"], login: false,
     question: "What can this counter actually detect in a 10-minute count? How slowly must I scan?",
     blurb: "Critical level, detection limit and minimum detectable activity for fixed counting, plus scan MDC with observer efficiency.",
     assumes: [
@@ -98,7 +111,8 @@ export const TOOLS: Tool[] = [
     ],
     checked: "The critical level L_C and the detection limit L_D are reported separately — reporting L_C alone understates what the instrument finds.",
   },
-  { slug: "beta", name: "Beta dose rate and shielding", needs: ["nuclide", "shielding"], login: false,
+  { slug: "beta", name: "Beta dose rate and shielding",
+    seoTitle: "Beta dose rate calculator and shielding", needs: ["nuclide", "shielding"], login: false,
     question: "How thick must acrylic be to stop Y-90 beta, and how much bremsstrahlung does lead make instead?",
     blurb: "Infinite-medium dose rate, Katz–Penfold range, transmission through absorbers, and bremsstrahlung yield by atomic number.",
     assumes: [
@@ -112,7 +126,8 @@ export const TOOLS: Tool[] = [
     ],
     checked: "Y-90 in acrylic gives a 9.2 mm range, matching the published value.",
   },
-  { slug: "alara", name: "ALARA and job planning", needs: ["none"], login: false,
+  { slug: "alara", name: "ALARA and job planning",
+    seoTitle: "ALARA calculator — stay time and collective dose", needs: ["none"], login: false,
     question: "How long can two workers stay? How far back must the barrier go?",
     blurb: "Inverse square, stay time against a dose budget, collective dose across tasks, and half- and tenth-value layers.",
     assumes: [

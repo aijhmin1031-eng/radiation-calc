@@ -128,3 +128,29 @@ scripts/      원천에서 다시 수확하는 스크립트
 · 다른 lab 도 재 봤다 — RadiMeter 58/27, 처분 lab 703. **문제는 이 lab 하나였다.**
 · 지키는 것은 `gate/check-header.mjs` 의 **층 대비 검사**(명도차 18 이상 · 띠가 전폭인가,
   2뷰포트 × 로그인/로그아웃). 역테스트로 `bg-panel` 로 되돌리자 **명도차 13** 을 그대로 잡았다.
+
+## ★ 검색 제목은 `seoTitle` 이다 — 내비 라벨(`name`)과 갈라 둔다 (2026-09-16)
+
+소유주 지시 「제목 고치자. **사람이 유입이 될 수 있도록** 노력하자.」
+
+실측: 라이브 10쪽 중 제목에 **`calculator` 가 든 쪽이 1개**뿐이었다(허브만).
+「Gamma dose rate and shielding」인데 **사람들은 「gamma dose rate calculator」를 친다.**
+
+· ★★ **한 값으로 묶으면 둘 중 하나가 반드시 나빠진다.** 내비·카드는 짧아야 하고
+  (줄이 바뀌면 조판이 무너진다) 검색 제목은 사람이 실제로 치는 낱말을 담아야 한다.
+  그래서 등록부(`lib/tools.ts`)에 **`seoTitle` 을 따로** 두고 `ToolPage` 가 그것을 쓴다.
+  **쪽마다 적지 않는다**는 이 등록부의 원칙은 그대로다.
+· **새 주장을 만들지 않았다** — 전부 그 도구의 `blurb` 가 이미 말하는 범위 안이다.
+  예: 단위 변환은 「never across」이므로 제목도 **`activity, dose, exposure`** 까지만 말한다
+  (`Bq → Sv` 를 해 준다고 읽히면 안 된다).
+· OG 그림은 **짧은 `name` 을 계속 쓴다** — 공유 카드는 검색 결과와 **보는 사람이 다르다.**
+
+```
+units             Radiation unit converter — activity, dose, exposure
+decay             Radioactive decay calculator — half-life and activity
+gamma-shielding   Gamma dose rate calculator and shielding
+beta              Beta dose rate calculator and shielding
+mda               MDA calculator — detection limits and scan MDC
+specific-activity Specific activity calculator — mass and activity
+alara             ALARA calculator — stay time and collective dose
+```
