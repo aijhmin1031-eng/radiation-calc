@@ -80,6 +80,15 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
         } catch (e) {}
       </script>
     )}
+
+    {/* 플랫폼 방문 집계 — **스크립트 본체는 이 레포에 없다.**
+        ★★ 정본은 우산 저장소의 `public/track.js` 한 벌이고 lab 넷이 **같은 파일**을 읽는다.
+        lab 마다 복제하면 한쪽만 고쳐진다.
+        ★ **`base` 를 붙이지 않는다** — 오리진 루트의 파일이고 플랫폼 층(우산)이 내준다.
+        base 를 붙이면 `/calc/track.js` 가 되어 404 가 나고 집계만 조용히 죽는다.
+        그래서 `is:inline` 으로 Astro 가 손대지 못하게 둔다.
+        ★ 쿠키·localStorage 를 쓰지 않으므로 동의 대상이 아니다(스키마 `sql/visits.sql`). */}
+    <script is:inline src="/track.js" data-lab="calc" defer></script>
   </head>
   <body class="min-h-screen antialiased">
     <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-panel focus:px-3 focus:py-2">Skip to content</a>
