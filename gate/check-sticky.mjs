@@ -107,14 +107,22 @@ for (const vp of [{ w: 1280, h: 900, tag: "데스크톱" }, { w: 360, h: 780, ta
       // ★★ 바는 **다른 붙박이(sticky)를 덮는다**. 실제로 레일 제목이 18px 가려져 있었고
       //   레일은 제대로 붙어 있었으므로 「안 붙는다」로는 안 보였다 — 가린 것은 바다.
       //   붙박이가 멈추는 자리는 반드시 **바 아래**여야 한다.
-      // ★★ **`top` 이 auto 인 붙박이는 붙지 않는다** — 그런데 「덮였다」 검사에는
+      // ★★ **어느 축에도 안 붙은 붙박이는 붙지 않는다** — 그런데 「덮였다」 검사에는
       //   안 걸린다(아예 화면 밖으로 흘러가므로). Tailwind 임의값 안의 calc 는
       //   공백을 `_` 로 써야 하고, 안 쓰면 CSS 가 통째로 무효가 되는데 **빌드는 통과한다.**
+      // ★★★ 처음에는 **`top` 이 auto 면 결함**으로 셌는데, 그것은 「붙박이 = 세로로 붙는 것」을
+      //   전제한 규칙이었다. **가로로 붙는 것도 있다** — 핵종 목록 표의 첫 칸은 `left: 0` 으로
+      //   붙고 `top` 은 auto 인 것이 **맞다**(2026-09-16, 그 칸을 세우자 CI 가 148행을
+      //   전부 결함으로 셌다). 붙박이는 **네 축 중 하나에만 붙으면 된다.**
+      //   교훈: 규칙을 쓸 때 「내가 아는 그 용례」만 생각하면 멀쩡한 것이 빨개진다.
+      const pinned = (cs) => ["top", "right", "bottom", "left"].some((k) => cs[k] !== "auto");
       const loose = [...document.querySelectorAll("*")]
-        .filter((e) => getComputedStyle(e).position === "sticky" && getComputedStyle(e).top === "auto")
+        .filter((e) => { const cs = getComputedStyle(e); return cs.position === "sticky" && !pinned(cs); })
         .map((e) => `${e.tagName.toLowerCase()}[${e.getAttribute("aria-label") || e.className.toString().slice(0, 18)}]`);
+      // ★ 바가 덮는지 보는 것은 **세로로 붙는 것**만이다 — 가로로만 붙은 칸은 본문처럼
+      //   흘러가므로 바 밑을 지나는 것이 정상이다.
       const under = [...document.querySelectorAll("*")]
-        .filter((e) => getComputedStyle(e).position === "sticky")
+        .filter((e) => { const cs = getComputedStyle(e); return cs.position === "sticky" && cs.top !== "auto"; })
         .map((e) => ({ e, q: e.getBoundingClientRect() }))
         .filter(({ q }) => q.height > 0 && q.top < r.bottom - 1 && q.bottom > r.top)
         .map(({ e, q }) => `${e.tagName.toLowerCase()}[${e.getAttribute("aria-label") || e.className.toString().slice(0, 18)}] ${Math.round(r.bottom - q.top)}px 가림`);
@@ -131,7 +139,7 @@ for (const vp of [{ w: 1280, h: 900, tag: "데스크톱" }, { w: 360, h: 780, ta
     if (on.overflow > 1) fail.push(`${vp.tag} ${p}: 바가 뜬 뒤 가로 넘침 ${on.overflow}px`);
     if (on.rows !== 1) fail.push(`${vp.tag} ${p}: 바 내용이 ${on.rows} 줄 — 한 줄이어야 한다`);
     for (const u of on.under) fail.push(`${vp.tag} ${p}: 바가 붙박이를 덮는다 — ${u}`);
-    for (const l of on.loose) fail.push(`${vp.tag} ${p}: 붙박이인데 top 이 auto 다(안 붙는다) — ${l}`);
+    for (const l of on.loose) fail.push(`${vp.tag} ${p}: 붙박이인데 어느 축에도 안 붙었다(top·right·bottom·left 가 전부 auto) — ${l}`);
     // ④ 칸이 실제로 눌리는가 + 손가락 표적 24px
     for (const l of on.links) {
       if (!l.hit) fail.push(`${vp.tag} ${p}: 바의 「${l.text}」 가 무언가에 덮여 안 눌린다`);
