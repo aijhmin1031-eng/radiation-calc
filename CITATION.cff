@@ -1,0 +1,71 @@
+# ★ GitHub 이 이 파일을 읽어 「Cite this repository」 단추를 만들고, Zenodo 가 릴리스 때
+#   저자·제목을 여기서 가져간다. 규격: https://citation-file-format.github.io
+#
+# ★★ **`authors` 가 아직 비어 있다 — 채우기 전에는 공개하지 않는다**(docs/zenodo.md 0절).
+#   지어낸 이름을 넣으면 그 이름이 DOI 와 함께 영구 보관된다. 라이선스는 정해졌다(MIT).
+cff-version: 1.2.0
+message: "If you use these figures or this code, please cite both this work and the upstream data sources listed below."
+title: "RadCalc — nuclide reference sheets and spectrum-solved shielding for radiation protection"
+abstract: >-
+  Reference sheets for 147 nuclides with half-life, decay mode, specific activity, photon, beta and
+  alpha emission lines, and — for photon emitters — air kerma rate constants and half- and
+  tenth-value layers solved across the whole emission spectrum rather than read from a single-energy
+  table. The spectrum solution matters where a nuclide's dose rate is not dominated by one line:
+  for Na-22 the lead half-value layer is 6.5 mm against the 10.5 mm implied by its strongest line,
+  and for Sn-113 the tenth-value layer is 84 times the half-value layer rather than the 3.32 that
+  holds for a single energy. Figures are narrow beam, with no buildup.
+type: software
+repository-code: "https://github.com/aijhmin1031-eng/radiation-calc"
+url: "https://radiation-lab.com/calc/nuclides/"
+keywords:
+  - health physics
+  - radiation protection
+  - gamma shielding
+  - half-value layer
+  - air kerma rate constant
+  - nuclear decay data
+  - bremsstrahlung
+  - waste characterisation
+
+# TODO(소유주): 실제 표기로 채울 것. 지어낸 이름을 넣지 않는다 — DOI 기록은 지울 수 없다.
+#   · 로마자 표기는 본인이 쓰는 것이 정본이다(Min, Jae-Hyun / Jaehyun Min / …).
+#   · 소속은 확인했다 — ri.or.kr 은 한국방사선진흥협회다.
+#   · 국가·주소 필드는 넣지 않는다(소속에 들어간다 · 개인 주소는 영구 공개 기록에 남는다).
+authors:
+  - family-names: "TODO-성-로마자"
+    given-names: "TODO-이름-로마자"
+    affiliation: "Korean Association for Radiation Application (KARA), Seoul, Republic of Korea"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"   # 있으면 주석을 푼다
+
+# 소유주 결정(2026-09-16): **MIT**. LICENSE 파일에 적용 범위를 덧붙였다 —
+# 이 라이선스는 **우리 기여분만** 덮고, 바탕이 된 평가 자료에는 우리가 조건을 붙일 수 없다.
+license: MIT
+
+references:
+  - type: database
+    title: "Livechart of Nuclides — evaluated nuclear structure and decay data (ENSDF)"
+    institution:
+      name: "IAEA Nuclear Data Section, International Atomic Energy Agency"
+    url: "https://nds.iaea.org/relnsd/vcharthtml/VChartHTML.html"
+    notes: >-
+      Used with acknowledgement under the IAEA website terms of use, which permit reproduction and
+      dissemination of IAEA data provided the IAEA is credited as the source. The IAEA does not
+      endorse this work, its methods or its results.
+  - type: database
+    title: >-
+      Tables of X-Ray Mass Attenuation Coefficients and Mass Energy-Absorption Coefficients from
+      1 keV to 20 MeV for Elements Z = 1 to 92 and 48 Additional Substances of Dosimetric Interest
+      (NISTIR 5632, NIST Standard Reference Database 126)
+    authors:
+      - family-names: "Hubbell"
+        given-names: "J. H."
+      - family-names: "Seltzer"
+        given-names: "S. M."
+    institution:
+      name: "National Institute of Standards and Technology, Gaithersburg MD"
+    doi: "10.18434/T4D01F"
+    notes: >-
+      NIST Standard Reference Database 126, copyright 1989, 1990, 1996 by the U.S. Secretary of
+      Commerce on behalf of the United States of America, all rights reserved. These tables are used
+      for computation and are NOT redistributed in this deposit; the harvest script is included so
+      that they can be obtained from NIST directly. NIST does not endorse this work.

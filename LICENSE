@@ -1,0 +1,52 @@
+MIT License
+
+Copyright (c) 2026 Radiation Lab
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------------------------------------
+SCOPE — what this licence does and does not cover
+
+This licence covers only the contribution made in this repository: the code, the
+derived quantities computed by it (air kerma rate constants, spectrum-solved half-
+and tenth-value layers, per-line dose shares), and the accompanying documentation.
+
+It does NOT and cannot license the evaluated data this work is built on. Those
+remain the work of the bodies below and are used under their own terms:
+
+  Decay data — IAEA Nuclear Data Section, Livechart of Nuclides (ENSDF),
+  International Atomic Energy Agency, Vienna.
+  <https://nds.iaea.org/relnsd/vcharthtml/VChartHTML.html>
+  Used with acknowledgement under the IAEA website terms of use, which permit
+  reproduction and dissemination of IAEA data provided the IAEA is credited as
+  the source. The IAEA does not endorse this work, its methods or its results.
+
+  Photon interaction coefficients — J. H. Hubbell and S. M. Seltzer, Tables of
+  X-Ray Mass Attenuation Coefficients and Mass Energy-Absorption Coefficients
+  from 1 keV to 20 MeV for Elements Z = 1 to 92 and 48 Additional Substances of
+  Dosimetric Interest, NISTIR 5632, NIST Standard Reference Database 126,
+  National Institute of Standards and Technology. <https://doi.org/10.18434/T4D01F>
+  NIST Standard Reference Database 126, (c) 1989, 1990, 1996 by the U.S. Secretary
+  of Commerce on behalf of the United States of America, all rights reserved.
+  These tables are used here for computation and are not redistributed. NIST does
+  not endorse this work and makes no warranty as to the accuracy of any result
+  derived from these data.
+
+This software does not replace a shielding design, a dose assessment or a
+radiation survey by a qualified person.

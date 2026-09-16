@@ -1,6 +1,8 @@
 ---
 import Base from "../layouts/Base.astro";
-import { DATA_SOURCES, SITE_NAME } from "../lib/site";
+import { DATA_SOURCES, SOURCE_CITATIONS, SITE_NAME, UMBRELLA_NAME, SITE_URL, u, canonical } from "../lib/site";
+const year = new Date().getUTCFullYear();
+const sheetsUrl = canonical("/nuclides/");
 ---
 <Base title="Methods and data"
       description="Where the nuclear and attenuation data come from, how the gamma constants are computed, how the results are validated, and the known limitations.">
@@ -61,6 +63,43 @@ import { DATA_SOURCES, SITE_NAME } from "../lib/site";
       <li>Beta range uses the Katz–Penfold empirical fit, accurate to roughly 10%.</li>
       <li>Bremsstrahlung yield uses a thick-target approximation and is an order-of-magnitude guide.</li>
     </ul>
+
+    <h2>How to cite</h2>
+    <p>
+      If a figure from this site ends up in a report, a procedure or a paper, cite the source of the
+      underlying data rather than only this site — the evaluated data are the IAEA's and NIST's work,
+      and the value of a citation belongs with them. Cite this site in addition when it is the
+      derivation, not the input, that you are relying on: the gamma constants, the spectrum-solved
+      half-value layers and the per-line dose shares are computed here and appear in this form here.
+    </p>
+
+    <h3>This site</h3>
+    <p class="my-3 rounded-md border border-line bg-surface px-3 py-2 text-[14px] leading-relaxed">
+      {UMBRELLA_NAME}. <em>{SITE_NAME} — nuclide reference and radiation protection calculators</em>.
+      {sheetsUrl} (accessed {year}).
+    </p>
+    <p>
+      There is no version number yet. If you need a fixed reference, quote the date you accessed the
+      page: the committed datasets do not change between visits, but they are re-harvested when the
+      upstream evaluations are updated.
+    </p>
+
+    <h3>The decay data</h3>
+    <p class="my-3 rounded-md border border-line bg-surface px-3 py-2 text-[14px] leading-relaxed">
+      {SOURCE_CITATIONS[0].text}
+    </p>
+    <p>{SOURCE_CITATIONS[0].terms}</p>
+
+    <h3>The attenuation coefficients</h3>
+    <p class="my-3 rounded-md border border-line bg-surface px-3 py-2 text-[14px] leading-relaxed">
+      {SOURCE_CITATIONS[1].text} <a href={SOURCE_CITATIONS[1].url} rel="noopener" class="underline">doi:10.18434/T4D01F</a>
+    </p>
+    <p>{SOURCE_CITATIONS[1].terms}</p>
+    <p>
+      Note that these tables are a NIST Standard Reference Database rather than a public-domain work
+      of the United States government. They are used here to compute results, which is not the same
+      as republishing the tables; anyone wanting the tables themselves should take them from NIST.
+    </p>
 
     <h2>Corrections</h2>
     <p>
