@@ -53,6 +53,10 @@ writeFileSync(join(OUT, "nuclides.json"), JSON.stringify(table, null, 1) + "\n")
 for (const f of ["src/engine", "src/lib/nuclides.ts", "src/lib/nuclide-prose.ts",
                  "scripts/harvest.py", "scripts/nist.py", "scripts/fill.py"])
   if (existsSync(f)) cpSync(f, join(OUT, "code", f.replace(/^src\/|^scripts\//, "")), { recursive: true });
+/* ★ 라이선스는 **배포물 안에** 있어야 한다 — 받은 사람이 저장소를 안 보고도 조건을 읽어야 하고,
+   MIT 는 「고지를 사본에 남길 것」이 조건 그 자체다. 없으면 배포물이 라이선스 위반이 된다. */
+if (!existsSync("LICENSE")) { console.error("\n❌ LICENSE 가 없다 — 배포물에 실을 수 없다"); process.exit(1); }
+cpSync("LICENSE", join(OUT, "LICENSE"));
 
 const readme = `# ${"RadCalc"} — nuclide reference data and spectrum-solved shielding
 
@@ -91,8 +95,11 @@ is found numerically. This differs from reading a single-energy table wherever t
 dominated by one line. All figures are **narrow beam** — scattered radiation is not added back, so a
 shield designed to these numbers will pass more than they suggest.
 
-Licence: see LICENSE in the source repository. The licence covers this contribution only; the
-underlying evaluated data remain the work of the bodies credited above.
+## Licence
+
+MIT — see \`LICENSE\` in this bundle. It covers this contribution only: the code, and the derived
+quantities computed by it. It does not license the evaluated data credited above, which remain the
+work of the IAEA and NIST and are used under their own terms.
 `;
 writeFileSync(join(OUT, "README.md"), readme);
 

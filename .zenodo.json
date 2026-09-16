@@ -1,12 +1,15 @@
 {
-  "_comment": "★ Zenodo 가 GitHub 릴리스에서 이 파일을 읽어 기록 메타데이터를 채운다. CITATION.cff 와 값이 어긋나면 안 된다 — 둘 다 고칠 것. ★★ creators 와 license 는 아직 TODO 다(docs/zenodo.md 0절).",
+  "_comment": "★ Zenodo 가 GitHub 릴리스에서 이 파일을 읽어 기록 메타데이터를 채운다. CITATION.cff 와 값이 어긋나면 안 된다 — 둘 다 고칠 것. ★★ creators 가 아직 TODO 다(docs/zenodo.md 0절). 라이선스는 MIT 로 정해졌다.",
   "title": "RadCalc — nuclide reference sheets and spectrum-solved shielding for radiation protection",
   "description": "<p>Reference sheets for 147 nuclides: half-life, decay mode, specific activity, photon, beta and alpha emission lines with each line's share of the air kerma rate, and — for photon emitters — half- and tenth-value layers solved across the whole emission spectrum rather than read from a single-energy table.</p><p>The spectrum solution matters where the dose rate is not dominated by one line. For Na-22 the lead half-value layer is 6.5 mm against the 10.5 mm implied by its strongest line at 1275 keV, which carries only 55% of the kerma. For Sn-113 the tenth-value layer is 84 times the half-value layer rather than the 3.32 that holds for a single energy, so stacking half-value layers does not work. All figures are narrow beam with no buildup.</p><p>Decay data are derived from the IAEA Nuclear Data Section Livechart (ENSDF) and used with acknowledgement under the IAEA terms of use; the IAEA does not endorse this work. Photon interaction coefficients are NIST Standard Reference Database 126 (Hubbell and Seltzer, NISTIR 5632, doi:10.18434/T4D01F), which is copyright the U.S. Secretary of Commerce with all rights reserved; those tables are NOT redistributed here — the harvest script is included so they can be obtained from NIST directly. NIST does not endorse this work.</p>",
   "upload_type": "software",
   "creators": [
-    { "name": "TODO-성, TODO-이름" }
+    {
+      "name": "TODO-성, TODO-이름",
+      "affiliation": "Korean Association for Radiation Application (KARA), Seoul, Republic of Korea"
+    }
   ],
-  "license": "TODO-mit-or-other",
+  "license": "mit",
   "keywords": [
     "health physics",
     "radiation protection",

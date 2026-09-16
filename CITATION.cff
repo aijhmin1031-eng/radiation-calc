@@ -1,9 +1,8 @@
 # ★ GitHub 이 이 파일을 읽어 「Cite this repository」 단추를 만들고, Zenodo 가 릴리스 때
 #   저자·제목을 여기서 가져간다. 규격: https://citation-file-format.github.io
 #
-# ★★ **두 자리가 비어 있다 — 채우기 전에는 공개하지 않는다**(docs/zenodo.md 0절):
-#     ① authors  ② license
-#   지어낸 이름을 넣으면 그 이름이 DOI 와 함께 영구 보관된다.
+# ★★ **`authors` 가 아직 비어 있다 — 채우기 전에는 공개하지 않는다**(docs/zenodo.md 0절).
+#   지어낸 이름을 넣으면 그 이름이 DOI 와 함께 영구 보관된다. 라이선스는 정해졌다(MIT).
 cff-version: 1.2.0
 message: "If you use these figures or this code, please cite both this work and the upstream data sources listed below."
 title: "RadCalc — nuclide reference sheets and spectrum-solved shielding for radiation protection"
@@ -28,15 +27,19 @@ keywords:
   - bremsstrahlung
   - waste characterisation
 
-# TODO(소유주): 실제 이름으로 채울 것. 지어낸 이름을 넣지 않는다.
+# TODO(소유주): 실제 표기로 채울 것. 지어낸 이름을 넣지 않는다 — DOI 기록은 지울 수 없다.
+#   · 로마자 표기는 본인이 쓰는 것이 정본이다(Min, Jae-Hyun / Jaehyun Min / …).
+#   · 소속은 확인했다 — ri.or.kr 은 한국방사선진흥협회다.
+#   · 국가·주소 필드는 넣지 않는다(소속에 들어간다 · 개인 주소는 영구 공개 기록에 남는다).
 authors:
-  - family-names: "TODO-성"
-    given-names: "TODO-이름"
-    # affiliation: "TODO — 소속"
-    # orcid: "https://orcid.org/0000-0000-0000-0000"
+  - family-names: "TODO-성-로마자"
+    given-names: "TODO-이름-로마자"
+    affiliation: "Korean Association for Radiation Application (KARA), Seoul, Republic of Korea"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"   # 있으면 주석을 푼다
 
-# TODO(소유주): docs/zenodo.md 3절의 권고는 코드 MIT · 데이터 CC-BY-4.0 이다.
-license: "TODO-MIT-or-other"
+# 소유주 결정(2026-09-16): **MIT**. LICENSE 파일에 적용 범위를 덧붙였다 —
+# 이 라이선스는 **우리 기여분만** 덮고, 바탕이 된 평가 자료에는 우리가 조건을 붙일 수 없다.
+license: MIT
 
 references:
   - type: database
