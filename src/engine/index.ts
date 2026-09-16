@@ -7,3 +7,4 @@ export * from "./mda";
 export * from "./alara";
 export * from "./units";
 export * from "./beta";
+export * from "./spectrum";

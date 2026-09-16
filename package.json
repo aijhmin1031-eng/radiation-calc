@@ -8,7 +8,7 @@
     "preview": "astro preview",
     "test": "tsx --test src/engine/*.test.ts src/lib/*.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json && astro check",
-    "gate": "node gate/check-output.mjs && node gate/check-render.mjs && node gate/check-lockup.mjs && node gate/check-inputs.mjs && node gate/check-save.mjs && node gate/check-sticky.mjs && node gate/check-header.mjs && node gate/check-platform.mjs && node gate/check-og.mjs",
+    "gate": "node gate/check-output.mjs && node gate/check-render.mjs && node gate/check-lockup.mjs && node gate/check-inputs.mjs && node gate/check-save.mjs && node gate/check-sticky.mjs && node gate/check-header.mjs && node gate/check-platform.mjs && node gate/check-nuclides.mjs && node gate/check-og.mjs",
     "make-keywords": "node scripts/make-keywords.mjs",
     "make-og": "node scripts/make-og.mjs",
     "check-og": "node gate/check-og.mjs"
