@@ -44,9 +44,13 @@ remain the work of the bodies below and are used under their own terms:
   National Institute of Standards and Technology. <https://doi.org/10.18434/T4D01F>
   NIST Standard Reference Database 126, (c) 1989, 1990, 1996 by the U.S. Secretary
   of Commerce on behalf of the United States of America, all rights reserved.
-  These tables are used here for computation and are not redistributed. NIST does
-  not endorse this work and makes no warranty as to the accuracy of any result
-  derived from these data.
+  A transcription of these tables is present in this repository, at
+  src/data/attenuation.json, because the code computes with them. That file is
+  covered by the NIST terms above and NOT by the MIT licence granted here; it is
+  not offered as a dataset or as standard reference data, and the authoritative
+  tables should be obtained from NIST at the address above. NIST does not endorse
+  this work and makes no warranty as to the accuracy of any result derived from
+  these data.
 
 This software does not replace a shielding design, a dose assessment or a
 radiation survey by a qualified person.

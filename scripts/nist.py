@@ -1,5 +1,11 @@
 import re, html, json, urllib.request, sys
-# NIST X-Ray Mass Attenuation Coefficients — 미국 정부 저작물(public domain)
+# NIST X-Ray Mass Attenuation Coefficients (SRD 126, Hubbell & Seltzer, NISTIR 5632).
+# ★★ 이 줄은 「미국 정부 저작물(public domain)」이라고 적고 있었다 — **틀린 주장이다**.
+#   SRD 는 15 U.S.C. §290e 로 별도 권리가 붙어 17 U.S.C. §105 의 공용 원칙에서 벗어나 있고,
+#   NIST 쪽이 「(c) U.S. Secretary of Commerce … All rights reserved」를 명시한다.
+#   2026-09-16 에 README·brand.ts·/methods/ 를 정정하면서 **이 파일만 빠졌다** —
+#   주석은 grep 대상에서 잊기 쉽다. 옛 주장을 지울 때는 **주석까지 훑을 것**.
+#   조건 정본은 `brand.ts` 의 SOURCE_CITATIONS, 배포 판단은 `docs/zenodo.md` 1~2절.
 BASE="https://physics.nist.gov/PhysRefData/XrayMassCoef/"
 def fetch(u):
     r=urllib.request.Request(u,headers={"User-Agent":"Mozilla/5.0"})
