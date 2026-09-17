@@ -191,14 +191,14 @@ const description =
       Every expected value in this report traces to one of the statements below, each read from the
       source named rather than from memory or from a secondary compilation.
     </p>
-    <div class="not-prose my-4 overflow-x-auto">
+    <div class="not-prose my-4 overflow-x-auto table-fit">
       <table>
         <thead><tr><th>Statement</th><th>Source</th></tr></thead>
         <tbody>
           {STATEMENTS.map((s) => (
             <tr>
               <td class="font-normal text-ink-muted">{s.text}</td>
-              <td class="whitespace-nowrap">{SOURCES[s.source].label}, {s.locator}</td>
+              <td>{SOURCES[s.source].label}, {s.locator}</td>
             </tr>
           ))}
         </tbody>
@@ -216,8 +216,8 @@ const description =
     <h2>Conversion factors</h2>
     <p>
       One subsection per quantity. Each table gives the factor taking one of that unit to the
-      quantity's base unit: first as derived by hand, then as returned by the tool, then the relative
-      difference between them. The derivations are given in full below each table.
+      quantity's base unit: the Hand column is the value derived below, the Tool column is what the
+      converter returns, and the last column is the relative difference between them. The derivations are given in full below each table.
     </p>
 
     {QUANTS.map((q) => (
@@ -228,24 +228,29 @@ const description =
           {" "}{Object.keys(UNITS[q].u).length * (Object.keys(UNITS[q].u).length - 1)} ordered
           conversions between them.
         </p>
-        <div class="not-prose my-3 pin-first">
+        <div class="not-prose my-3 pin-first table-fit">
           <table>
             <thead>
+              {/* ★ 사례번호를 **독립 열로 두지 않는다**(2026-09-17). 좁은 화면에서 열 하나가
+                  통째로 폭을 먹어, 정작 보러 온 Hand·Tool 이 화면 밖으로 밀렸다.
+                  번호는 그 줄의 **메타데이터**이지 내용이 아니므로 식별 칸 안에 작게 둔다. */}
               <tr>
-                <th>Case</th><th>Unit</th>
-                <th class="text-right">Hand calculation</th>
-                <th class="text-right">Tool</th>
-                <th class="text-right">Difference</th>
+                <th>Unit</th>
+                <th class="whitespace-nowrap text-right">Hand</th>
+                <th class="whitespace-nowrap text-right">Tool</th>
+                <th class="whitespace-nowrap text-right">Difference</th>
               </tr>
             </thead>
             <tbody>
               {factorRows(q).map(({ c, tool, diff }) => (
                 <tr>
-                  <td class="num whitespace-nowrap">{c.id}</td>
-                  <td class="whitespace-nowrap font-normal text-ink">{c.unit}</td>
-                  <td class="num text-right text-ink">{sci(c.factor)}</td>
-                  <td class="num text-right text-ink">{sci(tool)}</td>
-                  <td class="num text-right">{relDiff(tool, c.factor)}</td>
+                  <td class="whitespace-nowrap font-normal text-ink">
+                    {c.unit}
+                    <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id}</span>
+                  </td>
+                  <td class="num whitespace-nowrap text-right text-ink">{sci(c.factor)}</td>
+                  <td class="num whitespace-nowrap text-right text-ink">{sci(tool)}</td>
+                  <td class="num whitespace-nowrap text-right">{relDiff(tool, c.factor)}</td>
                 </tr>
               ))}
             </tbody>
@@ -282,19 +287,21 @@ const description =
       records and source certificates. They are the same arithmetic the single-expression argument above predicts,
       performed independently so that the prediction is tested rather than assumed.
     </p>
-    <div class="not-prose my-3 overflow-x-auto">
+    <div class="not-prose my-3 pin-first table-fit">
       <table>
         <thead>
-          <tr><th>Case</th><th>Conversion</th><th class="text-right">Hand</th><th class="text-right">Tool</th><th class="text-right">Difference</th></tr>
+          <tr><th>Conversion</th><th class="whitespace-nowrap text-right">Hand</th><th class="whitespace-nowrap text-right">Tool</th><th class="whitespace-nowrap text-right">Difference</th></tr>
         </thead>
         <tbody>
           {composed.map(({ c, tool, diff }) => (
             <tr>
-              <td class="num whitespace-nowrap">{c.id}</td>
-              <td class="whitespace-nowrap font-normal text-ink">{plain(c.value)} {c.from} → {c.to}</td>
-              <td class="num text-right text-ink">{sci(c.expect)}</td>
-              <td class="num text-right text-ink">{sci(tool)}</td>
-              <td class="num text-right">{relDiff(tool, c.expect)}</td>
+              <td class="whitespace-nowrap font-normal text-ink">
+                {plain(c.value)} {c.from} → {c.to}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id}</span>
+              </td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(c.expect)}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(tool)}</td>
+              <td class="num whitespace-nowrap text-right">{relDiff(tool, c.expect)}</td>
             </tr>
           ))}
         </tbody>
@@ -321,19 +328,26 @@ const description =
       the rest, with one difference: the constant in the first is measured, not defined, so the result
       inherits its uncertainty. The value used is {W_AIR_J_PER_C} J/C.
     </p>
-    <div class="not-prose my-3 overflow-x-auto">
+    <div class="not-prose my-3 pin-first table-fit">
       <table>
         <thead>
-          <tr><th>Case</th><th>Step</th><th class="text-right">Hand</th><th class="text-right">Tool</th><th class="text-right">Difference</th></tr>
+          <tr><th>Step</th><th class="whitespace-nowrap text-right">Hand</th><th class="whitespace-nowrap text-right">Tool</th><th class="whitespace-nowrap text-right">Difference</th></tr>
         </thead>
         <tbody>
           {bridges.map(({ c, tool }) => (
             <tr>
-              <td class="num whitespace-nowrap">{c.id}</td>
-              <td class="font-normal text-ink">{c.title}</td>
-              <td class="num text-right text-ink">{sci(c.expect)} <span class="font-sans text-[12px] text-ink-faint">{c.unit}</span></td>
-              <td class="num text-right text-ink">{sci(tool)}</td>
-              <td class="num text-right">{relDiff(tool, c.expect)}</td>
+              {/* ★ 단위를 숫자 칸에서 뺀다 — 함께 두면 「8.76426×10⁰ mGy (air)」가 되어
+                  **1280px 에서도** 줄이 바뀐다. 단위는 그 줄의 두 숫자에 함께 걸리므로
+                  설명 칸에 한 번만 적는 것이 맞다. */}
+              <td class="font-normal text-ink">
+                {c.title}
+                <span class="mt-0.5 block whitespace-nowrap text-[12px] text-ink-faint">
+                  in {c.unit} <span class="num text-[11px]">{c.id}</span>
+                </span>
+              </td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(c.expect)}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(tool)}</td>
+              <td class="num whitespace-nowrap text-right">{relDiff(tool, c.expect)}</td>
             </tr>
           ))}
         </tbody>
@@ -367,16 +381,18 @@ const description =
       is the second, for anything that reaches the engine by another route. Where a <code>NaN</code>
       does reach the display it is drawn as a dash, never as a number.
     </p>
-    <div class="not-prose my-3 overflow-x-auto">
+    <div class="not-prose my-3 pin-first table-fit">
       <table>
-        <thead><tr><th>Case</th><th>Asked</th><th>Why it must refuse</th><th>Returned</th></tr></thead>
+        <thead><tr><th>Asked</th><th>Why it must refuse</th><th class="whitespace-nowrap text-right">Returned</th></tr></thead>
         <tbody>
           {refusals.map(({ c, refused }) => (
             <tr>
-              <td class="num whitespace-nowrap">{c.id}</td>
-              <td class="font-normal text-ink">{c.title}</td>
+              <td class="font-normal text-ink">
+                {c.title}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id}</span>
+              </td>
               <td class="font-normal text-ink-muted">{c.why}</td>
-              <td class={refused ? "num whitespace-nowrap text-ink" : "num whitespace-nowrap font-semibold text-warn"}>
+              <td class={refused ? "num whitespace-nowrap text-right text-ink" : "num whitespace-nowrap text-right font-semibold text-warn"}>
                 {refused ? "NaN" : "a number"}
               </td>
             </tr>
@@ -410,17 +426,17 @@ const description =
     </p>
 
     <h2>Coverage and result</h2>
-    <div class="not-prose my-4 overflow-x-auto">
+    <div class="not-prose my-4 overflow-x-auto table-fit">
       <table>
-        <thead><tr><th>Check</th><th class="text-right">Count</th><th class="text-right">Result</th></tr></thead>
+        <thead><tr><th>Check</th><th class="whitespace-nowrap text-right">Count</th><th class="whitespace-nowrap text-right">Result</th></tr></thead>
         <tbody>
-          <tr><td>Units offered by the tool</td><td class="num text-right">{unitCount}</td><td class="text-right">—</td></tr>
-          <tr><td>Units with a hand-derived factor</td><td class="num text-right">{UNIT_CASES.length}</td><td class="text-right">{UNIT_CASES.length === unitCount ? "complete" : "incomplete"}</td></tr>
-          <tr><td>Ordered conversions within a quantity</td><td class="num text-right">{pairCount}</td><td class="text-right">all checked</td></tr>
-          <tr><td>Composed conversions worked end to end</td><td class="num text-right">{composed.length}</td><td class="text-right">{composed.every((x) => x.diff < TOLERANCE) ? "pass" : "fail"}</td></tr>
-          <tr><td>Steps that are not conversions</td><td class="num text-right">{bridges.length}</td><td class="text-right">{bridges.every((x) => x.diff < TOLERANCE) ? "pass" : "fail"}</td></tr>
-          <tr><td>Required refusals</td><td class="num text-right">{refusals.length}</td><td class="text-right">{refusals.every((x) => x.refused) ? "pass" : "fail"}</td></tr>
-          <tr><td>Largest relative difference observed</td><td class="num text-right">{worst.toExponential(3)}</td><td class="text-right">{worst < TOLERANCE ? "within criterion" : "outside criterion"}</td></tr>
+          <tr><td>Units offered by the tool</td><td class="num whitespace-nowrap text-right">{unitCount}</td><td class="text-right">—</td></tr>
+          <tr><td>Units with a hand-derived factor</td><td class="num whitespace-nowrap text-right">{UNIT_CASES.length}</td><td class="text-right">{UNIT_CASES.length === unitCount ? "complete" : "incomplete"}</td></tr>
+          <tr><td>Ordered conversions within a quantity</td><td class="num whitespace-nowrap text-right">{pairCount}</td><td class="text-right">all checked</td></tr>
+          <tr><td>Composed conversions worked end to end</td><td class="num whitespace-nowrap text-right">{composed.length}</td><td class="text-right">{composed.every((x) => x.diff < TOLERANCE) ? "pass" : "fail"}</td></tr>
+          <tr><td>Steps that are not conversions</td><td class="num whitespace-nowrap text-right">{bridges.length}</td><td class="text-right">{bridges.every((x) => x.diff < TOLERANCE) ? "pass" : "fail"}</td></tr>
+          <tr><td>Required refusals</td><td class="num whitespace-nowrap text-right">{refusals.length}</td><td class="text-right">{refusals.every((x) => x.refused) ? "pass" : "fail"}</td></tr>
+          <tr><td>Largest relative difference observed</td><td class="num whitespace-nowrap text-right">{worst.toExponential(3)}</td><td class="text-right">{worst < TOLERANCE ? "within criterion" : "outside criterion"}</td></tr>
         </tbody>
       </table>
     </div>

@@ -102,21 +102,44 @@ tbody tr:hover td { background: rgb(var(--c-accent-soft) / 0.35); }
      압축 고정 바에서 이미 배운 것과 같다: **스크롤한 뒤에만 존재하는 것은 따로 재야 한다.**
    ★ 바탕을 반투명으로 두면 안 된다 — 고정된 칸 **밑으로 다른 칸이 비쳐 지나간다.**
      그래서 `color-mix` 로 같은 배합을 **불투명하게** 만든다(옛 브라우저는 앞 줄로 떨어진다). */
-.pin-first { overflow-x: auto; }
+/* ★★ **고정 칸의 바탕은 그것이 놓인 자리의 바탕이어야 한다**(2026-09-17). 처음에는
+   `--c-paper` 를 글자로 박아 두었는데, 그 값은 **쪽 배경**이라 표가 `.card`(surface) 안에
+   들어가는 순간 고정 칸만 다른 색이 된다. `/beta/` 의 표가 바로 그 자리였다.
+   ★ 자리마다 클래스를 새로 만들지 말고 **바탕색을 변수 하나로 받는다** — 새 자리가 생기면
+     `--pin-bg` 만 바꿔 주면 되고, 기본값은 지금까지와 같은 쪽 배경이다. */
+.pin-first { overflow-x: auto; --pin-bg: rgb(var(--c-paper)); }
+.card.pin-first { --pin-bg: rgb(var(--c-surface)); }
 .pin-first table td:first-child,
 .pin-first table th:first-child {
   position: sticky; left: 0; z-index: 1;
-  background: rgb(var(--c-paper));
+  background: var(--pin-bg);
   border-right: 1px solid rgb(var(--c-line-strong));
 }
 .pin-first table thead th:first-child {
-  background: rgb(var(--c-paper));
-  background: color-mix(in srgb, rgb(var(--c-accent-soft)) 60%, rgb(var(--c-paper)));
+  background: var(--pin-bg);
+  background: color-mix(in srgb, rgb(var(--c-accent-soft)) 60%, var(--pin-bg));
 }
 .pin-first table tbody tr:hover td:first-child {
-  background: rgb(var(--c-paper));
-  background: color-mix(in srgb, rgb(var(--c-accent-soft)) 35%, rgb(var(--c-paper)));
+  background: var(--pin-bg);
+  background: color-mix(in srgb, rgb(var(--c-accent-soft)) 35%, var(--pin-bg));
 }
+/* ★★ **표시된 줄은 고정 칸에서도 표시되어야 한다**(2026-09-17 실측으로 잡았다).
+   고정 규칙의 특이도(0,2,2)가 유틸리티 배경(0,1,0)을 이겨, `/beta/` 에서 지금 고른 흡수체
+   줄의 첫 칸이 **다른 줄과 완전히 같은 rgb(252,252,250)** 이었다 — 어느 줄을 골랐는지
+   화면에서 사라진 것이다. 빌드도 통과하고 클래스도 그대로라 **재 봐야만 보인다.**
+   ★ 끄는 규칙을 더 세게 걸지 않는다 — 줄이 표식을 달면 고정 칸이 **그 표식을 따라온다.** */
+.pin-first table tbody tr.is-marked td:first-child {
+  background: color-mix(in srgb, rgb(var(--c-accent-soft)) 50%, var(--pin-bg));
+}
+
+/* ★★ **대조표는 내용 폭으로 둔다**(2026-09-17). 사이트의 표는 기본이 전폭(`w-full`)인데,
+   유효성 평가의 Hand·Tool 열은 내용이 75px 인데 **253px** 로 벌어져 있었다(실측) — 남는 폭이
+   열에 고르게 나뉘기 때문이다. 열이 벌어지면 같은 줄의 두 값이 멀어져 **눈으로 대조하기가
+   나빠진다**(이 표의 존재 이유가 바로 그 대조다).
+   ★ 전폭 규칙 자체는 건드리지 않는다 — 핵종 목록처럼 전폭이 맞는 표가 따로 있다.
+     **켜는 규칙의 범위를 줄인다**: 이 클래스를 붙인 표만 내용 폭이 된다.
+   ★ 좁은 화면에서는 어차피 내용이 화면보다 넓어 스크롤하고, 첫 칸은 `.pin-first` 가 잡아 준다. */
+.table-fit table { width: auto; min-width: 0; }
 
 /* 본문 — 절 번호는 조판이 매긴다. 본문에 손으로 쓰지 않는다. */
 .prose-doc { counter-reset: h2sec; }
