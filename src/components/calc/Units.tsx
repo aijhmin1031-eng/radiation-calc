@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { UNITS, convert, exposureToAirKerma, type Quantity } from "../../engine/units";
+import { UNITS, convert, exposureToAirKerma, massConcFromVolConc, volConcFromMassConc,
+         DENSITY_WATER_G_PER_ML, type Quantity } from "../../engine/units";
 import { Field, NumberInput, Select, RadioRow } from "../ui/Field";
 import { SaveBar } from "../ui/SaveBar";
 import { initialState, pick as pickState } from "../../lib/restore";
@@ -11,7 +12,10 @@ const QUANTITIES: { value: Quantity; label: string; hint: string }[] = [
   { value: "equivalent", label: "Dose equivalent",   hint: "Weighted for biological effect — Sv, rem" },
   { value: "exposure",   label: "Exposure",          hint: "Ionisation in air — R, C/kg" },
   { value: "surface",    label: "Surface activity",  hint: "Contamination per area" },
-  { value: "massConc",   label: "Concentration",     hint: "Per gram, kilogram or litre" },
+  /* ★★ 농도가 한 칸이었을 때 `Bq/L` 이 질량 배율로 들어 있어 **답이 1000배 틀렸다**
+     (2026-09-16). 분모가 다르면 **다른 양**이고, 잇는 것은 밀도라는 물리다 — 아래 다리 참조. */
+  { value: "massConc",   label: "Mass concentration",   hint: "Soil, waste, food — per gram or kilogram" },
+  { value: "volConc",    label: "Volume concentration", hint: "Water, air, vials — per litre or millilitre" },
 ];
 
 export default function Units() {
@@ -19,6 +23,7 @@ export default function Units() {
   const [q, setQ] = useState<Quantity>(pickState(restored, "q", "activity"));
   const [from, setFrom] = useState(pickState(restored, "from", "mCi"));
   const [val, setVal] = useState(pickState(restored, "val", 1));
+  const [density, setDensity] = useState(pickState(restored, "density", DENSITY_WATER_G_PER_ML));
 
   const units = Object.keys(UNITS[q].u);
   const pick = (nq: Quantity) => { setQ(nq); setFrom(Object.keys(UNITS[nq].u)[0]); };
@@ -81,6 +86,36 @@ export default function Units() {
         </div>
       ) : null}
 
+      {(q === "massConc" || q === "volConc") ? (
+        <div className="card p-4">
+          <p className="label mb-2">
+            {q === "volConc" ? "Volume to mass concentration" : "Mass to volume concentration"}
+          </p>
+          <Field label="Density" hint="g/mL — water is 1.00, so the two read the same">
+            <NumberInput value={Number.isFinite(density) ? density : ""} onChange={setDensity}
+                         step={0.01} min={0} suffix="g/mL" />
+          </Field>
+          <p className="num mt-3 text-[20px] font-semibold text-ink">
+            {fmt(
+              q === "volConc"
+                ? massConcFromVolConc(convert(val, safeFrom, "Bq/L", "volConc"), density) * 1000
+                : volConcFromMassConc(convert(val, safeFrom, "Bq/g", "massConc"), density),
+              4,
+            )}
+            <span className="ml-1.5 text-[14px] font-normal text-ink-muted">
+              {q === "volConc" ? "Bq/kg" : "Bq/L"}
+            </span>
+          </p>
+          <Warn>
+            This step is <strong>not a unit conversion</strong> — activity per litre and activity per
+            kilogram are different quantities, and crossing between them needs the density of the
+            material. The table above therefore never crosses on its own. For water at 1.00 g/mL the
+            two happen to be numerically equal, which is why the mistake is easy to make and hard to
+            notice: <strong>1 pCi/L is 0.037 Bq/kg, not 37</strong>.
+          </Warn>
+        </div>
+      ) : null}
+
       {(q === "dose" || q === "equivalent") ? (
         <Warn>
           Gray and sievert are <strong>never interchangeable by a factor</strong>. Going from absorbed
@@ -90,7 +125,7 @@ export default function Units() {
       ) : null}
 
       <SaveBar tool="units"
-        inputs={{ quantity: q, unit: safeFrom, value: val }}
+        inputs={{ quantity: q, unit: safeFrom, value: val, density }}
         outputs={Object.fromEntries(units.map((x) => [x, convert(Number.isFinite(val) ? val : 0, safeFrom, x, q)]))}
         summary={`${fmt(val)} ${safeFrom}`} />
     </div>
