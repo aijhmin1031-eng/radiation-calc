@@ -109,6 +109,47 @@ for (const vp of [{ w: 1280, h: 900, tag: "데스크톱" }, { w: 390, h: 844, ta
           }).map((e) => `${e.tagName.toLowerCase()}.${e.className || ""}`.slice(0, 40));
         })(),
         ko: leaves.filter((e) => /[가-힣]/.test(e.textContent)).length,
+        /* ★★ **값 하나가 두 줄로 쪼개지면 그것은 표가 아니다**(2026-09-17 소유주가 휴대폰
+           화면에서 잡았다 — 「표는 신경써서 만들자. 표 열넓이」). 유효성 평가표의
+           `1.85 × 10⁵` 가 `×` 앞뒤 공백 때문에 **세 줄**로 그려지고 있었다.
+           ★ 다른 검사가 구조적으로 못 본다 — 문서도 안 넘치고, 스크롤 컨테이너도 안 넘치고,
+             잘리지도 않는다. **줄이 늘어날 뿐**이라 조용하다.
+           ★ 칸 높이로 재면 안 된다 — 같은 줄의 **다른 칸**이 길면 높이가 함께 커져
+             멀쩡한 숫자도 걸린다. `Range` 의 line box 수로 **글자가 몇 줄인지** 센다.
+           ★ 두 뷰포트 모두에서 결함이다(가로 스크롤과 달리 설계된 동작일 수가 없다). */
+        wrappedNums: (() => {
+          const lines = (el) => {
+            const r = document.createRange();
+            r.selectNodeContents(el);
+            return new Set([...r.getClientRects()].map((x) => Math.round(x.top))).size;
+          };
+          return [...document.querySelectorAll("td.num")]
+            .filter((c) => c.textContent.trim() && lines(c) > 1)
+            .map((c) => c.textContent.trim().slice(0, 28));
+        })(),
+        /* ★★ 가로로 스크롤하는 표는 **첫 칸이 고정돼 있어야 한다**. 오른쪽으로 밀면 식별
+           칸이 화면 밖으로 나가 그 줄이 무엇인지 알 수 없다(핵종 목록에서 이미 밟았고,
+           유효성 평가의 합성·물리·거부 표 셋이 같은 상태로 나갔다). `.pin-first` 가 그 장치다. */
+        unpinned: [...document.querySelectorAll("table")]
+          .map((t) => t.parentElement)
+          .filter((sc) => sc && sc.scrollWidth - sc.clientWidth > 2 && !sc.classList.contains("pin-first"))
+          .length,
+        /* ★★ **고정 칸이 줄의 표식을 먹지 않는가**(2026-09-17 실측으로 잡았다).
+           고정 규칙의 특이도가 유틸리티 배경을 이겨, `/beta/` 에서 **지금 고른 흡수체 줄의
+           첫 칸이 다른 줄과 완전히 같은 색**이었다 — 어느 줄을 골랐는지 화면에서 사라졌다.
+           ★ 「줄에 바탕색이 있는데 그 줄의 첫 칸은 맨 줄과 같은 색」을 센다. 클래스 이름을
+             묻지 않는다 — 이름을 물으면 **표식 클래스를 안 붙인 바로 그 사고**를 못 본다. */
+        pinMarkerLost: [...document.querySelectorAll(".pin-first table")].flatMap((t) => {
+          const rows = [...t.querySelectorAll("tbody tr")];
+          const clear = (el) => getComputedStyle(el).backgroundColor === "rgba(0, 0, 0, 0)";
+          const plain = rows.find((r) => clear(r) && r.children[0]);
+          if (!plain) return [];
+          const plainBg = getComputedStyle(plain.children[0]).backgroundColor;
+          return rows
+            .filter((r) => !clear(r) && r.children[0] &&
+                           getComputedStyle(r.children[0]).backgroundColor === plainBg)
+            .map((r) => r.children[0].textContent.trim().slice(0, 20));
+        }),
       };
     });
     if (m.overflow > 0) fail.push(`${vp.tag} ${p}: 문서가 가로로 ${m.overflow}px 넘친다`);
@@ -119,8 +160,14 @@ for (const vp of [{ w: 1280, h: 900, tag: "데스크톱" }, { w: 390, h: 844, ta
     if (m.invisible.length > 0)
       fail.push(`${vp.tag} ${p}: 안 보이는 글자 ${m.invisible.length}곳 — ${[...new Set(m.invisible)].slice(0, 3).join(" · ")}`);
     if (m.ko > 0) fail.push(`${vp.tag} ${p}: 그려진 글자에 한국어 ${m.ko}곳`);
+    if (m.wrappedNums.length > 0)
+      fail.push(`${vp.tag} ${p}: 두 줄로 쪼개진 숫자 ${m.wrappedNums.length}칸 — ${[...new Set(m.wrappedNums)].slice(0, 3).join(" · ")}`);
+    if (m.unpinned > 0)
+      fail.push(`${vp.tag} ${p}: 가로로 스크롤하는데 첫 칸이 안 고정된 표 ${m.unpinned}개`);
+    if (m.pinMarkerLost.length > 0)
+      fail.push(`${vp.tag} ${p}: 고정 칸이 줄 표식을 먹었다 ${m.pinMarkerLost.length}줄 — ${m.pinMarkerLost.slice(0, 2).join(" · ")}`);
     if (errs.length) fail.push(`${vp.tag} ${p}: JS 오류 — ${errs[0].slice(0, 90)}`);
-    note(`${p.padEnd(22)} 넘침 ${m.overflow} · 스크롤넘침 ${m.scrollers} · 잘림 ${m.clipped.length} · 안보임 ${m.invisible.length} · 한국어 ${m.ko} · 오류 ${errs.length}`);
+    note(`${p.padEnd(22)} 넘침 ${m.overflow} · 스크롤넘침 ${m.scrollers} · 잘림 ${m.clipped.length} · 안보임 ${m.invisible.length} · 한국어 ${m.ko} · 쪼개진수 ${m.wrappedNums.length} · 안고정표 ${m.unpinned} · 표식먹힘 ${m.pinMarkerLost.length} · 오류 ${errs.length}`);
     await pg.close();
   }
   await ctx.close();

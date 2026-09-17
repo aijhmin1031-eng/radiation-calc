@@ -392,7 +392,7 @@ export interface BridgeCase {
 }
 
 export const BRIDGE_CASES: BridgeCase[] = [
-  { id: "B-01", kind: "exposureToAirKerma", title: "One roentgen to air kerma",
+  { id: "B-01", kind: "exposureToAirKerma", title: "1 R to air kerma",
     input: { value: 1, from: "R" }, expect: 8.76426, unit: "mGy (air)",
     cites: ["r-exact", "wair", "kerma"],
     steps: [
@@ -403,7 +403,7 @@ export const BRIDGE_CASES: BridgeCase[] = [
       "= 8.76426 × 10⁻³ Gy = 8.76426 mGy.",
     ],
     caveat: "Not a unit conversion. W_air/e is a measured constant carrying a standard uncertainty of 0.2%, so this result is not exact in the way the table above is. The product is the collision air kerma; total air kerma is larger by 1/(1 − g), with g the fraction of electron energy lost to bremsstrahlung, which is small but not zero at photon energies of interest." },
-  { id: "B-02", kind: "massFromVol", title: "One becquerel per litre of water, per kilogram",
+  { id: "B-02", kind: "massFromVol", title: "1 Bq/L of water, per kilogram",
     input: { value: 1, from: "Bq/L", density: 1.0 }, expect: 1, unit: "Bq/kg",
     cites: ["litre", "prefixes"],
     steps: [
@@ -413,7 +413,7 @@ export const BRIDGE_CASES: BridgeCase[] = [
       "= 1 Bq/kg, equivalently 1 × 10⁻³ Bq/g.",
     ],
     caveat: "The numerical equality holds only because water is 1.00 g/mL. It is a coincidence of the material, not a property of the units." },
-  { id: "B-03", kind: "massFromVol", title: "Five picocuries per litre of water, per kilogram",
+  { id: "B-03", kind: "massFromVol", title: "5 pCi/L of water, per kilogram",
     input: { value: 5, from: "pCi/L", density: 1.0 }, expect: 0.185, unit: "Bq/kg",
     cites: ["ci", "litre"],
     steps: [
@@ -432,7 +432,7 @@ export const BRIDGE_CASES: BridgeCase[] = [
       "= 1.25 Bq/kg.",
     ],
     caveat: "The same activity per litre is a higher activity per kilogram in a lighter material. Any tool that crosses this boundary with a fixed factor is wrong for everything but water." },
-  { id: "B-05", kind: "volFromMass", title: "One becquerel per gram of water, per litre",
+  { id: "B-05", kind: "volFromMass", title: "1 Bq/g of water, per litre",
     input: { value: 1, from: "Bq/g", density: 1.0 }, expect: 1000, unit: "Bq/L",
     cites: ["litre", "prefixes"],
     steps: [

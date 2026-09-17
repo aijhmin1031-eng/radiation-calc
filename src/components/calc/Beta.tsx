@@ -99,12 +99,14 @@ export default function Beta() {
             { k: "Transmission", v: trans === 0 ? "0 — stopped" : `${fmt(trans * 100, 3)}%` },
           ]} />
 
-          <div className="card overflow-x-auto">
+          {/* ★ 첫 칸 고정 — 좁은 화면에서 오른쪽으로 밀면 **어느 흡수체 줄인지** 사라진다
+              (2026-09-17, 유효성 평가 쪽에 세운 게이트가 이 기존 결함을 찾아냈다). */}
+          <div className="card pin-first">
             <table>
               <thead><tr><th>Absorber</th><th className="text-right">Thickness to stop</th><th className="text-right">Bremsstrahlung</th></tr></thead>
               <tbody>
                 {brems.map((a) => (
-                  <tr key={a.value} className={a.value === c.absK ? "bg-accent-soft/50" : ""}>
+                  <tr key={a.value} className={a.value === c.absK ? "is-marked bg-accent-soft/50" : ""}>
                     <td>{a.label}</td>
                     <td className="num text-right">{fmt(betaRangeCm(eMax, a.rho) * 10, 3)} mm</td>
                     <td className="num text-right">{fmt(a.f * 100, 3)}%</td>
