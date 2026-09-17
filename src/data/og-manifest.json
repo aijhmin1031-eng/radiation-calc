@@ -37,591 +37,591 @@
   },
   "/nuclides/ac-227/": {
     "slug": "nuclides-ac-227",
-    "title": "Ac-227 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Ac-227 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/am-241/": {
     "slug": "nuclides-am-241",
-    "title": "Am-241 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Am-241 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/am-243/": {
     "slug": "nuclides-am-243",
-    "title": "Am-243 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "Am-243 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/ar-39/": {
     "slug": "nuclides-ar-39",
-    "title": "Ar-39 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Ar-39 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/au-198/": {
     "slug": "nuclides-au-198",
-    "title": "Au-198 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Au-198 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/au-198m/": {
     "slug": "nuclides-au-198m",
-    "title": "Au-198m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Au-198m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ba-133/": {
     "slug": "nuclides-ba-133",
-    "title": "Ba-133 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Ba-133 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ba-133m/": {
     "slug": "nuclides-ba-133m",
-    "title": "Ba-133m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Ba-133m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ba-137m/": {
     "slug": "nuclides-ba-137m",
-    "title": "Ba-137m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Ba-137m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/bi-210/": {
     "slug": "nuclides-bi-210",
-    "title": "Bi-210 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Bi-210 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/c-14/": {
     "slug": "nuclides-c-14",
-    "title": "C-14 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "C-14 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/ca-41/": {
     "slug": "nuclides-ca-41",
-    "title": "Ca-41 — half-life, decay mode and specific activity · RadCalc"
+    "title": "Ca-41 half-life, decay mode and specific activity · RadCalc"
   },
   "/nuclides/ca-45/": {
     "slug": "nuclides-ca-45",
-    "title": "Ca-45 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Ca-45 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/cd-109/": {
     "slug": "nuclides-cd-109",
-    "title": "Cd-109 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Cd-109 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/cd-109m1/": {
     "slug": "nuclides-cd-109m1",
-    "title": "Cd-109m1 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Cd-109m1 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/cd-109m2/": {
     "slug": "nuclides-cd-109m2",
-    "title": "Cd-109m2 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Cd-109m2 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ce-139/": {
     "slug": "nuclides-ce-139",
-    "title": "Ce-139 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Ce-139 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ce-139m/": {
     "slug": "nuclides-ce-139m",
-    "title": "Ce-139m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Ce-139m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ce-141/": {
     "slug": "nuclides-ce-141",
-    "title": "Ce-141 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Ce-141 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ce-144/": {
     "slug": "nuclides-ce-144",
-    "title": "Ce-144 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Ce-144 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/cf-249/": {
     "slug": "nuclides-cf-249",
-    "title": "Cf-249 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "Cf-249 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/cf-252/": {
     "slug": "nuclides-cf-252",
-    "title": "Cf-252 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "Cf-252 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/cl-36/": {
     "slug": "nuclides-cl-36",
-    "title": "Cl-36 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Cl-36 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/cm-242/": {
     "slug": "nuclides-cm-242",
-    "title": "Cm-242 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "Cm-242 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/cm-243/": {
     "slug": "nuclides-cm-243",
-    "title": "Cm-243 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "Cm-243 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/cm-244/": {
     "slug": "nuclides-cm-244",
-    "title": "Cm-244 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Cm-244 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/cm-245/": {
     "slug": "nuclides-cm-245",
-    "title": "Cm-245 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "Cm-245 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/cm-246/": {
     "slug": "nuclides-cm-246",
-    "title": "Cm-246 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "Cm-246 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/co-57/": {
     "slug": "nuclides-co-57",
-    "title": "Co-57 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Co-57 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/co-60/": {
     "slug": "nuclides-co-60",
-    "title": "Co-60 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Co-60 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/co-60m/": {
     "slug": "nuclides-co-60m",
-    "title": "Co-60m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Co-60m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/cr-51/": {
     "slug": "nuclides-cr-51",
-    "title": "Cr-51 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Cr-51 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/cs-134/": {
     "slug": "nuclides-cs-134",
-    "title": "Cs-134 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Cs-134 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/cs-134m/": {
     "slug": "nuclides-cs-134m",
-    "title": "Cs-134m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Cs-134m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/cs-135/": {
     "slug": "nuclides-cs-135",
-    "title": "Cs-135 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Cs-135 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/cs-137/": {
     "slug": "nuclides-cs-137",
-    "title": "Cs-137 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Cs-137 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/eu-152/": {
     "slug": "nuclides-eu-152",
-    "title": "Eu-152 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Eu-152 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/eu-152m1/": {
     "slug": "nuclides-eu-152m1",
-    "title": "Eu-152m1 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Eu-152m1 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/eu-152m2/": {
     "slug": "nuclides-eu-152m2",
-    "title": "Eu-152m2 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Eu-152m2 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/eu-154/": {
     "slug": "nuclides-eu-154",
-    "title": "Eu-154 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Eu-154 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/eu-154m/": {
     "slug": "nuclides-eu-154m",
-    "title": "Eu-154m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Eu-154m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/f-18/": {
     "slug": "nuclides-f-18",
-    "title": "F-18 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "F-18 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/fe-55/": {
     "slug": "nuclides-fe-55",
-    "title": "Fe-55 — half-life, decay mode and specific activity · RadCalc"
+    "title": "Fe-55 half-life, decay mode and specific activity · RadCalc"
   },
   "/nuclides/fe-59/": {
     "slug": "nuclides-fe-59",
-    "title": "Fe-59 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Fe-59 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ga-67/": {
     "slug": "nuclides-ga-67",
-    "title": "Ga-67 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Ga-67 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ga-68/": {
     "slug": "nuclides-ga-68",
-    "title": "Ga-68 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Ga-68 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/gd-148/": {
     "slug": "nuclides-gd-148",
-    "title": "Gd-148 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "Gd-148 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/ge-68/": {
     "slug": "nuclides-ge-68",
-    "title": "Ge-68 — half-life, decay mode and specific activity · RadCalc"
+    "title": "Ge-68 half-life, decay mode and specific activity · RadCalc"
   },
   "/nuclides/h-3/": {
     "slug": "nuclides-h-3",
-    "title": "H-3 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "H-3 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/hg-203/": {
     "slug": "nuclides-hg-203",
-    "title": "Hg-203 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Hg-203 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/hg-203m/": {
     "slug": "nuclides-hg-203m",
-    "title": "Hg-203m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Hg-203m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ho-166/": {
     "slug": "nuclides-ho-166",
-    "title": "Ho-166 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Ho-166 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/i-125/": {
     "slug": "nuclides-i-125",
-    "title": "I-125 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "I-125 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/i-129/": {
     "slug": "nuclides-i-129",
-    "title": "I-129 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "I-129 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/i-131/": {
     "slug": "nuclides-i-131",
-    "title": "I-131 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "I-131 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/in-111/": {
     "slug": "nuclides-in-111",
-    "title": "In-111 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "In-111 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/in-111m/": {
     "slug": "nuclides-in-111m",
-    "title": "In-111m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "In-111m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ir-192/": {
     "slug": "nuclides-ir-192",
-    "title": "Ir-192 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Ir-192 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ir-192m1/": {
     "slug": "nuclides-ir-192m1",
-    "title": "Ir-192m1 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Ir-192m1 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ir-192m2/": {
     "slug": "nuclides-ir-192m2",
-    "title": "Ir-192m2 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Ir-192m2 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/k-40/": {
     "slug": "nuclides-k-40",
-    "title": "K-40 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "K-40 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/kr-85/": {
     "slug": "nuclides-kr-85",
-    "title": "Kr-85 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Kr-85 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/kr-85m/": {
     "slug": "nuclides-kr-85m",
-    "title": "Kr-85m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Kr-85m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/lu-177/": {
     "slug": "nuclides-lu-177",
-    "title": "Lu-177 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Lu-177 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/lu-177m/": {
     "slug": "nuclides-lu-177m",
-    "title": "Lu-177m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Lu-177m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/mn-54/": {
     "slug": "nuclides-mn-54",
-    "title": "Mn-54 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Mn-54 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/mo-99/": {
     "slug": "nuclides-mo-99",
-    "title": "Mo-99 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Mo-99 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/na-22/": {
     "slug": "nuclides-na-22",
-    "title": "Na-22 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Na-22 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/na-24/": {
     "slug": "nuclides-na-24",
-    "title": "Na-24 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Na-24 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/na-24m/": {
     "slug": "nuclides-na-24m",
-    "title": "Na-24m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Na-24m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/nb-95/": {
     "slug": "nuclides-nb-95",
-    "title": "Nb-95 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Nb-95 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/nb-95m/": {
     "slug": "nuclides-nb-95m",
-    "title": "Nb-95m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Nb-95m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ni-59/": {
     "slug": "nuclides-ni-59",
-    "title": "Ni-59 — half-life, decay mode and specific activity · RadCalc"
+    "title": "Ni-59 half-life, decay mode and specific activity · RadCalc"
   },
   "/nuclides/ni-63/": {
     "slug": "nuclides-ni-63",
-    "title": "Ni-63 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Ni-63 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/np-237/": {
     "slug": "nuclides-np-237",
-    "title": "Np-237 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "Np-237 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/p-32/": {
     "slug": "nuclides-p-32",
-    "title": "P-32 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "P-32 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/p-33/": {
     "slug": "nuclides-p-33",
-    "title": "P-33 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "P-33 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/pa-231/": {
     "slug": "nuclides-pa-231",
-    "title": "Pa-231 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "Pa-231 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/pb-210/": {
     "slug": "nuclides-pb-210",
-    "title": "Pb-210 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Pb-210 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/pm-147/": {
     "slug": "nuclides-pm-147",
-    "title": "Pm-147 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Pm-147 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/po-210/": {
     "slug": "nuclides-po-210",
-    "title": "Po-210 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "Po-210 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/pr-144/": {
     "slug": "nuclides-pr-144",
-    "title": "Pr-144 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Pr-144 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/pu-238/": {
     "slug": "nuclides-pu-238",
-    "title": "Pu-238 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Pu-238 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/pu-239/": {
     "slug": "nuclides-pu-239",
-    "title": "Pu-239 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Pu-239 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/pu-240/": {
     "slug": "nuclides-pu-240",
-    "title": "Pu-240 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Pu-240 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/pu-241/": {
     "slug": "nuclides-pu-241",
-    "title": "Pu-241 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Pu-241 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/pu-242/": {
     "slug": "nuclides-pu-242",
-    "title": "Pu-242 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "Pu-242 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/pu-244/": {
     "slug": "nuclides-pu-244",
-    "title": "Pu-244 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "Pu-244 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/ra-223/": {
     "slug": "nuclides-ra-223",
-    "title": "Ra-223 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Ra-223 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ra-224/": {
     "slug": "nuclides-ra-224",
-    "title": "Ra-224 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "Ra-224 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/ra-226/": {
     "slug": "nuclides-ra-226",
-    "title": "Ra-226 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Ra-226 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ra-228/": {
     "slug": "nuclides-ra-228",
-    "title": "Ra-228 — half-life, decay mode and specific activity · RadCalc"
+    "title": "Ra-228 half-life, decay mode and specific activity · RadCalc"
   },
   "/nuclides/re-188/": {
     "slug": "nuclides-re-188",
-    "title": "Re-188 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Re-188 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/re-188m/": {
     "slug": "nuclides-re-188m",
-    "title": "Re-188m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Re-188m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/rh-106/": {
     "slug": "nuclides-rh-106",
-    "title": "Rh-106 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Rh-106 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/rh-106m/": {
     "slug": "nuclides-rh-106m",
-    "title": "Rh-106m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Rh-106m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ru-106/": {
     "slug": "nuclides-ru-106",
-    "title": "Ru-106 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Ru-106 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/s-35/": {
     "slug": "nuclides-s-35",
-    "title": "S-35 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "S-35 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/sb-124/": {
     "slug": "nuclides-sb-124",
-    "title": "Sb-124 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Sb-124 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/sb-124m1/": {
     "slug": "nuclides-sb-124m1",
-    "title": "Sb-124m1 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Sb-124m1 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/sb-124m2/": {
     "slug": "nuclides-sb-124m2",
-    "title": "Sb-124m2 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Sb-124m2 half-life, decay mode and specific activity · RadCalc"
   },
   "/nuclides/sb-125/": {
     "slug": "nuclides-sb-125",
-    "title": "Sb-125 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Sb-125 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/sc-46/": {
     "slug": "nuclides-sc-46",
-    "title": "Sc-46 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Sc-46 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/sc-46m/": {
     "slug": "nuclides-sc-46m",
-    "title": "Sc-46m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Sc-46m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/se-75/": {
     "slug": "nuclides-se-75",
-    "title": "Se-75 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Se-75 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/se-79/": {
     "slug": "nuclides-se-79",
-    "title": "Se-79 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Se-79 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/si-32/": {
     "slug": "nuclides-si-32",
-    "title": "Si-32 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Si-32 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/sm-147/": {
     "slug": "nuclides-sm-147",
-    "title": "Sm-147 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "Sm-147 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/sm-151/": {
     "slug": "nuclides-sm-151",
-    "title": "Sm-151 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Sm-151 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/sm-153/": {
     "slug": "nuclides-sm-153",
-    "title": "Sm-153 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Sm-153 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/sm-153m/": {
     "slug": "nuclides-sm-153m",
-    "title": "Sm-153m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Sm-153m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/sn-113/": {
     "slug": "nuclides-sn-113",
-    "title": "Sn-113 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Sn-113 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/sn-113m/": {
     "slug": "nuclides-sn-113m",
-    "title": "Sn-113m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Sn-113m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/sr-85/": {
     "slug": "nuclides-sr-85",
-    "title": "Sr-85 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Sr-85 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/sr-85m/": {
     "slug": "nuclides-sr-85m",
-    "title": "Sr-85m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Sr-85m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/sr-89/": {
     "slug": "nuclides-sr-89",
-    "title": "Sr-89 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Sr-89 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/sr-90/": {
     "slug": "nuclides-sr-90",
-    "title": "Sr-90 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Sr-90 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/ta-182/": {
     "slug": "nuclides-ta-182",
-    "title": "Ta-182 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Ta-182 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ta-182m1/": {
     "slug": "nuclides-ta-182m1",
-    "title": "Ta-182m1 — half-life, decay mode and specific activity · RadCalc"
+    "title": "Ta-182m1 half-life, decay mode and specific activity · RadCalc"
   },
   "/nuclides/ta-182m2/": {
     "slug": "nuclides-ta-182m2",
-    "title": "Ta-182m2 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Ta-182m2 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/tc-99/": {
     "slug": "nuclides-tc-99",
-    "title": "Tc-99 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Tc-99 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/tc-99m/": {
     "slug": "nuclides-tc-99m",
-    "title": "Tc-99m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Tc-99m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/th-228/": {
     "slug": "nuclides-th-228",
-    "title": "Th-228 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Th-228 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/th-229/": {
     "slug": "nuclides-th-229",
-    "title": "Th-229 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "Th-229 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/th-230/": {
     "slug": "nuclides-th-230",
-    "title": "Th-230 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "Th-230 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/th-232/": {
     "slug": "nuclides-th-232",
-    "title": "Th-232 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Th-232 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/tl-201/": {
     "slug": "nuclides-tl-201",
-    "title": "Tl-201 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Tl-201 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/tl-201m/": {
     "slug": "nuclides-tl-201m",
-    "title": "Tl-201m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Tl-201m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/tl-204/": {
     "slug": "nuclides-tl-204",
-    "title": "Tl-204 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Tl-204 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/u-232/": {
     "slug": "nuclides-u-232",
-    "title": "U-232 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "U-232 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/u-233/": {
     "slug": "nuclides-u-233",
-    "title": "U-233 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "U-233 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/u-234/": {
     "slug": "nuclides-u-234",
-    "title": "U-234 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "U-234 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/u-235/": {
     "slug": "nuclides-u-235",
-    "title": "U-235 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "U-235 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/u-236/": {
     "slug": "nuclides-u-236",
-    "title": "U-236 — half-life, alpha energies and specific activity · RadCalc"
+    "title": "U-236 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/u-238/": {
     "slug": "nuclides-u-238",
-    "title": "U-238 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "U-238 specific activity and alpha line energies · RadCalc"
   },
   "/nuclides/u-238m/": {
     "slug": "nuclides-u-238m",
-    "title": "U-238m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "U-238m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/xe-133/": {
     "slug": "nuclides-xe-133",
-    "title": "Xe-133 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Xe-133 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/xe-133m/": {
     "slug": "nuclides-xe-133m",
-    "title": "Xe-133m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Xe-133m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/y-88/": {
     "slug": "nuclides-y-88",
-    "title": "Y-88 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Y-88 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/y-88m1/": {
     "slug": "nuclides-y-88m1",
-    "title": "Y-88m1 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Y-88m1 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/y-88m2/": {
     "slug": "nuclides-y-88m2",
-    "title": "Y-88m2 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Y-88m2 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/y-90/": {
     "slug": "nuclides-y-90",
-    "title": "Y-90 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Y-90 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/y-90m/": {
     "slug": "nuclides-y-90m",
-    "title": "Y-90m — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Y-90m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/y-91/": {
     "slug": "nuclides-y-91",
-    "title": "Y-91 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Y-91 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/zn-65/": {
     "slug": "nuclides-zn-65",
-    "title": "Zn-65 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Zn-65 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/zr-93/": {
     "slug": "nuclides-zr-93",
-    "title": "Zr-93 — half-life, beta energy, range and bremsstrahlung · RadCalc"
+    "title": "Zr-93 beta shielding — range and bremsstrahlung · RadCalc"
   },
   "/nuclides/zr-95/": {
     "slug": "nuclides-zr-95",
-    "title": "Zr-95 — half-life, gamma energies, dose rate and shielding · RadCalc"
+    "title": "Zr-95 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/specific-activity/": {
     "slug": "specific-activity",

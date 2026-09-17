@@ -3,6 +3,7 @@ import Base from "../../layouts/Base.astro";
 import { u, DATA_SOURCES } from "../../lib/site";
 import { ALL_KEYS, NUCLIDES, nuclidePage, slugOf, longName, decayWord, halfLifeText, elementName } from "../../lib/nuclides";
 import { paragraphs } from "../../lib/nuclide-prose";
+import { nuclideSeo } from "../../lib/nuclide-seo";
 
 export function getStaticPaths() {
   return ALL_KEYS.map((key) => ({ params: { slug: slugOf(key) }, props: { key } }));
@@ -11,15 +12,10 @@ const { key } = Astro.props as { key: string };
 const p = nuclidePage(key);
 const n = p.n;
 
-/** ★ 검색 제목은 **그 핵종이 실제로 들고 있는 것**으로 짓는다 — 감마가 없는 핵종에
- *  「gamma energies」를 달면 찾아온 사람이 없는 것을 찾게 된다(도구 쪽에서 이미 밟은 함정). */
-const seo = p.gamma > 0
-  ? `${p.key} — half-life, gamma energies, dose rate and shielding`
-  : n.beta?.length
-    ? `${p.key} — half-life, beta energy, range and bremsstrahlung`
-    : n.alpha?.length
-      ? `${p.key} — half-life, alpha energies and specific activity`
-      : `${p.key} — half-life, decay mode and specific activity`;
+/** ★ 검색 제목·설명은 **정본 한 곳**에서 만든다 — `lib/nuclide-seo.ts`.
+ *  왜 그 문구인지(비어 있는 질의를 골랐다 · 숫자를 제목에 넣지 않는다 · Γ>0 을 자로
+ *  쓰지 않는다)는 그 파일이 든다. 여기서는 쓰기만 한다. */
+const seo = nuclideSeo(p);
 
 const sig = (x: number, d = 3) => (Number.isFinite(x) ? x.toPrecision(d) : "—");
 const mm = (cm: number) => (Number.isFinite(cm) ? (cm * 10).toPrecision(3) : "—");
@@ -42,7 +38,7 @@ const TOOLS_FOR: { href: string; label: string; when: boolean; prefill?: boolean
 ];
 const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).slice(0, 8);
 ---
-<Base schema="TechArticle" title={seo} description={`${longName(key)} (${p.key}): half-life ${halfLifeText(n)}, ${decayWord(n.decay)}, specific activity, emission lines and ${p.gamma > 0 ? "spectrum-based half-value layers" : "measurement notes"} — computed from IAEA decay data and NIST attenuation coefficients.`}>
+<Base schema="TechArticle" title={seo.title} description={seo.description}>
   <nav class="tap-list mb-4 flex flex-wrap items-center gap-x-1.5 text-[12px] text-ink-faint">
     <a href={u("/")} class="hover:text-ink">Calculators</a> <span aria-hidden>/</span>
     <a href={u("/nuclides/")} class="hover:text-ink">Nuclides</a> <span aria-hidden>/</span> {p.key}
