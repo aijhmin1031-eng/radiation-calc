@@ -1,0 +1,482 @@
+---
+/** ★★ 붕괴 계산기 유효성 평가 보고서 — 쪽이 숫자를 손으로 들지 않는다.
+ *  기대값은 `src/validation/decay.cases.ts`, 도구 값은 **빌드 시점에 엔진을 실제로 불러** 얻는다.
+ *  ★ 단위환산 보고서와 **층 구성이 다르다** — 붕괴는 정의가 아니라 ① 수학 ② 측정값 위에 서 있다. */
+import Base from "../../layouts/Base.astro";
+import { u, DOI, DOI_URL, SITE_NAME } from "../../lib/site";
+import nuclides from "../../data/nuclides.json";
+import type { NuclideMap } from "../../engine/types";
+import { decayActivity, elapsedFromRatio, halfLifeFromTwoPoints, lambda } from "../../engine/decay";
+import {
+  IDENTITY_CASES, HALF_LIVES_S, HALFLIFE_REFS, WORKED_CASES, REFUSAL_CASES, YEAR_CASE, YEAR_S,
+  refSeconds, refUncSeconds, TOLERANCE_IDENTITY, TOLERANCE_WORKED, SIGMA_LIMIT,
+} from "../../validation/decay.cases";
+import { SOURCES, STATEMENTS, statementById } from "../../validation/sources";
+import { reportFor } from "../../validation/registry";
+import { sci, plain, relDiff, relValue } from "../../validation/format";
+
+const N = nuclides as unknown as NuclideMap;
+const report = reportFor("decay")!;
+const TIME_Y = YEAR_S.gregorian;
+const UNIT_S: Record<string, number> = { s: 1, min: 60, h: 3600, d: 86400, y: TIME_Y };
+
+let revision = (process.env.VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7);
+if (!revision) {
+  try {
+    const { execSync } = await import("node:child_process");
+    revision = execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch { revision = ""; }
+}
+
+/* ── ① 항등식 ── */
+const identityRun = (c: typeof IDENTITY_CASES[number], T: number) => {
+  if (c.kind === "remaining") return decayActivity(1, T, c.halves! * T);
+  if (c.kind === "lambda") return lambda(T) * T;
+  if (c.kind === "elapsed") return elapsedFromRatio(c.ratio!, T) / T;
+  if (c.kind === "halfLife") return halfLifeFromTwoPoints(1, 2 ** -c.halves!, 1000) / 1000;
+  if (c.kind === "multiplicative") {
+    const t1 = c.halves! * T, t2 = 0.8 * T;
+    return decayActivity(1, T, t1 + t2) / decayActivity(decayActivity(1, T, t1), T, t2);
+  }
+  const t = c.halves! * T;
+  return elapsedFromRatio(decayActivity(1, T, t), T) / t;
+};
+let idChecks = 0, idWorst = 0, idWorstWhat = "";
+const identities = IDENTITY_CASES.map((c) => {
+  let worst = 0;
+  for (const T of HALF_LIVES_S) {
+    idChecks += 1;
+    const r = relValue(identityRun(c, T), c.expect);
+    if (r > worst) worst = r;
+    if (r > idWorst) { idWorst = r; idWorstWhat = `${c.id} @T½=${sci(T, 3)} s`; }
+  }
+  return { c, tool: identityRun(c, HALF_LIVES_S[2]), worst };
+});
+
+/* ── ② 반감기 ── */
+const halfLives = HALFLIFE_REFS.map((r) => {
+  const ours = N[r.nuclide].t_half_s;
+  const ref = refSeconds(r), unc = refUncSeconds(r);
+  return { r, ours, ref, unc, diffPct: ((ours - ref) / ref) * 100, sigma: Math.abs(ours - ref) / unc };
+});
+const sigmaWorst = [...halfLives].sort((a, b) => b.sigma - a.sigma)[0];
+const medianDiff = [...halfLives].map((x) => Math.abs(x.diffPct)).sort((a, b) => a - b)[Math.floor(halfLives.length / 2)];
+
+/* ── ③ 손계산 ── */
+const worked = WORKED_CASES.map((c) => {
+  const T = N[c.nuclide].t_half_s;
+  const secs = (c.input.t ?? 0) * UNIT_S[c.input.tu ?? "s"];
+  const tool = c.mode === "remaining" ? decayActivity(c.input.a0, T, secs)
+    : c.mode === "when" ? elapsedFromRatio(c.input.target! / c.input.a0, T)
+    : halfLifeFromTwoPoints(c.input.a0, c.input.a1!, secs);
+  return { c, tool, diff: relValue(tool, c.expect) };
+});
+
+/* ── ④ 거부 ── */
+const refusals = REFUSAL_CASES.map((c) => {
+  const tool = c.kind === "elapsed" ? elapsedFromRatio(c.ratio!, 1000)
+    : halfLifeFromTwoPoints(c.two![0], c.two![1], c.two![2]);
+  return { c, refused: Number.isNaN(tool) };
+});
+
+/* ── ⑤ 해 규약 ── */
+const yearRows = YEAR_CASE.nuclides.map((k) => {
+  const r = HALFLIFE_REFS.find((x) => x.nuclide === k)!;
+  const ours = N[k].t_half_s;
+  return { k, r, ours,
+    greg: relValue(ours, refSeconds(r, YEAR_S.gregorian)),
+    jul: relValue(ours, refSeconds(r, YEAR_S.julian)) };
+});
+const yearOk = yearRows.every((x) => x.greg < YEAR_CASE.tolerance && x.jul > x.greg * 5)
+  && TIME_Y === YEAR_S.gregorian;
+
+const checks = idChecks + halfLives.length + worked.length * 2 + refusals.length + yearRows.length;
+const allPass = idWorst < TOLERANCE_IDENTITY
+  && halfLives.every((x) => x.sigma < SIGMA_LIMIT)
+  && worked.every((x) => x.diff < TOLERANCE_WORKED)
+  && refusals.every((x) => x.refused) && yearOk;
+
+const cite = (ids: string[]) => ids.map((id) => {
+  const st = statementById(id);
+  return st ? `${SOURCES[st.source].label}, ${st.locator}` : id;
+}).join(" · ");
+
+const title = "Decay calculator validation — the decay law and the half-lives it uses";
+const description =
+  "The exponential decay law checked as exact mathematics, and every half-life the calculator uses set against an independent evaluation that publishes uncertainties, with the working shown.";
+---
+<Base title={title} description={description} schema="TechArticle">
+  <nav class="tap-list mb-4 flex flex-wrap items-center gap-x-1.5 text-[12px] text-ink-faint">
+    <a href={u("/")} class="hover:text-ink">Calculators</a> <span aria-hidden>/</span>
+    <a href={u("/validation/")} class="hover:text-ink">Validation</a> <span aria-hidden>/</span> Decay
+  </nav>
+
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
+    Validation of the decay calculator
+  </h1>
+  <p class="mt-2 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    The arithmetic is worked here by hand and set against what the tool returns. The half-lives the
+    arithmetic rests on are a separate question, and are compared against an evaluation carried out
+    independently of the one this site draws on.
+  </p>
+
+  <dl class="card mt-6 grid max-w-3xl gap-x-6 gap-y-2 p-4 text-[13px] sm:grid-cols-[11rem_minmax(0,1fr)]">
+    <dt class="text-ink-faint">Subject</dt>
+    <dd class="text-ink-muted">The decay calculator at <a href={u("/decay/")} class="underline">{u("/decay/")}</a>, its three modes, and the engine module <code>src/engine/decay.ts</code>.</dd>
+    <dt class="text-ink-faint">Report date</dt>
+    <dd class="text-ink-muted">{report.validatedOn}</dd>
+    <dt class="text-ink-faint">Source revision</dt>
+    <dd class="num text-ink-muted">{revision || "not recorded in this build"}</dd>
+    <dt class="text-ink-faint">Archived source</dt>
+    <dd class="text-ink-muted"><a href={DOI_URL} rel="noopener" class="underline">{DOI}</a></dd>
+    <dt class="text-ink-faint">Checks performed</dt>
+    <dd class="num text-ink-muted">{checks}</dd>
+    <dt class="text-ink-faint">Acceptance criteria</dt>
+    <dd class="text-ink-muted">
+      Mathematics: relative difference below <span class="num">{TOLERANCE_IDENTITY}</span>.
+      Half-lives: within <span class="num">{SIGMA_LIMIT}</span> standard uncertainties of the
+      independent value. Worked cases: below <span class="num">{TOLERANCE_WORKED}</span>.
+    </dd>
+    <dt class="text-ink-faint">Largest found</dt>
+    <dd class="text-ink-muted">
+      <span class="num">{idWorst === 0 ? "0" : idWorst.toExponential(3)}</span> on the mathematics,
+      <span class="num">{sigmaWorst.sigma.toFixed(2)}σ</span> on the half-lives ({sigmaWorst.r.nuclide})
+    </dd>
+    <dt class="text-ink-faint">Result</dt>
+    <dd class={allPass ? "font-semibold text-ink" : "font-semibold text-warn"}>
+      {allPass ? "All checks pass." : "One or more checks fail — see the tables below."}
+    </dd>
+  </dl>
+
+  <section class="prose-doc mt-10 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <h2>Scope</h2>
+    <p>
+      This report covers the decay calculator: the three questions it answers — how much is left after
+      a given time, when the activity reaches a target, and what half-life two measurements imply —
+      together with the half-lives those answers rest on and the cases in which the calculator must
+      refuse. It does not cover the ingrowth of daughters, the specific-activity conversion, or any
+      other calculator on this site.
+    </p>
+
+    <h2>Why this report is built differently from the converter's</h2>
+    <p>
+      The unit converter rests entirely on definitions, so its report could be complete: a finite list
+      of units, each derived from a published definition. A decay calculation rests on two things of
+      very different character, and treating them as one would make the result meaningless.
+    </p>
+    <p>
+      The first is <strong>mathematics</strong>. The decay law and its inverse are exact. One
+      half-life leaves exactly one half, not approximately; the statement can be checked by hand with
+      no data at all, and any disagreement beyond the resolution of the arithmetic is a defect. That
+      part is validated to the same standard as the converter.
+    </p>
+    <p>
+      The second is <strong>measured data</strong>. A half-life is not defined, it is measured, and
+      evaluators differ because they weight the underlying experiments differently. Asking whether a
+      half-life is "correct" to some percentage is the wrong question. The right one is whether it
+      agrees with an independent evaluation within the uncertainty that evaluation publishes, and that
+      is how the second section judges it.
+    </p>
+
+    <h3>Choosing something independent to compare against</h3>
+    <p>
+      This matters more than it first appears. The nuclear data on this site come from the IAEA's
+      Livechart interface, which serves the evaluated nuclear structure data file, ENSDF. The obvious
+      place to check a half-life is the National Nuclear Data Center at Brookhaven — and it would be
+      the wrong place, because it serves the same file. Agreement would demonstrate nothing except
+      that two copies of one evaluation match.
+    </p>
+    <p>
+      The comparison here is against the <strong>Decay Data Evaluation Project</strong>, maintained by
+      the LNE-LNHB with an international working group. DDEP is a separate evaluation, it publishes a
+      standard uncertainty with every recommended value, and those uncertainties are what make a
+      quantitative verdict possible rather than a vague one.
+    </p>
+    <p>
+      Each value below is quoted in the form it appears in the DDEP sheet, so that a reader can open
+      the sheet and compare characters rather than trusting a transcription. That is not decoration:
+      an automatic reading of those sheets initially took the half-life of U-238 to be 24.10 days,
+      because each sheet also carries the daughter's half-life and 24.10 d is thorium-234. The values
+      here were taken from the line naming the right isotope.
+    </p>
+
+    <h2>The implementation under test</h2>
+    <p>The three modes are three expressions:</p>
+    <pre class="card my-3 overflow-x-auto p-3 text-[13px]"><code>lambda      = (tHalfS) =&gt; LN2 / tHalfS
+decayActivity        = a0 * Math.exp(-lambda(tHalfS) * elapsedS)
+elapsedFromRatio     = -Math.log(ratio) / lambda(tHalfS)
+halfLifeFromTwoPoints = (LN2 * elapsedS) / Math.log(a0 / a1)</code></pre>
+    <p>
+      There is no series expansion and no iteration, so there is no accumulation of error to bound —
+      the only question is whether these are the right expressions and whether the library's
+      exponential and logarithm are faithful. Both are settled by the identities below, which fail
+      immediately if either is wrong.
+    </p>
+
+    <h2>Exact identities</h2>
+    <p>
+      These hold for every half-life, which is what makes them identities rather than test values. Each
+      is therefore checked at {HALF_LIVES_S.length} half-lives spanning seventeen orders of magnitude,
+      from one second to 10¹⁷ seconds; the table shows the value at one day and the worst disagreement
+      seen across all of them.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th>Identity</th>
+            <th class="whitespace-nowrap text-right">Hand</th>
+            <th class="whitespace-nowrap text-right">Tool</th>
+            <th class="whitespace-nowrap text-right">Worst difference</th></tr>
+        </thead>
+        <tbody>
+          {identities.map(({ c, tool, worst }) => (
+            <tr>
+              <td class="font-normal text-ink">
+                {c.title}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id}</span>
+              </td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(c.expect)}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(tool)}</td>
+              <td class="num whitespace-nowrap text-right">{worst === 0 ? "0" : worst.toExponential(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <details class="not-prose my-3 rounded-md border border-line bg-surface px-3 py-2 text-[14px]">
+      <summary class="cursor-pointer font-medium text-ink">Derivations of the identities</summary>
+      <div class="mt-3 space-y-4">
+        {IDENTITY_CASES.map((c) => (
+          <div>
+            <p class="text-[13px] font-semibold text-ink"><span class="num">{c.id}</span> — {c.title}</p>
+            <ol class="mt-1 list-decimal space-y-0.5 pl-5 text-ink-muted">
+              {c.steps.map((s) => <li>{s}</li>)}
+            </ol>
+          </div>
+        ))}
+      </div>
+    </details>
+
+    <h2>Half-lives against an independent evaluation</h2>
+    <p>
+      The column headed σ is the difference expressed in standard uncertainties of the DDEP value: a
+      figure below one means the two evaluations agree within the published uncertainty, and the
+      acceptance criterion is {SIGMA_LIMIT}, the usual coverage factor. Judging by percentage instead
+      would be meaningless here, because the uncertainties differ by two orders of magnitude between
+      nuclides — Ni-63 carries ±2.4% and Ir-192 ±0.018%.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th>Nuclide</th>
+            <th class="whitespace-nowrap">DDEP</th>
+            <th class="whitespace-nowrap text-right">DDEP [s]</th>
+            <th class="whitespace-nowrap text-right">This site [s]</th>
+            <th class="whitespace-nowrap text-right">Difference</th>
+            <th class="whitespace-nowrap text-right">σ</th></tr>
+        </thead>
+        <tbody>
+          {halfLives.map(({ r, ours, ref, diffPct, sigma }) => (
+            <tr>
+              <td class="whitespace-nowrap font-normal text-ink">
+                {r.nuclide}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{r.id}</span>
+              </td>
+              {/* ★ 원문 줄에서 **값 부분만** 든다 — 「T1/2(60Co ) : 」까지 그리면 열이 두 배가 되고,
+                  동위원소는 바로 왼쪽 칸이 이미 말하고 있다. 전체 줄은 아래 목록이 든다. */}
+              <td class="num whitespace-nowrap text-[12px]">{r.quoted.replace(/^.*?:\s*/, "")}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(ref, 8)}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(ours, 8)}</td>
+              <td class="num whitespace-nowrap text-right">{diffPct >= 0 ? "+" : ""}{diffPct.toFixed(4)}%</td>
+              <td class={sigma < SIGMA_LIMIT ? "num whitespace-nowrap text-right" : "num whitespace-nowrap text-right font-semibold text-warn"}>{sigma.toFixed(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The median difference across the {halfLives.length} nuclides is {medianDiff.toFixed(4)}%, and the
+      largest is {sigmaWorst.r.nuclide} at {sigmaWorst.sigma.toFixed(2)}σ. That one is worth a sentence,
+      because it is not noise: the DDEP re-evaluation of caesium-137 recommends a shorter half-life
+      than the ENSDF value this site carries, and the difference of about 0.2% is real and traceable to
+      the evaluations rather than to any calculation. Over a thirty-year storage period it amounts to
+      about a tenth of a percent in the remaining activity, which is far below the uncertainty of any
+      measurement it would be compared with, but it is a difference and this report does not hide it.
+    </p>
+    <details class="not-prose my-3 rounded-md border border-line bg-surface px-3 py-2 text-[14px]">
+      <summary class="cursor-pointer font-medium text-ink">The lines as they appear in the DDEP sheets</summary>
+      <ul class="num mt-3 space-y-1 text-[12px] text-ink-muted">
+        {HALFLIFE_REFS.map((r) => (
+          <li><span class="text-ink">{r.nuclide}</span> — {r.quoted}</li>
+        ))}
+      </ul>
+      <p class="mt-3 text-[12px] leading-relaxed text-ink-faint">
+        The comma is the decimal separator, the parenthesis carries the standard uncertainty on the
+        last digits, and <span class="num">a</span> is the year. Each sheet is at
+        <span class="num"> lnhb.fr/nuclides/&lt;nuclide&gt;_tables.pdf</span>.
+      </p>
+    </details>
+    <p class="text-[13px]">Source: {cite(["halflife-ddep"])}.</p>
+
+    <h2>The year, which is two different years</h2>
+    <p>
+      DDEP quotes long half-lives in years, the data file carries seconds, and the calculator offers
+      years as a time unit. A year is not one length: the Julian year of 365.25 days and the Gregorian
+      mean year of 365.2425 days differ by 0.002%. That is small, but it is exactly the kind of
+      difference that sits undetected in a chain of conversions, and it can be measured rather than
+      assumed.
+    </p>
+    <p>
+      Take the nuclides where the two evaluations recommend the same number of years, so that no
+      evaluation difference remains and only the conversion is left.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th>Nuclide</th>
+            <th class="whitespace-nowrap">Both evaluations</th>
+            <th class="whitespace-nowrap text-right">Residual, Gregorian</th>
+            <th class="whitespace-nowrap text-right">Residual, Julian</th></tr>
+        </thead>
+        <tbody>
+          {yearRows.map(({ k, r, greg, jul }) => (
+            <tr>
+              <td class="whitespace-nowrap font-normal text-ink">{k}</td>
+              <td class="num whitespace-nowrap text-[12px]">{plain(r.value)} {r.unit}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{greg.toExponential(2)}</td>
+              <td class="num whitespace-nowrap text-right">{jul.toExponential(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The Gregorian conversion leaves a residual at the rounding of the quoted digits; the Julian one
+      leaves twenty times more. The seconds in the data therefore rest on the Gregorian mean year, and
+      the calculator's own year input uses the same 365.2425 days. The two agree, which is the only
+      thing that matters here — a tool whose year differed from its data's year would be wrong by
+      0.002% in a way no test of the arithmetic would ever reveal.
+    </p>
+
+    <h2>Worked cases</h2>
+    <p>
+      One per mode, and then some. The half-life is taken as given in these — it was the subject of the
+      previous section, and mixing the two would leave any disagreement unattributable. What is checked
+      here is that the arithmetic the tool performs on that half-life is the arithmetic the decay law
+      calls for, end to end, including the secondary figure the screen prints alongside the answer.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th>Case</th>
+            <th class="whitespace-nowrap text-right">Hand</th>
+            <th class="whitespace-nowrap text-right">Tool</th>
+            <th class="whitespace-nowrap text-right">Difference</th></tr>
+        </thead>
+        <tbody>
+          {worked.map(({ c, tool }) => (
+            <tr>
+              <td class="font-normal text-ink">
+                {c.nuclide}, {c.mode === "remaining" ? `${plain(c.input.a0)} ${c.input.unit} after ${plain(c.input.t!)} ${c.input.tu}`
+                  : c.mode === "when" ? `${plain(c.input.a0)} → ${plain(c.input.target!)} ${c.input.unit}`
+                  : `${plain(c.input.a0)} → ${plain(c.input.a1!)} ${c.input.unit} over ${plain(c.input.t!)} ${c.input.tu}`}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id} · in {c.expectUnit}</span>
+              </td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(c.expect)}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(tool)}</td>
+              <td class="num whitespace-nowrap text-right">{relDiff(tool, c.expect)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div class="not-prose my-3 space-y-4">
+      {worked.map(({ c }) => (
+        <div class="rounded-md border border-line bg-surface px-3 py-2 text-[14px]">
+          <p class="text-[13px] font-semibold text-ink"><span class="num">{c.id}</span> — {c.nuclide}</p>
+          <ol class="mt-1 list-decimal space-y-0.5 pl-5 text-ink-muted">
+            {c.steps.map((s) => <li>{s}</li>)}
+          </ol>
+          <p class="mt-1 text-[13px] text-ink-faint">Why this case: {c.why}</p>
+        </div>
+      ))}
+    </div>
+
+    <h2>Required refusals</h2>
+    <p>
+      Some inputs have no answer. Not a large answer, not a small one — none. A calculator that
+      produces a number there is worse than one that produces nothing, because the number will be
+      written down.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead><tr><th>Asked</th><th>Why there is no answer</th><th class="whitespace-nowrap text-right">Returned</th></tr></thead>
+        <tbody>
+          {refusals.map(({ c, refused }) => (
+            <tr>
+              <td class="font-normal text-ink">
+                {c.title}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id}</span>
+              </td>
+              <td class="font-normal text-ink-muted">{c.why}</td>
+              <td class={refused ? "num whitespace-nowrap text-right text-ink" : "num whitespace-nowrap text-right font-semibold text-warn"}>
+                {refused ? "NaN" : "a number"}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h2>The number on the screen</h2>
+    <p>
+      The checks above exercise the engine. A separate check drives the published calculator in a
+      browser, picks the nuclide, enters the values, presses the button and reads the figure the screen
+      prints, comparing it with the hand calculation and allowing only the declared display rounding.
+      It also reads the secondary line, because the number of half-lives elapsed is the figure a reader
+      uses to sanity-check the answer, and a report that only looked at the headline would not have
+      looked at it.
+    </p>
+
+    <h2>Coverage and result</h2>
+    <div class="not-prose my-4 overflow-x-auto table-fit">
+      <table>
+        <thead><tr><th>Check</th><th class="whitespace-nowrap text-right">Count</th><th class="whitespace-nowrap text-right">Result</th></tr></thead>
+        <tbody>
+          <tr><td>Exact identities, each at {HALF_LIVES_S.length} half-lives</td><td class="num whitespace-nowrap text-right">{idChecks}</td><td class="whitespace-nowrap text-right">{idWorst < TOLERANCE_IDENTITY ? "pass" : "fail"}</td></tr>
+          <tr><td>Half-lives against an independent evaluation</td><td class="num whitespace-nowrap text-right">{halfLives.length}</td><td class="whitespace-nowrap text-right">{halfLives.every((x) => x.sigma < SIGMA_LIMIT) ? `all within ${SIGMA_LIMIT}σ` : "fail"}</td></tr>
+          <tr><td>Worked cases, answer and half-lives elapsed</td><td class="num whitespace-nowrap text-right">{worked.length * 2}</td><td class="whitespace-nowrap text-right">{worked.every((x) => x.diff < TOLERANCE_WORKED) ? "pass" : "fail"}</td></tr>
+          <tr><td>Required refusals</td><td class="num whitespace-nowrap text-right">{refusals.length}</td><td class="whitespace-nowrap text-right">{refusals.every((x) => x.refused) ? "pass" : "fail"}</td></tr>
+          <tr><td>Year convention, data against tool</td><td class="num whitespace-nowrap text-right">{yearRows.length}</td><td class="whitespace-nowrap text-right">{yearOk ? "same year" : "fail"}</td></tr>
+          <tr><td>Modes of the calculator covered</td><td class="num whitespace-nowrap text-right">{new Set(WORKED_CASES.map((c) => c.mode)).size} of 3</td><td class="whitespace-nowrap text-right">{new Set(WORKED_CASES.map((c) => c.mode)).size === 3 ? "complete" : "incomplete"}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Coverage of the nuclide list is deliberately not claimed. The calculator offers
+      {" "}{Object.keys(N).length} nuclides and this report compares {halfLives.length} of them, chosen
+      because DDEP has evaluated them and because they are the ones that appear in practice. A complete
+      comparison is not possible: DDEP has not evaluated every nuclide, and claiming otherwise would be
+      the kind of overreach this report exists to avoid. What the sample establishes is that the
+      pipeline carrying half-lives from the evaluation into the calculation does not distort them.
+    </p>
+
+    <h2>What this does not establish</h2>
+    <ul class="my-3 list-disc space-y-1.5 pl-5">
+      <li>That the half-life of a nuclide not listed above is right. The {halfLives.length} compared here all agree; the rest are carried by the same pipeline, which is an argument, not a measurement.</li>
+      <li>That decay is the only thing changing the activity. Leakage, adsorption on a container wall, and detector drift all look exactly like a shorter half-life in a two-point fit, and the calculator cannot tell them apart.</li>
+      <li>That the daughter is negligible. Ingrowth is a different calculation, and for a nuclide such as Sr-90 or Cs-137 the daughter carries most of the dose.</li>
+      <li>That the starting activity is what the certificate says. Everything here is conditional on the number entered.</li>
+      <li>Fitness for a regulatory submission. This site does not replace an accredited calibration or measurement.</li>
+    </ul>
+
+    <h2>Reporting a disagreement</h2>
+    <p>
+      A disagreement with a source you hold is worth sending — including a half-life, since the sample
+      above is not the whole list. Contact details are on the
+      <a href="/radimeter/contact/">contact page</a>, the converter's report is at
+      <a href={u("/validation/units/")}>validation of the unit converter</a>, and the method behind the
+      rest of {SITE_NAME} is on the <a href={u("/methods/")}>methods page</a>.
+    </p>
+  </section>
+</Base>

@@ -4,6 +4,7 @@ import type { NuclideMap } from "../../engine/types";
 import { infiniteMediumDoseRate, semiInfiniteSurfaceDoseRate, betaRange, betaRangeCm,
          betaTransmission, bremsstrahlungYield } from "../../engine/beta";
 import { DENSITY_G_CM3 } from "../../engine/gamma";
+import { TIME_S } from "../../engine/constants";
 import { convert, UNITS } from "../../engine/units";
 import { NuclidePicker } from "../ui/NuclidePicker";
 import { Field, NumberInput, Select, RadioRow } from "../ui/Field";
@@ -144,7 +145,7 @@ export default function Beta() {
             { k: "Mean beta energy", v: `${fmt(n.beta_mean_keV ?? 0, 5)} keV` },
             { k: "At a plane surface", v: `${fmt(semiInfiniteSurfaceDoseRate(n.beta_mean_keV ?? 0, conc) * 1000, 4)} mGy/h`,
               hint: "exactly half — nothing above the surface sends energy back" },
-            { k: "Per year, continuous", v: `${fmt(dInf * 24 * 365.25, 4)} Gy/y` },
+            { k: "Per year, continuous", v: `${fmt(dInf * (TIME_S.y / 3600), 4)} Gy/y` },
           ]} />
 
           <Warn>

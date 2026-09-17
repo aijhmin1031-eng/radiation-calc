@@ -635,6 +635,10 @@
     "slug": "validation",
     "title": "Validation — how the results on this site are checked · RadCalc"
   },
+  "/validation/decay/": {
+    "slug": "validation-decay",
+    "title": "Decay calculator validation — the decay law and the half-lives it uses · RadCalc"
+  },
   "/validation/units/": {
     "slug": "validation-units",
     "title": "Unit converter validation — hand calculations against the tool · RadCalc"

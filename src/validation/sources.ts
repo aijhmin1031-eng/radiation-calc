@@ -59,6 +59,13 @@ export const SOURCES: Record<string, Source> = {
     url: "https://www-pub.iaea.org/MTCD/Publications/PDF/TRS398_scr.pdf",
     access: "Freely published by the IAEA.",
   },
+  ddep: {
+    key: "ddep",
+    label: "DDEP / LNE-LNHB",
+    cite: "Decay Data Evaluation Project, Table de Radionucléides, Laboratoire National Henri Becquerel (LNE-LNHB), Saclay — per-nuclide recommended data sheets.",
+    url: "http://www.lnhb.fr/nuclear-data/nuclear-data-table/",
+    access: "Freely published by the LNE-LNHB on behalf of the DDEP collaboration.",
+  },
   podgorsak: {
     key: "podgorsak",
     label: "IAEA STI/PUB/1196",
@@ -106,6 +113,8 @@ export const STATEMENTS: Statement[] = [
     text: "1 l = 1 L = 1 dm³ = 10⁻³ m³." },
   { id: "wair", source: "trs398", locator: "Appendix II.2.2",
     text: "W_air is the mean energy expended in air per ion pair formed, more usually expressed as W_air/e. For dry air the value is taken to be 33.97 J/C, with a standard uncertainty estimated at 0.2%." },
+  { id: "halflife-ddep", source: "ddep", locator: "per-nuclide data sheets",
+    text: "Recommended half-lives with standard uncertainties, evaluated independently of the ENSDF file that this site's nuclear data are taken from. Each sheet quotes the value in the form T1/2 = value (uncertainty on the last digits), with the comma as the decimal separator and 'a' for the year." },
   { id: "kerma", source: "podgorsak", locator: "Section 2.7.4, Eqs (2.29) and (2.30)",
     text: "Collision kerma in air and exposure are related by K_col = X · (W_air/e). Total air kerma is larger by the factor 1/(1 − g), where g is the fraction of the charged-particle energy lost to bremsstrahlung." },
 ];
