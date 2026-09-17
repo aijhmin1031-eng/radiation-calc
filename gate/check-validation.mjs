@@ -1,0 +1,211 @@
+/** ★★★ 유효성 평가 게이트 — 「보고서가 도구를 실제로 덮고 있는가」를 잰다(2026-09-17 신설).
+ *
+ *  ★ `npm test` 의 `src/validation/units.test.ts` 와 층이 다르다 — 저쪽은 **엔진 함수**가
+ *    손계산과 같은지를 보고, 이쪽은 셋을 본다:
+ *      ① **커버리지** — 도구가 내놓는 단위 전부에 손계산이 있는가(양방향).
+ *      ② **독립성** — 케이스 파일이 엔진의 **값**을 들여오지 않는가(순환논증 금지).
+ *      ③ **화면 실측** — 사람이 실제로 보는 숫자가 손계산과 같은가.
+ *
+ *  ★★ ③ 이 없으면 유효성 평가가 **엔진에서 멈춘다.** 화면은 답을 6자리로 반올림해 그리고,
+ *    단위 라벨·군 전환·표 행 짝짓기는 전부 엔진 바깥이다 — 거기서 어긋나면 엔진 테스트는
+ *    전건 통과한 채로 **틀린 숫자가 라이브에 선다.** 이웃 레포가 같은 자리에서 실제로 밟았다
+ *    (사전에 번역이 다 있는데 `t()` 를 한 번 빠뜨려 한국어가 라이브로 나갔다).
+ *
+ *  ★ ③ 은 **표 전체를 읽는다** — 고른 단위 한 줄이 아니라 그 군의 모든 줄을 읽어
+ *    손계산 배수의 비와 맞댄다. 「열었다」가 아니라 「무엇이 열렸는지」를 세는 것과 같은 판단이다.
+ *    커버리지 하한을 걸어 두어, 조작이 실패했는데 조용히 통과하는 일이 없게 한다.
+ */
+import { chromium } from "playwright";
+import { createServer } from "node:http";
+import { readFileSync, existsSync } from "node:fs";
+import { extname, join } from "node:path";
+import { UNITS } from "../src/engine/units.ts";
+import { UNIT_CASES, COMPOSED_CASES, BRIDGE_CASES, BASE_UNIT, QUANTITY_LABEL }
+  from "../src/validation/units.cases.ts";
+
+const DIST = "dist/calc";
+const CASE_FILE = "src/validation/units.cases.ts";
+/** ★★ **화면의 반올림은 한 가지가 아니다**(첫 판에서 이것 때문에 B-01 이 걸렸다).
+ *  환산표는 `fmt(v, 6)` 로 **6자리**, 그 아래 「환산이 아닌 단계」의 으뜸 숫자는 `fmt(v, 4)` 로
+ *  **4자리**다. 자를 하나로 두면 둘 중 하나가 틀린다 — 느슨하게 맞추면 표의 결함을 놓치고,
+ *  빡빡하게 맞추면 멀쩡한 4자리 표기가 늘 빨개진다. **자리마다 그 자리의 자를 쓴다.** */
+const TOL_TABLE = 1e-5;      // 6자리 반올림의 최대 상대오차 5×10⁻⁶ 위
+const TOL_HEADLINE = 1e-3;   // 4자리 반올림의 최대 상대오차 5×10⁻⁴ 위
+const fail = [];
+
+/* ══════════════ ① 커버리지 — 양방향으로 센다 ══════════════ */
+let units = 0;
+for (const [q, group] of Object.entries(UNITS)) {
+  if (BASE_UNIT[q] !== group.base)
+    fail.push(`① ${q} 의 기준단위가 다르다: 도구 ${group.base} · 보고서 ${BASE_UNIT[q]}`);
+  if (!QUANTITY_LABEL[q]) fail.push(`① ${q} 의 화면 이름이 보고서에 없다`);
+  for (const u of Object.keys(group.u)) {
+    units += 1;
+    const hits = UNIT_CASES.filter((c) => c.quantity === q && c.unit === u);
+    if (hits.length !== 1)
+      fail.push(`① ${q}/${u} 의 손계산이 ${hits.length} 건이다 — 도구에 단위를 늘리면 보고서도 늘린다`);
+  }
+}
+for (const c of UNIT_CASES)
+  if (!UNITS[c.quantity] || !(c.unit in UNITS[c.quantity].u))
+    fail.push(`① 보고서의 ${c.id}(${c.unit})이 도구에 없다 — 없는 것을 평가했다고 주장하게 된다`);
+console.log(`① 커버리지 — 도구 단위 ${units} · 손계산 ${UNIT_CASES.length} · 군 ${Object.keys(UNITS).length}`);
+
+/* ══════════════ ② 독립성 — 기대값이 엔진에서 오면 순환논증이다 ══════════════ */
+const src = readFileSync(CASE_FILE, "utf8");
+/* `import type` 은 컴파일에서 지워지므로 값을 들여오지 않는다. 그 외의 engine import 는 전부 결함. */
+for (const m of src.matchAll(/^\s*import\s+(type\s+)?([^;]*?)\s*from\s*["']([^"']+)["']/gm)) {
+  const [, isType, what, spec] = m;
+  if (!/engine/.test(spec)) continue;
+  if (isType) continue;
+  if (/^\s*type\s/.test(what) || /^\{\s*type\s/.test(what)) continue;
+  fail.push(`② ${CASE_FILE} 이 엔진에서 값을 들여온다 (${spec}: ${what.trim()}) — 기대값이 도구에서 나오면 대조가 순환이 된다`);
+}
+if (/require\(["'][^"']*engine/.test(src))
+  fail.push(`② ${CASE_FILE} 이 require 로 엔진을 들여온다`);
+console.log(`② 독립성 — ${CASE_FILE} 은 엔진에서 값을 들여오지 않는다 (import type 만 허용)`);
+
+/* ══════════════ ③ 화면 실측 ══════════════ */
+const MIME = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript",
+               ".json": "application/json", ".xml": "application/xml", ".svg": "image/svg+xml" };
+const srv = createServer((q, r) => {
+  let p = decodeURIComponent(q.url.split("?")[0]);
+  if (p.startsWith("/calc")) p = p.slice(5) || "/";
+  let f = join(DIST, p);
+  if (existsSync(f) && !extname(f)) f = join(f, "index.html");
+  if (!existsSync(f)) { r.writeHead(404); return r.end("404"); }
+  r.writeHead(200, { "content-type": MIME[extname(f)] || "application/octet-stream" });
+  r.end(readFileSync(f));
+});
+await new Promise((r) => srv.listen(0, r));
+const PORT = srv.address().port;
+
+/** 화면 표기를 수로 되돌린다 — `fmt()` 가 내는 「1.85×10⁵」·「37,000」·「—」를 읽는다. */
+const SUP = "⁻⁰¹²³⁴⁵⁶⁷⁸⁹";
+function parseShown(s) {
+  const t = String(s).trim().replace(/,/g, "").replace(/\s/g, "");
+  if (t === "—" || t === "") return NaN;
+  const m = t.match(/^(-?[\d.]+)×10(.+)$/);
+  if (!m) return Number(t);
+  const exp = [...m[2]].map((ch) => (ch === "⁻" ? "-" : String(SUP.indexOf(ch) - 1))).join("");
+  return Number(m[1]) * 10 ** Number(exp);
+}
+
+const browser = await chromium.launch(
+  { ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
+const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+await page.goto(`http://127.0.0.1:${PORT}/calc/units/`, { waitUntil: "networkidle" });
+await page.waitForTimeout(500);
+
+/** React 제어 입력이라 `el.value` 로는 안 먹는다 — 네이티브 세터 + input 이벤트. */
+const setNumber = (idx, v) => page.evaluate(([i, val]) => {
+  const el = document.querySelectorAll("main input")[i];
+  if (!el) throw new Error(`입력칸 ${i} 이 없다`);
+  const set = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+  set.call(el, String(val));
+  el.dispatchEvent(new Event("input", { bubbles: true }));
+}, [idx, v]);
+
+const pickQuantity = async (label) => {
+  const btn = page.locator(`[role="radio"]`, { hasText: new RegExp(`^${label}$`) });
+  await btn.click({ timeout: 4000 });   // ★ 실패를 삼키지 않는다
+  await page.waitForTimeout(120);
+};
+const pickUnit = async (unit) => {
+  await page.selectOption("main select", unit, { timeout: 4000 });
+  await page.waitForTimeout(120);
+};
+/** 환산표의 모든 줄을 읽는다 — 고른 줄 하나가 아니라 표 전체다. */
+const readTable = () => page.evaluate(() =>
+  [...document.querySelectorAll("main table tbody tr")].map((tr) => ({
+    unit: tr.children[0].textContent.trim(),
+    shown: tr.children[1].textContent.trim(),
+  })));
+/** 「환산이 아닌 단계」 칸의 으뜸 숫자.
+ *  ★ `textContent` 로 읽으면 **단위 꼬리표까지 딸려 온다**(「8.76426mGy (air)」) — 첫 판에서
+ *    그대로 읽어 전건 NaN 이 났다. 숫자는 첫 자식 텍스트 노드에 있고 단위는 `<span>` 이다. */
+const readBridge = () => page.evaluate(() => {
+  const el = [...document.querySelectorAll("main .card p.num")].pop();
+  if (!el) return null;
+  const first = [...el.childNodes].find((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
+  return (first ? first.textContent : el.textContent).trim();
+});
+
+let shownCells = 0, tableStates = 0;
+const worst = { r: 0, what: "—" };
+const cmp = (got, want, what, tol) => {
+  const r = want === 0 ? Math.abs(got) : Math.abs(got - want) / Math.abs(want);
+  if (r / tol > worst.r / (worst.tol ?? tol)) { worst.r = r; worst.what = what; worst.tol = tol; }
+  if (!(r < tol)) fail.push(`③ ${what}: 화면 ${got} · 손계산 ${want} · 상대차 ${r} · 허용 ${tol}`);
+};
+
+/* ③-1 모든 군 × 모든 단위를 「넣는 단위」로 세워, 그 군의 표 전체를 읽는다.
+       읽는 칸은 단위 수의 제곱 — 도구가 내놓는 환산을 화면에서 전수로 보는 것과 같다. */
+for (const [q, group] of Object.entries(UNITS)) {
+  await pickQuantity(QUANTITY_LABEL[q]);
+  const cases = UNIT_CASES.filter((c) => c.quantity === q);
+  for (const from of cases) {
+    await pickUnit(from.unit);
+    await setNumber(0, 1);
+    await page.waitForTimeout(60);
+    const rows = await readTable();
+    if (rows.length !== Object.keys(group.u).length)
+      fail.push(`③ ${q}/${from.unit}: 표에 ${rows.length} 줄 — 단위는 ${Object.keys(group.u).length} 개다`);
+    tableStates += 1;
+    for (const row of rows) {
+      const to = cases.find((c) => c.unit === row.unit);
+      if (!to) { fail.push(`③ ${q} 표에 보고서가 모르는 줄이 있다: ${row.unit}`); continue; }
+      shownCells += 1;
+      cmp(parseShown(row.shown), from.factor / to.factor, `1 ${from.unit} → ${row.unit} (${q}, 화면)`, TOL_TABLE);
+    }
+  }
+}
+
+/* ③-2 합성 케이스 — 값을 실어 끝에서 끝까지. */
+for (const c of COMPOSED_CASES) {
+  await pickQuantity(QUANTITY_LABEL[c.quantity]);
+  await pickUnit(c.from);
+  await setNumber(0, c.value);
+  await page.waitForTimeout(80);
+  const row = (await readTable()).find((r) => r.unit === c.to);
+  if (!row) { fail.push(`③ ${c.id}: 표에 ${c.to} 줄이 없다`); continue; }
+  shownCells += 1;
+  cmp(parseShown(row.shown), c.expect, `${c.id} ${c.value} ${c.from} → ${c.to} (화면)`, TOL_TABLE);
+}
+
+/* ③-3 환산이 아닌 단계 — 밀도 칸까지 실제로 만진다. */
+for (const c of BRIDGE_CASES) {
+  const q = c.kind === "exposureToAirKerma" ? "exposure"
+          : c.kind === "massFromVol" ? "volConc" : "massConc";
+  await pickQuantity(QUANTITY_LABEL[q]);
+  await pickUnit(c.input.from);
+  await setNumber(0, c.input.value);
+  if (c.input.density !== undefined) await setNumber(1, c.input.density);
+  await page.waitForTimeout(120);
+  const shown = await readBridge();
+  if (shown === null) { fail.push(`③ ${c.id}: 「환산이 아닌 단계」 칸이 화면에 없다`); continue; }
+  shownCells += 1;
+  cmp(parseShown(shown), c.expect, `${c.id} ${c.title} (화면)`, TOL_HEADLINE);
+}
+
+/* ★★ 커버리지 하한 — **조작이 가로채여도 조용히 통과하는 일**을 막는다.
+   이웃 레포에서 실제로 났다: 배너가 단추를 덮어 클릭이 먹히지 않았는데 실패를 삼켜
+   빈 화면을 훑고 통과했다. 「몇 개를 실제로 읽었는지」를 세면 그 자리에서 드러난다. */
+const MIN_CELLS = 276 + COMPOSED_CASES.length + BRIDGE_CASES.length;
+if (shownCells < MIN_CELLS)
+  fail.push(`③ 화면에서 읽은 칸이 ${shownCells} 개뿐이다 — ${MIN_CELLS} 개 이상이어야 한다 (조작이 가로채였을 수 있다)`);
+if (tableStates !== units)
+  fail.push(`③ 표를 세운 상태가 ${tableStates} 가지 — 단위 수 ${units} 와 같아야 한다`);
+
+console.log(`③ 화면 실측 — 표 상태 ${tableStates} 가지 · 읽은 칸 ${shownCells} 개 · ` +
+            `허용에 가장 가까웠던 것 ${worst.r.toExponential(2)} (${worst.what}, 허용 ${worst.tol})`);
+
+await browser.close();
+srv.close();
+
+if (fail.length) {
+  console.error(`\n❌ 유효성 평가 게이트 ${fail.length} 건`);
+  for (const f of fail) console.error(`   ${f}`);
+  process.exit(1);
+}
+console.log("\n✅ 유효성 평가 게이트 통과");

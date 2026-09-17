@@ -630,5 +630,13 @@
   "/units/": {
     "slug": "units",
     "title": "Radiation unit converter — activity, dose, exposure · RadCalc"
+  },
+  "/validation/": {
+    "slug": "validation",
+    "title": "Validation — how the results on this site are checked · RadCalc"
+  },
+  "/validation/units/": {
+    "slug": "validation-units",
+    "title": "Unit converter validation — hand calculations against the tool · RadCalc"
   }
 }

@@ -1,6 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
-import { DATA_SOURCES, SOURCE_CITATIONS, SITE_NAME, UMBRELLA_NAME, DOI, DOI_URL } from "../lib/site";
+import { DATA_SOURCES, SOURCE_CITATIONS, SITE_NAME, UMBRELLA_NAME, DOI, DOI_URL, u } from "../lib/site";
 ---
 <Base title="Methods and data"
       description="Where the nuclear and attenuation data come from, how the gamma constants are computed, how the results are validated, and the known limitations.">
@@ -35,7 +35,7 @@ import { DATA_SOURCES, SOURCE_CITATIONS, SITE_NAME, UMBRELLA_NAME, DOI, DOI_URL 
 
     <h2>Validation</h2>
     <p>
-      The engine is covered by 69 automated tests that run on every change. Computed gamma constants
+      The engine is covered by 86 automated tests that run on every change. Computed gamma constants
       are checked against published values for Cs-137, I-131, Cs-134, Co-60 and Ir-192 and agree
       within 2%. Specific activities for Co-60, Cs-137, Pu-239, U-238, Am-241, Sr-90 and H-3 agree
       within 1%. Beta maximum energies for fifteen nuclides and alpha principal energies for eight
@@ -48,6 +48,15 @@ import { DATA_SOURCES, SOURCE_CITATIONS, SITE_NAME, UMBRELLA_NAME, DOI, DOI_URL 
       Analytic identities are tested rather than asserted — one half-life leaves exactly half, one
       half-value layer transmits exactly 0.5, doubling the distance quarters the dose rate, and
       quadrupling the count time improves the detection limit by exactly two.
+    </p>
+    <p>
+      Passing tests are evidence to whoever can read them. Where a calculation can be worked by hand
+      from a published definition, the working itself is published, so that the result can be checked
+      without taking the test suite on trust. The
+      <a href={u("/validation/")} class="underline">validation reports</a> set out that working in
+      full, name the sources each expected value comes from, and state how much of the tool has
+      actually been covered. The unit converter has one; the remaining calculators do not yet, and
+      that page says so rather than implying otherwise.
     </p>
 
     <h2>Known limitations</h2>
