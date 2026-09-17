@@ -1,0 +1,109 @@
+---
+/** 유효성 평가 허브. ★ 보고서가 있는 도구와 없는 도구를 **함께** 든다 —
+ *  있는 것만 보이면 쪽이 「전부 평가됐다」고 읽히고, 그것은 없는 것을 주장하는 일이다. */
+import Base from "../../layouts/Base.astro";
+import { u, SITE_NAME } from "../../lib/site";
+import { TOOLS } from "../../lib/tools";
+import { REPORTS, reportFor } from "../../validation/registry";
+import { UNIT_CASES } from "../../validation/units.cases";
+/** ★ 건수는 **세어서** 그린다 — 등록부에 글자로 적으면 단위가 늘 때 그 줄만 낡는다. */
+const unitsStats = (() => {
+  const byQ = new Map<string, number>();
+  for (const c of UNIT_CASES) byQ.set(c.quantity, (byQ.get(c.quantity) ?? 0) + 1);
+  let pairs = 0;
+  for (const n of byQ.values()) pairs += n * (n - 1);
+  return { units: UNIT_CASES.length, pairs };
+})();
+import ToolIcon from "../../components/ToolIcon.astro";
+
+const published = REPORTS.filter((r) => r.status === "published").length;
+const rows = TOOLS.map((t) => ({ tool: t, report: reportFor(t.slug) }));
+
+const title = "Validation — how the results on this site are checked";
+const description =
+  "Hand calculations set against what each calculator returns, with the sources used, the acceptance criterion and the coverage. One report per tool.";
+---
+<Base title={title} description={description} schema="CollectionPage">
+  <nav class="tap-list mb-4 flex flex-wrap items-center gap-x-1.5 text-[12px] text-ink-faint">
+    <a href={u("/")} class="hover:text-ink">Calculators</a> <span aria-hidden>/</span> Validation
+  </nav>
+
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">Validation</h1>
+  <p class="mt-2 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    Whether a calculator can be trusted is decided by what stands behind its answer, not by the answer
+    itself. These reports work each calculation by hand from a published definition and set the result
+    against what the tool returns, with every step shown.
+  </p>
+
+  <section class="prose-doc mt-8 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <h2>What a report contains</h2>
+    <p>
+      Each report states what it covers, derives the expected values from primary sources, names the
+      acceptance criterion, shows the working in full, and ends with what the exercise does not
+      establish. The expected values are held apart from the calculation engine and are written from
+      the sources rather than computed from the tool's own constants, because a tool compared against
+      itself will always agree.
+    </p>
+    <p>
+      Coverage is counted rather than asserted. A report states how many of the things the tool offers
+      it has actually derived, the build compares that count against the tool, and a mismatch fails the
+      build. Adding a capability without validating it is therefore not possible.
+    </p>
+
+    <h2>Reports</h2>
+    <p>
+      {published} of {TOOLS.length} calculators has a published report. The rest are listed so that the
+      gap is visible; the work is proceeding one tool at a time and this page is the record of where it
+      has reached.
+    </p>
+  </section>
+
+  <ul class="mt-6 grid max-w-3xl gap-3">
+    {rows.map(({ tool, report }) => (
+      <li class="card p-4">
+        <div class="flex items-start gap-2.5">
+          <ToolIcon slug={tool.slug} class="mt-[3px]" />
+          <div class="min-w-0 flex-1">
+            <p class="text-[15px] font-semibold text-ink">{tool.name}</p>
+            {report?.status === "published" ? (
+              <>
+                <p class="mt-1 text-[14px] leading-relaxed text-ink-muted">{report.summary}</p>
+                <p class="mt-2 text-[13px] text-ink-faint">
+                  {tool.slug === "units"
+                    ? `${unitsStats.units} units · ${unitsStats.pairs} ordered conversions · `
+                    : ""}Report dated {report.validatedOn} ·
+                  <a href={u(`/validation/${tool.slug}/`)} class="ml-1 underline hover:text-ink">
+                    Read the validation report
+                  </a>
+                </p>
+              </>
+            ) : (
+              <p class="mt-1 text-[14px] leading-relaxed text-ink-muted">
+                No report yet. The calculator is covered by the automated tests described on the
+                <a href={u("/methods/")} class="mx-1 underline hover:text-ink">methods page</a>
+                but its working has not been written out for reading.
+              </p>
+            )}
+          </div>
+        </div>
+      </li>
+    ))}
+  </ul>
+
+  <section class="prose-doc mt-10 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <h2>Scope of the exercise</h2>
+    <p>
+      Validating a conversion is a different task from validating a physical model. The unit converter
+      rests entirely on definitions, so its report can be complete: there is a finite list of units and
+      every one of them is derived. The calculators that use nuclear data and physical models cannot be
+      complete in that sense, and their reports will have to say what was compared, against which
+      published values, and how far apart the two were. Where a figure on this site is a computed
+      derivation rather than a copied table value, the derivation is described on the
+      <a href={u("/methods/")}>methods page</a>.
+    </p>
+    <p>
+      None of this makes {SITE_NAME} a substitute for an accredited calibration or test, and the
+      <a href={u("/disclaimer/")}>disclaimer</a> says so in the terms that matter.
+    </p>
+  </section>
+</Base>

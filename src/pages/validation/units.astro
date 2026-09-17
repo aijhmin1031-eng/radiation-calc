@@ -1,0 +1,453 @@
+---
+/** ★★ 단위환산 유효성 평가 보고서 — **쪽이 숫자를 손으로 들지 않는다.**
+ *  기대값은 `src/validation/units.cases.ts`(원문에서 옮긴 것), 도구 값은 **빌드 시점에
+ *  엔진을 실제로 불러** 얻는다. 합격 여부·건수·최대 상대차도 여기서 **재서** 그린다 —
+ *  적어 두면 반드시 낡는다. 어긋나면 `npm test` 와 `gate/check-validation.mjs` 가 먼저 막는다. */
+import Base from "../../layouts/Base.astro";
+import { u, DOI, DOI_URL, SITE_NAME } from "../../lib/site";
+import { convert, exposureToAirKerma, massConcFromVolConc, volConcFromMassConc, UNITS,
+         type Quantity } from "../../engine/units";
+import { W_AIR_J_PER_C } from "../../engine/constants";
+import { UNIT_CASES, COMPOSED_CASES, BRIDGE_CASES, REFUSAL_CASES,
+         BASE_UNIT, QUANTITY_LABEL, TOLERANCE } from "../../validation/units.cases";
+import { SOURCES, STATEMENTS, statementById } from "../../validation/sources";
+import { reportFor } from "../../validation/registry";
+import { sci, plain, relDiff, relValue } from "../../validation/format";
+
+const report = reportFor("units")!;
+
+/* 판본 — 이 보고서가 어느 빌드를 말하는지. 없으면 없다고 적는다(지어내지 않는다). */
+let revision = (process.env.VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7);
+if (!revision) {
+  try {
+    const { execSync } = await import("node:child_process");
+    revision = execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] })
+      .toString().trim();
+  } catch { revision = ""; }
+}
+
+const QUANTS = Object.keys(UNITS) as Quantity[];
+
+/* ── 배수 44건 ── */
+const factorRows = (q: Quantity) =>
+  UNIT_CASES.filter((c) => c.quantity === q).map((c) => {
+    const tool = convert(1, c.unit, BASE_UNIT[q], q);
+    return { c, tool, diff: relValue(tool, c.factor) };
+  });
+
+/* ── 순서쌍 전수 — 쪽이 직접 센다 ── */
+let pairCount = 0;
+let worst = 0;
+let worstWhat = "";
+const note = (got: number, want: number, what: string) => {
+  const r = relValue(got, want);
+  if (r > worst) { worst = r; worstWhat = what; }
+  return r;
+};
+for (const q of QUANTS) {
+  const cs = UNIT_CASES.filter((c) => c.quantity === q);
+  for (const a of cs) for (const b of cs) {
+    if (a.unit === b.unit) continue;
+    pairCount += 1;
+    note(convert(1, a.unit, b.unit, q), a.factor / b.factor, `${a.unit} → ${b.unit}`);
+  }
+}
+for (const c of UNIT_CASES)
+  note(convert(1, c.unit, BASE_UNIT[c.quantity], c.quantity), c.factor, c.id);
+
+/* ── 합성 12건 ── */
+const composed = COMPOSED_CASES.map((c) => {
+  const tool = convert(c.value, c.from, c.to, c.quantity);
+  return { c, tool, diff: note(tool, c.expect, c.id) };
+});
+
+/* ── 물리 단계 6건 ── */
+const bridges = BRIDGE_CASES.map((c) => {
+  const tool = c.kind === "exposureToAirKerma"
+    ? exposureToAirKerma(convert(c.input.value, c.input.from, "C/kg", "exposure")) * 1000
+    : c.kind === "massFromVol"
+      ? massConcFromVolConc(convert(c.input.value, c.input.from, "Bq/L", "volConc"), c.input.density) * 1000
+      : volConcFromMassConc(convert(c.input.value, c.input.from, "Bq/g", "massConc"), c.input.density);
+  return { c, tool, diff: note(tool, c.expect, c.id) };
+});
+
+/* ── 거부 7건 ── */
+const refusals = REFUSAL_CASES.map((c) => {
+  const tool = c.kind === "convert"
+    ? convert(c.call!.value, c.call!.from, c.call!.to, c.call!.quantity)
+    : massConcFromVolConc(1, c.density);
+  return { c, refused: Number.isNaN(tool) };
+});
+
+const unitCount = QUANTS.reduce((n, q) => n + Object.keys(UNITS[q].u).length, 0);
+const checks = UNIT_CASES.length + pairCount + composed.length + bridges.length + refusals.length;
+const allPass = worst < TOLERANCE && refusals.every((r) => r.refused);
+
+const title = "Unit converter validation — hand calculations against the tool";
+const description =
+  "Every conversion factor in the radiation unit converter derived by hand from its primary definition, compared with what the tool returns, with the sources, the acceptance criterion and the coverage.";
+---
+<Base title={title} description={description} schema="TechArticle">
+  <nav class="tap-list mb-4 flex flex-wrap items-center gap-x-1.5 text-[12px] text-ink-faint">
+    <a href={u("/")} class="hover:text-ink">Calculators</a> <span aria-hidden>/</span>
+    <a href={u("/validation/")} class="hover:text-ink">Validation</a> <span aria-hidden>/</span> Unit converter
+  </nav>
+
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
+    Validation of the unit converter
+  </h1>
+  <p class="mt-2 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    Each conversion the tool offers is worked out here by hand from a published definition, and set
+    against the number the tool actually returns. The working is shown in full so that the result can
+    be checked without running anything.
+  </p>
+
+  {/* ── 표제부. 보고서가 무엇에 대한 것인지 — 없는 것은 없다고 적는다 ── */}
+  <dl class="card mt-6 grid max-w-3xl gap-x-6 gap-y-2 p-4 text-[13px] sm:grid-cols-[10rem_minmax(0,1fr)]">
+    <dt class="text-ink-faint">Subject</dt>
+    <dd class="text-ink-muted">The unit converter at <a href={u("/units/")} class="underline">{u("/units/")}</a>, and the engine module it runs on, <code>src/engine/units.ts</code>.</dd>
+    <dt class="text-ink-faint">Report date</dt>
+    <dd class="text-ink-muted">{report.validatedOn}</dd>
+    <dt class="text-ink-faint">Source revision</dt>
+    <dd class="num text-ink-muted">{revision || "not recorded in this build"}</dd>
+    <dt class="text-ink-faint">Archived source</dt>
+    <dd class="text-ink-muted"><a href={DOI_URL} rel="noopener" class="underline">{DOI}</a></dd>
+    <dt class="text-ink-faint">Checks performed</dt>
+    <dd class="num text-ink-muted">{checks}</dd>
+    <dt class="text-ink-faint">Acceptance criterion</dt>
+    <dd class="text-ink-muted">Relative difference below <span class="num">{TOLERANCE}</span>, and a refusal where a refusal is required.</dd>
+    <dt class="text-ink-faint">Largest difference found</dt>
+    <dd class="num text-ink-muted">{worst === 0 ? "0" : worst.toExponential(3)} <span class="font-sans text-ink-faint">({worstWhat})</span></dd>
+    <dt class="text-ink-faint">Result</dt>
+    <dd class={allPass ? "font-semibold text-ink" : "font-semibold text-red-600"}>
+      {allPass ? "All checks pass." : "One or more checks fail — see the tables below."}
+    </dd>
+  </dl>
+
+  <section class="prose-doc mt-10 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <h2>Scope</h2>
+    <p>
+      This report covers the unit converter only. It covers every unit the converter offers, in every
+      quantity, together with the two steps the converter presents as physics rather than as
+      conversion, and the cases in which it is required to refuse an answer. It does not cover the
+      other calculators on this site; each of those needs its own report, and the
+      <a href={u("/validation/")}>validation index</a> records which ones have one.
+    </p>
+    <p>
+      What is being established is narrow and worth stating plainly: that the number the tool returns
+      is the number that follows from the published definition of the units involved. Whether the
+      quantity you selected is the quantity you meant is not something a converter can check, and
+      the closing section sets out the rest of what this exercise does not establish.
+    </p>
+
+    <h2>Method</h2>
+    <h3>Independence</h3>
+    <p>
+      A calculation tool can always be made to agree with itself. The only useful comparison is
+      against something derived without reference to the tool, so the expected values in this report
+      are written out from the sources listed under Definitions used and are held in a file that imports no
+      value from the calculation engine. Where arithmetic was needed to reach a factor, it was
+      performed on the numbers printed in those sources, which is why each derivation below names the
+      published statement it starts from. A check in the build refuses to publish if that file ever
+      acquires an import from the engine's constants.
+    </p>
+    <h3>Acceptance criterion</h3>
+    <p>
+      Agreement is judged by relative difference, against a threshold of {TOLERANCE}. Double-precision
+      binary arithmetic resolves about 2.2 × 10⁻¹⁶, so a threshold four orders of magnitude above that
+      is loose enough never to fail on rounding and tight enough to catch any error of substance. The
+      largest difference actually observed across every check in this report is stated in the header
+      and repeated in the coverage table; it is at the resolution of the arithmetic itself.
+    </p>
+    <h3>Exactness and representability</h3>
+    <p>
+      Every one of the {UNIT_CASES.length} factors below is exact by definition. That is not the same as being
+      representable: one sixtieth, which the disintegration per minute rests on, has no finite binary
+      expansion, and neither does 0.037. Those factors are therefore carried as the nearest
+      double-precision value, which differs from the exact quantity by less than one part in 10¹⁶. The
+      one constant in this tool that is not exact is the mean energy per ion pair in air used in the
+      crossing to air kerma, which is a measured quantity carrying a stated uncertainty.
+    </p>
+
+    <h2>The implementation under test</h2>
+    <p>
+      The converter holds, for each quantity, one multiplier per unit taking that unit to the
+      quantity's base unit, and performs every conversion as a single expression:
+    </p>
+    <pre class="card my-3 overflow-x-auto p-3 text-[13px]"><code>return (value * t[from]) / t[to];</code></pre>
+    <p>
+      There is no table of pairs and no special case. It follows that verifying each unit's multiplier
+      against its published definition verifies every conversion within that quantity, since each is
+      the ratio of two verified multipliers. The coverage table records that this argument was not left as an
+      argument: all {pairCount} ordered pairs were computed and compared.
+    </p>
+    <p>
+      The <code>t</code> lookup is per quantity, so a unit belonging to another quantity is absent
+      rather than wrong, and the function returns <code>NaN</code>. The refusals below exercise that path.
+    </p>
+
+    <h2>Definitions used</h2>
+    <p>
+      Every expected value in this report traces to one of the statements below, each read from the
+      source named rather than from memory or from a secondary compilation.
+    </p>
+    <div class="not-prose my-4 overflow-x-auto">
+      <table>
+        <thead><tr><th>Statement</th><th>Source</th></tr></thead>
+        <tbody>
+          {STATEMENTS.map((s) => (
+            <tr>
+              <td class="font-normal text-ink-muted">{s.text}</td>
+              <td class="whitespace-nowrap">{SOURCES[s.source].label}, {s.locator}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <ul class="my-3 space-y-2 text-[14px]">
+      {Object.values(SOURCES).map((s) => (
+        <li>
+          <a href={s.url} rel="noopener" class="underline">{s.cite}</a>
+          <span class="text-ink-faint"> {s.access}</span>
+        </li>
+      ))}
+    </ul>
+
+    <h2>Conversion factors</h2>
+    <p>
+      One subsection per quantity. Each table gives the factor taking one of that unit to the
+      quantity's base unit: first as derived by hand, then as returned by the tool, then the relative
+      difference between them. The derivations are given in full below each table.
+    </p>
+
+    {QUANTS.map((q) => (
+      <>
+        <h3>{QUANTITY_LABEL[q]}</h3>
+        <p>
+          Base unit <strong>{BASE_UNIT[q]}</strong>. {Object.keys(UNITS[q].u).length} units,
+          {" "}{Object.keys(UNITS[q].u).length * (Object.keys(UNITS[q].u).length - 1)} ordered
+          conversions between them.
+        </p>
+        <div class="not-prose my-3 pin-first">
+          <table>
+            <thead>
+              <tr>
+                <th>Case</th><th>Unit</th>
+                <th class="text-right">Hand calculation</th>
+                <th class="text-right">Tool</th>
+                <th class="text-right">Difference</th>
+              </tr>
+            </thead>
+            <tbody>
+              {factorRows(q).map(({ c, tool, diff }) => (
+                <tr>
+                  <td class="num whitespace-nowrap">{c.id}</td>
+                  <td class="whitespace-nowrap font-normal text-ink">{c.unit}</td>
+                  <td class="num text-right text-ink">{sci(c.factor)}</td>
+                  <td class="num text-right text-ink">{sci(tool)}</td>
+                  <td class="num text-right">{relDiff(tool, c.factor)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <details class="not-prose my-3 rounded-md border border-line bg-surface px-3 py-2 text-[14px]">
+          <summary class="cursor-pointer font-medium text-ink">
+            Hand calculations for {QUANTITY_LABEL[q].toLowerCase()}
+          </summary>
+          <div class="mt-3 space-y-4">
+            {factorRows(q).map(({ c }) => (
+              <div>
+                <p class="text-[13px] font-semibold text-ink"><span class="num">{c.id}</span> — one {c.unit} in {BASE_UNIT[q]}</p>
+                <ol class="mt-1 list-decimal space-y-0.5 pl-5 text-ink-muted">
+                  {c.steps.map((s) => <li>{s}</li>)}
+                </ol>
+                <p class="mt-1 text-[13px] text-ink-faint">
+                  From: {c.cites.map((id) => {
+                    const st = statementById(id);
+                    return st ? `${SOURCES[st.source].label}, ${st.locator}` : id;
+                  }).join(" · ")}
+                </p>
+              </div>
+            ))}
+          </div>
+        </details>
+      </>
+    ))}
+
+    <h2>Composed conversions</h2>
+    <p>
+      The factors above are verified one unit at a time against the base unit. These are worked
+      through end to end, with a value carried through, in the pairs that actually appear on survey
+      records and source certificates. They are the same arithmetic the single-expression argument above predicts,
+      performed independently so that the prediction is tested rather than assumed.
+    </p>
+    <div class="not-prose my-3 overflow-x-auto">
+      <table>
+        <thead>
+          <tr><th>Case</th><th>Conversion</th><th class="text-right">Hand</th><th class="text-right">Tool</th><th class="text-right">Difference</th></tr>
+        </thead>
+        <tbody>
+          {composed.map(({ c, tool, diff }) => (
+            <tr>
+              <td class="num whitespace-nowrap">{c.id}</td>
+              <td class="whitespace-nowrap font-normal text-ink">{plain(c.value)} {c.from} → {c.to}</td>
+              <td class="num text-right text-ink">{sci(c.expect)}</td>
+              <td class="num text-right text-ink">{sci(tool)}</td>
+              <td class="num text-right">{relDiff(tool, c.expect)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div class="not-prose my-3 space-y-4">
+      {composed.map(({ c }) => (
+        <div class="rounded-md border border-line bg-surface px-3 py-2 text-[14px]">
+          <p class="text-[13px] font-semibold text-ink">
+            <span class="num">{c.id}</span> — {plain(c.value)} {c.from} to {c.to}
+          </p>
+          <ol class="mt-1 list-decimal space-y-0.5 pl-5 text-ink-muted">
+            {c.steps.map((s) => <li>{s}</li>)}
+          </ol>
+          <p class="mt-1 text-[13px] text-ink-faint">Why this pair: {c.why}</p>
+        </div>
+      ))}
+    </div>
+
+    <h2>Steps that are not conversions</h2>
+    <p>
+      The converter offers two crossings that a table of factors cannot make. Both are labelled on the
+      tool itself as physics rather than conversion, and both are validated here on the same terms as
+      the rest, with one difference: the constant in the first is measured, not defined, so the result
+      inherits its uncertainty. The value used is {W_AIR_J_PER_C} J/C.
+    </p>
+    <div class="not-prose my-3 overflow-x-auto">
+      <table>
+        <thead>
+          <tr><th>Case</th><th>Step</th><th class="text-right">Hand</th><th class="text-right">Tool</th><th class="text-right">Difference</th></tr>
+        </thead>
+        <tbody>
+          {bridges.map(({ c, tool }) => (
+            <tr>
+              <td class="num whitespace-nowrap">{c.id}</td>
+              <td class="font-normal text-ink">{c.title}</td>
+              <td class="num text-right text-ink">{sci(c.expect)} <span class="font-sans text-[12px] text-ink-faint">{c.unit}</span></td>
+              <td class="num text-right text-ink">{sci(tool)}</td>
+              <td class="num text-right">{relDiff(tool, c.expect)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div class="not-prose my-3 space-y-4">
+      {bridges.map(({ c }) => (
+        <div class="rounded-md border border-line bg-surface px-3 py-2 text-[14px]">
+          <p class="text-[13px] font-semibold text-ink"><span class="num">{c.id}</span> — {c.title}</p>
+          <ol class="mt-1 list-decimal space-y-0.5 pl-5 text-ink-muted">
+            {c.steps.map((s) => <li>{s}</li>)}
+          </ol>
+          <p class="mt-1 text-[13px] text-ink-faint">{c.caveat}</p>
+          <p class="mt-1 text-[13px] text-ink-faint">
+            From: {c.cites.map((id) => {
+              const st = statementById(id);
+              return st ? `${SOURCES[st.source].label}, ${st.locator}` : id;
+            }).join(" · ")}
+          </p>
+        </div>
+      ))}
+    </div>
+
+    <h2>Required refusals</h2>
+    <p>
+      A converter that answers a question it cannot answer is worse than one that answers nothing,
+      because the number it produces carries no sign of being wrong. These are the cases where the
+      correct output is no output. Each returns <code>NaN</code> from the engine. Most of them cannot
+      be reached from the interface at all, because a unit belonging to another quantity is simply
+      absent from the list, and that absence is the first line of defence; the refusal underneath it
+      is the second, for anything that reaches the engine by another route. Where a <code>NaN</code>
+      does reach the display it is drawn as a dash, never as a number.
+    </p>
+    <div class="not-prose my-3 overflow-x-auto">
+      <table>
+        <thead><tr><th>Case</th><th>Asked</th><th>Why it must refuse</th><th>Returned</th></tr></thead>
+        <tbody>
+          {refusals.map(({ c, refused }) => (
+            <tr>
+              <td class="num whitespace-nowrap">{c.id}</td>
+              <td class="font-normal text-ink">{c.title}</td>
+              <td class="font-normal text-ink-muted">{c.why}</td>
+              <td class={refused ? "num whitespace-nowrap text-ink" : "num whitespace-nowrap font-semibold text-warn"}>
+                {refused ? "NaN" : "a number"}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h2>The number on the screen</h2>
+    <p>
+      Everything above validates the calculation. What a person reads is the calculation after the
+      interface has rounded it for display, and a report that stopped at the engine would not have
+      looked at what anyone actually sees. A separate check drives the published page in a browser,
+      selects each quantity in turn, enters a value, reads every rendered figure out of the conversion
+      table and compares each with the hand calculation above, allowing only the declared rounding. It
+      runs on every change alongside the checks in this report.
+    </p>
+    <p>
+      The rounding is not the same everywhere, which is worth stating because it was found by making
+      this check rather than by reading the code. The conversion table is drawn to six significant
+      figures; the two derived figures under it, the air kerma and the crossed concentration, are
+      drawn to four. Both are more than any decision here turns on, but neither is the full
+      double-precision result, and a check written to one of those two tolerances would silently
+      accept or wrongly reject the other. The tolerances are therefore set separately.
+    </p>
+    <p>
+      Writing the check this way also answers the question of whether the calculation and the display
+      can be validated together. They cannot. With the engine left untouched and only the
+      direction of the table's lookup reversed, every one of the {checks} checks above still passed,
+      while the browser check failed on nearly every figure it read.
+    </p>
+
+    <h2>Coverage and result</h2>
+    <div class="not-prose my-4 overflow-x-auto">
+      <table>
+        <thead><tr><th>Check</th><th class="text-right">Count</th><th class="text-right">Result</th></tr></thead>
+        <tbody>
+          <tr><td>Units offered by the tool</td><td class="num text-right">{unitCount}</td><td class="text-right">—</td></tr>
+          <tr><td>Units with a hand-derived factor</td><td class="num text-right">{UNIT_CASES.length}</td><td class="text-right">{UNIT_CASES.length === unitCount ? "complete" : "incomplete"}</td></tr>
+          <tr><td>Ordered conversions within a quantity</td><td class="num text-right">{pairCount}</td><td class="text-right">all checked</td></tr>
+          <tr><td>Composed conversions worked end to end</td><td class="num text-right">{composed.length}</td><td class="text-right">{composed.every((x) => x.diff < TOLERANCE) ? "pass" : "fail"}</td></tr>
+          <tr><td>Steps that are not conversions</td><td class="num text-right">{bridges.length}</td><td class="text-right">{bridges.every((x) => x.diff < TOLERANCE) ? "pass" : "fail"}</td></tr>
+          <tr><td>Required refusals</td><td class="num text-right">{refusals.length}</td><td class="text-right">{refusals.every((x) => x.refused) ? "pass" : "fail"}</td></tr>
+          <tr><td>Largest relative difference observed</td><td class="num text-right">{worst.toExponential(3)}</td><td class="text-right">{worst < TOLERANCE ? "within criterion" : "outside criterion"}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Coverage is complete in a checkable sense rather than a claimed one: the count of units the tool
+      offers is read from the tool, the count of units with a derivation is read from this report, and
+      the build fails if they differ. Adding a unit to the converter without adding its derivation here
+      is therefore not possible.
+    </p>
+
+    <h2>What this does not establish</h2>
+    <ul class="my-3 list-disc space-y-1.5 pl-5">
+      <li>That the quantity you chose is the quantity you meant. Selecting absorbed dose and reading it as dose equivalent produces a correct conversion of the wrong thing.</li>
+      <li>That the value you entered is the value you measured. Nothing here checks transcription.</li>
+      <li>Anything about the other calculators on this site. Their numbers rest on nuclear data and on physical models, not only on definitions, and each needs its own report.</li>
+      <li>That the definitions cited are current. They are the editions read on the report date, named so that the reading can be repeated; the SI Brochure and NIST SP 811 are revised from time to time.</li>
+      <li>Fitness for a regulatory submission. This site does not replace an accredited calibration or test, and a validated conversion does not change that.</li>
+    </ul>
+
+    <h2>Reporting a disagreement</h2>
+    <p>
+      If a figure here disagrees with a source you hold, the disagreement is worth sending. Several
+      values in this project's test suite exist because a check found an error during development,
+      including one in this very converter, where activity per litre was treated as activity per
+      kilogram and answers were wrong by a factor of a thousand for every material but water. Contact
+      details are on the <a href="/radimeter/contact/">contact page</a>, and the method behind the rest
+      of {SITE_NAME} is on the <a href={u("/methods/")}>methods page</a>.
+    </p>
+  </section>
+</Base>
