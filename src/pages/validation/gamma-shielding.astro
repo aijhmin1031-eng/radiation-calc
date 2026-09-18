@@ -48,6 +48,21 @@ const idRun: Record<string, number> = {
   "G-ID-05": sh(Math.LN2 / mu), "G-ID-06": sh(Math.log(10) / mu),
   "G-ID-07": (Math.log(10) / mu) / (Math.LN2 / mu),
   "G-ID-08": bergerBuildup(0, 0.5, 0.1), "G-ID-09": bergerBuildup(3, NaN, NaN),
+  /* ★★ 화면이 쓰는 경로와 보고서가 재는 경로가 같은지 — `npm test` 에는 있었는데
+     **이 쪽의 실행 표에만 없었다**(2026-09-19 에 잡았다). 케이스를 늘리면서 쪽에 잇는 것을
+     빠뜨렸고, `relValue(undefined, 1)` 이 NaN 이 되어 **쪽이 「One or more checks fail」을
+     띄운 채 한 라운드를 배포돼 있었다.** 지키는 것은 `check-validation.mjs` ①-5 다. */
+  "G-ID-10": (() => {
+    let worst = 1;
+    for (const [k, act, d] of [["Co-60", 37, 1], ["Ir-192", 370, 2], ["Cs-137", 5, 0.3]] as const) {
+      const a = pointSourceDoseRate(gammaConstant(N[k], A.air, 20), act, d);
+      const b = shieldedDoseRate({ lines: N[k].lines, air: A.air, shield: A.lead,
+        material: "lead" as Material, activityGBq: act, distanceM: d,
+        thicknessCm: 0, mode: "none", deltaKeV: 20 }).doseRate;
+      if (Math.abs(a / b - 1) > Math.abs(worst - 1)) worst = a / b;
+    }
+    return worst;
+  })(),
 };
 const identities = IDENTITY_CASES.map((c) => ({ c, got: idRun[c.id], diff: relValue(idRun[c.id], c.expect) }));
 
@@ -336,7 +351,8 @@ const description =
     </p>
     <pre class="card my-3 overflow-x-auto p-3 text-[13px]"><code>Pγ = Pγ+ce / (1 + αT + απ)</code></pre>
     <p>
-      That derivation is itself checkable, which matters: DDEP publishes the caesium-137 line intensity
+      That derivation is itself checkable, which matters
+      (<span class="num">{EMISSION_SELF_CHECK.id}</span>): DDEP publishes the caesium-137 line intensity
       separately as {EMISSION_SELF_CHECK.recommended} ({EMISSION_SELF_CHECK.uncertainty}) %, and the
       derivation returns <span class="num">{sci(selfGot, 7)}</span> %, agreeing to
       {" "}<span class="num">{relDiff(selfGot, EMISSION_SELF_CHECK.recommended)}</span>. Without that

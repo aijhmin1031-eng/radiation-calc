@@ -29,6 +29,7 @@ import { WORKED_CASES as GAMMA_WORKED, EMISSION_REFS, DERIVATION_CASES, INTERP_C
 import { WORKED_CASES as SA_WORKED, MASS_REFS, DERIVATION_CASES as SA_DERIV,
          IDENTITY_CASES as SA_IDENT, REFUSAL_CASES as SA_REFUSAL }
   from "../src/validation/specific-activity.cases.ts";
+import { REPORTS } from "../src/validation/registry.ts";
 import { createRequire } from "node:module";
 const NUCLIDES = createRequire(import.meta.url)("../src/data/nuclides.json");
 
@@ -143,6 +144,54 @@ console.log(`① 커버리지(감마) — 사슬 고리 ${GAMMA_LINKS.length}가
             `보간 ${INTERP_CASES.length} · 방출선 ${EMISSION_REFS.length} · 손계산 ${GAMMA_WORKED.length}`);
 console.log(`① 커버리지(붕괴) — 갈래 ${DECAY_MODES.length}/3 덮음 · 손계산 ${DECAY_WORKED.length} · ` +
             `반감기 기준 ${HALFLIFE_REFS.length}종(자료 ${Object.keys(NUCLIDES).length}종 중) · 항등식 ${IDENTITY_CASES.length}`);
+
+/* ══════════════ ①-5 보고서가 스스로 내린 판정 ══════════════
+   ★★★ **2026-09-19 에 이 검사가 없어서 한 라운드를 놓쳤다.** 감마 보고서가 라이브에서
+     「One or more checks fail」을 띄운 채 배포돼 있었다 — 항등식 `G-ID-10` 을 케이스 정본에
+     늘리면서 **쪽의 실행 표(`idRun`)에 잇는 것을 빠뜨렸고**, `relValue(undefined, 1)` 이
+     NaN 이 되어 `allPass` 가 false 로 떨어진 것이다.
+   ★ **`npm test` 는 잡지 못한다** — 테스트에는 그 케이스의 실행부가 제대로 있었다.
+     빠진 것은 **쪽**이고, 쪽은 테스트가 보는 자리가 아니다.
+   ★ **사람도 놓쳤다** — 배포 확인에서 「검사 654건」과 「한국어 0자」는 읽고 **판정 줄은 안 봤다.**
+     그래서 사람이 읽는 자리를 게이트가 읽게 한다.
+   ★ **「NaN 이 있는가」로는 못 잰다** — 거부 표가 NaN 을 **일부러** 그린다(단위 10 · 붕괴 6).
+     보고서에서 신호가 되는 것은 **판정 줄 하나**다. */
+{
+  const VERDICT_OK = "All checks pass";
+  const published = REPORTS.filter((x) => x.status === "published");
+  /* ★ 로그는 **센 것**을 찍는다 — 「전부 통과」라고 박아 두면 실패한 판에서도 그대로 나와
+     로그가 거짓말을 한다(역테스트에서 실제로 그랬다). */
+  let verdictOk = 0;
+  for (const r of published) {
+    const f = `${DIST}/validation/${r.tool}/index.html`;
+    if (!existsSync(f)) { fail.push(`①-5 보고서 쪽이 없다: ${f}`); continue; }
+    if (readFileSync(f, "utf8").includes(VERDICT_OK)) verdictOk += 1;
+    else fail.push(`①-5 /validation/${r.tool}/ 이 스스로 실패를 선언하고 있다 — 쪽의 판정 줄이 「${VERDICT_OK}」 가 아니다`);
+  }
+  /* ★ 케이스 정본의 id 가 쪽에 그려지는지도 본다 — **쪽이 그 케이스를 아예 안 드는** 경우다.
+     ★★ **이것만으로는 부족하다**(역테스트로 한계를 확인했다):
+       · G-ID-10 은 **그려지기는 했고 값만 NaN 이었다** → 이 검사는 통과했다. 본체는 위의 판정 줄이다.
+       · 표에서 `{c.id}` 를 지워도 같은 id 가 유도 카드·상세 카드에 남아 통과한다.
+       잡는 것은 **케이스를 렌더에서 통째로 뺀 경우** 하나다(S-R-03 을 빼서 확인했다). */
+  const RENDERED = [
+    ["units", "src/validation/units.cases.ts"],
+    ["decay", "src/validation/decay.cases.ts"],
+    ["gamma-shielding", "src/validation/gamma.cases.ts"],
+    ["specific-activity", "src/validation/specific-activity.cases.ts"],
+  ];
+  let ids = 0;
+  for (const [tool, caseFile] of RENDERED) {
+    const f = `${DIST}/validation/${tool}/index.html`;
+    if (!existsSync(f)) continue;
+    const html = readFileSync(f, "utf8");
+    for (const m of readFileSync(caseFile, "utf8").matchAll(/\bid:\s*"([A-Z]-[A-Z]+-\d+)"/g)) {
+      ids += 1;
+      if (!html.includes(m[1]))
+        fail.push(`①-5 /validation/${tool}/ 에 케이스 ${m[1]} 이 그려지지 않는다 — 정본에는 있는데 쪽이 들지 않았다`);
+    }
+  }
+  console.log(`①-5 보고서 판정 — 공개 ${published.length}건 중 ${verdictOk}건이 「${VERDICT_OK}」 · 케이스 id ${ids}개 대조`);
+}
 
 /* ══════════════ ② 독립성 — 기대값이 엔진에서 오면 순환논증이다 ══════════════ */
 for (const f of CASE_FILES) checkIndependence(f);
