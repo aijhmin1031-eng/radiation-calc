@@ -32,9 +32,10 @@ const report = reportFor(slug);
   <div class="xl:grid xl:grid-cols-[13rem_minmax(0,1fr)_16rem] xl:items-start xl:gap-8">
 
     {/* ── 좌: 도구 목록. 이 lab 에서 가장 자주 하는 이동이다 ── */}
+    {/* ★ 칸 제목은 `.col-head` 다 — 칸 **안**의 소제목(`.label`)과 층이 갈려야 한다. */}
     <nav aria-label="Calculators" class="hidden xl:block xl:sticky xl:top-[calc(var(--bar-h)_+_12px)] xl:max-h-[calc(100vh_-_var(--bar-h)_-_24px)] xl:overflow-y-auto">
-      <p class="label">Calculators</p>
-      <ul class="mt-2 space-y-0.5">
+      <p class="col-head">Calculators</p>
+      <ul class="space-y-0.5">
         {TOOLS.map((t) => {
           const on = t.slug === slug;
           return (
@@ -86,8 +87,12 @@ const report = reportFor(slug);
         top-4 에 박히고 나머지는 화면 밖에 남아 스크롤로도 닿지 않는다. 신뢰도 삼항을
         넣으면서 레일이 344 → 884px 이 되어 800px 화면에서 그 함정에 들어갔다.
         화면 높이로 상한을 두고 넘치면 레일 안에서 스크롤한다. */}
-    <aside aria-label="Reference"
+    {/* ★★ 이 칸에는 **보이는 제목이 없었다** — `aria-label` 은 화면에 안 나오므로
+        읽는 사람에게는 「제목 없는 상자」였다. 이름을 보이게 세우고, 보조기기가 읽는 이름도
+        **같은 문자열**로 맞춘다(보이는 이름과 접근성 이름이 다르면 둘이 따로 낡는다). */}
+    <aside aria-label="About this calculator"
            class="mt-12 xl:mt-0 xl:sticky xl:top-[calc(var(--bar-h)_+_12px)] xl:max-h-[calc(100vh_-_var(--bar-h)_-_24px)] xl:overflow-y-auto">
+      <p class="col-head">About this calculator</p>
       <div class="card space-y-5 p-4 text-[13px]">
         {/* ★★ 신뢰도 삼항 — 정본은 `lib/tools.ts` 다. 쪽마다 적지 않는다.
             계산기를 믿을지는 **답이 아니라 답이 선 자리**를 보고 정한다.
