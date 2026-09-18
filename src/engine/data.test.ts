@@ -39,9 +39,18 @@ test("★ EC 핵종은 Γ=0 이지만 X선을 낸다 — 분류에서 빠지면 
   }
 });
 
-test("저장된 비방사능이 반감기·질량수와 어긋나지 않는다", () => {
+test("저장된 비방사능이 반감기·몰 질량과 어긋나지 않는다", () => {
   for (const [k, v] of Object.entries(N))
-    near(v.sa_bq_g, specificActivity(v.t_half_s, v.a), 1e-6, `비방사능(${k})`);
+    near(v.sa_bq_g, specificActivity(v.t_half_s, v.m_u), 1e-6, `비방사능(${k})`);
+});
+
+// ★★ **질량수를 넣던 자리다**(2026-09-18). 이 테스트가 `v.a` 를 쓰고 있었으므로
+//   **질량수 근사가 스스로를 검증하고 있었다** — 데이터도 테스트도 같은 근사를 썼으니
+//   영원히 통과한다. 근사가 0.5% 틀렸다는 것은 **바깥 자료(AME2020)를 들여야만** 보인다.
+test("원자질량이 질량수와 다르다 — 근사를 되돌리면 여기서 걸린다", () => {
+  const off = Object.values(N).map((v) => Math.abs(v.m_u - v.a) / v.a);
+  assert.ok(Math.max(...off) > 5e-3, `최대 편차 ${Math.max(...off)}`);
+  assert.ok(off.filter((r) => r > 3e-4).length > 90, "0.03% 초과 핵종 수");
 });
 
 // ★ 이 레포에서 세 번 되풀이된 버그 — 이성질체 부모가 섞여 들어온다.

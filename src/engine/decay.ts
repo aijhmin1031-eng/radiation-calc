@@ -19,14 +19,26 @@ export function halfLifeFromTwoPoints(a0: number, a1: number, elapsedS: number):
   return (LN2 * elapsedS) / Math.log(a0 / a1);
 }
 
-/** 비방사능  a = ln2·N_A/(T½·M)  [Bq/g] — M 은 g/mol, 질량수로 근사한다(0.03% 이내). */
+/** 비방사능  a = ln2·N_A/(T½·M)  [Bq/g] — M 은 몰 질량 g/mol.
+ *  ★★ **질량수를 넣지 말 것**(2026-09-18, 유효성 평가에서 잡았다). 그전에는 M=A 로 두고
+ *    「0.03% 이내」라고 적어 두었는데, 실측하니 **147 중 95 가 그것을 넘었고** H-3 은
+ *    **+0.535%** 였다 — 주장의 18배다. 어긋나는 크기는 **핵의 결합에너지**이고 A≈56
+ *    부근에서 −0.11%, 가벼운 핵에서 +0.5% 다. 지금은 데이터의 `m_u`(AME2020)를 넣는다.
+ *  ★ 1 u 의 g/mol 값은 1 이 아니다(M_u = 1.000 000 001 05×10⁻³ kg/mol)만, 상대 1.05×10⁻⁹
+ *    이라 6자리 표시에 닿지 않는다 — `m_u` 를 그대로 g/mol 로 쓴다. */
 export function specificActivity(tHalfS: number, molarMass: number): number {
+  if (!(tHalfS > 0) || !(molarMass > 0) || !Number.isFinite(tHalfS)) return NaN;
   return (LN2 * N_A) / (tHalfS * molarMass);
 }
 
-/** 활성도 ↔ 질량. Pu·U 계량이 이 한 줄이다. */
-export const massFromActivity = (bq: number, saBqPerG: number) => bq / saBqPerG;
-export const activityFromMass = (grams: number, saBqPerG: number) => grams * saBqPerG;
+/** 활성도 ↔ 질량. Pu·U 계량이 이 한 줄이다.
+ *  ★ 막지 않으면 **수처럼 생긴 것**이 나온다(2026-09-18 유효성 평가에서 잡았다) —
+ *    음의 활성도가 **음의 질량**을, 비방사능 0 이 Infinity 를 냈다.
+ *    이 레포의 관행대로 답이 없는 자리는 NaN 으로 낸다(`elapsedFromRatio` 와 같다). */
+export const massFromActivity = (bq: number, saBqPerG: number) =>
+  bq >= 0 && saBqPerG > 0 && Number.isFinite(bq) ? bq / saBqPerG : NaN;
+export const activityFromMass = (grams: number, saBqPerG: number) =>
+  grams >= 0 && saBqPerG > 0 && Number.isFinite(grams) ? grams * saBqPerG : NaN;
 
 /** Bateman — 직렬 붕괴연쇄 (분기비 없는 단순 연쇄).
  *  ★ 분모 Π(λⱼ−λᵢ) 가 0 이 되면 ±Infinity 가 난다 — 같은 반감기가 섞이는 경우다

@@ -7,11 +7,14 @@ import SpecificActivity from "../components/calc/SpecificActivity.tsx";
   <Fragment slot="prose">
     <h2>Where the number comes from</h2>
     <p>
-      Specific activity follows from two facts and no measurements. A gram of a pure nuclide contains
-      N<sub>A</sub>/M atoms, where M is the molar mass in grams per mole. Each atom decays with
-      probability λ = ln 2 / T½ per second. Multiplying gives a = ln 2 · N<sub>A</sub> / (T½ · M)
-      becquerel per gram. The only inputs are the half-life and the molar mass, and the calculator
-      approximates the molar mass by the mass number, which is within 0.03% for every nuclide here.
+      Specific activity follows from two definitions and two measured quantities. A gram of a pure
+      nuclide contains N<sub>A</sub>/M atoms, where M is the molar mass in grams per mole. Each atom
+      decays with probability λ = ln 2 / T½ per second. Multiplying gives
+      a = ln 2 · N<sub>A</sub> / (T½ · M) becquerel per gram, with nothing left to choose: no
+      geometry, no efficiency, no convention. The two measured inputs are the half-life and the
+      molar mass, and both are evaluated values with published uncertainties. The molar mass here is
+      the evaluated atomic mass from AME2020, not the mass number — the two differ by the nuclear
+      binding energy, which reaches 0.53% for tritium and changes sign across the chart of nuclides.
     </p>
     <p>
       The inverse relationship with half-life is the whole story. Tritium, with a half-life of 12.3

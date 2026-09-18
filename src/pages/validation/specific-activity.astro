@@ -1,0 +1,486 @@
+---
+/** ★★ 비방사능 계산기 유효성 평가 보고서 — 쪽이 숫자를 손으로 들지 않는다.
+ *  기대값은 `src/validation/specific-activity.cases.ts`, 도구 값은 **빌드 시점에 엔진을
+ *  실제로 불러** 얻는다. 근사 오차의 분포도 여기서 **재어** 그린다 — 적어 두면 낡는다.
+ *  ★ 이 라운드는 결함을 찾아냈다. 보고서가 그것을 숨기면 보고서가 거짓이 된다. */
+import Base from "../../layouts/Base.astro";
+import { u, DOI, DOI_URL } from "../../lib/site";
+import nuclides from "../../data/nuclides.json";
+import type { NuclideMap } from "../../engine/types";
+import { specificActivity, massFromActivity, activityFromMass } from "../../engine/decay";
+import {
+  DERIVATION_CASES, IDENTITY_CASES, MASS_REFS, WORKED_CASES, REFUSAL_CASES,
+  U_KEV, N_A_REF, TOLERANCE_IDENTITY, TOLERANCE_WORKED, TOLERANCE_MASS,
+} from "../../validation/specific-activity.cases";
+import { SOURCES, statementById } from "../../validation/sources";
+import { reportFor } from "../../validation/registry";
+import { sci, relValue } from "../../validation/format";
+
+const N = nuclides as unknown as NuclideMap;
+const report = reportFor("specific-activity")!;
+
+let revision = (process.env.VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7);
+if (!revision) {
+  try {
+    const { execSync } = await import("node:child_process");
+    revision = execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch { revision = ""; }
+}
+
+/* ── ① 유도에서 나온 상수 ── */
+const uKevDiff = relValue(U_KEV, 931494.10372);
+
+/* ── ② 항등식 — 147종 전수에서 최악을 잡는다 ── */
+const idRun = (kind: string, k: string) => {
+  const n = N[k];
+  if (kind === "roundTrip") return massFromActivity(activityFromMass(2.5, n.sa_bq_g), n.sa_bq_g) / 2.5;
+  if (kind === "inverseHalfLife") return specificActivity(2 * n.t_half_s, n.m_u) / specificActivity(n.t_half_s, n.m_u);
+  if (kind === "inverseMolarMass") return specificActivity(n.t_half_s, 2 * n.m_u) / specificActivity(n.t_half_s, n.m_u);
+  if (kind === "linearMass") return activityFromMass(10, n.sa_bq_g) / activityFromMass(1, n.sa_bq_g);
+  if (kind === "carbon12") return 12;
+  return activityFromMass(1, n.sa_bq_g) / n.sa_bq_g;
+};
+const KEYS = Object.keys(N);
+let idChecks = 0, idWorst = 0, idWorstWhat = "";
+const identities = IDENTITY_CASES.map((c) => {
+  if (c.kind === "carbon12") { idChecks += 1; return { c, tool: 12, worst: 0 }; }
+  let worst = 0;
+  for (const k of KEYS) {
+    idChecks += 1;
+    const r = relValue(idRun(c.kind, k), c.expect);
+    if (r > worst) worst = r;
+    if (r > idWorst) { idWorst = r; idWorstWhat = `${c.id} @${k}`; }
+  }
+  return { c, tool: idRun(c.kind, "Co-60"), worst };
+});
+
+/* ── ③ 원자질량 — 147종 전수. 근사 오차는 **여기서 잰다** ── */
+const masses = MASS_REFS.map((r) => {
+  const n = N[r.nuclide];
+  const approx = (r.m_u - r.a) / r.a;
+  return {
+    r, ours: n.m_u, sa: n.sa_bq_g,
+    massDiff: relValue(n.m_u, r.m_u),
+    excessResid: relValue(r.a + r.excess_keV / U_KEV, r.mGround_u),
+    saDiff: relValue(n.sa_bq_g, (Math.LN2 * N_A_REF) / (n.t_half_s * r.m_u)),
+    approx,
+  };
+});
+const byApprox = [...masses].sort((a, b) => Math.abs(b.approx) - Math.abs(a.approx));
+const approxWorst = byApprox[0];
+const approxBest = byApprox[byApprox.length - 1];
+const approxMedian = Math.abs(byApprox[Math.floor(byApprox.length / 2)].approx);
+const overOldClaim = masses.filter((m) => Math.abs(m.approx) > 3e-4).length;
+const overTenth = masses.filter((m) => Math.abs(m.approx) > 1e-3).length;
+const isomers = masses.filter((m) => m.r.exc_keV > 0);
+const massWorst = Math.max(...masses.map((m) => m.massDiff));
+const saWorst = Math.max(...masses.map((m) => m.saDiff));
+const excessWorst = Math.max(...masses.map((m) => m.excessResid));
+const uncWorst = Math.max(...MASS_REFS.map((r) => r.u_u / r.m_u));
+
+/* ── ④ 손계산 ── */
+const worked = WORKED_CASES.map((c) => {
+  const n = N[c.nuclide];
+  const tool = c.kind === "specificActivity" ? specificActivity(n.t_half_s, n.m_u)
+    : c.kind === "massFromActivity" ? massFromActivity(c.input!, n.sa_bq_g)
+    : activityFromMass(c.input!, n.sa_bq_g);
+  return { c, tool, diff: relValue(tool, c.expect) };
+});
+
+/* ── ⑤ 거부 ── */
+const refusals = REFUSAL_CASES.map((c) => {
+  const tool = c.kind === "specificActivity" ? specificActivity(c.args[0], c.args[1])
+    : c.kind === "massFromActivity" ? massFromActivity(c.args[0], c.args[1])
+    : activityFromMass(c.args[0], c.args[1]);
+  return { c, refused: Number.isNaN(tool), got: tool };
+});
+
+const checks = idChecks + masses.length * 3 + worked.length + refusals.length + 1;
+const allPass = idWorst < TOLERANCE_IDENTITY && massWorst < TOLERANCE_MASS
+  && saWorst < TOLERANCE_WORKED && excessWorst < 1e-9
+  && worked.every((x) => x.diff < TOLERANCE_WORKED)
+  && refusals.every((x) => x.refused) && uKevDiff < 1e-11;
+
+const cite = (ids?: string[]) => (ids ?? []).map((id) => {
+  const st = statementById(id);
+  return st ? `${SOURCES[st.source].label}, ${st.locator}` : id;
+}).join(" · ");
+
+const title = "Specific activity validation — molar masses and the becquerel per gram";
+const description =
+  "Specific activity derived by hand from the definitions of the mole and the becquerel, with every molar mass set against the AME2020 atomic mass evaluation. This report records a defect it found and removed.";
+---
+<Base title={title} description={description} schema="TechArticle">
+  <nav class="tap-list mb-4 flex flex-wrap items-center gap-x-1.5 text-[12px] text-ink-faint">
+    <a href={u("/")} class="hover:text-ink">Calculators</a> <span aria-hidden>/</span>
+    <a href={u("/validation/")} class="hover:text-ink">Validation</a> <span aria-hidden>/</span> Specific activity
+  </nav>
+
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
+    Validation of the specific activity calculator
+  </h1>
+  <p class="mt-2 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    Specific activity is derived here from the definitions of the mole and the becquerel, and every
+    molar mass the calculator uses is set against the evaluated atomic masses. This report found an
+    error in the calculator, states its size, and records what was changed.
+  </p>
+
+  <dl class="card mt-6 grid max-w-3xl gap-x-6 gap-y-2 p-4 text-[13px] sm:grid-cols-[11rem_minmax(0,1fr)]">
+    <dt class="text-ink-faint">Subject</dt>
+    <dd class="text-ink-muted">The specific activity calculator at <a href={u("/specific-activity/")} class="underline">{u("/specific-activity/")}</a>, both of its directions, and the functions <code>specificActivity</code>, <code>massFromActivity</code> and <code>activityFromMass</code> in <code>src/engine/decay.ts</code>.</dd>
+    <dt class="text-ink-faint">Report date</dt>
+    <dd class="text-ink-muted">{report.validatedOn}</dd>
+    <dt class="text-ink-faint">Source revision</dt>
+    <dd class="num text-ink-muted">{revision || "not recorded in this build"}</dd>
+    <dt class="text-ink-faint">Archived source</dt>
+    <dd class="text-ink-muted"><a href={DOI_URL} rel="noopener" class="underline">{DOI}</a></dd>
+    <dt class="text-ink-faint">Nuclides covered</dt>
+    <dd class="num text-ink-muted">{masses.length} of {KEYS.length}</dd>
+    <dt class="text-ink-faint">Checks performed</dt>
+    <dd class="num text-ink-muted">{checks}</dd>
+    <dt class="text-ink-faint">Acceptance criteria</dt>
+    <dd class="text-ink-muted">
+      Mathematics: relative difference below <span class="num">{TOLERANCE_IDENTITY}</span>.
+      Molar masses: identical to the evaluated value within <span class="num">{TOLERANCE_MASS}</span>.
+      Worked cases: below <span class="num">{TOLERANCE_WORKED}</span>.
+    </dd>
+    <dt class="text-ink-faint">Largest found</dt>
+    <dd class="text-ink-muted">
+      <span class="num">{idWorst === 0 ? "0" : idWorst.toExponential(3)}</span> on the mathematics
+      ({idWorstWhat || "none"}), <span class="num">{saWorst === 0 ? "0" : saWorst.toExponential(3)}</span> on the stored specific activities
+    </dd>
+    <dt class="text-ink-faint">Result</dt>
+    <dd class={allPass ? "font-semibold text-ink" : "font-semibold text-warn"}>
+      {allPass ? "All checks pass." : "One or more checks fail — see the tables below."}
+    </dd>
+  </dl>
+
+  <section class="prose-doc mt-10 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <h2>Scope</h2>
+    <p>
+      This report covers the specific activity calculator: the becquerel per gram of a pure nuclide,
+      the conversion of an activity to a mass, and the conversion of a mass to an activity, for all
+      {" "}{masses.length} nuclides in the data set. The half-lives those answers rest on are validated
+      separately, in the <a href={u("/validation/decay/")}>decay report</a>, and are taken as given here.
+      Isotopic mixtures, chemical compounds and daughter ingrowth are outside the quantity itself and
+      are treated under refusals.
+    </p>
+
+    <h2>What this report found</h2>
+    <p>
+      Until this report, the calculator used the <strong>mass number</strong> in place of the molar
+      mass, and four pages of this site described that substitution as accurate to 0.03% for every
+      nuclide. Checked against the evaluated atomic masses, that statement is false.
+      {" "}<strong>{overOldClaim} of the {masses.length} nuclides exceed 0.03%</strong>, {overTenth} of
+      them exceed 0.1%, and the worst — {approxWorst.r.nuclide} — is off by
+      {" "}<span class="num">{(Math.abs(approxWorst.approx) * 100).toFixed(3)}%</span>, some
+      {" "}{Math.round(Math.abs(approxWorst.approx) / 3e-4)} times the claimed bound. The median
+      nuclide is off by <span class="num">{(approxMedian * 100).toFixed(4)}%</span>.
+    </p>
+    <p>
+      The discrepancy is not rounding. An atomic mass is the mass number plus the mass excess divided
+      by c², and the mass excess is the nuclear binding energy — it is most negative near A = 56, where
+      binding per nucleon peaks, and strongly positive for the lightest nuclides. It therefore
+      <em>changes sign</em> across the chart, from
+      {" "}<span class="num">{(approxWorst.approx * 100).toFixed(3)}%</span> at {approxWorst.r.nuclide}
+      {" "}to about −0.11% through the iron region. A quantity that changes sign has no single small
+      bound, and the figure 0.03% has no traceable origin in this repository.
+    </p>
+    <p>
+      Rather than restate the bound more accurately, the approximation was removed. The molar masses
+      are now the evaluated atomic masses from AME2020, corrected for isomer excitation energy where
+      the nuclide is an isomer, and specific activities were recomputed. Every specific activity on
+      this site changed, by up to {(Math.abs(approxWorst.approx) * 100).toFixed(2)}%.
+    </p>
+    <p>
+      Which of the two is correct is settled by the definition rather than by comparison: the molar
+      mass of a nuclide <em>is</em> its atomic mass expressed in grams per mole, while the mass number
+      is a count of nucleons. No external figure is needed to decide it, and none is claimed here.
+    </p>
+    <p>
+      It is worth recording nonetheless that this repository carried a regression fence for tritium,
+      3.56 × 10¹⁴ Bq/g, written before this report and without a citation. The mass-number
+      calculation gave 3.5789 × 10¹⁴; the atomic-mass calculation gives
+      {" "}<span class="num">{sci(N["H-3"].sa_bq_g, 6)}</span>, which matches that fence to 0.004%
+      against 0.53%. An uncited value is not a source and is not used as one. It is mentioned because
+      it was fixed in advance of the change and so could not have been fitted to it.
+    </p>
+
+    <h3>Why the existing tests could not see it</h3>
+    <p>
+      The engine test suite already checked that each stored specific activity matched
+      ln 2 · N<sub>A</sub> / (T½ · A) — the same expression, with the same mass number, that had
+      generated the value. A test that recomputes a number the way it was computed will pass forever,
+      whatever the number means. This is the difference between a consistency check and a validation:
+      the error was only visible once an outside evaluation was brought in.
+    </p>
+
+    <h2>Comparing against something independent, where that is possible</h2>
+    <p>
+      The decay report could set this site's half-lives against a genuinely separate evaluation,
+      because two independent evaluations of half-lives exist. Atomic masses are different. The
+      Atomic Mass Evaluation is a single global least-squares adjustment of essentially all mass
+      measurements, and there is no second evaluation to play against it. Claiming that two sources
+      agree would be dishonest here.
+    </p>
+    <p>What can be done instead is done, and it is three things.</p>
+    <ol>
+      <li>
+        <strong>The derivation is shown in full</strong>, so that the formula is not asserted. It
+        rests on the definitions of the mole, the becquerel and the half-life, and on nothing else.
+      </li>
+      <li>
+        <strong>Two independent columns of the evaluation are checked against each other.</strong>
+        {" "}AME2020 publishes both the atomic mass and the mass excess, which satisfy
+        m = A + Δ/c². Across all {masses.length} nuclides the largest residual is
+        {" "}<span class="num">{excessWorst.toExponential(2)}</span>. This will not catch an error in
+        the evaluation, but it does catch an error in reading it — which is the failure mode actually
+        within reach, and one this project has already hit once, in the decay report.
+      </li>
+      <li>
+        <strong>The source line is reproduced for every nuclide</strong>, so a reader can open the
+        published file and compare characters rather than trusting a transcription.
+      </li>
+    </ol>
+    <p>
+      The conversion from the unified atomic mass unit to keV, needed for the isomer correction, is
+      derived from SI definitions rather than quoted: it reproduces the published CODATA value to
+      {" "}<span class="num">{uKevDiff.toExponential(2)}</span>, which is the rounding of the printed
+      figure.
+    </p>
+
+    <h2>The implementation under test</h2>
+    <pre class="card my-3 overflow-x-auto p-3 text-[13px]"><code>specificActivity  = (LN2 * N_A) / (tHalfS * molarMass)
+massFromActivity  = bq / saBqPerG
+activityFromMass  = grams * saBqPerG</code></pre>
+    <p>
+      Three expressions with no iteration and no series, so there is no accumulated error to bound.
+      The questions are whether these are the right expressions, whether the two inputs are right,
+      and whether the functions refuse where no answer exists.
+    </p>
+
+    <h2>Derivation</h2>
+    <div class="not-prose my-3 space-y-5">
+      {DERIVATION_CASES.map((c) => (
+        <div class="card p-4">
+          <p class="text-[14px] font-semibold text-ink"><span class="num">{c.id}</span> — {c.title}</p>
+          <p class="mt-0.5 text-[12px] text-ink-faint">In the code: {c.where}{c.statements ? ` · Cited: ${cite(c.statements)}` : ""}</p>
+          <ol class="mt-2 list-decimal space-y-1 pl-5 text-[14px] leading-relaxed text-ink-muted">
+            {c.steps.map((s) => <li>{s}</li>)}
+          </ol>
+        </div>
+      ))}
+    </div>
+
+    <h2>Identities</h2>
+    <p>
+      These hold for every nuclide, which is what makes them identities rather than test values. Each
+      is checked at all {KEYS.length} nuclides; the table shows the value at Co-60 and the worst
+      disagreement seen across the set.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th>Identity</th>
+            <th class="whitespace-nowrap text-right">Hand</th>
+            <th class="whitespace-nowrap text-right">Tool</th>
+            <th class="whitespace-nowrap text-right">Worst difference</th></tr>
+        </thead>
+        <tbody>
+          {identities.map(({ c, tool, worst }) => (
+            <tr>
+              <td class="font-normal text-ink">
+                {c.title}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id}</span>
+              </td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(c.expect)}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(tool)}</td>
+              <td class="num whitespace-nowrap text-right">{worst === 0 ? "0" : worst.toExponential(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <details class="not-prose my-3 rounded-md border border-line bg-surface px-3 py-2 text-[14px]">
+      <summary class="cursor-pointer font-medium text-ink">Derivations of the identities</summary>
+      <div class="mt-3 space-y-4">
+        {IDENTITY_CASES.map((c) => (
+          <div>
+            <p class="text-[13px] font-semibold text-ink"><span class="num">{c.id}</span> — {c.title}</p>
+            <ol class="mt-1 list-decimal space-y-0.5 pl-5 text-ink-muted">
+              {c.steps.map((s) => <li>{s}</li>)}
+            </ol>
+          </div>
+        ))}
+      </div>
+    </details>
+
+    <h2>Molar masses against the evaluation</h2>
+    <p>
+      Every nuclide in the data set, with the evaluated atomic mass, the deviation of the mass number
+      from it — the error the calculator used to carry — and the resulting specific activity. The
+      largest uncertainty in the evaluation across this set is
+      {" "}<span class="num">{uncWorst.toExponential(1)}</span> relative, which is
+      {" "}{Math.round(Math.abs(approxWorst.approx) / uncWorst).toLocaleString("en")} times smaller
+      than the approximation it replaces, so the measured uncertainty plays no part in the verdict.
+      {" "}{isomers.length} of the rows are isomers, whose excitation energy is added to the
+      ground-state mass.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          {/* ★ 머리글에는 nowrap 을 걸지 않는다 — 값보다 머리글이 넓어 표를 밀어낸다
+              (실측: 「Excitation [keV]」가 150px 인데 값은 「661.659」 하나다. 일곱 칸 합이
+              835px 이라 768px 컨테이너를 67px 넘겼고 `check-render` 가 잡았다).
+              nowrap 이 지키려던 것은 `3.21202×10¹²` 같은 **공백 없는 값**이고, 그것은
+              데이터 칸에만 있다. 머리글은 공백이 있으니 접히는 것이 맞다. */}
+          <tr><th class="text-left">Nuclide</th>
+            <th class="text-right">A</th>
+            <th class="text-right">AME2020<br />[u]</th>
+            <th class="text-right">Excitation<br />[keV]</th>
+            <th class="text-right">This site<br />[u]</th>
+            <th class="text-right">(M−A)/A</th>
+            <th class="text-right">Specific activity<br />[Bq/g]</th></tr>
+        </thead>
+        <tbody>
+          {masses.map((m) => (
+            <tr>
+              <td class="whitespace-nowrap font-normal text-ink">{m.r.nuclide}</td>
+              <td class="num whitespace-nowrap text-right">{m.r.a}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{m.r.mGround_u.toFixed(6)}</td>
+              <td class="num whitespace-nowrap text-right">{m.r.exc_keV ? m.r.exc_keV.toFixed(3) : "—"}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{m.ours.toFixed(6)}</td>
+              <td class={Math.abs(m.approx) > 3e-4 ? "num whitespace-nowrap text-right font-semibold text-warn" : "num whitespace-nowrap text-right"}>
+                {m.approx >= 0 ? "+" : ""}{(m.approx * 100).toFixed(4)}%
+              </td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(m.sa, 6)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The column marked in the warning colour is every nuclide for which the old claim of 0.03% was
+      untrue: {overOldClaim} of {masses.length}. The stored specific activities were recomputed from
+      the half-life and the evaluated molar mass; the largest disagreement between the stored value
+      and that recomputation is <span class="num">{saWorst === 0 ? "0" : saWorst.toExponential(2)}</span>,
+      and the largest disagreement between a stored molar mass and the evaluated one is
+      {" "}<span class="num">{massWorst === 0 ? "0" : massWorst.toExponential(2)}</span>.
+    </p>
+    <details class="not-prose my-3 rounded-md border border-line bg-surface px-3 py-2 text-[14px]">
+      <summary class="cursor-pointer font-medium text-ink">The source line for every nuclide, as published</summary>
+      <p class="mt-2 text-[13px] text-ink-muted">
+        Each line is reproduced from the AME2020 data file mass_1.mas20, whitespace collapsed. The
+        fields are, in order: N−Z, N, Z, A, element, origin, mass excess and its uncertainty in keV,
+        binding energy per nucleon and its uncertainty in keV, decay mode, beta-decay energy and its
+        uncertainty, then the atomic mass and its uncertainty in micro-u. Isomers carry a second line
+        from NUBASE2020 giving the excitation energy.
+      </p>
+      <ul class="mt-2 space-y-1 text-[11px] leading-snug text-ink-muted">
+        {MASS_REFS.map((r) => (
+          <li><span class="font-semibold text-ink">{r.nuclide}</span>
+            <span class="num block break-all">{r.line}</span>
+            {r.excLine && <span class="num block break-all text-ink-faint">{r.excLine}</span>}
+          </li>
+        ))}
+      </ul>
+    </details>
+
+    <h2>Worked cases</h2>
+    <p>
+      Each is computed from the definitions with the arithmetic shown, and compared against what the
+      tool returns. They are chosen to span the range: the nuclide the old approximation missed by the
+      most, one at the opposite sign of the mass excess, an isomer where the excitation energy enters,
+      and both directions of the mass–activity conversion.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th>Case</th>
+            <th class="whitespace-nowrap text-right">By hand</th>
+            <th class="whitespace-nowrap text-right">Tool</th>
+            <th class="whitespace-nowrap text-right">Difference</th></tr>
+        </thead>
+        <tbody>
+          {worked.map(({ c, tool, diff }) => (
+            <tr>
+              <td class="font-normal text-ink">
+                {c.title}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id} · {c.nuclide}</span>
+              </td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(c.expect, 11)} {c.unit}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(tool, 11)} {c.unit}</td>
+              <td class="num whitespace-nowrap text-right">{diff === 0 ? "0" : diff.toExponential(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div class="not-prose my-3 space-y-5">
+      {WORKED_CASES.map((c) => (
+        <div class="card p-4">
+          <p class="text-[14px] font-semibold text-ink"><span class="num">{c.id}</span> — {c.title}</p>
+          <ol class="mt-2 list-decimal space-y-1 pl-5 text-[14px] leading-relaxed text-ink-muted">
+            {c.steps.map((s) => <li>{s}</li>)}
+          </ol>
+        </div>
+      ))}
+    </div>
+
+    <h2>Where the calculator must refuse</h2>
+    <p>
+      A validation that only asks whether right answers are right will never find these. All five
+      were open when this report was written: the engine returned infinity for a half-life or a molar
+      mass of zero, and a <em>negative mass</em> for a negative activity. Each now returns a
+      not-a-number, which the screen renders as no answer rather than as a plausible one.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th>Input</th><th>Why there is no answer</th><th class="whitespace-nowrap text-right">Refused</th></tr>
+        </thead>
+        <tbody>
+          {refusals.map(({ c, refused }) => (
+            <tr>
+              <td class="font-normal text-ink">
+                {c.title}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id}</span>
+              </td>
+              <td>{c.why}</td>
+              <td class={refused ? "whitespace-nowrap text-right text-ink" : "whitespace-nowrap text-right font-semibold text-warn"}>{refused ? "yes" : "no"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h2>What this report does not establish</h2>
+    <ul>
+      <li>
+        <strong>That the atomic masses are right.</strong> They are the values of a single evaluation,
+        checked for faithful transcription, not verified against an independent measurement.
+      </li>
+      <li>
+        <strong>That the half-lives are right.</strong> That is the subject of the
+        {" "}<a href={u("/validation/decay/")}>decay report</a>, and every specific activity here is
+        exactly as good as the half-life beneath it.
+      </li>
+      <li>
+        <strong>That a real source weighs this.</strong> Specific activity is the property of the pure
+        nuclide. Weapons- or reactor-grade plutonium and enriched uranium are mixtures; compounds and
+        alloys carry other elements; and a caesium-137 source in equilibrium with its barium-137m
+        daughter emits close to twice the activity computed here for the caesium alone.
+      </li>
+    </ul>
+
+    <h2>Primary sources</h2>
+    <ul>
+      {["ame2020", "nubase2020", "codata", "si", "cgpm1975"].map((k) => SOURCES[k] && (
+        <li>
+          <strong>{SOURCES[k].label}</strong> — {SOURCES[k].cite}
+          {" "}<a href={SOURCES[k].url} rel="noopener" class="underline">link</a>. {SOURCES[k].access}
+        </li>
+      ))}
+    </ul>
+  </section>
+</Base>

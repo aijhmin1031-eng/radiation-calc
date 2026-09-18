@@ -12,6 +12,7 @@ export interface Nuclide {
   z: number; a: number; sym: string; iso: string;
   t_half_s: number; hl: string; hl_unit: string;
   decay: string | null;
+  m_u: number;                // 원자질량 [u] — AME2020(+NUBASE2020 들뜬에너지). 몰 질량 g/mol 과 같다
   sa_bq_g: number;            // 비방사능 Bq/g
   gamma_const: number;        // 공기커마율상수 Γ [mGy·m²/(GBq·h)] · δ=20 keV
   lines: [energyKeV: number, intensityPct: number][];

@@ -643,6 +643,10 @@
     "slug": "validation-gamma-shielding",
     "title": "Gamma dose rate validation — the constant, the coefficients and the cutoff · RadCalc"
   },
+  "/validation/specific-activity/": {
+    "slug": "validation-specific-activity",
+    "title": "Specific activity validation — molar masses and the becquerel per gram · RadCalc"
+  },
   "/validation/units/": {
     "slug": "validation-units",
     "title": "Unit converter validation — hand calculations against the tool · RadCalc"
