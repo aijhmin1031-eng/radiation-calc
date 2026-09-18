@@ -193,10 +193,17 @@ const description =
       this site changed, by up to {(Math.abs(approxWorst.approx) * 100).toFixed(2)}%.
     </p>
     <p>
-      One published figure settles the direction. Tritium's specific activity is commonly given as
-      3.56 × 10¹⁴ Bq/g. The mass-number calculation gave 3.5789 × 10¹⁴; the atomic-mass calculation
-      gives <span class="num">{sci(N["H-3"].sa_bq_g, 6)}</span>. At the precision the published figure
-      is printed to, it agrees with the atomic mass and disagrees with the mass number.
+      Which of the two is correct is settled by the definition rather than by comparison: the molar
+      mass of a nuclide <em>is</em> its atomic mass expressed in grams per mole, while the mass number
+      is a count of nucleons. No external figure is needed to decide it, and none is claimed here.
+    </p>
+    <p>
+      It is worth recording nonetheless that this repository carried a regression fence for tritium,
+      3.56 × 10¹⁴ Bq/g, written before this report and without a citation. The mass-number
+      calculation gave 3.5789 × 10¹⁴; the atomic-mass calculation gives
+      {" "}<span class="num">{sci(N["H-3"].sa_bq_g, 6)}</span>, which matches that fence to 0.004%
+      against 0.53%. An uncited value is not a source and is not used as one. It is mentioned because
+      it was fixed in advance of the change and so could not have been fitted to it.
     </p>
 
     <h3>Why the existing tests could not see it</h3>
