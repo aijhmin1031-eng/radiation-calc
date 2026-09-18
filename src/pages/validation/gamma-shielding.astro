@@ -189,12 +189,26 @@ const description =
       whose δ is unstated is not a weak comparison; it is not a comparison.
     </p>
     <p>
-      So the output is not compared. Instead the derivation and the inputs are validated separately,
-      which is what can actually be done rigorously: if the formula is right, the coefficients are the
-      published ones, and the emission intensities agree with an independent evaluation, then the
-      constant follows. Each of those three is a section below.
+      There is a further piece of evidence, and it is the strongest of the three. The international
+      metrology community publishes its own evaluated radionuclide table — the BIPM's Monographie-5,
+      which is the DDEP evaluation in its formal form. That table does not contain a gamma constant of
+      any kind. Its opening states what it recommends: half-lives, decay modes, alpha, beta, gamma,
+      X-ray and electron emissions, and the characteristics of the transitions. Searching the whole of
+      its first volume for the words kerma, exposure or dose rate constant returns nothing at all.
     </p>
-    <p class="text-[13px]">Sources: {cite(["ornl-quantity"])}.</p>
+    <p>
+      The evaluators stop at the emissions deliberately. Everything past that point — which quantity,
+      which cutoff, which weighting function — is an application convention rather than evaluated data,
+      and it is exactly where published gamma constants stop agreeing with each other.
+    </p>
+    <p>
+      So the output is not compared. Instead the derivation and the inputs are validated separately,
+      which is what can actually be done rigorously and is what the evaluated data supports: if the
+      formula is right, the coefficients are the published ones, and the emission intensities agree
+      with an independent evaluation, then the constant follows. Each of those three is a section
+      below.
+    </p>
+    <p class="text-[13px]">Sources: {cite(["ornl-quantity", "bipm-no-gamma-constant"])}.</p>
 
     <h2>The unit chain, derived</h2>
     <p>
@@ -363,7 +377,15 @@ const description =
       </ul>
     </details>
     <p>
-      Two nuclides, six lines. That is a sample and the report says so rather than implying a census.
+      The power-of-ten factor on the conversion coefficients differs from sheet to sheet — 10⁻¹ for
+      caesium-137, 10⁻⁴ for cobalt-60, and none at all for iodine-131, whose 164 keV transition is M4
+      and has α<sub>T</sub> above fifty. Reading that header wrongly is a factor-of-fifty error, and the
+      derivation catches it: taken as an absolute value the iodine line agrees with this site's data to
+      0.02 %, and taken as 10⁻⁴ it would be out by fifty. Agreement to the digits is itself the
+      evidence that the sheet was read correctly.
+    </p>
+    <p>
+      Five nuclides, ten lines. That is a sample and the report says so rather than implying a census.
       Americium-241 was left out deliberately: its DDEP transition table carries approximate and blank
       entries, and a reference value that cannot be read without guessing is worse than none. An
       earlier automated reading of these sheets returned the half-life of uranium-238 as 24.10 days,
@@ -467,7 +489,7 @@ const description =
     <h2>What this does not establish</h2>
     <ul class="my-3 list-disc space-y-1.5 pl-5">
       <li>That the constant matches any published gamma constant. It was not compared, for the reasons given at the top, and a reader holding such a value should first check which quantity it is and at what cutoff.</li>
-      <li>That the emission intensities of nuclides other than the two compared here are right. Six lines were checked against an independent evaluation; the rest travel the same pipeline, which is an argument rather than a measurement.</li>
+      <li>That the emission intensities of nuclides other than the two compared here are right. Ten lines across five nuclides were checked against an independent evaluation; the rest travel the same pipeline, which is an argument rather than a measurement.</li>
       <li>Anything about buildup. The Berger form is implemented and its degenerate cases are checked, but no coefficients are supplied, so a shielded result without them is a narrow-beam underestimate.</li>
       <li>That a point source is the right model. No self-absorption in the source, no capsule, no room scatter, no skyshine.</li>
       <li>Fitness for a shielding design. This site does not replace one.</li>

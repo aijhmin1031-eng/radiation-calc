@@ -244,6 +244,22 @@ export const EMISSION_REFS: EmissionRef[] = [
   { id: "G-EM-06", nuclide: "Co-60", energyKeV: 2158.61,
     pTransition: 0.0012, uTransition: 0.0002, alphaT: 0.495e-4, alphaPi: 0,
     quoted: "γ2,0(Ni) 2158,61 (3)  0,0012 (2)  E2  αT = 0,495 (15) ×10⁻⁴" },
+  /* ★★ **배율이 낱장마다 다르다 — 머리글을 읽어야 한다.** Cs-137 은 (10⁻¹), Co-60 은 (10⁻⁴),
+     그런데 **I-131 은 배율이 없어 절대값**이다(164 keV 는 M4 전이라 αT 가 50 을 넘는다).
+     ★ 이 읽기는 **스스로를 확인한다**: 절대값으로 읽으면 유도가 우리 자료와 0.015% 로 맞고,
+       10⁻⁴ 로 잘못 읽으면 **50배** 틀어진다. 자릿수가 맞는다는 것이 곧 읽기가 맞다는 뜻이다. */
+  { id: "G-EM-07", nuclide: "Mn-54", energyKeV: 834.855,
+    pTransition: 99.9997, uTransition: 0.0003, alphaT: 2.45e-4, alphaPi: 0,
+    quoted: "γ1,0(Cr) 834,855 (3)  99,9997 (3)  E2  αT = 2,45 (4) ×10⁻⁴" },
+  { id: "G-EM-08", nuclide: "Na-22", energyKeV: 1274.577,
+    pTransition: 99.94, uTransition: 0.13, alphaT: 6.71e-6, alphaPi: 2.34e-5,
+    quoted: "γ1,0(Ne) 1274,577 (7)  99,94 (13)  E2  αT = 6,71 (9) ×10⁻⁶  απ = 2,34 (3) ×10⁻⁵" },
+  { id: "G-EM-09", nuclide: "I-131", energyKeV: 80.1854,
+    pTransition: 6.63, uTransition: 0.15, alphaT: 1.544, alphaPi: 0,
+    quoted: "γ1,0(Xe) 80,1854 (19)  6,63 (15)  M1  αT = 1,544 (46)  — no power-of-ten factor on this sheet" },
+  { id: "G-EM-10", nuclide: "I-131", energyKeV: 163.930,
+    pTransition: 1.087, uTransition: 0.021, alphaT: 50.5, alphaPi: 0,
+    quoted: "γ2,0(Xe) 163,930 (8)  1,087 (21)  M4  αT = 50,5 (7)  — no power-of-ten factor on this sheet" },
 ];
 
 /** 광자 방출확률 — 원문의 수에 대한 산술뿐이다(엔진을 부르지 않는다). */
