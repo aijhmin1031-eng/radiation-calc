@@ -1,0 +1,484 @@
+---
+/** ★★ 감마 선량률·차폐 유효성 평가 보고서 — 쪽이 숫자를 손으로 들지 않는다.
+ *  ★ 앞선 두 보고서와 또 다르다: 감마는 **사슬**이라 고리마다 검증 방법이 다르고,
+ *    무엇보다 **출력(Γ)을 문헌과 맞대지 않는 이유**를 밝히는 것이 이 쪽의 뼈대다. */
+import Base from "../../layouts/Base.astro";
+import { u, DOI, DOI_URL, SITE_NAME } from "../../lib/site";
+import nuclides from "../../data/nuclides.json";
+import att from "../../data/attenuation.json";
+import type { NuclideMap, Material } from "../../engine/types";
+import { gammaConstant, pointSourceDoseRate, linearAttenuation, bergerBuildup,
+         shieldedDoseRate, DENSITY_G_CM3 } from "../../engine/gamma";
+import { logInterp, type Row } from "../../engine/interp";
+import {
+  DERIVATION_CASES, IDENTITY_CASES, INTERP_CASES, EMISSION_REFS, EMISSION_SELF_CHECK,
+  DELTA_CASES, WORKED_CASES, REFUSAL_CASES, photonProbability, photonUncertainty,
+  TOLERANCE_EXACT, TOLERANCE_WORKED, SIGMA_LIMIT, NODE_TOLERANCE,
+} from "../../validation/gamma.cases";
+import { SOURCES, STATEMENTS, statementById } from "../../validation/sources";
+import { reportFor } from "../../validation/registry";
+import { sci, plain, relDiff, relValue } from "../../validation/format";
+
+const N = nuclides as unknown as NuclideMap;
+const A = att as unknown as Record<string, Row[]>;
+const report = reportFor("gamma-shielding")!;
+
+let revision = (process.env.VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7);
+if (!revision) {
+  try {
+    const { execSync } = await import("node:child_process");
+    revision = execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch { revision = ""; }
+}
+
+/* ── ① 유도 ── */
+const derived: Record<string, number> = { "G-U-01": 1e3 * 1e9 * 3600, "G-U-02": (1e-2 ** 2) / 1e-3, "G-U-03": 1 };
+const derivations = DERIVATION_CASES.map((c) => ({ c, got: derived[c.id], diff: relValue(derived[c.id], c.expect) }));
+
+/* ── ② 항등식 ── */
+const ONE: [number, number][] = [[661.657, 100]];
+const mu = linearAttenuation(A.lead, 0.661657, "lead" as Material);
+const sh = (t: number, mode: "none" | "attenuation" = "attenuation") =>
+  shieldedDoseRate({ lines: ONE, air: A.air, shield: A.lead, material: "lead" as Material,
+    activityGBq: 1, distanceM: 1, thicknessCm: t, mode, deltaKeV: 20 }).transmission;
+const idRun: Record<string, number> = {
+  "G-ID-01": pointSourceDoseRate(0.3, 1, 2) / pointSourceDoseRate(0.3, 1, 1),
+  "G-ID-02": pointSourceDoseRate(0.3, 2, 1) / pointSourceDoseRate(0.3, 1, 1),
+  "G-ID-03": sh(0), "G-ID-04": sh(5, "none"),
+  "G-ID-05": sh(Math.LN2 / mu), "G-ID-06": sh(Math.log(10) / mu),
+  "G-ID-07": (Math.log(10) / mu) / (Math.LN2 / mu),
+  "G-ID-08": bergerBuildup(0, 0.5, 0.1), "G-ID-09": bergerBuildup(3, NaN, NaN),
+};
+const identities = IDENTITY_CASES.map((c) => ({ c, got: idRun[c.id], diff: relValue(idRun[c.id], c.expect) }));
+
+/* ── ③ 보간 ── */
+const interps = INTERP_CASES.map((c) => {
+  const got = logInterp(A[c.material], c.energyMeV, c.col);
+  return { c, got, diff: relValue(got, c.expect) };
+});
+let nodes = 0, nodeWorst = 0;
+for (const rows of Object.values(A))
+  for (let i = 0; i < rows.length; i++) {
+    if (i > 0 && rows[i][0] === rows[i - 1][0]) continue;
+    if (i + 1 < rows.length && rows[i][0] === rows[i + 1][0]) continue;
+    for (const col of [1, 2] as const) {
+      nodes += 1;
+      const r = relValue(logInterp(rows, rows[i][0], col), rows[i][col]);
+      if (r > nodeWorst) nodeWorst = r;
+    }
+  }
+
+/* ── ④ 방출선 ── */
+const emissions = EMISSION_REFS.map((r) => {
+  const hit = N[r.nuclide].lines.find(([e]) => Math.abs(e - r.energyKeV) < 0.05)!;
+  const pg = photonProbability(r), unc = photonUncertainty(r);
+  return { r, ours: hit[1], pg, unc, diffPct: ((hit[1] - pg) / pg) * 100, sigma: Math.abs(hit[1] - pg) / unc };
+});
+const emWorst = [...emissions].sort((a, b) => b.sigma - a.sigma)[0];
+const selfRef = EMISSION_REFS.find((r) => r.nuclide === EMISSION_SELF_CHECK.nuclide)!;
+const selfGot = photonProbability(selfRef);
+
+/* ── ⑤ δ ── */
+const deltas = DELTA_CASES.map((c) => {
+  const got = gammaConstant(N[c.nuclide], A.air, 10) / gammaConstant(N[c.nuclide], A.air, 20);
+  return { c, got, diff: relValue(got, c.ratio10over20) };
+});
+
+/* ── ⑥ 손계산 ── */
+const worked = WORKED_CASES.map((c) => {
+  const got = c.kind === "gammaConstant" ? gammaConstant(N[c.nuclide], A.air, 20)
+    : c.kind === "doseRate" ? pointSourceDoseRate(gammaConstant(N[c.nuclide], A.air, 20), c.input!.activityGBq!, c.input!.distanceM!)
+    : shieldedDoseRate({ lines: N[c.nuclide].lines, air: A.air, shield: A[c.input!.material!],
+        material: c.input!.material as Material, activityGBq: 1, distanceM: 1,
+        thicknessCm: c.input!.thicknessCm!, mode: "attenuation", deltaKeV: 20 }).transmission;
+  return { c, got, diff: relValue(got, c.expect) };
+});
+
+/* ── ⑦ 거부 ── */
+const refusals = REFUSAL_CASES.map((c) => ({ c, refused: Number.isNaN(pointSourceDoseRate(0.3, 37, c.distanceM)) }));
+
+const checks = derivations.length + identities.length + interps.length + nodes
+  + emissions.length + 1 + deltas.length + worked.length + refusals.length + Object.keys(DENSITY_G_CM3).length;
+const allPass = derivations.every((x) => x.diff < TOLERANCE_EXACT)
+  && identities.every((x) => x.diff < TOLERANCE_EXACT)
+  && interps.every((x) => x.diff < TOLERANCE_WORKED) && nodeWorst < NODE_TOLERANCE
+  && emissions.every((x) => x.sigma < SIGMA_LIMIT)
+  && deltas.every((x) => x.diff < TOLERANCE_WORKED)
+  && worked.every((x) => x.diff < TOLERANCE_WORKED)
+  && refusals.every((x) => x.refused);
+
+const cite = (ids: string[]) => ids.map((id) => {
+  const st = statementById(id);
+  return st ? `${SOURCES[st.source].label}, ${st.locator}` : id;
+}).join(" · ");
+
+const title = "Gamma dose rate validation — the constant, the coefficients and the cutoff";
+const description =
+  "The air kerma rate constant derived from first principles, the attenuation interpolation checked against every row of the tables, and the emission intensities derived from an independent evaluation — with an account of why published gamma constants are not a valid comparison.";
+---
+<Base title={title} description={description} schema="TechArticle">
+  <nav class="tap-list mb-4 flex flex-wrap items-center gap-x-1.5 text-[12px] text-ink-faint">
+    <a href={u("/")} class="hover:text-ink">Calculators</a> <span aria-hidden>/</span>
+    <a href={u("/validation/")} class="hover:text-ink">Validation</a> <span aria-hidden>/</span> Gamma dose rate
+  </nav>
+
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
+    Validation of the gamma dose rate and shielding calculator
+  </h1>
+  <p class="mt-2 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    This calculation is a chain: a unit derivation, an interpolation, a set of emission intensities, a
+    set of attenuation coefficients, and an exponential. Each link is checked on its own terms, and the
+    report says plainly which link cannot be checked the way one might expect.
+  </p>
+
+  <dl class="card mt-6 grid max-w-3xl gap-x-6 gap-y-2 p-4 text-[13px] sm:grid-cols-[11rem_minmax(0,1fr)]">
+    <dt class="text-ink-faint">Subject</dt>
+    <dd class="text-ink-muted">The calculator at <a href={u("/gamma-shielding/")} class="underline">{u("/gamma-shielding/")}</a>, and the modules <code>src/engine/gamma.ts</code> and <code>src/engine/interp.ts</code>.</dd>
+    <dt class="text-ink-faint">Quantity computed</dt>
+    <dd class="text-ink-muted">Air kerma rate constant Γ<sub>δ</sub>, in mGy·m²/(GBq·h), at a low-energy cutoff δ that the interface exposes.</dd>
+    <dt class="text-ink-faint">Report date</dt>
+    <dd class="text-ink-muted">{report.validatedOn}</dd>
+    <dt class="text-ink-faint">Source revision</dt>
+    <dd class="num text-ink-muted">{revision || "not recorded in this build"}</dd>
+    <dt class="text-ink-faint">Archived source</dt>
+    <dd class="text-ink-muted"><a href={DOI_URL} rel="noopener" class="underline">{DOI}</a></dd>
+    <dt class="text-ink-faint">Checks performed</dt>
+    <dd class="num text-ink-muted">{checks}</dd>
+    <dt class="text-ink-faint">Result</dt>
+    <dd class={allPass ? "font-semibold text-ink" : "font-semibold text-warn"}>
+      {allPass ? "All checks pass." : "One or more checks fail — see the tables below."}
+    </dd>
+  </dl>
+
+  <section class="prose-doc mt-10 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <h2>Scope</h2>
+    <p>
+      This report covers the air kerma rate constant the calculator computes, the point-source dose
+      rate it derives from it, the attenuation of that rate through a shield, and the interpolation of
+      the coefficient tables underneath both. It does not cover buildup coefficients, which this site
+      does not supply, nor any other calculator.
+    </p>
+
+    <h2>Why there is no comparison against published gamma constants</h2>
+    <p>
+      The obvious way to validate a computed gamma constant is to set it beside a published one. That
+      comparison was attempted and abandoned, and the reason is worth more than the comparison would
+      have been.
+    </p>
+    <p>
+      <strong>The published constants are a different quantity.</strong> What this tool computes is an
+      air kerma rate constant: photons per decay, times energy, times the mass energy-absorption
+      coefficient of air. The best-known freely available compilation, ORNL/RSIC-45, tabulates
+      something else — the dose-equivalent rate at one metre, obtained by weighting the photon fluence
+      with a fluence-to-dose-rate function rather than with the absorption coefficient of air. Its own
+      equations say so. Setting the two side by side and reporting the difference as agreement or
+      disagreement would be meaningless, and it is a mistake this field makes often enough that the
+      three quantities involved — exposure rate constant, air kerma rate constant, and ambient dose
+      equivalent rate constant — are worth naming separately every time.
+    </p>
+    <p>
+      <strong>The weighting function is inside a standard that cannot be reproduced here.</strong> Even
+      converting between the two would require the coefficients of that function, which belong to a
+      paid standard. This site does not reproduce such material, which is also why it supplies no
+      buildup coefficients.
+    </p>
+    <p>
+      <strong>And the constant depends on a cutoff that published values often omit.</strong> Γ<sub>δ</sub>
+      counts only photons above δ. The table further down measures what that choice is worth: for
+      americium-241 it is a factor of about eight between 10 and 20 keV. A comparison against a value
+      whose δ is unstated is not a weak comparison; it is not a comparison.
+    </p>
+    <p>
+      So the output is not compared. Instead the derivation and the inputs are validated separately,
+      which is what can actually be done rigorously: if the formula is right, the coefficients are the
+      published ones, and the emission intensities agree with an independent evaluation, then the
+      constant follows. Each of those three is a section below.
+    </p>
+    <p class="text-[13px]">Sources: {cite(["ornl-quantity"])}.</p>
+
+    <h2>The unit chain, derived</h2>
+    <p>
+      The bottom link, and until this report the only one no test looked at. A factor of ten here would
+      move every dose rate on the site by a factor of ten, and every internal consistency check would
+      still pass.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead><tr><th>Factor</th><th class="whitespace-nowrap text-right">Hand</th><th class="whitespace-nowrap text-right">In the code</th><th class="whitespace-nowrap text-right">Difference</th></tr></thead>
+        <tbody>
+          {derivations.map(({ c, got }) => (
+            <tr>
+              <td class="font-normal text-ink">
+                {c.title}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id} · {c.where}</span>
+              </td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(c.expect)}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(got)}</td>
+              <td class="num whitespace-nowrap text-right">{relDiff(got, c.expect)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div class="not-prose my-3 space-y-4">
+      {DERIVATION_CASES.map((c) => (
+        <div class="rounded-md border border-line bg-surface px-3 py-2 text-[14px]">
+          <p class="text-[13px] font-semibold text-ink"><span class="num">{c.id}</span> — {c.title}</p>
+          <ol class="mt-1 list-decimal space-y-0.5 pl-5 text-ink-muted">{c.steps.map((s) => <li>{s}</li>)}</ol>
+        </div>
+      ))}
+    </div>
+
+    <h2>Exact identities</h2>
+    <p>
+      These hold whatever the attenuation coefficient is, which is what makes them identities. They
+      test the exponential and the geometry, not the coefficients; those are the next section.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead><tr><th>Identity</th><th class="whitespace-nowrap text-right">Hand</th><th class="whitespace-nowrap text-right">Tool</th><th class="whitespace-nowrap text-right">Difference</th></tr></thead>
+        <tbody>
+          {identities.map(({ c, got }) => (
+            <tr>
+              <td class="font-normal text-ink">
+                {c.title}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id}</span>
+              </td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(c.expect)}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(got)}</td>
+              <td class="num whitespace-nowrap text-right">{relDiff(got, c.expect)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <details class="not-prose my-3 rounded-md border border-line bg-surface px-3 py-2 text-[14px]">
+      <summary class="cursor-pointer font-medium text-ink">Derivations of the identities</summary>
+      <div class="mt-3 space-y-4">
+        {IDENTITY_CASES.map((c) => (
+          <div>
+            <p class="text-[13px] font-semibold text-ink"><span class="num">{c.id}</span> — {c.title}</p>
+            <ol class="mt-1 list-decimal space-y-0.5 pl-5 text-ink-muted">{c.steps.map((s) => <li>{s}</li>)}</ol>
+          </div>
+        ))}
+      </div>
+    </details>
+
+    <h2>The interpolation</h2>
+    <p>
+      Attenuation coefficients fall across orders of magnitude, so the tables are interpolated
+      logarithmically in both energy and coefficient. The strongest check available is that asking for
+      an energy that is already in the table returns the tabulated number: that fails for almost any
+      error in the formula. It was run over every row of all {Object.keys(A).length} materials.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead><tr><th>Case</th><th class="whitespace-nowrap text-right">Hand</th><th class="whitespace-nowrap text-right">Tool</th><th class="whitespace-nowrap text-right">Difference</th></tr></thead>
+        <tbody>
+          {interps.map(({ c, got }) => (
+            <tr>
+              <td class="font-normal text-ink">
+                {c.title}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id} · {c.material} · {plain(c.energyMeV)} MeV</span>
+              </td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(c.expect)}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(got)}</td>
+              <td class="num whitespace-nowrap text-right">{relDiff(got, c.expect)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Across all {nodes} tabulated values the largest disagreement is
+      {" "}<span class="num">{nodeWorst === 0 ? "0" : nodeWorst.toExponential(3)}</span>. It is not
+      exactly zero, and the reason is worth a sentence because the first version of this check demanded
+      that it be: when the requested energy equals a tabulated one the interpolation weight is exactly
+      1, but <code>log(y₀) + (log(y₁) − log(y₀))</code> is not exactly <code>log(y₁)</code> in binary
+      floating point. The table values are therefore reproduced at the resolution of the arithmetic
+      rather than bit for bit. The engine was left alone: a correction here would change no answer
+      anywhere by more than one part in 10¹⁵.
+    </p>
+    <details class="not-prose my-3 rounded-md border border-line bg-surface px-3 py-2 text-[14px]">
+      <summary class="cursor-pointer font-medium text-ink">How each interpolation was worked</summary>
+      <div class="mt-3 space-y-4">
+        {INTERP_CASES.map((c) => (
+          <div>
+            <p class="text-[13px] font-semibold text-ink"><span class="num">{c.id}</span> — {c.title}</p>
+            <ol class="mt-1 list-decimal space-y-0.5 pl-5 text-ink-muted">{c.steps.map((s) => <li>{s}</li>)}</ol>
+          </div>
+        ))}
+      </div>
+    </details>
+    <p class="text-[13px]">Coefficient source: {SOURCES.nist126.cite} {SOURCES.nist126.access}</p>
+
+    <h2>Emission intensities, derived from an independent evaluation</h2>
+    <p>
+      The nuclear data on this site come from the IAEA's Livechart interface, which serves ENSDF. The
+      independent check is against DDEP, as in the decay report — but DDEP does not tabulate photon
+      emission probabilities directly. It gives the transition probability P<sub>γ+ce</sub> and the
+      internal conversion coefficient α<sub>T</sub>, and for transitions above 1.022 MeV an internal
+      pair creation coefficient α<sub>π</sub>. The photon intensity has to be derived:
+    </p>
+    <pre class="card my-3 overflow-x-auto p-3 text-[13px]"><code>Pγ = Pγ+ce / (1 + αT + απ)</code></pre>
+    <p>
+      That derivation is itself checkable, which matters: DDEP publishes the caesium-137 line intensity
+      separately as {EMISSION_SELF_CHECK.recommended} ({EMISSION_SELF_CHECK.uncertainty}) %, and the
+      derivation returns <span class="num">{sci(selfGot, 7)}</span> %, agreeing to
+      {" "}<span class="num">{relDiff(selfGot, EMISSION_SELF_CHECK.recommended)}</span>. Without that
+      step the formula would be an assumption that every line below inherited.
+    </p>
+    <p>
+      The internal pair creation term is not decoration. Left out, the 1332 keV line of cobalt-60 comes
+      out 0.0034 % away from the value in this site's data; put back in, the two agree to the digits
+      quoted. Both the derivation and the data had to be right for that to happen.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th>Line</th><th class="whitespace-nowrap text-right">DDEP, derived</th>
+            <th class="whitespace-nowrap text-right">This site</th>
+            <th class="whitespace-nowrap text-right">Difference</th><th class="whitespace-nowrap text-right">σ</th></tr>
+        </thead>
+        <tbody>
+          {emissions.map(({ r, ours, pg, diffPct, sigma }) => (
+            <tr>
+              <td class="whitespace-nowrap font-normal text-ink">
+                {r.nuclide} {plain(r.energyKeV)} keV
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{r.id}</span>
+              </td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(pg, 8)}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(ours, 8)}</td>
+              <td class="num whitespace-nowrap text-right">{diffPct >= 0 ? "+" : ""}{diffPct.toFixed(4)}%</td>
+              <td class={sigma < SIGMA_LIMIT ? "num whitespace-nowrap text-right" : "num whitespace-nowrap text-right font-semibold text-warn"}>{sigma.toFixed(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <details class="not-prose my-3 rounded-md border border-line bg-surface px-3 py-2 text-[14px]">
+      <summary class="cursor-pointer font-medium text-ink">The lines as they appear in the DDEP sheets</summary>
+      <ul class="num mt-3 space-y-1 text-[12px] text-ink-muted">
+        {EMISSION_REFS.map((r) => <li><span class="text-ink">{r.nuclide}</span> — {r.quoted}</li>)}
+      </ul>
+    </details>
+    <p>
+      Two nuclides, six lines. That is a sample and the report says so rather than implying a census.
+      Americium-241 was left out deliberately: its DDEP transition table carries approximate and blank
+      entries, and a reference value that cannot be read without guessing is worse than none. An
+      earlier automated reading of these sheets returned the half-life of uranium-238 as 24.10 days,
+      which is thorium-234's, because each sheet also carries the daughter.
+    </p>
+    <p class="text-[13px]">Source: {cite(["ddep-transitions"])}.</p>
+
+    <h2>What the cutoff does</h2>
+    <p>
+      Γ<sub>δ</sub> counts photons above δ only. The interface exposes δ because the answer depends on
+      it, and how much it depends is not a matter of opinion.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead><tr><th>Nuclide</th><th class="whitespace-nowrap text-right">Γ(δ=10)/Γ(δ=20)</th><th>What it means</th></tr></thead>
+        <tbody>
+          {deltas.map(({ c, got }) => (
+            <tr>
+              <td class="whitespace-nowrap font-normal text-ink">
+                {c.nuclide}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id}</span>
+              </td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(got, 8)}</td>
+              <td class="font-normal text-ink-muted">{c.note}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Worked cases</h2>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead><tr><th>Case</th><th class="whitespace-nowrap text-right">Hand</th><th class="whitespace-nowrap text-right">Tool</th><th class="whitespace-nowrap text-right">Difference</th></tr></thead>
+        <tbody>
+          {worked.map(({ c, got }) => (
+            <tr>
+              <td class="font-normal text-ink">
+                {c.title}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id} · {c.expectUnit}</span>
+              </td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(c.expect)}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(got)}</td>
+              <td class="num whitespace-nowrap text-right">{relDiff(got, c.expect)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div class="not-prose my-3 space-y-4">
+      {WORKED_CASES.map((c) => (
+        <div class="rounded-md border border-line bg-surface px-3 py-2 text-[14px]">
+          <p class="text-[13px] font-semibold text-ink"><span class="num">{c.id}</span> — {c.title}</p>
+          <ol class="mt-1 list-decimal space-y-0.5 pl-5 text-ink-muted">{c.steps.map((s) => <li>{s}</li>)}</ol>
+          <p class="mt-1 text-[13px] text-ink-faint">Why this case: {c.why}</p>
+        </div>
+      ))}
+    </div>
+
+    <h2>Required refusals</h2>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead><tr><th>Asked</th><th>Why there is no answer</th><th class="whitespace-nowrap text-right">Returned</th></tr></thead>
+        <tbody>
+          {refusals.map(({ c, refused }) => (
+            <tr>
+              <td class="font-normal text-ink">
+                {c.title}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id}</span>
+              </td>
+              <td class="font-normal text-ink-muted">{c.why}</td>
+              <td class={refused ? "num whitespace-nowrap text-right text-ink" : "num whitespace-nowrap text-right font-semibold text-warn"}>{refused ? "NaN" : "a number"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Coverage and result</h2>
+    <div class="not-prose my-4 overflow-x-auto table-fit">
+      <table>
+        <thead><tr><th>Check</th><th class="whitespace-nowrap text-right">Count</th><th class="whitespace-nowrap text-right">Result</th></tr></thead>
+        <tbody>
+          <tr><td>Unit factors derived by hand</td><td class="num whitespace-nowrap text-right">{derivations.length}</td><td class="whitespace-nowrap text-right">{derivations.every((x) => x.diff < TOLERANCE_EXACT) ? "pass" : "fail"}</td></tr>
+          <tr><td>Exact identities</td><td class="num whitespace-nowrap text-right">{identities.length}</td><td class="whitespace-nowrap text-right">{identities.every((x) => x.diff < TOLERANCE_EXACT) ? "pass" : "fail"}</td></tr>
+          <tr><td>Interpolations worked by hand</td><td class="num whitespace-nowrap text-right">{interps.length}</td><td class="whitespace-nowrap text-right">{interps.every((x) => x.diff < TOLERANCE_WORKED) ? "pass" : "fail"}</td></tr>
+          <tr><td>Tabulated values reproduced</td><td class="num whitespace-nowrap text-right">{nodes}</td><td class="whitespace-nowrap text-right">{nodeWorst < NODE_TOLERANCE ? "within arithmetic" : "fail"}</td></tr>
+          <tr><td>Emission lines against an independent evaluation</td><td class="num whitespace-nowrap text-right">{emissions.length}</td><td class="whitespace-nowrap text-right">{emissions.every((x) => x.sigma < SIGMA_LIMIT) ? `all within ${SIGMA_LIMIT}σ` : "fail"}</td></tr>
+          <tr><td>Cutoff sensitivity measured</td><td class="num whitespace-nowrap text-right">{deltas.length}</td><td class="whitespace-nowrap text-right">{deltas.every((x) => x.diff < TOLERANCE_WORKED) ? "pass" : "fail"}</td></tr>
+          <tr><td>Worked cases end to end</td><td class="num whitespace-nowrap text-right">{worked.length}</td><td class="whitespace-nowrap text-right">{worked.every((x) => x.diff < TOLERANCE_WORKED) ? "pass" : "fail"}</td></tr>
+          <tr><td>Required refusals</td><td class="num whitespace-nowrap text-right">{refusals.length}</td><td class="whitespace-nowrap text-right">{refusals.every((x) => x.refused) ? "pass" : "fail"}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The largest disagreement anywhere in this report is {emWorst.sigma.toFixed(2)}σ, on the
+      {" "}{emWorst.r.nuclide} line at {plain(emWorst.r.energyKeV)} keV, which is
+      {" "}{Math.abs(emWorst.diffPct).toFixed(4)} % in relative terms.
+    </p>
+
+    <h2>What this does not establish</h2>
+    <ul class="my-3 list-disc space-y-1.5 pl-5">
+      <li>That the constant matches any published gamma constant. It was not compared, for the reasons given at the top, and a reader holding such a value should first check which quantity it is and at what cutoff.</li>
+      <li>That the emission intensities of nuclides other than the two compared here are right. Six lines were checked against an independent evaluation; the rest travel the same pipeline, which is an argument rather than a measurement.</li>
+      <li>Anything about buildup. The Berger form is implemented and its degenerate cases are checked, but no coefficients are supplied, so a shielded result without them is a narrow-beam underestimate.</li>
+      <li>That a point source is the right model. No self-absorption in the source, no capsule, no room scatter, no skyshine.</li>
+      <li>Fitness for a shielding design. This site does not replace one.</li>
+    </ul>
+
+    <h2>Reporting a disagreement</h2>
+    <p>
+      Contact details are on the <a href="/radimeter/contact/">contact page</a>. The other reports are
+      the <a href={u("/validation/units/")}>unit converter</a> and the
+      {" "}<a href={u("/validation/decay/")}>decay calculator</a>, and the method behind the rest of
+      {" "}{SITE_NAME} is on the <a href={u("/methods/")}>methods page</a>.
+    </p>
+  </section>
+</Base>

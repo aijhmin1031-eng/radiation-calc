@@ -66,6 +66,20 @@ export const SOURCES: Record<string, Source> = {
     url: "http://www.lnhb.fr/nuclear-data/nuclear-data-table/",
     access: "Freely published by the LNE-LNHB on behalf of the DDEP collaboration.",
   },
+  ornl45: {
+    key: "ornl45",
+    label: "ORNL/RSIC-45",
+    cite: "Unger, L. M. and Trubey, D. K., Specific Gamma-Ray Dose Constants for Nuclides Important to Dosimetry and Radiological Assessment, ORNL/RSIC-45, Oak Ridge National Laboratory (1981).",
+    url: "https://www.osti.gov/biblio/6246345",
+    access: "Freely published by the US Department of Energy through OSTI.",
+  },
+  nist126: {
+    key: "nist126",
+    label: "NIST SRD 126",
+    cite: "Hubbell, J. H. and Seltzer, S. M., Tables of X-Ray Mass Attenuation Coefficients and Mass Energy-Absorption Coefficients, NIST Standard Reference Database 126, doi:10.18434/T4D01F.",
+    url: "https://physics.nist.gov/PhysRefData/XrayMassCoef/cover.html",
+    access: "Published by NIST as a Standard Reference Database; not a public-domain work. Used here to compute, not redistributed as a dataset.",
+  },
   podgorsak: {
     key: "podgorsak",
     label: "IAEA STI/PUB/1196",
@@ -115,6 +129,10 @@ export const STATEMENTS: Statement[] = [
     text: "W_air is the mean energy expended in air per ion pair formed, more usually expressed as W_air/e. For dry air the value is taken to be 33.97 J/C, with a standard uncertainty estimated at 0.2%." },
   { id: "halflife-ddep", source: "ddep", locator: "per-nuclide data sheets",
     text: "Recommended half-lives with standard uncertainties, evaluated independently of the ENSDF file that this site's nuclear data are taken from. Each sheet quotes the value in the form T1/2 = value (uncertainty on the last digits), with the comma as the decimal separator and 'a' for the year." },
+  { id: "ddep-transitions", source: "ddep", locator: "per-nuclide sheets, section 2.2",
+    text: "Gamma transition energies with transition probabilities Pγ+ce and internal conversion coefficients αT, and for transitions above 1.022 MeV an internal pair creation coefficient απ. The photon emission probability is not tabulated directly; it follows as Pγ = Pγ+ce / (1 + αT + απ)." },
+  { id: "ornl-quantity", source: "ornl45", locator: "page 1, equations (1) and (2)",
+    text: "The tabulated constant is the unshielded gamma-ray dose-equivalent rate at 1 m, computed as Γ = (1/4πR²) Σ Sᵢ D(Eᵢ) with D(E) the fluence-to-dose-rate conversion function of ANSI/ANS-6.1.1-1977. It is therefore a dose-equivalent rate constant, not an air kerma rate constant." },
   { id: "kerma", source: "podgorsak", locator: "Section 2.7.4, Eqs (2.29) and (2.30)",
     text: "Collision kerma in air and exposure are related by K_col = X · (W_air/e). Total air kerma is larger by the factor 1/(1 − g), where g is the fraction of the charged-particle energy lost to bremsstrahlung." },
 ];

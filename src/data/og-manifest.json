@@ -639,6 +639,10 @@
     "slug": "validation-decay",
     "title": "Decay calculator validation — the decay law and the half-lives it uses · RadCalc"
   },
+  "/validation/gamma-shielding/": {
+    "slug": "validation-gamma-shielding",
+    "title": "Gamma dose rate validation — the constant, the coefficients and the cutoff · RadCalc"
+  },
   "/validation/units/": {
     "slug": "validation-units",
     "title": "Unit converter validation — hand calculations against the tool · RadCalc"
