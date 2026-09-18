@@ -83,15 +83,14 @@ export default function SpecificActivity() {
         { k: "Specific activity", v: `${fmt(n.sa_bq_g, 5)} Bq/g` },
         { k: "", v: `${fmt(n.sa_bq_g / 3.7e10, 5)} Ci/g` },
         { k: "Half-life", v: `${n.hl} ${n.hl_unit}` },
-        { k: "Mass number", v: `${n.a}`, hint: "used as the molar mass in g/mol" },
+        { k: "Molar mass", v: `${n.m_u.toFixed(6)} g/mol`, hint: "AME2020 atomic mass, not the mass number" },
         { k: "Decay mode", v: n.decay ?? "—" },
       ]} />
 
       <Warn>
         <strong>This is the mass of the pure isotope.</strong> Weapons-grade or reactor-grade plutonium,
         or enriched uranium, is a mixture — the total mass of the material holding this activity is larger,
-        and other isotopes in the mixture add their own activity. The molar mass is approximated by the
-        mass number, which is within 0.03% for every nuclide here.
+        and other isotopes in the mixture add their own activity.
       </Warn>
 
       <SaveBar tool="specific-activity"

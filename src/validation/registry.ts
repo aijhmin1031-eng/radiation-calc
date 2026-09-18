@@ -21,7 +21,8 @@ export const REPORTS: ValidationReport[] = [
   { tool: "gamma-shielding", status: "published", validatedOn: "2026-09-18",
     summary: "The unit chain is derived by hand, the interpolation is checked against every row of the attenuation tables, and the emission intensities are derived from an independent evaluation rather than compared with published gamma constants, which turn out to be a different quantity." },
   { tool: "beta", status: "planned" },
-  { tool: "specific-activity", status: "planned" },
+  { tool: "specific-activity", status: "published", validatedOn: "2026-09-18",
+    summary: "Derived by hand from the definitions of the mole and the becquerel, with every molar mass set against the evaluated atomic masses. The report found that the calculator had been using mass numbers in place of molar masses, states the size of the error it caused, and records its removal." },
   { tool: "mda", status: "planned" },
   { tool: "alara", status: "planned" },
 ];

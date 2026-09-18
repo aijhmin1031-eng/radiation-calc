@@ -26,11 +26,15 @@ import { WORKED_CASES as DECAY_WORKED, HALFLIFE_REFS, IDENTITY_CASES }
   from "../src/validation/decay.cases.ts";
 import { WORKED_CASES as GAMMA_WORKED, EMISSION_REFS, DERIVATION_CASES, INTERP_CASES }
   from "../src/validation/gamma.cases.ts";
+import { WORKED_CASES as SA_WORKED, MASS_REFS, DERIVATION_CASES as SA_DERIV,
+         IDENTITY_CASES as SA_IDENT, REFUSAL_CASES as SA_REFUSAL }
+  from "../src/validation/specific-activity.cases.ts";
 import { createRequire } from "node:module";
 const NUCLIDES = createRequire(import.meta.url)("../src/data/nuclides.json");
 
 const DIST = "dist/calc";
-const CASE_FILES = ["src/validation/units.cases.ts", "src/validation/decay.cases.ts", "src/validation/gamma.cases.ts"];
+const CASE_FILES = ["src/validation/units.cases.ts", "src/validation/decay.cases.ts",
+                    "src/validation/gamma.cases.ts", "src/validation/specific-activity.cases.ts"];
 /** ★★ **화면의 반올림은 한 가지가 아니다**(첫 판에서 이것 때문에 B-01 이 걸렸다).
  *  환산표는 `fmt(v, 6)` 로 **6자리**, 그 아래 「환산이 아닌 단계」의 으뜸 숫자는 `fmt(v, 4)` 로
  *  **4자리**다. 자를 하나로 두면 둘 중 하나가 틀린다 — 느슨하게 맞추면 표의 결함을 놓치고,
@@ -93,6 +97,48 @@ const GAMMA_LINKS = ["derivation", "identity", "interp", "emission", "delta", "w
     if (!src2.includes(must))
       fail.push(`① ${page} 에서 「${must}」가 사라졌다 — 대조하지 않는 이유가 쪽에서 빠지면 안 된다`);
 }
+/* ★ 비방사능은 커버리지가 **전수**여야 한다 — 몰 질량은 핵종마다 다른 값이고, 하나라도
+   평가 밖이면 그 핵종의 답만 조용히 옛 근사로 남을 수 있다. 147 중 147 을 요구한다.
+   ★★ 그리고 **이 라운드가 찾아낸 결함이 쪽에 남아 있는지**를 함께 잰다. 결함을 고치고
+     기록을 지우면, 다음 사람이 같은 자리에 같은 근사를 다시 넣는다. */
+{
+  const keys = Object.keys(NUCLIDES);
+  const covered = new Set(MASS_REFS.map((r) => r.nuclide));
+  for (const k of keys)
+    if (!covered.has(k)) fail.push(`① 비방사능: ${k} 의 원자질량이 평가에 없다`);
+  for (const r of MASS_REFS) {
+    if (!NUCLIDES[r.nuclide]) fail.push(`① 비방사능: 평가의 ${r.nuclide} 이 자료에 없다`);
+    if (!r.line) fail.push(`① 비방사능: ${r.nuclide} 의 원문 줄이 비었다 — 대조할 자리가 없다`);
+  }
+  for (const c of SA_WORKED)
+    if (!NUCLIDES[c.nuclide]) fail.push(`① 비방사능 케이스 ${c.id} 의 ${c.nuclide} 이 자료에 없다`);
+  if (!SA_REFUSAL.length) fail.push("① 비방사능: 거부 케이스가 없다");
+
+  /* ★★ **질량수를 몰 질량으로 되돌리면 여기서 걸린다.** 근사가 살아 있을 때 통과하던
+     자리이므로, 역테스트로 확인한 경계다(최악 0.4% 초과 · 0.03% 초과가 74종 이상). */
+  const off = MASS_REFS.map((r) => Math.abs(r.m_u - r.a) / r.a);
+  if (Math.max(...off) < 4e-3)
+    fail.push("① 비방사능: 질량수와 원자질량의 최대 차가 0.4% 미만이다 — 몰 질량이 질량수로 되돌아갔다");
+  if (off.filter((x) => x > 3e-4).length < 74)
+    fail.push("① 비방사능: 0.03% 를 넘는 핵종이 74종 미만이다 — 근사가 되살아났을 수 있다");
+
+  /* ★ 「독립한 둘째 평가가 없다」는 고백과 「무엇을 세우지 못하는가」가 쪽에 남아 있어야 한다.
+     감마 쪽에 「공개된 Γ 와 비교하지 않는 이유」를 요구하는 것과 같은 자리다. */
+  const page3 = "src/pages/validation/specific-activity.astro";
+  const src3 = readFileSync(page3, "utf8");
+  for (const must of ["there is no second evaluation to play against it",
+                      "What this report does not establish",
+                      "consistency check and a validation"])
+    if (!src3.includes(must))
+      fail.push(`① ${page3} 에서 「${must}」가 사라졌다 — 세우지 못하는 것을 밝히는 문장이다`);
+  /* ★ 거짓 주장이 되살아나는지 — 사이트 어디에도 「0.03%」 가 다시 나오면 안 된다. */
+  for (const f of ["src/pages/methods.astro", "src/lib/tools.ts",
+                   "src/components/calc/SpecificActivity.tsx", "src/pages/specific-activity.astro"])
+    if (readFileSync(f, "utf8").includes("0.03%"))
+      fail.push(`① ${f} 에 「0.03%」 주장이 되살아났다`);
+}
+console.log(`① 커버리지(비방사능) — 원자질량 ${MASS_REFS.length}/${Object.keys(NUCLIDES).length}종 · ` +
+            `유도 ${SA_DERIV.length} · 항등식 ${SA_IDENT.length} · 손계산 ${SA_WORKED.length} · 거부 ${SA_REFUSAL.length}`);
 console.log(`① 커버리지(감마) — 사슬 고리 ${GAMMA_LINKS.length}가지 · 유도 ${DERIVATION_CASES.length} · ` +
             `보간 ${INTERP_CASES.length} · 방출선 ${EMISSION_REFS.length} · 손계산 ${GAMMA_WORKED.length}`);
 console.log(`① 커버리지(붕괴) — 갈래 ${DECAY_MODES.length}/3 덮음 · 손계산 ${DECAY_WORKED.length} · ` +
@@ -367,6 +413,83 @@ for (const c of GAMMA_SCREEN) {
 if (gammaRead < GAMMA_SCREEN.length)
   fail.push(`⑤ 감마 화면에서 읽은 값이 ${gammaRead} 개뿐이다 — ${GAMMA_SCREEN.length} 개여야 한다`);
 console.log(`⑤ 감마 화면 실측 — 케이스 ${GAMMA_SCREEN.length} · 읽은 값 ${gammaRead} 개 · 허용 ${TOL_GAMMA}`);
+
+/* ═══ ⑥ 비방사능 화면 실측 — 으뜸 답과 **몰 질량 줄**을 함께 읽는다 ═══
+   ★★ **여기서 읽어야 할 것이 두 가지다.** 으뜸 답만 재면 「몰 질량이 질량수로 되돌아간」
+     사고를 **못 잡는다** — 되돌려도 답은 0.5% 만 달라지고, 그 정도는 4자리 표시에서
+     한두 자리만 움직여 화면으로는 정상으로 보인다. 그래서 화면이 **몰 질량 자체를
+     드러내는지**, 그 값이 AME2020 과 같은지를 함께 잰다.
+     (그전 화면은 이 자리에 「Mass number 60」을 그리고 있었다 — 값이 보이는데 틀린 값이었다.)
+   ★ 으뜸 답은 `fmt(v)` 4자리이고 **크기에 따라 단위가 바뀐다**(ng·µg·mg·g·kg). 단위를 읽어
+     되돌리지 않으면 10³ 배씩 어긋난 채 통과한다. */
+const TOL_SA = 1e-3;                          // 으뜸 답 4자리 — 반올림 5×10⁻⁴ 위
+const TOL_SA_MASS = 5e-7;                     // 몰 질량은 6자리로 그린다
+const MASS_SCALE = { ng: 1e-9, "µg": 1e-6, mg: 1e-3, g: 1, kg: 1e3 };
+const SA_BY_NUCLIDE = Object.fromEntries(MASS_REFS.map((r) => [r.nuclide, r]));
+let saRead = 0;
+const SA_SCREEN = SA_WORKED.filter((c) => c.kind !== "specificActivity");
+await page.goto(`http://127.0.0.1:${PORT}/calc/specific-activity/`, { waitUntil: "networkidle" });
+await page.waitForTimeout(600);
+
+/** 「Molar mass」 줄을 읽는다 — `Rows` 는 dl > div > dt/dd 다. */
+const readRow = (label) => page.evaluate((lab) => {
+  const d = [...document.querySelectorAll("main dl > div")]
+    .find((x) => x.querySelector("dt")?.textContent.trim().startsWith(lab));
+  return d ? d.querySelector("dd").textContent.trim() : null;
+}, label);
+
+/* ⑥-1 모든 핵종에서 몰 질량 줄이 AME2020 과 같은지 — 표본이 아니라 **전수에 가깝게** 돈다.
+   ★ 147 을 다 돌면 게이트가 느려지므로, 근사 오차가 큰 쪽·작은 쪽·이성질체를 고루 든다. */
+const byOff = [...MASS_REFS].sort((a, b) => Math.abs(b.m_u - b.a) / b.a - Math.abs(a.m_u - a.a) / a.a);
+const SAMPLE = [...new Set([
+  ...byOff.slice(0, 8).map((r) => r.nuclide),
+  ...byOff.slice(-4).map((r) => r.nuclide),
+  ...MASS_REFS.filter((r) => r.exc_keV > 0).slice(0, 4).map((r) => r.nuclide),
+  ...SA_WORKED.map((c) => c.nuclide),
+])];
+for (const k of SAMPLE) {
+  await pickNuclide(k);
+  /* ★★ **계산 단추를 눌러야 한다.** 이 화면의 아래 표는 고른 값이 아니라 **커밋된 스냅숏**
+     에서 그려진다 — 안 누르면 직전 핵종의 몰 질량이 그대로 서 있고, 게이트는 147종을
+     도는 시늉만 한 채 통과한다. 첫 판에서 실제로 그랬다(19종 전부 Pu-239 를 읽었다). */
+  await page.click("main button:has-text('Calculate')", { timeout: 4000 });
+  await page.waitForTimeout(200);
+  const shown = await readRow("Molar mass");
+  if (!shown) { fail.push(`⑥ ${k}: 「Molar mass」 줄이 화면에 없다 — 몰 질량이 화면에서 사라졌다`); continue; }
+  const v = Number(shown.replace(/[^0-9.]/g, ""));
+  if (!Number.isFinite(v)) { fail.push(`⑥ ${k}: 몰 질량을 읽을 수 없다 — 「${shown}」`); continue; }
+  if (!/g\/mol/.test(shown)) fail.push(`⑥ ${k}: 몰 질량에 단위 g/mol 이 없다 — 「${shown}」`);
+  saRead += 1;
+  cmp(v, SA_BY_NUCLIDE[k].m_u, `${k} 몰 질량 (화면)`, TOL_SA_MASS);
+  /* ★ 질량수와 **다른지**를 함께 본다 — 같으면 근사가 되살아난 것이다. */
+  if (Math.abs(SA_BY_NUCLIDE[k].m_u - SA_BY_NUCLIDE[k].a) / SA_BY_NUCLIDE[k].a > 1e-4
+      && Math.abs(v - SA_BY_NUCLIDE[k].a) < 5e-4)
+    fail.push(`⑥ ${k}: 화면의 몰 질량이 질량수 ${SA_BY_NUCLIDE[k].a} 과 같다 — 근사가 되살아났다`);
+}
+
+/* ⑥-2 손계산 케이스를 실제로 눌러 으뜸 답을 읽는다. */
+for (const c of SA_SCREEN) {
+  const toMass = c.kind === "massFromActivity";
+  await page.locator('[role="radio"]', { hasText: toMass ? /^Activity → mass$/ : /^Mass → activity$/ })
+    .click({ timeout: 4000 });
+  await page.waitForTimeout(120);
+  await pickNuclide(c.nuclide);
+  await setByLabel(toMass ? "Activity" : "Mass", c.input);
+  await setByLabel("Unit", toMass ? "Bq" : "g");
+  await page.click("main button:has-text('Calculate')", { timeout: 4000 });
+  await page.waitForTimeout(250);
+  const h = await readHeadline();
+  if (!h) { fail.push(`⑥ ${c.id}: 으뜸 답이 화면에 없다`); continue; }
+  if (h.stale) { fail.push(`⑥ ${c.id}: 답이 낡은 상태다 — 계산 단추가 먹히지 않았다`); continue; }
+  const scale = toMass ? (MASS_SCALE[h.unit] ?? NaN) : 1;
+  if (!Number.isFinite(scale)) { fail.push(`⑥ ${c.id}: 질량 단위 「${h.unit}」 를 모른다`); continue; }
+  saRead += 1;
+  cmp(parseShown(h.num) * scale, c.expect, `${c.id} ${c.nuclide} ${c.kind} (화면)`, TOL_SA);
+}
+if (saRead < SAMPLE.length + SA_SCREEN.length)
+  fail.push(`⑥ 비방사능 화면에서 읽은 값이 ${saRead} 개뿐이다 — ${SAMPLE.length + SA_SCREEN.length} 개여야 한다`);
+console.log(`⑥ 비방사능 화면 실측 — 몰 질량 ${SAMPLE.length}종 · 으뜸 답 ${SA_SCREEN.length} · ` +
+            `읽은 값 ${saRead} 개 · 허용 ${TOL_SA_MASS}/${TOL_SA}`);
 
 /* ★★ 커버리지 하한 — **조작이 가로채여도 조용히 통과하는 일**을 막는다.
    이웃 레포에서 실제로 났다: 배너가 단추를 덮어 클릭이 먹히지 않았는데 실패를 삼켜
