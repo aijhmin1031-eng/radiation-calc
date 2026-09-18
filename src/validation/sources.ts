@@ -59,12 +59,16 @@ export const SOURCES: Record<string, Source> = {
     url: "https://www-pub.iaea.org/MTCD/Publications/PDF/TRS398_scr.pdf",
     access: "Freely published by the IAEA.",
   },
+  /** ★★ **정식 간행물은 BIPM 쪽이다**(2026-09-18 소유주 제안으로 확인 — 「bipm 방사선 table
+   *  자료를 찾아서 이용해」). DDEP 평가는 **BIPM Monographie-5 『Table of Radionuclides』**
+   *  로 간행되고, LNE-LNHB 가 낱장 형태로 최신판을 유지한다. **같은 평가의 두 얼굴**이므로
+   *  인용은 국제 계량기구의 간행물로 하고, 실제로 읽은 낱장 주소를 함께 적는다. */
   ddep: {
     key: "ddep",
-    label: "DDEP / LNE-LNHB",
-    cite: "Decay Data Evaluation Project, Table de Radionucléides, Laboratoire National Henri Becquerel (LNE-LNHB), Saclay — per-nuclide recommended data sheets.",
-    url: "http://www.lnhb.fr/nuclear-data/nuclear-data-table/",
-    access: "Freely published by the LNE-LNHB on behalf of the DDEP collaboration.",
+    label: "BIPM Monographie-5",
+    cite: "Table of Radionuclides, Monographie BIPM-5, Bureau International des Poids et Mesures — the Decay Data Evaluation Project evaluation, maintained in per-nuclide form by the Laboratoire National Henri Becquerel (LNE-LNHB).",
+    url: "https://www.bipm.org/en/publications/monographies-ri",
+    access: "Freely published by the BIPM; the current per-nuclide sheets are at lnhb.fr/nuclides/.",
   },
   ornl45: {
     key: "ornl45",
@@ -131,6 +135,8 @@ export const STATEMENTS: Statement[] = [
     text: "Recommended half-lives with standard uncertainties, evaluated independently of the ENSDF file that this site's nuclear data are taken from. Each sheet quotes the value in the form T1/2 = value (uncertainty on the last digits), with the comma as the decimal separator and 'a' for the year." },
   { id: "ddep-transitions", source: "ddep", locator: "per-nuclide sheets, section 2.2",
     text: "Gamma transition energies with transition probabilities Pγ+ce and internal conversion coefficients αT, and for transitions above 1.022 MeV an internal pair creation coefficient απ. The photon emission probability is not tabulated directly; it follows as Pγ = Pγ+ce / (1 + αT + απ)." },
+  { id: "bipm-no-gamma-constant", source: "ddep", locator: "Volume 1 (2004), introduction and full text",
+    text: "The recommended data comprise half-lives, decay modes, alpha, beta, gamma, X-ray and electron emissions, and the characteristics of the transitions. No gamma-ray constant of any kind is tabulated: the words kerma, exposure and dose rate constant do not appear anywhere in the volume. The evaluation stops at the emissions, which is where the conventions end and the application-specific ones begin." },
   { id: "ornl-quantity", source: "ornl45", locator: "page 1, equations (1) and (2)",
     text: "The tabulated constant is the unshielded gamma-ray dose-equivalent rate at 1 m, computed as Γ = (1/4πR²) Σ Sᵢ D(Eᵢ) with D(E) the fluence-to-dose-rate conversion function of ANSI/ANS-6.1.1-1977. It is therefore a dose-equivalent rate constant, not an air kerma rate constant." },
   { id: "kerma", source: "podgorsak", locator: "Section 2.7.4, Eqs (2.29) and (2.30)",
