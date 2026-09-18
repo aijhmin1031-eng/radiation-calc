@@ -24,11 +24,13 @@ import { UNIT_CASES, COMPOSED_CASES, BRIDGE_CASES, BASE_UNIT, QUANTITY_LABEL }
   from "../src/validation/units.cases.ts";
 import { WORKED_CASES as DECAY_WORKED, HALFLIFE_REFS, IDENTITY_CASES }
   from "../src/validation/decay.cases.ts";
+import { WORKED_CASES as GAMMA_WORKED, EMISSION_REFS, DERIVATION_CASES, INTERP_CASES }
+  from "../src/validation/gamma.cases.ts";
 import { createRequire } from "node:module";
 const NUCLIDES = createRequire(import.meta.url)("../src/data/nuclides.json");
 
 const DIST = "dist/calc";
-const CASE_FILES = ["src/validation/units.cases.ts", "src/validation/decay.cases.ts"];
+const CASE_FILES = ["src/validation/units.cases.ts", "src/validation/decay.cases.ts", "src/validation/gamma.cases.ts"];
 /** ★★ **화면의 반올림은 한 가지가 아니다**(첫 판에서 이것 때문에 B-01 이 걸렸다).
  *  환산표는 `fmt(v, 6)` 로 **6자리**, 그 아래 「환산이 아닌 단계」의 으뜸 숫자는 `fmt(v, 4)` 로
  *  **4자리**다. 자를 하나로 두면 둘 중 하나가 틀린다 — 느슨하게 맞추면 표의 결함을 놓치고,
@@ -70,6 +72,29 @@ for (const r of HALFLIFE_REFS)
   const ids = [...DECAY_WORKED.map((c) => c.id), ...HALFLIFE_REFS.map((r) => r.id), ...IDENTITY_CASES.map((c) => c.id)];
   if (new Set(ids).size !== ids.length) fail.push("① 붕괴 케이스 id 가 겹친다");
 }
+/* ★ 감마는 커버리지의 뜻이 또 다르다 — 「몇 %를 덮었나」가 아니라 **사슬의 고리를 빠짐없이
+   덮었나**다. 고리 하나가 검증 밖이면 나머지가 아무리 촘촘해도 사슬이 끊긴다. */
+const GAMMA_LINKS = ["derivation", "identity", "interp", "emission", "delta", "worked"];
+{
+  const have = { derivation: DERIVATION_CASES.length, interp: INTERP_CASES.length,
+                 emission: EMISSION_REFS.length, worked: GAMMA_WORKED.length };
+  for (const [k, n] of Object.entries(have))
+    if (!n) fail.push(`① 감마 사슬의 고리 「${k}」에 케이스가 없다`);
+  for (const r of EMISSION_REFS)
+    if (!NUCLIDES[r.nuclide]) fail.push(`① 방출선 기준 ${r.id} 의 ${r.nuclide} 이 자료에 없다`);
+  for (const c of GAMMA_WORKED)
+    if (!NUCLIDES[c.nuclide]) fail.push(`① 감마 케이스 ${c.id} 의 ${c.nuclide} 이 자료에 없다`);
+  /* ★★ **출력(Γ)을 문헌과 맞대지 않는다는 판단이 쪽에 적혀 있어야 한다.** 그 문단이 사라지면
+     읽는 사람은 「그냥 안 했다」로 읽는다 — 안 한 것과 못 하는 것은 다르다. */
+  const page = "src/pages/validation/gamma-shielding.astro";
+  const src2 = readFileSync(page, "utf8");
+  for (const must of ["Why there is no comparison against published gamma constants",
+                      "different quantity", "cutoff"])
+    if (!src2.includes(must))
+      fail.push(`① ${page} 에서 「${must}」가 사라졌다 — 대조하지 않는 이유가 쪽에서 빠지면 안 된다`);
+}
+console.log(`① 커버리지(감마) — 사슬 고리 ${GAMMA_LINKS.length}가지 · 유도 ${DERIVATION_CASES.length} · ` +
+            `보간 ${INTERP_CASES.length} · 방출선 ${EMISSION_REFS.length} · 손계산 ${GAMMA_WORKED.length}`);
 console.log(`① 커버리지(붕괴) — 갈래 ${DECAY_MODES.length}/3 덮음 · 손계산 ${DECAY_WORKED.length} · ` +
             `반감기 기준 ${HALFLIFE_REFS.length}종(자료 ${Object.keys(NUCLIDES).length}종 중) · 항등식 ${IDENTITY_CASES.length}`);
 
@@ -313,6 +338,35 @@ for (const c of DECAY_WORKED) {
 if (decayRead < DECAY_WORKED.length * 2)
   fail.push(`④ 붕괴 화면에서 읽은 값이 ${decayRead} 개뿐이다 — ${DECAY_WORKED.length * 2} 개 이상이어야 한다`);
 console.log(`④ 붕괴 화면 실측 — 갈래 ${new Set(DECAY_WORKED.map((c) => c.mode)).size}가지 · 케이스 ${DECAY_WORKED.length} · 읽은 값 ${decayRead} 개 · 허용 ${TOL_DECAY}`);
+
+/* ═══ ⑤ 감마 화면 실측 — 선량률을 실제로 눌러 읽는다 ═══
+   ★ 이 화면은 핵종·거리·활성도·차폐를 모두 세워야 답이 나온다. 「눌렀다」가 아니라
+     **「무엇이 그려졌는지」**를 세고, 답이 낡은 상태(stale)면 읽지 않는다. */
+const TOL_GAMMA = 2e-3;   // 으뜸 답 4자리 — 반올림 5×10⁻⁴ 위, 단위 환산 여유 포함
+let gammaRead = 0;
+const GAMMA_SCREEN = GAMMA_WORKED.filter((c) => c.kind === "doseRate");
+await page.goto(`http://127.0.0.1:${PORT}/calc/gamma-shielding/`, { waitUntil: "networkidle" });
+await page.waitForTimeout(600);
+for (const c of GAMMA_SCREEN) {
+  await page.locator('[role="radio"]', { hasText: /^Dose rate$/ }).click({ timeout: 4000 });
+  await page.waitForTimeout(120);
+  await pickNuclide(c.nuclide);
+  await setByLabel("Activity", c.input.activityGBq);
+  await setByLabel("Unit", "GBq");
+  await setByLabel("Distance", c.input.distanceM);
+  await setByLabel("Distance unit", "m");
+  await setByLabel("Show dose rate in", "mGy/h");
+  await page.click("main button:has-text('Calculate')", { timeout: 4000 });
+  await page.waitForTimeout(250);
+  const h = await readHeadline();
+  if (!h) { fail.push(`⑤ ${c.id}: 으뜸 답이 화면에 없다`); continue; }
+  if (h.stale) { fail.push(`⑤ ${c.id}: 답이 낡은 상태다 — 계산 단추가 먹히지 않았다`); continue; }
+  gammaRead += 1;
+  cmp(parseShown(h.num), c.expect, `${c.id} ${c.nuclide} 선량률 (화면)`, TOL_GAMMA);
+}
+if (gammaRead < GAMMA_SCREEN.length)
+  fail.push(`⑤ 감마 화면에서 읽은 값이 ${gammaRead} 개뿐이다 — ${GAMMA_SCREEN.length} 개여야 한다`);
+console.log(`⑤ 감마 화면 실측 — 케이스 ${GAMMA_SCREEN.length} · 읽은 값 ${gammaRead} 개 · 허용 ${TOL_GAMMA}`);
 
 /* ★★ 커버리지 하한 — **조작이 가로채여도 조용히 통과하는 일**을 막는다.
    이웃 레포에서 실제로 났다: 배너가 단추를 덮어 클릭이 먹히지 않았는데 실패를 삼켜
