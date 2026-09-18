@@ -449,7 +449,7 @@ halfLifeFromTwoPoints = (LN2 * elapsedS) / Math.log(a0 / a1)</code></pre>
           <tr><td>Half-lives against an independent evaluation</td><td class="num whitespace-nowrap text-right">{halfLives.length}</td><td class="whitespace-nowrap text-right">{halfLives.every((x) => x.sigma < SIGMA_LIMIT) ? `all within ${SIGMA_LIMIT}σ` : "fail"}</td></tr>
           <tr><td>Worked cases, answer and half-lives elapsed</td><td class="num whitespace-nowrap text-right">{worked.length * 2}</td><td class="whitespace-nowrap text-right">{worked.every((x) => x.diff < TOLERANCE_WORKED) ? "pass" : "fail"}</td></tr>
           <tr><td>Required refusals</td><td class="num whitespace-nowrap text-right">{refusals.length}</td><td class="whitespace-nowrap text-right">{refusals.every((x) => x.refused) ? "pass" : "fail"}</td></tr>
-          <tr><td>Year convention, data against tool</td><td class="num whitespace-nowrap text-right">{yearRows.length}</td><td class="whitespace-nowrap text-right">{yearOk ? "same year" : "fail"}</td></tr>
+          <tr><td>Year convention, data against tool <span class="num text-[11px] text-ink-faint">{YEAR_CASE.id}</span></td><td class="num whitespace-nowrap text-right">{yearRows.length}</td><td class="whitespace-nowrap text-right">{yearOk ? "same year" : "fail"}</td></tr>
           <tr><td>Modes of the calculator covered</td><td class="num whitespace-nowrap text-right">{new Set(WORKED_CASES.map((c) => c.mode)).size} of 3</td><td class="whitespace-nowrap text-right">{new Set(WORKED_CASES.map((c) => c.mode)).size === 3 ? "complete" : "incomplete"}</td></tr>
         </tbody>
       </table>
