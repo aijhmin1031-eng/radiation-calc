@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import nuclides from "../../data/nuclides.json";
 import type { NuclideMap } from "../../engine/types";
 import { decayActivity, elapsedFromRatio, halfLifeFromTwoPoints } from "../../engine/decay";
+import { TIME_S } from "../../engine/constants";
 import { convert, UNITS } from "../../engine/units";
 import { NuclidePicker } from "../ui/NuclidePicker";
 import { Field, NumberInput, Select, RadioRow } from "../ui/Field";
@@ -13,7 +14,8 @@ import { Headline, Rows, fmt, Warn } from "../ui/Result";
 
 const N = nuclides as unknown as NuclideMap;
 const ACT = Object.keys(UNITS.activity.u);
-const TIME = { s: 1, min: 60, h: 3600, d: 86400, y: 365.2425 * 86400 } as const;
+/** ★ 해의 정본은 `engine/constants.ts` 다 — 여기에 다시 적지 않는다. */
+const TIME = TIME_S;
 type TimeUnit = keyof typeof TIME;
 type Mode = "remaining" | "when" | "halflife";
 

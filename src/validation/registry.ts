@@ -16,7 +16,8 @@ export interface ValidationReport {
 export const REPORTS: ValidationReport[] = [
   { tool: "units", status: "published", validatedOn: "2026-09-17",
     summary: "Every unit the converter offers is derived by hand from its primary definition, and every conversion within a quantity is checked against those hand-derived factors." },
-  { tool: "decay", status: "planned" },
+  { tool: "decay", status: "published", validatedOn: "2026-09-17",
+    summary: "The decay law is checked as exact mathematics across half-lives spanning seventeen orders of magnitude, and the half-lives themselves are set against an independent evaluation that publishes uncertainties." },
   { tool: "gamma-shielding", status: "planned" },
   { tool: "beta", status: "planned" },
   { tool: "specific-activity", status: "planned" },

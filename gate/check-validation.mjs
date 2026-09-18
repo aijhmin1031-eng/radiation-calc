@@ -22,9 +22,13 @@ import { extname, join } from "node:path";
 import { UNITS } from "../src/engine/units.ts";
 import { UNIT_CASES, COMPOSED_CASES, BRIDGE_CASES, BASE_UNIT, QUANTITY_LABEL }
   from "../src/validation/units.cases.ts";
+import { WORKED_CASES as DECAY_WORKED, HALFLIFE_REFS, IDENTITY_CASES }
+  from "../src/validation/decay.cases.ts";
+import { createRequire } from "node:module";
+const NUCLIDES = createRequire(import.meta.url)("../src/data/nuclides.json");
 
 const DIST = "dist/calc";
-const CASE_FILE = "src/validation/units.cases.ts";
+const CASE_FILES = ["src/validation/units.cases.ts", "src/validation/decay.cases.ts"];
 /** ★★ **화면의 반올림은 한 가지가 아니다**(첫 판에서 이것 때문에 B-01 이 걸렸다).
  *  환산표는 `fmt(v, 6)` 로 **6자리**, 그 아래 「환산이 아닌 단계」의 으뜸 숫자는 `fmt(v, 4)` 로
  *  **4자리**다. 자를 하나로 두면 둘 중 하나가 틀린다 — 느슨하게 맞추면 표의 결함을 놓치고,
@@ -49,9 +53,29 @@ for (const [q, group] of Object.entries(UNITS)) {
 for (const c of UNIT_CASES)
   if (!UNITS[c.quantity] || !(c.unit in UNITS[c.quantity].u))
     fail.push(`① 보고서의 ${c.id}(${c.unit})이 도구에 없다 — 없는 것을 평가했다고 주장하게 된다`);
-console.log(`① 커버리지 — 도구 단위 ${units} · 손계산 ${UNIT_CASES.length} · 군 ${Object.keys(UNITS).length}`);
+console.log(`① 커버리지(단위환산) — 도구 단위 ${units} · 손계산 ${UNIT_CASES.length} · 군 ${Object.keys(UNITS).length}`);
+
+/* ★ 붕괴는 커버리지의 뜻이 다르다 — 단위는 유한하지만 핵종은 147종이고 DDEP 가 전부를
+   평가하지도 않았다. 그래서 「전수」가 아니라 **① 화면의 갈래를 빠짐없이 덮었는가**
+   ② 보고서가 **없는 핵종을 평가했다고 주장하지 않는가** 를 센다. */
+const DECAY_MODES = ["remaining", "when", "halflife"];
+for (const m of DECAY_MODES)
+  if (!DECAY_WORKED.some((c) => c.mode === m))
+    fail.push(`① 붕괴 화면의 갈래 「${m}」에 손계산 케이스가 없다`);
+for (const c of DECAY_WORKED)
+  if (!NUCLIDES[c.nuclide]) fail.push(`① 붕괴 케이스 ${c.id} 의 ${c.nuclide} 이 자료에 없다`);
+for (const r of HALFLIFE_REFS)
+  if (!NUCLIDES[r.nuclide]) fail.push(`① 반감기 기준 ${r.id} 의 ${r.nuclide} 이 자료에 없다`);
+{
+  const ids = [...DECAY_WORKED.map((c) => c.id), ...HALFLIFE_REFS.map((r) => r.id), ...IDENTITY_CASES.map((c) => c.id)];
+  if (new Set(ids).size !== ids.length) fail.push("① 붕괴 케이스 id 가 겹친다");
+}
+console.log(`① 커버리지(붕괴) — 갈래 ${DECAY_MODES.length}/3 덮음 · 손계산 ${DECAY_WORKED.length} · ` +
+            `반감기 기준 ${HALFLIFE_REFS.length}종(자료 ${Object.keys(NUCLIDES).length}종 중) · 항등식 ${IDENTITY_CASES.length}`);
 
 /* ══════════════ ② 독립성 — 기대값이 엔진에서 오면 순환논증이다 ══════════════ */
+for (const f of CASE_FILES) checkIndependence(f);
+function checkIndependence(CASE_FILE) {
 const src = readFileSync(CASE_FILE, "utf8");
 /* `import type` 은 컴파일에서 지워지므로 값을 들여오지 않는다. 그 외의 engine import 는 전부 결함. */
 for (const m of src.matchAll(/^\s*import\s+(type\s+)?([^;]*?)\s*from\s*["']([^"']+)["']/gm)) {
@@ -63,7 +87,8 @@ for (const m of src.matchAll(/^\s*import\s+(type\s+)?([^;]*?)\s*from\s*["']([^"'
 }
 if (/require\(["'][^"']*engine/.test(src))
   fail.push(`② ${CASE_FILE} 이 require 로 엔진을 들여온다`);
-console.log(`② 독립성 — ${CASE_FILE} 은 엔진에서 값을 들여오지 않는다 (import type 만 허용)`);
+}
+console.log(`② 독립성 — 케이스 정본 ${CASE_FILES.length}개가 엔진에서 값을 들여오지 않는다 (import type 만 허용)`);
 
 /* ══════════════ ③ 화면 실측 ══════════════ */
 const MIME = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript",
@@ -187,6 +212,107 @@ for (const c of BRIDGE_CASES) {
   shownCells += 1;
   cmp(parseShown(shown), c.expect, `${c.id} ${c.title} (화면)`, TOL_HEADLINE);
 }
+
+/* ═══ ④ 붕괴 화면 실측 — 도구를 실제로 눌러 그려진 답을 읽는다 ═══
+   ★ 붕괴 화면은 환산표와 달리 **계산 단추를 거친다.** 「눌렀다」가 아니라 「무엇이 그려졌는지」를
+     센다 — 단추가 막히거나 핵종이 안 골라지면 **직전 답이 그대로 남아** 조용히 통과할 수 있다.
+     그래서 고른 핵종·갈래가 화면에 실제로 섰는지 확인하고, 읽은 답의 수를 하한으로 건다.
+   ★ 으뜸 답은 `fmt(v)` 로 **4자리**다(환산표는 6자리). 자리마다 그 자리의 자를 쓴다. */
+const TOL_DECAY = 1e-3;                       // 으뜸 답은 4자리 — 반올림 오차 5×10⁻⁴ 위
+/** ★ 검산용 수치는 **3자리**로 그려진다(`fmt(v, 3)`) — 으뜸 답과 다른 자다.
+ *  첫 판에서 하나로 뒀다가 D-W-02 의 「3.9952 → 4」가 걸렸다. 화면의 반올림은 자리마다 다르다. */
+const TOL_DECAY_NOTE = 5e-3;                  // 3자리 반올림의 최대 상대오차 5×10⁻³ 위
+const MODE_LABEL = { remaining: "How much is left", when: "When does it reach", halflife: "Find the half-life" };
+const TIME_S = { s: 1, min: 60, h: 3600, d: 86400, y: 365.2425 * 86400 };
+
+/** 라벨로 칸을 찾는다 — 칸의 순서는 갈래마다 달라 번호로 잡으면 조용히 어긋난다. */
+const setByLabel = (label, v) => page.evaluate(([lab, val]) => {
+  const l = [...document.querySelectorAll("main label")].find(
+    (x) => x.querySelector(".label")?.textContent.trim() === lab);
+  if (!l) throw new Error(`「${lab}」 칸이 화면에 없다`);
+  const el = l.querySelector("input, select");
+  if (!el) throw new Error(`「${lab}」 에 입력 요소가 없다`);
+  const proto = el.tagName === "SELECT" ? window.HTMLSelectElement.prototype : window.HTMLInputElement.prototype;
+  Object.getOwnPropertyDescriptor(proto, "value").set.call(el, String(val));
+  el.dispatchEvent(new Event(el.tagName === "SELECT" ? "change" : "input", { bubbles: true }));
+}, [label, v]);
+
+const pickNuclide = async (key) => {
+  await page.click('main button[aria-haspopup="listbox"]', { timeout: 4000 });
+  await page.fill('main [role="listbox"] >> xpath=../..//input', key, { timeout: 4000 }).catch(async () => {
+    await page.fill("main input[placeholder^='Type to filter']", key, { timeout: 4000 });
+  });
+  await page.waitForTimeout(150);
+  await page.click(`main [role="option"]:has(.num:text-is("${key}"))`, { timeout: 4000 });
+  await page.waitForTimeout(150);
+};
+
+/** 으뜸 답 — 숫자와, 시간일 때는 단위까지. 낡은 답(stale)이면 읽지 않는다. */
+const readHeadline = () => page.evaluate(() => {
+  const box = [...document.querySelectorAll("main div.rounded-lg.border")]
+    .find((d) => d.querySelector("p.label") && d.querySelector("span.num"));
+  if (!box) return null;
+  const stale = box.className.includes("opacity-60");
+  const num = box.querySelector("span.num").textContent.trim();
+  const unit = box.querySelector("span.num + span")?.textContent.trim() ?? "";
+  const note = box.querySelector("p.mt-2")?.textContent.trim() ?? "";
+  return { stale, num, unit, note };
+});
+
+await page.goto(`http://127.0.0.1:${PORT}/calc/decay/`, { waitUntil: "networkidle" });
+await page.waitForTimeout(500);
+let decayRead = 0;
+for (const c of DECAY_WORKED) {
+  await page.locator('[role="radio"]', { hasText: new RegExp(`^${MODE_LABEL[c.mode]}$`) }).click({ timeout: 4000 });
+  await page.waitForTimeout(120);
+  await pickNuclide(c.nuclide);
+  await setByLabel(c.mode === "halflife" ? "First measurement" : "Starting activity", c.input.a0);
+  await setByLabel("Unit", c.input.unit);
+  if (c.mode === "when") await setByLabel("Target activity", c.input.target);
+  if (c.mode === "halflife") await setByLabel("Second measurement", c.input.a1);
+  if (c.mode !== "when") {
+    await setByLabel(c.mode === "halflife" ? "Time between measurements" : "Elapsed time", c.input.t);
+    await setByLabel("Time unit", c.input.tu);
+  }
+  await page.click("main button:has-text('Calculate')", { timeout: 4000 });
+  await page.waitForTimeout(200);
+
+  const h = await readHeadline();
+  if (!h) { fail.push(`④ ${c.id}: 으뜸 답이 화면에 없다`); continue; }
+  if (h.stale) { fail.push(`④ ${c.id}: 답이 낡은 상태다 — 계산 단추가 먹히지 않았다`); continue; }
+  decayRead += 1;
+  /* ★★ 시간을 답하는 갈래는 **수와 단위가 한 덩어리로** 그려진다(「27.46 y」) — 활성도 답처럼
+     단위가 옆 칸에 있지 않다. 첫 판에서 그것을 모르고 읽어 세 건이 NaN 이 났다.
+     화면이 초·분·시·일·해 중 무엇을 골랐는지까지 읽어야 초로 되돌릴 수 있다. */
+  let got;
+  if (c.expectUnit === "s") {
+    const m = h.num.match(/^(.+?)\s*(s|min|h|d|y)$/);
+    if (!m) { fail.push(`④ ${c.id}: 시간 답에서 단위를 못 읽었다 (「${h.num}」)`); continue; }
+    got = parseShown(m[1]) * TIME_S[m[2]];
+  } else {
+    got = parseShown(h.num);
+  }
+  cmp(got, c.expect, `${c.id} ${c.nuclide} ${c.mode} (화면)`, TOL_DECAY);
+
+  /* ★ 검산용 수치도 잰다 — 으뜸 답만 보면 이 자리가 시야 밖이다.
+     갈래마다 **다른 것**을 그린다: 「반감기 몇 번」이거나 「자료값과의 차이」다. */
+  if (c.secondary.kind === "halves") {
+    const m = h.note.match(/([\d.]+)\s*half-li/);
+    if (!m) fail.push(`④ ${c.id}: 「반감기 몇 번」이 화면에 없다 — 검산할 자리가 사라졌다`);
+    else { decayRead += 1; cmp(Number(m[1]), c.secondary.expect, `${c.id} 반감기 수 (화면)`, TOL_DECAY_NOTE); }
+  } else {
+    const row = await page.evaluate(() => {
+      const d = [...document.querySelectorAll("main dl > div")]
+        .find((x) => x.querySelector("dt")?.textContent.trim().startsWith("Difference"));
+      return d ? d.querySelector("dd").textContent.trim() : null;
+    });
+    if (!row) fail.push(`④ ${c.id}: 「Difference」 줄이 화면에 없다 — 자료값과 견줄 자리가 사라졌다`);
+    else { decayRead += 1; cmp(parseShown(row.replace("%", "")), c.secondary.expect, `${c.id} 자료값과의 차이 (화면)`, TOL_DECAY_NOTE); }
+  }
+}
+if (decayRead < DECAY_WORKED.length * 2)
+  fail.push(`④ 붕괴 화면에서 읽은 값이 ${decayRead} 개뿐이다 — ${DECAY_WORKED.length * 2} 개 이상이어야 한다`);
+console.log(`④ 붕괴 화면 실측 — 갈래 ${new Set(DECAY_WORKED.map((c) => c.mode)).size}가지 · 케이스 ${DECAY_WORKED.length} · 읽은 값 ${decayRead} 개 · 허용 ${TOL_DECAY}`);
 
 /* ★★ 커버리지 하한 — **조작이 가로채여도 조용히 통과하는 일**을 막는다.
    이웃 레포에서 실제로 났다: 배너가 단추를 덮어 클릭이 먹히지 않았는데 실패를 삼켜
