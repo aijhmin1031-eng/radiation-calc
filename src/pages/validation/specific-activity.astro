@@ -329,13 +329,18 @@ activityFromMass  = grams * saBqPerG</code></pre>
     <div class="not-prose my-3 pin-first table-fit">
       <table>
         <thead>
-          <tr><th>Nuclide</th>
-            <th class="whitespace-nowrap text-right">A</th>
-            <th class="whitespace-nowrap text-right">AME2020 [u]</th>
-            <th class="whitespace-nowrap text-right">Excitation [keV]</th>
-            <th class="whitespace-nowrap text-right">This site [u]</th>
-            <th class="whitespace-nowrap text-right">(M−A)/A</th>
-            <th class="whitespace-nowrap text-right">Specific activity [Bq/g]</th></tr>
+          {/* ★ 머리글에는 nowrap 을 걸지 않는다 — 값보다 머리글이 넓어 표를 밀어낸다
+              (실측: 「Excitation [keV]」가 150px 인데 값은 「661.659」 하나다. 일곱 칸 합이
+              835px 이라 768px 컨테이너를 67px 넘겼고 `check-render` 가 잡았다).
+              nowrap 이 지키려던 것은 `3.21202×10¹²` 같은 **공백 없는 값**이고, 그것은
+              데이터 칸에만 있다. 머리글은 공백이 있으니 접히는 것이 맞다. */}
+          <tr><th class="text-left">Nuclide</th>
+            <th class="text-right">A</th>
+            <th class="text-right">AME2020<br />[u]</th>
+            <th class="text-right">Excitation<br />[keV]</th>
+            <th class="text-right">This site<br />[u]</th>
+            <th class="text-right">(M−A)/A</th>
+            <th class="text-right">Specific activity<br />[Bq/g]</th></tr>
         </thead>
         <tbody>
           {masses.map((m) => (
