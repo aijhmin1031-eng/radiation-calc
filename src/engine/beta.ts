@@ -18,11 +18,24 @@ export function infiniteMediumDoseRate(eMeanKeV: number, concBqPerKg: number): n
 export const semiInfiniteSurfaceDoseRate = (eMeanKeV: number, concBqPerKg: number) =>
   infiniteMediumDoseRate(eMeanKeV, concBqPerKg) / 2;
 
+/** Katz–Penfold 적합의 **아래 끝**. 그 아래는 적합된 자료가 없다. */
+export const BETA_RANGE_MIN_MEV = 0.01;
+/** 두 가지가 갈리는 곳 [MeV].
+ *  ★★ **2.5 이지 3 이 아니다**(2026-09-19 유효성 평가에서 잡았다). 코드가 `<= 3` 이라
+ *    2.5~3 MeV 를 저에너지 가지로 풀고 있었다. 자료에서 걸리는 것은 **Pr-144(2.996 MeV)**
+ *    하나이고 어긋남은 0.69% — 적합 자체의 산포 안이라 답이 크게 틀리지는 않았지만,
+ *    **공표된 식과 다른 식을 쓰면서 그 식의 이름을 다는 것**이라 고친다. */
+export const BETA_RANGE_BRANCH_MEV = 2.5;
+
 /** 베타 비정 — Katz–Penfold 경험식 [g/cm²].
- *  ★ 경험식이다(±10% 수준). 0.01~3 MeV 밖에서는 다른 가지를 쓴다. */
+ *  ★★ **경험식이다 — 정의도 평가된 핵자료도 아니다.** 알루미늄 흡수곡선에서 얻은
+ *    **투사비정**에 맞춘 것이고, 그래서 ESTAR 의 CSDA(경로길이)보다 늘 짧다(우회인자).
+ *    정확도 주장은 `src/validation/beta.cases.ts` 가 **실측한 값**으로 든다.
+ *  ★ 적합 범위 밖에서는 답하지 않는다 — 그전에는 1 keV 를 넣어도 수를 냈다. */
 export function betaRange(eMaxMeV: number): number {
-  if (!(eMaxMeV > 0)) return NaN;
-  if (eMaxMeV <= 3) return 0.412 * Math.pow(eMaxMeV, 1.265 - 0.0954 * Math.log(eMaxMeV));
+  if (!(eMaxMeV >= BETA_RANGE_MIN_MEV) || !Number.isFinite(eMaxMeV)) return NaN;
+  if (eMaxMeV <= BETA_RANGE_BRANCH_MEV)
+    return 0.412 * Math.pow(eMaxMeV, 1.265 - 0.0954 * Math.log(eMaxMeV));
   return 0.530 * eMaxMeV - 0.106;
 }
 
@@ -30,14 +43,26 @@ export function betaRange(eMaxMeV: number): number {
 export const betaRangeCm = (eMaxMeV: number, densityGcm3: number) =>
   densityGcm3 > 0 ? betaRange(eMaxMeV) / densityGcm3 : NaN;
 
-/** 베타 질량흡수계수 경험식 [cm²/g] — 얇은 흡수체의 투과율 어림에 쓴다. */
+/** 베타 질량흡수계수 경험식 [cm²/g] — 얇은 흡수체의 투과율 어림에 쓴다.
+ *  ★★ **이 식의 출처를 찾지 못했다**(2026-09-19). 사이트 어디에도 인용이 없었고,
+ *    유효성 평가에서도 「공표된 어느 식과 같은가」를 세우지 못했다. 그래서 보고서가
+ *    **검증하지 못한 것**으로 분명히 적는다 — 있지도 않은 근거를 주장하는 것보다 낫다.
+ *  ★ 비정과 **같은 범위**에서만 답한다. 0.001 MeV 를 넣으면 44 715 cm²/g 이 나왔는데,
+ *    그것이 투과율 6×10⁻¹⁹⁵ 라는 **수처럼 생긴 답**으로 이어지고 있었다. */
 export const betaMassAbsorption = (eMaxMeV: number) =>
-  eMaxMeV > 0 ? 17 / Math.pow(eMaxMeV, 1.14) : NaN;
+  eMaxMeV >= BETA_RANGE_MIN_MEV && Number.isFinite(eMaxMeV) ? 17 / Math.pow(eMaxMeV, 1.14) : NaN;
 
-/** 흡수체 투과율 — **비정을 넘으면 0 이다**(지수식은 0 으로 안 가므로 잘라 준다). */
+/** 흡수체 투과율 — **비정을 넘으면 0 이다**(지수식은 0 으로 안 가므로 잘라 준다).
+ *  ★★ **비정이 정의되지 않으면 투과율도 정의되지 않는다**(2026-09-19에 잡았다).
+ *    그전에는 `thicknessGcm2 >= NaN` 이 false 라 **지수식으로 빠져 수를 냈다** —
+ *    적합 범위 밖에서 6.4×10⁻¹⁹⁵ 같은 값이 화면에 설 수 있었다.
+ *    **NaN 과의 비교가 false 인 것을 「통과」로 읽으면 가드가 뚫린다.** */
 export function betaTransmission(eMaxMeV: number, thicknessGcm2: number): number {
-  if (thicknessGcm2 <= 0) return 1;
-  if (thicknessGcm2 >= betaRange(eMaxMeV)) return 0;
+  const R = betaRange(eMaxMeV);
+  if (!Number.isFinite(R)) return NaN;
+  if (!(thicknessGcm2 >= 0) || !Number.isFinite(thicknessGcm2)) return NaN;
+  if (thicknessGcm2 === 0) return 1;
+  if (thicknessGcm2 >= R) return 0;
   return Math.exp(-betaMassAbsorption(eMaxMeV) * thicknessGcm2);
 }
 
