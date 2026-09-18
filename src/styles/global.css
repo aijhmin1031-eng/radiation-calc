@@ -78,6 +78,19 @@ a { color: inherit; }
 .field:focus { box-shadow: 0 0 0 3px rgb(var(--c-accent) / 0.28); }
 select.field { @apply pr-8; }
 .label { @apply block text-[12px] font-medium uppercase tracking-wide text-ink-faint mb-1; }
+
+/* ★★ **칸 제목과 칸 안의 소제목은 다른 층인데 같은 서식이었다**(2026-09-18 소유주가 화면에서
+   잡았다 — 「1단열 제목이 calculators … 제목처럼 보이게 서식을 입혀줘 … 오른쪽은 제목이 없네」).
+   실측하니 왼쪽 칸 제목 `Calculators` 와 오른쪽 칸 **속** 소제목 `What this assumes` 가
+   **같은 `.label`** 이었다 — 층이 하나도 안 갈린다. 게다가 오른쪽 칸에는 보이는 제목이
+   아예 없었고(`aria-label` 만 있어 화면에 안 나온다), 그래서 세 칸의 역할이 글로 서지 않았다.
+   ★ **앰버로 강조할 수 없다** — 규약상 활성·포커스·기준선 전용이고, 왼쪽 목록의 활성 칸이
+     이미 앰버다. 제목까지 앰버면 「지금 여기」 표시가 뜻을 잃는다.
+     남은 축으로 낸다 — **명도(faint→ink) · 무게(medium→semibold) · 괘선(아래 실선)**.
+   ★ 정본은 이 한 줄이고 두 레일이 함께 읽는다. 쪽마다 적지 않는다. */
+.col-head {
+  @apply mb-2 block border-b border-line-strong pb-1.5 text-[12px] font-semibold uppercase tracking-wide text-ink;
+}
 .card { @apply rounded-lg border border-line bg-surface; }
 .btn {
   @apply inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-surface;

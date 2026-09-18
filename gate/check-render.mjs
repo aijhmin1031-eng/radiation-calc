@@ -134,6 +134,35 @@ for (const vp of [{ w: 1280, h: 900, tag: "데스크톱" }, { w: 390, h: 844, ta
           .map((t) => t.parentElement)
           .filter((sc) => sc && sc.scrollWidth - sc.clientWidth > 2 && !sc.classList.contains("pin-first"))
           .length,
+        /* ★★ **세 칸의 역할이 글로 서 있는가**(2026-09-18 소유주가 화면에서 잡았다 —
+           「1단열 제목이 calculators … 제목처럼 보이게 … 오른쪽은 제목이 없네」).
+           실측 원인이 둘이었다: ① 칸 제목과 칸 **안**의 소제목이 같은 `.label` 이라 층이
+           안 갈렸다 ② 오른쪽 칸에는 **보이는 제목이 아예 없었다**(`aria-label` 만 있었다).
+           ★ 세 가지를 센다 —
+             ⓐ 붙박이 레일마다 보이는 칸 제목(`.col-head`)이 있는가
+                (공유 줄 같은 `aside` 는 붙박이가 아니라 걸리지 않는다)
+             ⓑ 칸 제목이 소제목과 **실제로 달라 보이는가**(명도나 무게가 다른가)
+             ⓒ 보이는 이름과 **보조기기가 읽는 이름**이 같은가(다르면 둘이 따로 낡는다) */
+        rails: (() => {
+          const out = { noHead: [], sameAsLabel: [], nameMismatch: [] };
+          const rails = [...document.querySelectorAll("main nav, main aside")]
+            .filter((r) => getComputedStyle(r).position === "sticky");
+          for (const r of rails) {
+            const h = r.querySelector(".col-head");
+            if (!h) { out.noHead.push(r.getAttribute("aria-label") || r.tagName.toLowerCase()); continue; }
+            const aria = r.getAttribute("aria-label");
+            if (aria && aria.trim() !== h.textContent.trim())
+              out.nameMismatch.push(`${aria} ≠ ${h.textContent.trim()}`);
+          }
+          const head = document.querySelector("main .col-head");
+          const label = document.querySelector("main .label");
+          if (head && label) {
+            const a = getComputedStyle(head), b = getComputedStyle(label);
+            if (a.color === b.color && a.fontWeight === b.fontWeight)
+              out.sameAsLabel.push(`${a.color} / ${a.fontWeight}`);
+          }
+          return out;
+        })(),
         /* ★★ **고정 칸이 줄의 표식을 먹지 않는가**(2026-09-17 실측으로 잡았다).
            고정 규칙의 특이도가 유틸리티 배경을 이겨, `/beta/` 에서 **지금 고른 흡수체 줄의
            첫 칸이 다른 줄과 완전히 같은 색**이었다 — 어느 줄을 골랐는지 화면에서 사라졌다.
@@ -164,10 +193,16 @@ for (const vp of [{ w: 1280, h: 900, tag: "데스크톱" }, { w: 390, h: 844, ta
       fail.push(`${vp.tag} ${p}: 두 줄로 쪼개진 숫자 ${m.wrappedNums.length}칸 — ${[...new Set(m.wrappedNums)].slice(0, 3).join(" · ")}`);
     if (m.unpinned > 0)
       fail.push(`${vp.tag} ${p}: 가로로 스크롤하는데 첫 칸이 안 고정된 표 ${m.unpinned}개`);
+    if (m.rails.noHead.length > 0)
+      fail.push(`${vp.tag} ${p}: 제목 없는 붙박이 레일 ${m.rails.noHead.length} — ${m.rails.noHead.join(" · ")}`);
+    if (m.rails.sameAsLabel.length > 0)
+      fail.push(`${vp.tag} ${p}: 칸 제목이 소제목과 같아 보인다 (${m.rails.sameAsLabel[0]})`);
+    if (m.rails.nameMismatch.length > 0)
+      fail.push(`${vp.tag} ${p}: 보이는 이름과 읽어 주는 이름이 다르다 — ${m.rails.nameMismatch.join(" · ")}`);
     if (m.pinMarkerLost.length > 0)
       fail.push(`${vp.tag} ${p}: 고정 칸이 줄 표식을 먹었다 ${m.pinMarkerLost.length}줄 — ${m.pinMarkerLost.slice(0, 2).join(" · ")}`);
     if (errs.length) fail.push(`${vp.tag} ${p}: JS 오류 — ${errs[0].slice(0, 90)}`);
-    note(`${p.padEnd(22)} 넘침 ${m.overflow} · 스크롤넘침 ${m.scrollers} · 잘림 ${m.clipped.length} · 안보임 ${m.invisible.length} · 한국어 ${m.ko} · 쪼개진수 ${m.wrappedNums.length} · 안고정표 ${m.unpinned} · 표식먹힘 ${m.pinMarkerLost.length} · 오류 ${errs.length}`);
+    note(`${p.padEnd(22)} 넘침 ${m.overflow} · 스크롤넘침 ${m.scrollers} · 잘림 ${m.clipped.length} · 안보임 ${m.invisible.length} · 한국어 ${m.ko} · 쪼개진수 ${m.wrappedNums.length} · 안고정표 ${m.unpinned} · 표식먹힘 ${m.pinMarkerLost.length} · 레일제목 ${m.rails.noHead.length + m.rails.sameAsLabel.length + m.rails.nameMismatch.length} · 오류 ${errs.length}`);
     await pg.close();
   }
   await ctx.close();
