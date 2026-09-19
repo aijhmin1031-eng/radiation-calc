@@ -635,6 +635,10 @@
     "slug": "validation",
     "title": "Validation — how the results on this site are checked · RadCalc"
   },
+  "/validation/alara/": {
+    "slug": "validation-alara",
+    "title": "ALARA validation — a tool with no data to check against · RadCalc"
+  },
   "/validation/beta/": {
     "slug": "validation-beta",
     "title": "Beta calculator validation — what an empirical fit can and cannot be checked against · RadCalc"

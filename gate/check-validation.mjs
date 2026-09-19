@@ -35,6 +35,9 @@ import { WORKED_CASES as BETA_WORKED, FIT_CASES, UNVERIFIED, ESTAR,
 import { PUBLISHED_CASES, DPRIME_TABLE, UNVERIFIED as MDA_UNVERIFIED,
          WORKED_CASES as MDA_WORKED, REFUSAL_CASES as MDA_REFUSAL }
   from "../src/validation/mda.cases.ts";
+import { EXTENT_CASE, UNVERIFIED as ALARA_UNVERIFIED, WORKED_CASES as ALARA_WORKED,
+         REFUSAL_CASES as ALARA_REFUSAL, IDENTITY_CASES as ALARA_IDENT }
+  from "../src/validation/alara.cases.ts";
 import { REPORTS } from "../src/validation/registry.ts";
 import { createRequire } from "node:module";
 const NUCLIDES = createRequire(import.meta.url)("../src/data/nuclides.json");
@@ -42,7 +45,8 @@ const NUCLIDES = createRequire(import.meta.url)("../src/data/nuclides.json");
 const DIST = "dist/calc";
 const CASE_FILES = ["src/validation/units.cases.ts", "src/validation/decay.cases.ts",
                     "src/validation/gamma.cases.ts", "src/validation/specific-activity.cases.ts",
-                    "src/validation/beta.cases.ts", "src/validation/mda.cases.ts"];
+                    "src/validation/beta.cases.ts", "src/validation/mda.cases.ts",
+                    "src/validation/alara.cases.ts"];
 /** ★★ **화면의 반올림은 한 가지가 아니다**(첫 판에서 이것 때문에 B-01 이 걸렸다).
  *  환산표는 `fmt(v, 6)` 로 **6자리**, 그 아래 「환산이 아닌 단계」의 으뜸 숫자는 `fmt(v, 4)` 로
  *  **4자리**다. 자를 하나로 두면 둘 중 하나가 틀린다 — 느슨하게 맞추면 표의 결함을 놓치고,
@@ -222,6 +226,31 @@ console.log(`①-4 커버리지(베타) — 경험식 ${FIT_CASES.length} · 유
 console.log(`①-4 커버리지(MDA) — 공표 예제 ${PUBLISHED_CASES.length} · d′ 표 ${DPRIME_TABLE.length} · ` +
             `손계산 ${MDA_WORKED.length} · 거부 ${MDA_REFUSAL.length} · ★세우지 못한 것 ${MDA_UNVERIFIED.length}`);
 
+/* ★ ALARA 는 커버리지의 뜻이 또 다르다 — **대조할 바깥 자료가 없다.**
+   ★★ 그러면 남는 것이 ① 유도 ② **가정이 깨지는 자리를 수로 말하기** ③ 거부 셋이고,
+     가운데가 사라지면 이 보고서는 「점선원을 가정한다」는 쓸모없는 한 줄로 되돌아간다. */
+{
+  if (!EXTENT_CASE?.ratios?.length || !EXTENT_CASE?.targets?.length)
+    fail.push("① ALARA: 점선원 가정의 거리 기준이 사라졌다");
+  if (ALARA_UNVERIFIED.length < 5)
+    fail.push(`① ALARA: 「세우지 못한 것」이 ${ALARA_UNVERIFIED.length}건뿐이다 — 5건 이상이어야 한다`);
+  /* ★★★ **거부가 이 도구의 본체다** — 자료가 없으니 틀릴 수 있는 것이 거기뿐이다. */
+  if (ALARA_REFUSAL.length < 9)
+    fail.push(`① ALARA: 거부 케이스가 ${ALARA_REFUSAL.length}건뿐이다 — 9건 이상이어야 한다`);
+  const page6 = "src/pages/validation/alara.astro";
+  const src6 = readFileSync(page6, "utf8");
+  for (const must of ["nothing published to compare it against", "safe direction",
+                      "What this report does not establish", "Half the defect was fixed"])
+    if (!src6.includes(must))
+      fail.push(`① ${page6} 에서 「${must}」가 사라졌다`);
+  /* ★ 엔진이 「정확히 0 일 때만 무제한」을 지키는가 — 2026-09-14 에 절반만 고쳤던 자리다. */
+  const eng = readFileSync("src/engine/alara.ts", "utf8");
+  if (!/nonNeg\(doseRate\)/.test(eng))
+    fail.push("① ALARA: stayTime 이 음의 선량률을 다시 「무제한」으로 떨어뜨린다");
+}
+console.log(`①-4 커버리지(ALARA) — 항등식 ${ALARA_IDENT.length} · 손계산 ${ALARA_WORKED.length} · ` +
+            `거부 ${ALARA_REFUSAL.length} · 거리기준 ${EXTENT_CASE.targets.length} · ★세우지 못한 것 ${ALARA_UNVERIFIED.length}`);
+
 /* ══════════════ ①-5 보고서가 스스로 내린 판정 ══════════════
    ★★★ **2026-09-19 에 이 검사가 없어서 한 라운드를 놓쳤다.** 감마 보고서가 라이브에서
      「One or more checks fail」을 띄운 채 배포돼 있었다 — 항등식 `G-ID-10` 을 케이스 정본에
@@ -257,6 +286,7 @@ console.log(`①-4 커버리지(MDA) — 공표 예제 ${PUBLISHED_CASES.length}
     ["specific-activity", "src/validation/specific-activity.cases.ts"],
     ["beta", "src/validation/beta.cases.ts"],
     ["mda", "src/validation/mda.cases.ts"],
+    ["alara", "src/validation/alara.cases.ts"],
   ];
   let ids = 0;
   for (const [tool, caseFile] of RENDERED) {
