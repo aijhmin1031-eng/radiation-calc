@@ -89,7 +89,7 @@ export interface NuclidePage {
   saCiPerG: number;
 }
 
-const fmtTime = (s: number): string => {
+export const fmtTime = (s: number): string => {
   if (!Number.isFinite(s) || s <= 0) return "—";
   const y = s / 31557600;
   if (y >= 1e6) return `${(y / 1e6).toPrecision(3)} million years`;
@@ -209,6 +209,49 @@ export function betaDominantBranch(key: string): { maxKeV: number | null; iPct: 
   if (!b?.length) return null;
   const top = b.reduce((a, x) => (x.i > a.i ? x : a));
   return { maxKeV: top.max, iPct: top.i };
+}
+
+/** δ=20 keV 에서 **잘려 나간 선** — Γ 주의문을 그 핵종의 숫자로 쓰기 위한 값이다.
+ *  ★ 「컷오프를 낮추면 답이 크게 바뀔 수 있다」를 147번 되풀이하는 대신,
+ *    **이 핵종에서 실제로 몇 개가 얼마만큼 잘렸는지**를 말한다. 잘린 것이 없는 쪽에서는
+ *    그 문장 자체가 사라진다 — 없는 위험을 경고하지 않는다. */
+export function belowCutoff(key: string): { count: number; iPct: number; topKeV: number } | null {
+  const cut = NUCLIDES[key].lines.filter(([e]) => e < DELTA_DEFAULT_KEV);
+  if (!cut.length) return null;
+  return {
+    count: cut.length,
+    iPct: cut.reduce((a, [, i]) => a + i, 0),
+    topKeV: Math.max(...cut.map(([e]) => e)),
+  };
+}
+
+/** ★★ 낱장 어수 하한(`check-output` ⑥ · 250어)을 **되풀이 문장으로 채우고 있었다**
+ *  (2026-09-20 에 드러났다 — 되풀이를 걷어내자 18장이 하한 아래로 떨어졌다).
+ *  **되풀이로 채운 분량은 분량이 아니다.** 하한을 내리는 대신, 그 쪽들이 **쓰지 않고 있던
+ *  자기 자료**로 채운다. 아래 값은 전부 산술이고 핵종마다 자릿수가 다르다.
+ *  ★ 자릿수가 모든 핵종에서 **같은 값**은 쓰지 않는다 — 평균수명/반감기 = 1.44 처럼
+ *    147장에서 똑같은 비를 찍는 것이 정확히 「틀에 값만 갈아 끼우는」 짓이다
+ *    (`nuclide-prose.ts` 가 82/6 에서 이미 세운 규칙). */
+export const tenHalfLives = (key: string) => fmtTime(10 * NUCLIDES[key].t_half_s);
+export const meanLife = (key: string) => fmtTime(NUCLIDES[key].t_half_s / Math.LN2);
+
+/** 알파 스펙트럼의 폭 — 기록된 선의 범위와 으뜸선의 몫. */
+export function alphaSpread(key: string) {
+  const a = NUCLIDES[key].alpha;
+  if (!a?.length) return null;
+  const e = a.map(([x]) => x), tot = a.reduce((s, [, i]) => s + i, 0);
+  const top = a.reduce((x, y) => (y[1] > x[1] ? y : x));
+  return { count: a.length, loMeV: Math.min(...e) / 1000, hiMeV: Math.max(...e) / 1000,
+           topMeV: top[0] / 1000, topPct: top[1], totPct: tot };
+}
+
+/** 기록된 광자선 전체의 범위와 세기 합 — 컷오프 아래만 있는 핵종의 낱장이 쓴다. */
+export function lineSpan(key: string) {
+  const l = NUCLIDES[key].lines;
+  if (!l.length) return null;
+  const e = l.map(([x]) => x);
+  return { count: l.length, loKeV: Math.min(...e), hiKeV: Math.max(...e),
+           totPct: l.reduce((s, [, i]) => s + i, 0) };
 }
 
 /** 목록 — 원소기호, 그 다음 질량수 순. 「Co-60 다음에 Co-60m」이 자연스럽다. */

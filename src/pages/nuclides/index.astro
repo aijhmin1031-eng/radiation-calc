@@ -35,7 +35,7 @@ const sig = (x: number, d = 3) => (Number.isFinite(x) && x > 0 ? x.toPrecision(d
       interaction coefficients from NIST, and every derived quantity is recomputed from those two.
     </p>
 
-    <h3>Emission probability is not dose contribution</h3>
+    <h3 id="lines">Emission probability is not dose contribution</h3>
     <p>
       A line's emission probability says how often it appears per hundred decays. Its share of the dose
       rate also carries its energy and the absorption coefficient of air at that energy, so the two
@@ -44,7 +44,7 @@ const sig = (x: number, d = 3) => (Number.isFinite(x) && x > 0 ? x.toPrecision(d
       For most nuclides the answer is one or two out of a list of twenty or more.
     </p>
 
-    <h3>Half-value layers are solved for the spectrum, not for one energy</h3>
+    <h3 id="hvl">Half-value layers are solved for the spectrum, not for one energy</h3>
     <p>
       The usual shortcut is to pick a representative energy, look the attenuation coefficient up, and
       divide. That is exact only for a nuclide with a single line. When there are several, each one is
@@ -61,7 +61,7 @@ const sig = (x: number, d = 3) => (Number.isFinite(x) && x > 0 ? x.toPrecision(d
       answer has to be a design figure.
     </p>
 
-    <h3>When half-value layers stop being additive</h3>
+    <h3 id="tvl">When half-value layers stop being additive</h3>
     <p>
       For a single energy the tenth-value layer is always 3.32 times the half-value layer, and stacking
       three half-value layers leaves an eighth. Neither holds for a broad spectrum. The first layer
@@ -71,7 +71,7 @@ const sig = (x: number, d = 3) => (Number.isFinite(x) && x > 0 ? x.toPrecision(d
       the rule of thumb has stopped working.
     </p>
 
-    <h3>Nuclides with no photon above the cutoff</h3>
+    <h3 id="no-photon">Nuclides with no photon above the cutoff</h3>
     <p>
       {noPhoton.length} of the {rows.length} nuclides here have no photon line above the conventional
       20 keV cutoff, so their air kerma rate constant is zero and no external dose rate can be quoted.
@@ -82,13 +82,25 @@ const sig = (x: number, d = 3) => (Number.isFinite(x) && x > 0 ? x.toPrecision(d
       common absorbers, bremsstrahlung yield against atomic number, and specific activity.
     </p>
 
-    <h3>Beta shielding is a low-atomic-number job</h3>
+    <h3 id="beta">Beta shielding is a low-atomic-number job</h3>
     <p>
       Stopping a beta is a matter of enough material, and the range follows from the endpoint energy.
       What changes with the choice of material is how much of the beta energy leaves again as
       bremsstrahlung, which rises with atomic number. Shielding a strong beta emitter with lead
       converts a particle you could have stopped into a photon you now have to stop. Each beta sheet
       prints the yield in acrylic and in lead so the comparison is in front of the reader.
+    </p>
+
+    <h3 id="limits">What these sheets do not tell you</h3>
+    <p>
+      Every figure here is an external quantity for a bare point source in air. Nothing on these sheets
+      is an internal dose: committed effective dose per becquerel taken in depends on chemical form and
+      biokinetics, and this site does not compute it. A real source has self-absorption, a capsule and a
+      geometry, and each of those lowers what a meter would actually read. Shielding thicknesses are
+      narrow beam, so scatter is not added back and a design needs more than they say. Where a nuclide
+      emits betas, the range is an empirical fit and skin dose from a contamination is a different
+      calculation again — it needs source geometry and a point kernel, which this site does not do.
+      Each sheet repeats only the part of this that its own numbers make specific.
     </p>
   </section>
 

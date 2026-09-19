@@ -113,16 +113,31 @@ note(`${sample.length}쌍 · 중앙 ${(median * 100).toFixed(1)}% · 최대 ${(w
    ★ 아래 상한은 **래칫**이다 — 지금 값에 맞춰 두어 **나빠지는 것만** 막는다.
      되풀이를 허브로 옮긴 뒤 이 수들을 함께 내린다. **고치기 전 값을 박아 두는 것**이 요점이다. */
 console.log("\n④-2 심사자가 읽는 것 — 산문 전체 · 숫자 제외 · 제목 틀");
-const BOILER_MEDIAN_MAX = 0.68;   // 되풀이 몫 중앙 (2026-09-20 실측 0.664)
-const BOILER_WORST_MAX  = 0.82;   // 한 장의 되풀이 몫 (실측 0.806, fe-59)
-const WORDS_MEDIAN_MAX  = 0.33;   // 숫자 뺀 낱말 겹침 중앙 (실측 0.319)
-const NEAR_DUP_MAX      = 8;      // 낱말 겹침 95% 이상인 쌍의 수 (실측 6)
-const HEAD_MEDIAN_MAX   = 0.78;   // 제목 틀 겹침 중앙 (실측 0.750)
+const BOILER_MEDIAN_MAX = 0.51;   // 되풀이 몫 중앙 (2026-09-20 ② 뒤 실측 0.487)
+const BOILER_WORST_MAX  = 0.67;   // 한 장의 되풀이 몫 (실측 0.640, zr-95)
+const WORDS_MEDIAN_MAX  = 0.27;   // 숫자 뺀 낱말 겹침 중앙 (실측 0.251)
+const NEAR_DUP_MAX      = 3;   // 낱말 겹침 95% 이상인 쌍의 수 (실측 2)
+const HEAD_MEDIAN_MAX   = 0.78;   // 제목 틀 겹침 중앙 (실측 0.750 · 이 라운드에서 안 건드렸다)
 
 /** 본문 산문만 — 표의 숫자와 곁칸은 글이 아니다. `<p>` 만 든다. */
+/** ★★ `<p>` 만 세던 첫 판에 **같은 종류의 사각**이 있었다(2026-09-20, ④ 를 흉본 자리에서
+ *  똑같이 밟았다). 147장의 「What this page does not tell you」는 `<li>` 목록이라
+ *  **한 번도 세지 않았다** — 일반 경고 세 줄이 글자까지 같게 서 있는 동안 게이트는 초록이었다.
+ *  ★ 그렇다고 `<li>` 를 통째로 넣으면 안 된다 — 거기엔 **링크 라벨**도 있다
+ *    (「Decay and half-life」·「Mass and activity」). 그것은 UI 이고 147장에서 같은 것이
+ *    **정상**이다. 넣으면 게이트가 영영 빨갛고, 늘 빨간 게이트는 없는 게이트다.
+ *  ★ 실측으로 갈랐다 — 낱장의 `<li>` 어수 분포는 **3·5 어(라벨 572건)와 25~38 어(산문 502건)**
+ *    둘뿐이고 **그 사이가 완전히 비어 있다.** 12 어는 그 20어짜리 빈 골짜기 한가운데다
+ *    (경계에 걸리는 항목이 0건이므로 글꼴·문구가 조금 바뀌어도 흔들리지 않는다). */
+const LI_PROSE_MIN_WORDS = 12;
 const proseAll = (main) => {
-  const x = main.replace(/<aside[\s\S]*?<\/aside>/gi, " ").replace(/<table[\s\S]*?<\/table>/gi, " ");
-  return [...x.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)].map((m) => m[1].replace(/<[^>]+>/g, " ")).join(" ");
+  const x = main.replace(/<aside[\s\S]*?<\/aside>/gi, " ").replace(/<table[\s\S]*?<\/table>/gi, " ")
+                .replace(/<nav[\s\S]*?<\/nav>/gi, " ");
+  const txt = (h) => h.replace(/<[^>]+>/g, " ").replace(/&[a-z#0-9]+;/gi, " ");
+  const ps = [...x.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)].map((m) => txt(m[1]));
+  const lis = [...x.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)].map((m) => txt(m[1]))
+    .filter((t) => t.trim().split(/\s+/).filter(Boolean).length >= LI_PROSE_MIN_WORDS);
+  return [...ps, ...lis].join(" ");
 };
 /** ★ 숫자를 **버린다** — 남기면 핵종마다 다른 수가 겹침을 씻어 내려 검사가 헛돈다. */
 const wordList = (s) => s.toLowerCase().replace(/[^a-z ]/g, " ").split(/\s+/).filter(Boolean);

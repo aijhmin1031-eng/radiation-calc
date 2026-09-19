@@ -1,8 +1,9 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { u, DATA_SOURCES } from "../../lib/site";
-import { ALL_KEYS, NUCLIDES, nuclidePage, slugOf, longName, decayWord, halfLifeText, elementName } from "../../lib/nuclides";
-import { paragraphs } from "../../lib/nuclide-prose";
+import { ALL_KEYS, NUCLIDES, nuclidePage, slugOf, longName, decayWord, halfLifeText, elementName,
+         belowCutoff, alphaSpread } from "../../lib/nuclides";
+import { paragraphs, decayCaption } from "../../lib/nuclide-prose";
 import { nuclideSeo } from "../../lib/nuclide-seo";
 
 export function getStaticPaths() {
@@ -19,8 +20,27 @@ const seo = nuclideSeo(p);
 
 const sig = (x: number, d = 3) => (Number.isFinite(x) ? x.toPrecision(d) : "—");
 const mm = (cm: number) => (Number.isFinite(cm) ? (cm * 10).toPrecision(3) : "—");
+/** ★ 산문용 — 위 `mm()` 은 **표 칸**에 쓰는 것이라 단위를 안 붙인다(열 머리글이 든다).
+ *  그것을 문장에 그대로 쓰면 「10.3 of lead halves this spectrum」이 나간다(2026-09-20 실측으로
+ *  잡았다 — 빌드도 게이트도 통과했고 **화면을 읽어야만** 보였다). */
+const mmText = (cm: number) => (Number.isFinite(cm) ? `${(cm * 10).toPrecision(3)} mm` : "—");
 const prose = paragraphs(p);
 const shown = p.shares.slice(0, 14);
+/** ★★ 147장의 **되풀이 설명**을 허브 한 곳으로 보냈다(2026-09-20). 그전에는 구획마다
+ *  「방출확률이란 무엇인가」·「왜 스펙트럼으로 푸는가」·「narrow beam 이란」을 96장·96장·
+ *  35장에서 **글자까지 같게** 되풀이했다. 심사자가 한 장을 열었을 때 남의 쪽에서 본 문장이
+ *  **산문의 66.4%**(실측 중앙)였다.
+ *  ★ 규칙은 `nuclide-prose.ts` 가 이미 세워 둔 것과 같다 — **낱장에는 이 핵종의 숫자만 둔다.**
+ *    일반론은 `/nuclides/` 허브의 앵커로 보낸다. 캡션도 본문이다(그전 판단을 뒤집는다):
+ *    96장에 같은 세 문장이 있으면 그것은 UI 가 아니라 되풀이다.
+ *  ★ 남기는 경고는 **그 핵종의 숫자를 든 것**뿐이다 — 숫자가 없으면 그 줄이 아예 사라진다.
+ *    없는 위험을 147번 경고하지 않는다. */
+const cut = belowCutoff(key);
+const al = alphaSpread(key);
+const pb = p.shields.find((s) => s.material === "lead");
+const hubLinks = { lines: "/nuclides/#lines", hvl: "/nuclides/#hvl", tvl: "/nuclides/#tvl",
+                   beta: "/nuclides/#beta", limits: "/nuclides/#limits" } as const;
+const plural = (k: number, one: string, many: string) => (k === 1 ? one : many);
 /** ★★ 계산기로 보내는 링크는 **이미 있는 복원 장치**(`?s=<base64 json>`)를 쓴다.
  *  처음에 `?n=Co-60` 으로 적었는데 그것을 읽는 코드가 **아무 데도 없었다** — 눌러도
  *  기본 핵종이 뜬다. 「없는 기능을 광고하지 않는다」(이 lab 이 `Saved` 에서 이미 밟았다).
@@ -73,9 +93,12 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
     <section class="mt-8 max-w-3xl">
       <h2 class="text-[20px] font-semibold text-ink">Photon lines and what each contributes</h2>
       <p class="mt-2 text-[14px] leading-relaxed text-ink-muted">
-        Emission probability is how often a line appears per 100 decays. The dose share is that line's
-        part of the air kerma rate — energy and the air absorption coefficient both enter, so the two
-        columns rank differently. Lines below the 20 keV cutoff are excluded from both Γ and this table.
+        {cut
+          ? `${cut.count} further ${plural(cut.count, "line", "lines")} below the 20 keV cutoff, the highest at ` +
+            `${cut.topKeV.toFixed(2)} keV and ${cut.iPct.toPrecision(3)}% emission probability in all, ` +
+            `${plural(cut.count, "is", "are")} excluded here and from Γ.`
+          : `No recorded line for ${p.key} falls below the 20 keV cutoff, so this table is the whole photon spectrum.`}
+        {" "}<a href={u(hubLinks.lines)} class="underline">Why the two columns rank differently</a>.
       </p>
       <table class="mt-3">
         <thead><tr><th>Energy (keV)</th><th>Emission probability (%)</th><th>Share of dose rate (%)</th></tr></thead>
@@ -98,9 +121,8 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
     <section class="mt-8 max-w-3xl">
       <h2 class="text-[20px] font-semibold text-ink">Half- and tenth-value layers</h2>
       <p class="mt-2 text-[14px] leading-relaxed text-ink-muted">
-        Solved for this nuclide's whole photon spectrum, not for one representative energy: each line is
-        attenuated with its own coefficient and the thickness that leaves half — then a tenth — of the total
-        air kerma rate is found numerically. Narrow beam, no buildup, so a design shield needs more.
+        Solved numerically across all {p.shares.length} {plural(p.shares.length, "line", "lines")}, narrow beam.
+        {" "}<a href={u(hubLinks.hvl)} class="underline">Why not one representative energy</a>.
       </p>
       <table class="mt-3">
         <thead><tr><th>Material</th><th>HVL (mm)</th><th>TVL (mm)</th><th>TVL / HVL</th></tr></thead>
@@ -113,8 +135,8 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
         </tbody>
       </table>
       <p class="mt-2 text-[13px] text-ink-faint">
-        A single photon energy always gives TVL / HVL = 3.32. Larger values mean the spectrum hardens as it
-        penetrates, and half-value layers stop being additive.
+        A single energy would give 3.32.
+        {" "}<a href={u(hubLinks.tvl)} class="underline">What a spread of energies does instead</a>.
       </p>
     </section>
   )}
@@ -123,9 +145,9 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
     <section class="mt-8 max-w-3xl">
       <h2 class="text-[20px] font-semibold text-ink">Beta range and bremsstrahlung</h2>
       <p class="mt-2 text-[14px] leading-relaxed text-ink-muted">
-        Range is the Katz–Penfold empirical fit to the endpoint energy, good to roughly ±10% and valid from
-        about 10 keV to 3 MeV. It is a stopping thickness, not an attenuation length: past the range the
-        primary betas are gone.
+        Katz–Penfold fit to the {sig(p.betaMaxMeV ?? NaN)} MeV endpoint — ±10%, and a stopping thickness
+        rather than an attenuation length.
+        {" "}<a href={u(hubLinks.beta)} class="underline">Why the material matters more than the thickness</a>.
       </p>
       <table class="mt-3">
         <thead><tr><th>Absorber</th><th>Range for the endpoint (mm)</th></tr></thead>
@@ -149,6 +171,14 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
   {Boolean(n.alpha?.length) && (
     <section class="mt-8 max-w-3xl">
       <h2 class="text-[20px] font-semibold text-ink">Alpha lines</h2>
+      {al && (
+        <p class="mt-2 text-[14px] leading-relaxed text-ink-muted">
+          {al.count === 1
+            ? `One recorded line, ${al.topMeV.toPrecision(4)} MeV at ${al.topPct}% — monoenergetic as far as this dataset goes.`
+            : `${al.count} recorded lines from ${al.loMeV.toPrecision(4)} to ${al.hiMeV.toPrecision(4)} MeV, ` +
+              `the strongest ${al.topMeV.toPrecision(4)} MeV at ${al.topPct}% of ${al.totPct.toPrecision(4)}% total alpha emission.`}
+        </p>
+      )}
       <table class="mt-3">
         <thead><tr><th>Energy (MeV)</th><th>Emission probability (%)</th></tr></thead>
         <tbody>
@@ -165,6 +195,10 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
 
   <section class="mt-8 max-w-3xl">
     <h2 class="text-[20px] font-semibold text-ink">How the activity falls</h2>
+    {/* ★ 표에 **없는** 값만 든다 — 표는 반감기 배수와 남는 비율을 주고, 여기서는 그 배수의
+        **경과 시간**과 평균수명을 준다. 표와 같은 것을 산문으로 되풀이하지 않는다.
+        ★ 평균수명 / 반감기 = 1.44 는 **모든 핵종에서 같으므로 찍지 않는다**(82/6 과 같은 규칙). */}
+    <p class="mt-2 text-[14px] leading-relaxed text-ink-muted">{decayCaption(key)}</p>
     <table class="mt-3">
       <thead><tr><th>Elapsed</th><th>Fraction remaining</th></tr></thead>
       <tbody>
@@ -178,17 +212,24 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
 
   <section class="mt-8 max-w-3xl">
     <h2 class="text-[20px] font-semibold text-ink">What this page does not tell you</h2>
+    {/* ★★ 일반 경고 세 줄은 허브(`/nuclides/#limits`)로 보냈다 — 147장에 **글자까지 같게**
+        서 있던 것이라 심사자가 읽는 산문의 되풀이 몫을 크게 키우고 있었다.
+        ★ 대신 **이 쪽의 숫자를 든 줄**만 남긴다. 숫자가 없으면 그 줄이 사라지므로 쪽마다
+          길이도 내용도 다르고, 경고가 추상이 아니라 **위에 인쇄된 값에 붙는다.**
+        ★ 지우지 않고 옮긴 것이다 — 마지막 줄이 전문으로 데려간다(절대규칙 4 의 방어선). */}
     <ul class="mt-3 space-y-1.5 text-[15px] leading-relaxed text-ink-muted">
-      <li>Nothing here is an internal dose. Committed effective dose per becquerel taken in depends on
-        chemical form and biokinetics and is not computed anywhere on this site.</li>
-      <li>Dose rates assume a bare point source in air. A real source has self-absorption, a capsule and a
-        geometry, and every one of those lowers what you would measure.</li>
-      <li>Shielding figures are narrow beam. Scatter is not added back, so they underestimate the thickness
-        a design needs.</li>
-      {p.gamma > 0 && <li>Γ is quoted at a 20 keV cutoff. Lowering the cutoff pulls soft lines back in and can
-        change the answer by a large factor for nuclides with strong low-energy emission.</li>}
-      {p.betaMaxMeV && <li>The beta range is an empirical fit, and skin dose from a beta contamination is a
-        different calculation again — it needs source geometry and a point kernel, which this site does not do.</li>}
+      {p.gamma > 0 && <li>{sig(p.doseAt1mPerGBq)} mGy/h at a metre — bare point source, no capsule, no self-absorption.</li>}
+      {pb && <li>{mmText(pb.hvlCm)} of lead halves this spectrum, narrow beam, scatter not added back.</li>}
+      {cut && (
+        <li>Γ excludes {cut.count} {plural(cut.count, "line", "lines")} under 20 keV, carrying{" "}
+          {cut.iPct.toPrecision(3)}% of all emissions.</li>
+      )}
+      {p.betaMaxMeV && (
+        <li>{mmText(p.betaRanges[0].cm)} of {p.betaRanges[0].material} for the {sig(p.betaMaxMeV)} MeV
+          endpoint: a ±10% fit, and not a skin dose.</li>
+      )}
+      {Boolean(n.alpha?.length) && <li>Alpha reaches nothing through skin — {p.key} is an intake problem, not an external one.</li>}
+      <li><a href={u(hubLinks.limits)} class="underline">What every sheet leaves out</a>, internal dose included.</li>
     </ul>
   </section>
 
@@ -207,11 +248,10 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
         ))}
       </p>
     )}
+    {/* ★ 허브의 같은 문단과 글자까지 겹쳐 있었다 — 한 문장으로 줄이고 정본으로 보낸다. */}
     <p class="mt-4 text-[14px] text-ink-muted">
-      Decay data from the {DATA_SOURCES[0].name}; attenuation coefficients from the {DATA_SOURCES[1].name}.
-      Both are harvested once and committed, so the numbers on this page do not move between visits.
-      The derivations, and how to cite these figures, are set out on the
-      <a href={u("/methods/")} class="underline">methods page</a>.
+      Computed from the {DATA_SOURCES[0].name} and the {DATA_SOURCES[1].name}.
+      {" "}<a href={u("/methods/")} class="underline">Derivations and citations</a>.
     </p>
   </section>
 </Base>
