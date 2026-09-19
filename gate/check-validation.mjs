@@ -32,6 +32,9 @@ import { WORKED_CASES as SA_WORKED, MASS_REFS, DERIVATION_CASES as SA_DERIV,
 import { WORKED_CASES as BETA_WORKED, FIT_CASES, UNVERIFIED, ESTAR,
          DERIVATION_CASES as BETA_DERIV, REFUSAL_CASES as BETA_REFUSAL }
   from "../src/validation/beta.cases.ts";
+import { PUBLISHED_CASES, DPRIME_TABLE, UNVERIFIED as MDA_UNVERIFIED,
+         WORKED_CASES as MDA_WORKED, REFUSAL_CASES as MDA_REFUSAL }
+  from "../src/validation/mda.cases.ts";
 import { REPORTS } from "../src/validation/registry.ts";
 import { createRequire } from "node:module";
 const NUCLIDES = createRequire(import.meta.url)("../src/data/nuclides.json");
@@ -39,7 +42,7 @@ const NUCLIDES = createRequire(import.meta.url)("../src/data/nuclides.json");
 const DIST = "dist/calc";
 const CASE_FILES = ["src/validation/units.cases.ts", "src/validation/decay.cases.ts",
                     "src/validation/gamma.cases.ts", "src/validation/specific-activity.cases.ts",
-                    "src/validation/beta.cases.ts"];
+                    "src/validation/beta.cases.ts", "src/validation/mda.cases.ts"];
 /** ★★ **화면의 반올림은 한 가지가 아니다**(첫 판에서 이것 때문에 B-01 이 걸렸다).
  *  환산표는 `fmt(v, 6)` 로 **6자리**, 그 아래 「환산이 아닌 단계」의 으뜸 숫자는 `fmt(v, 4)` 로
  *  **4자리**다. 자를 하나로 두면 둘 중 하나가 틀린다 — 느슨하게 맞추면 표의 결함을 놓치고,
@@ -186,6 +189,39 @@ console.log(`① 커버리지(붕괴) — 갈래 ${DECAY_MODES.length}/3 덮음 
 console.log(`①-4 커버리지(베타) — 경험식 ${FIT_CASES.length} · 유도 ${BETA_DERIV.length} · ` +
             `손계산 ${BETA_WORKED.length} · 거부 ${BETA_REFUSAL.length} · ★세우지 못한 것 ${UNVERIFIED.length}`);
 
+/* ★ MDA 는 커버리지의 뜻이 또 다르다 — **공표된 수치 예제를 재현하는가**다.
+   ★★ 남이 인쇄한 숫자를 맞히는 것은 유도 검증보다 강하다: **대수가 맞고 답이 틀린 경우**를
+     잡는다. 예제가 사라지면 이 보고서는 유도만 남은 보통 보고서로 조용히 내려앉는다. */
+{
+  if (PUBLISHED_CASES.length < 3)
+    fail.push(`① MDA: 공표 예제가 ${PUBLISHED_CASES.length}건뿐이다 — 3건 이상이어야 한다`);
+  for (const c of PUBLISHED_CASES) {
+    if (!c.locator) fail.push(`① MDA ${c.id}: 원문 위치가 비었다`);
+    /* ★ 차이가 있으면 **그 출처를 적어야 한다** — 「대충 맞는다」로 넘기지 않는다. */
+    if (!c.note || c.note.length < 20) fail.push(`① MDA ${c.id}: 잔차의 출처가 적혀 있지 않다`);
+  }
+  if (MDA_UNVERIFIED.length < 4)
+    fail.push(`① MDA: 「세우지 못한 것」이 ${MDA_UNVERIFIED.length}건뿐이다 — 4건 이상이어야 한다`);
+  /* ★★ **d′ 의 뜻이 되살아나는지** — 화면 도움말이 「95% / 25%」라고 적고 있었다. */
+  const first = DPRIME_TABLE.find((r) => r.dPrime === 1.38);
+  if (!first || first.falsePositive !== 0.6)
+    fail.push("① MDA: d′ 1.38 의 거짓양성 비율이 0.60 이 아니다 — MARSSIM 표 6.5 와 어긋난다");
+  const ui = readFileSync("src/components/calc/Mda.tsx", "utf8");
+  if (/1\.38[^"]*25% false positive/.test(ui))
+    fail.push("① MDA: 화면 도움말이 1.38 을 「25% 거짓양성」으로 되돌렸다 — 그 칸은 2.32 다");
+  /* ★ Rev 2 초안을 인용하지 않는가 — 쪽마다 「DO NOT CITE OR QUOTE」가 찍혀 있다. */
+  const page5 = "src/pages/validation/mda.astro";
+  const src5 = readFileSync(page5, "utf8");
+  if (/Revision 2|rev2/i.test(src5) && !/do not cite/i.test(src5))
+    fail.push(`① ${page5}: Rev 2 를 언급하면서 그것이 인용 불가 초안이라는 것을 밝히지 않았다`);
+  for (const must of ["do not cite or quote", "What this report does not establish",
+                      "the standard's own rounding"])
+    if (!src5.toLowerCase().includes(must.toLowerCase()))
+      fail.push(`① ${page5} 에서 「${must}」가 사라졌다`);
+}
+console.log(`①-4 커버리지(MDA) — 공표 예제 ${PUBLISHED_CASES.length} · d′ 표 ${DPRIME_TABLE.length} · ` +
+            `손계산 ${MDA_WORKED.length} · 거부 ${MDA_REFUSAL.length} · ★세우지 못한 것 ${MDA_UNVERIFIED.length}`);
+
 /* ══════════════ ①-5 보고서가 스스로 내린 판정 ══════════════
    ★★★ **2026-09-19 에 이 검사가 없어서 한 라운드를 놓쳤다.** 감마 보고서가 라이브에서
      「One or more checks fail」을 띄운 채 배포돼 있었다 — 항등식 `G-ID-10` 을 케이스 정본에
@@ -220,6 +256,7 @@ console.log(`①-4 커버리지(베타) — 경험식 ${FIT_CASES.length} · 유
     ["gamma-shielding", "src/validation/gamma.cases.ts"],
     ["specific-activity", "src/validation/specific-activity.cases.ts"],
     ["beta", "src/validation/beta.cases.ts"],
+    ["mda", "src/validation/mda.cases.ts"],
   ];
   let ids = 0;
   for (const [tool, caseFile] of RENDERED) {

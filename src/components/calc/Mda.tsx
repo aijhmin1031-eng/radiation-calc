@@ -113,7 +113,7 @@ export default function Mda() {
             <Field label="Observer efficiency" hint="How much of the ideal detector performance the person achieves. MARSSIM uses 0.5.">
               <NumberInput value={Number.isFinite(obsEff) ? obsEff : ""} onChange={setObsEff} suffix="%" />
             </Field>
-            <Field label="Detectability index d′" hint="1.38 gives 95% true positive at 25% false positive">
+            <Field label="Detectability index d′" hint="MARSSIM: 1.38 is 95% true positive at 60% false positive; 2.32 for 25%">
               <NumberInput value={Number.isFinite(dPrime) ? dPrime : ""} onChange={setDPrime} step={0.01} />
             </Field>
           </div>

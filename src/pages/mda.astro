@@ -1,6 +1,7 @@
 ---
 import ToolPage from "../components/ToolPage.astro";
 import Mda from "../components/calc/Mda.tsx";
+import { u } from "../lib/site";
 ---
 <ToolPage slug="mda">
   <Mda slot="tool" client:only="react" />
@@ -22,7 +23,17 @@ import Mda from "../components/calc/Mda.tsx";
       The <strong>detection limit</strong> L<sub>D</sub> is a property of the method decided before
       the measurement. It is the true amount that will produce a result above L<sub>C</sub> with
       your chosen confidence, so it accounts for false negatives as well: L<sub>D</sub> = k² + 2L<sub>C</sub>,
-      the familiar 2.71 + 4.65√B at k = 1.645.
+      which at k = 1.645 is 2.71 + 4.65√B.
+    </p>
+    <p>
+      <strong>MARSSIM writes that constant as 3 rather than 2.71</strong>, citing Brodsky (1992) as
+      having shown the larger value to be the more appropriate one. This calculator keeps Currie's
+      k², because the confidence level here is yours to choose and 3 only applies at k = 1.645. The
+      two differ by 0.294 counts — 0.60% of L<sub>D</sub> at a background of 100 counts, 10.9% at
+      zero background and 0.06% at 10,000, and MARSSIM's is the more conservative one. This
+      calculator therefore reports a slightly <em>lower</em> detection limit than MARSSIM would. The
+      measured difference across a range of backgrounds is in the
+      <a href={u("/validation/mda/")} class="underline">validation report</a>.
     </p>
     <p>
       The <strong>minimum detectable activity</strong> is L<sub>D</sub> converted into units someone
@@ -59,7 +70,10 @@ import Mda from "../components/calc/Mda.tsx";
       The detectability index d′ describes an ideal observer's ability to notice a brief change in
       signal, and the observer efficiency p accounts for the fact that a real person listening to a
       rate meter while walking does not achieve it. MARSSIM conventionally takes p = 0.5, which
-      raises the required count rate by √2. Halving the scan speed doubles the observation interval
+      raises the required count rate by √2. Its tabulated d′ = 1.38 is the value for 95% correct
+      detections at a <strong>60%</strong> false-positive rate — deliberately permissive, because the
+      first scanning stage is meant to flag locations that a longer second-stage count then confirms
+      or clears. Requiring 95% detections at 25% false positives instead needs d′ = 2.32. Halving the scan speed doubles the observation interval
       and improves the MDC by √2 — usually the cheapest improvement available, and the reason a
       documented scan speed belongs in the survey plan.
     </p>

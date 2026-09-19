@@ -1,0 +1,468 @@
+---
+/** ★★ 검출하한 유효성 평가 보고서 — 쪽이 숫자를 손으로 들지 않는다.
+ *  ★★★ 이번 보고서의 중심은 **MARSSIM 이 본문에 실은 수치 예제 셋**이다.
+ *    남이 공표한 숫자를 우리가 재현하는지가, 유도만 맞고 답이 다른 일을 막는다. */
+import Base from "../../layouts/Base.astro";
+import { u, DOI, DOI_URL } from "../../lib/site";
+import { criticalLevel, detectionLimit, minimumDetectableActivity, scanMdc } from "../../engine/mda";
+import {
+  DERIVATION_CASES, IDENTITY_CASES, PUBLISHED_CASES, DPRIME_TABLE, CONSTANT_CASE,
+  WORKED_CASES, REFUSAL_CASES, UNVERIFIED,
+  TOLERANCE_EXACT, TOLERANCE_WORKED, TOLERANCE_PUBLISHED,
+} from "../../validation/mda.cases";
+import { SOURCES, statementById } from "../../validation/sources";
+import { reportFor } from "../../validation/registry";
+import { sci, relValue } from "../../validation/format";
+
+const report = reportFor("mda")!;
+let revision = (process.env.VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7);
+if (!revision) {
+  try {
+    const { execSync } = await import("node:child_process");
+    revision = execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch { revision = ""; }
+}
+
+const K_LEVELS = [1.645, 1.96, 2.326];
+const BACKGROUNDS = [0, 1, 25, 100, 1500];
+
+/* ── ★ MARSSIM 공표 예제 ── */
+const scanAt = (c: typeof PUBLISHED_CASES[number]) => scanMdc({
+  bgCps: c.input.bgCpm / 60, scanSpeedCmPerS: 5, detectorWidthCm: 5 * c.input.intervalS,
+  efficiency: c.input.efficiency ?? 0.2, surfaceEfficiency: c.input.surfaceEfficiency,
+  probeAreaCm2: c.input.probeAreaCm2, dPrime: c.input.dPrime, observerEff: c.input.observerEff,
+});
+const published = PUBLISHED_CASES.map((c) => {
+  const r = scanAt(c);
+  const got = c.quantity === "mdcr" ? r.mdcr : r.scanMdc;
+  return { c, got, diff: relValue(got, c.published), interval: r.observationIntervalS };
+});
+const publishedWorst = Math.max(...published.map((p) => p.diff));
+
+/* ── 통계 — 꼴 ── */
+let formChecks = 0, formWorst = 0;
+for (const k of K_LEVELS) for (const B of BACKGROUNDS) {
+  formChecks += 2;
+  formWorst = Math.max(formWorst,
+    relValue(criticalLevel(B, k), k * Math.sqrt(2 * B)),
+    relValue(detectionLimit(B, k), k * k + 2 * k * Math.sqrt(2 * B)));
+}
+
+/* ── 항등식 ── */
+const idRun = (kind: string) => {
+  const base = { bgCps: 2, countTimeS: 300, efficiency: 0.4 };
+  if (kind === "effInverse")
+    return minimumDetectableActivity({ ...base, efficiency: 0.2 }).mda / minimumDetectableActivity(base).mda;
+  if (kind === "yieldInverse")
+    return minimumDetectableActivity({ ...base, yieldFrac: 0.3 }).mda / minimumDetectableActivity({ ...base, yieldFrac: 0.6 }).mda;
+  if (kind === "qtyInverse")
+    return minimumDetectableActivity({ ...base, sampleQty: 2 }).mda / minimumDetectableActivity({ ...base, sampleQty: 1 }).mda;
+  if (kind === "ldIsLcPlus") return detectionLimit(100) - 2 * criticalLevel(100);
+  if (kind === "zeroBg") return detectionLimit(0);
+  if (kind === "sqrtTime")
+    return minimumDetectableActivity({ bgCps: 5000, countTimeS: 100, efficiency: 0.25 }).mda
+         / minimumDetectableActivity({ bgCps: 5000, countTimeS: 400, efficiency: 0.25 }).mda;
+  const r = scanMdc({ bgCps: 5, scanSpeedCmPerS: 5, detectorWidthCm: 10, efficiency: 0.2, observerEff: 0.5 });
+  return r.mdcrSurveyor / r.mdcr;
+};
+/* ★★ **항등식마다 자가 다르다.** 여섯은 정확한 산술이지만 `sqrtTime` 은 **점근값**이라
+   배정밀도 바닥을 요구할 수 없다 — 배경이 유한한 한 비는 2 를 조금 넘는다.
+   ★ 첫 판에서 하나의 자로 재었다가 **쪽이 「One or more checks fail」을 띄웠고**,
+     지난 라운드에 세운 게이트 ①-5 가 그 자리에서 잡았다. 자리마다 그 자리의 자를 쓴다. */
+const ID_TOLERANCE = (kind: string) => (kind === "sqrtTime" ? 2e-3 : TOLERANCE_EXACT);
+let idWorst = 0, idWorstWhat = "", idFail = 0;
+const identities = IDENTITY_CASES.map((c) => {
+  const expect = c.kind === "ldIsLcPlus" || c.kind === "zeroBg" ? 1.645 ** 2 : c.expect;
+  const tool = idRun(c.kind);
+  const d = relValue(tool, expect);
+  const tol = ID_TOLERANCE(c.kind);
+  if (d >= tol) idFail += 1;
+  if (c.kind !== "sqrtTime" && d > idWorst) { idWorst = d; idWorstWhat = c.id; }
+  return { c, tool, expect, diff: d, tol, asymptotic: c.kind === "sqrtTime" };
+});
+
+/* ── MARSSIM 상수와의 차이 — **재어서** 낸다 ── */
+const K = 1.645;
+const constantRows = CONSTANT_CASE.backgrounds.map((B) => {
+  const ours = detectionLimit(B, K);
+  const marssim = 3 + 2 * K * Math.SQRT2 * Math.sqrt(B);
+  return { B, ours, marssim, gap: marssim - ours, rel: (marssim - ours) / ours };
+});
+const constantOk = constantRows.every((r) => relValue(r.gap, CONSTANT_CASE.absoluteGap) < TOLERANCE_EXACT && r.gap > 0);
+
+/* ── 손계산 · 거부 ── */
+const worked = WORKED_CASES.map((c) => {
+  const i = c.input, B = i.bgCps * (i.countTimeS ?? 1);
+  const got = c.kind === "lc" ? criticalLevel(B, i.k)
+    : c.kind === "ld" ? detectionLimit(B, i.k)
+    : minimumDetectableActivity({ bgCps: i.bgCps, countTimeS: i.countTimeS!, efficiency: i.efficiency!,
+        yieldFrac: i.yieldFrac, sampleQty: i.sampleQty, k: i.k }).mda;
+  return { c, got, diff: relValue(got, c.expect) };
+});
+const refusals = REFUSAL_CASES.map((c) => {
+  const a = c.args;
+  const got = c.kind === "lc" ? criticalLevel(a.bgCounts, a.k)
+    : c.kind === "ld" ? detectionLimit(a.bgCounts, a.k)
+    : c.kind === "mda" ? minimumDetectableActivity(a as never).mda
+    : scanMdc(a as never).scanMdc;
+  return { c, refused: Number.isNaN(got), got };
+});
+
+const checks = DERIVATION_CASES.length + formChecks + identities.length
+  + published.length * 2 + constantRows.length + worked.length + refusals.length + DPRIME_TABLE.length;
+const allPass = formWorst < TOLERANCE_EXACT && idFail === 0
+  && published.every((p) => p.diff < TOLERANCE_PUBLISHED) && constantOk
+  && worked.every((w) => w.diff < TOLERANCE_WORKED) && refusals.every((r) => r.refused);
+
+const quote = (id: string) => {
+  const st = statementById(id);
+  return st ? { label: `${SOURCES[st.source].label}, ${st.locator}`, text: st.text } : null;
+};
+
+const title = "MDA validation — reproducing MARSSIM's own worked examples";
+const description =
+  "Critical level, detection limit and scan MDC checked against the worked examples printed in MARSSIM itself, with the deviation from its L_D constant measured and its direction stated.";
+---
+<Base title={title} description={description} schema="TechArticle">
+  <nav class="tap-list mb-4 flex flex-wrap items-center gap-x-1.5 text-[12px] text-ink-faint">
+    <a href={u("/")} class="hover:text-ink">Calculators</a> <span aria-hidden>/</span>
+    <a href={u("/validation/")} class="hover:text-ink">Validation</a> <span aria-hidden>/</span> Detection limits
+  </nav>
+
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
+    Validation of the detection limit calculator
+  </h1>
+  <p class="mt-2 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    The standard this calculator follows prints worked examples of its own. Reproducing them is a
+    stronger check than any derivation, because it fails when the algebra is right and the answer is
+    not. This report does that, and states where the calculator deliberately differs.
+  </p>
+
+  <dl class="card mt-6 grid max-w-3xl gap-x-6 gap-y-2 p-4 text-[13px] sm:grid-cols-[11rem_minmax(0,1fr)]">
+    <dt class="text-ink-faint">Subject</dt>
+    <dd class="text-ink-muted">The detection limit calculator at <a href={u("/mda/")} class="underline">{u("/mda/")}</a>, both of its modes, and the engine module <code>src/engine/mda.ts</code>.</dd>
+    <dt class="text-ink-faint">Report date</dt>
+    <dd class="text-ink-muted">{report.validatedOn}</dd>
+    <dt class="text-ink-faint">Source revision</dt>
+    <dd class="num text-ink-muted">{revision || "not recorded in this build"}</dd>
+    <dt class="text-ink-faint">Archived source</dt>
+    <dd class="text-ink-muted"><a href={DOI_URL} rel="noopener" class="underline">{DOI}</a></dd>
+    <dt class="text-ink-faint">Published examples</dt>
+    <dd class="num text-ink-muted">{published.length} reproduced</dd>
+    <dt class="text-ink-faint">Checks performed</dt>
+    <dd class="num text-ink-muted">{checks}</dd>
+    <dt class="text-ink-faint">Acceptance criteria</dt>
+    <dd class="text-ink-muted">
+      Statistics: relative difference below <span class="num">{TOLERANCE_EXACT}</span>. Worked cases:
+      below <span class="num">{TOLERANCE_WORKED}</span>. Published examples: below
+      {" "}<span class="num">{TOLERANCE_PUBLISHED}</span>, because the standard prints them rounded —
+      each residual is accounted for individually.
+    </dd>
+    <dt class="text-ink-faint">Not established</dt>
+    <dd class="num text-ink-muted">{UNVERIFIED.length} items, listed at the end</dd>
+    <dt class="text-ink-faint">Result</dt>
+    <dd class={allPass ? "font-semibold text-ink" : "font-semibold text-warn"}>
+      {allPass ? "All checks pass." : "One or more checks fail — see the tables below."}
+    </dd>
+  </dl>
+
+  <section class="prose-doc mt-10 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <h2>Scope</h2>
+    <p>
+      This report covers the critical level, the detection limit and the minimum detectable activity
+      for a fixed count, and the scan MDC with its surveyor term. The formulas come from Currie's
+      1968 framework as restated by MARSSIM, the multi-agency survey manual published by the US NRC,
+      EPA and DOE.
+    </p>
+    <p>
+      One note on which edition. MARSSIM Revision 1 (August 2000) is the final issue and is what is
+      quoted here. A Revision 2 draft exists and carries the same statements, but every page of it is
+      stamped <em>draft for public comment — do not cite or quote</em>, so it is not used, even where
+      it would have been convenient.
+    </p>
+
+    <h2>Reproducing the standard's own worked examples</h2>
+    <p>
+      MARSSIM does not only give formulas; it works three examples through to printed numbers. That
+      makes a kind of check the other reports on this site could not do: not "is the derivation
+      right" but "does this code produce the number the standard produces". A transposed factor or a
+      wrong unit survives a derivation and dies here.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th class="text-left">Example</th>
+            <th class="text-right">Interval<br />[s]</th>
+            <th class="text-right">MARSSIM<br />prints</th>
+            <th class="text-right">This tool</th>
+            <th class="text-right">Difference</th></tr>
+        </thead>
+        <tbody>
+          {published.map(({ c, got, diff, interval }) => (
+            <tr>
+              <td class="font-normal text-ink">{c.title}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id} · {c.locator}</span></td>
+              <td class="num whitespace-nowrap text-right">{interval}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{c.published} {c.unit}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(got, 6)} {c.unit}</td>
+              <td class="num whitespace-nowrap text-right">{diff === 0 ? "0" : diff.toExponential(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The first two agree digit for digit. The third does not, and the reason is worth stating rather
+      than smoothing over: MARSSIM reads its minimum detectable count rate from a table that prints
+      it rounded to 130 cpm, where the unrounded value is 130.92. Carrying the rounded figure through
+      the same expression reproduces the 750 dpm/100 cm² that MARSSIM prints; carrying the exact one
+      gives {sci(published[2].got, 6)}. <strong>The residual is the standard's own rounding.</strong>
+    </p>
+    <div class="not-prose my-3 space-y-5">
+      {PUBLISHED_CASES.map((c) => (
+        <div class="card p-4">
+          <p class="text-[14px] font-semibold text-ink"><span class="num">{c.id}</span> — {c.title}</p>
+          <p class="mt-0.5 text-[12px] text-ink-faint">MARSSIM Revision 1, {c.locator}</p>
+          <ol class="mt-2 list-decimal space-y-1 pl-5 text-[14px] leading-relaxed text-ink-muted">
+            {c.steps.map((s) => <li>{s}</li>)}
+          </ol>
+          <p class="mt-2 text-[13px] text-ink-muted"><strong>Residual:</strong> {c.note}</p>
+        </div>
+      ))}
+    </div>
+
+    <h2>What the detectability index actually means</h2>
+    <p>
+      Until this report the screen described d′ = 1.38 as giving <em>95% true positives at 25% false
+      positives</em>. MARSSIM's Table 6.5 puts 1.38 at a 95% true positive rate and a
+      {" "}<strong>60%</strong> false positive rate; the 25% column holds 2.32. The difference is not
+      cosmetic — it is the design of the method.
+    </p>
+    <div class="card not-prose my-4 p-4 text-[14px] leading-relaxed">
+      {["dprime-table", "two-stage"].map((id) => {
+        const q = quote(id);
+        return q ? (
+          <p class="mb-2 last:mb-0">
+            <span class="text-[12px] text-ink-faint">{q.label}</span><br />
+            <span class="text-ink-muted">“{q.text}”</span>
+          </p>
+        ) : null;
+      })}
+    </div>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th class="text-right">True<br />positive</th><th class="text-right">False<br />positive</th><th class="text-right">d′</th><th class="text-left">Where it is used</th></tr>
+        </thead>
+        <tbody>
+          {DPRIME_TABLE.map((r) => (
+            <tr>
+              <td class="num whitespace-nowrap text-right text-ink">{(r.truePositive * 100).toFixed(0)}%</td>
+              <td class="num whitespace-nowrap text-right text-ink">{(r.falsePositive * 100).toFixed(0)}%</td>
+              <td class="num whitespace-nowrap text-right text-ink">{r.dPrime}</td>
+              <td>{r.use}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The first scanning stage is <em>meant</em> to be permissive. It flags locations cheaply and
+      tolerates a majority of false alarms, because a second stage — the surveyor pausing over the
+      spot for a few seconds — then confirms or clears each one at a stricter d′ of 2.48. Describing
+      1.38 as a 25% false positive rate makes the first stage look far more discriminating than it is,
+      and hides why the second stage exists.
+    </p>
+
+    <h2>Where this calculator differs from MARSSIM, and by how much</h2>
+    <div class="card not-prose my-4 p-4 text-[14px] leading-relaxed">
+      {["currie-forms", "currie-constant", "paired-blanks"].map((id) => {
+        const q = quote(id);
+        return q ? (
+          <p class="mb-2 last:mb-0">
+            <span class="text-[12px] text-ink-faint">{q.label}</span><br />
+            <span class="text-ink-muted">“{q.text}”</span>
+          </p>
+        ) : null;
+      })}
+    </div>
+    <p>
+      MARSSIM prints the detection limit with a constant of 3 where Currie's derivation gives k²,
+      which is 2.706 at k = 1.645, and attributes the change to Brodsky (1992). This calculator keeps
+      k². The reason is that the confidence level is a choice on this screen — 95%, 97.5% or 99% —
+      and 3 is a value specific to k = 1.645, while k² follows whatever the user picks.
+    </p>
+    <p>
+      <span class="num text-[12px] text-ink-faint">{CONSTANT_CASE.id}</span> — the consequence is measured rather than asserted. The two differ by a constant
+      {" "}<span class="num">{CONSTANT_CASE.absoluteGap.toFixed(6)}</span> counts at every background,
+      and <strong>MARSSIM's is the larger</strong> — so this calculator reports a slightly
+      <em>lower</em> detection limit, which is the direction a user working to MARSSIM should know.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th class="text-right">Background<br />[counts]</th>
+            <th class="text-right">This tool<br />(k²)</th>
+            <th class="text-right">MARSSIM<br />(3)</th>
+            <th class="text-right">Gap<br />[counts]</th>
+            <th class="text-right">Relative</th></tr>
+        </thead>
+        <tbody>
+          {constantRows.map((r) => (
+            <tr>
+              <td class="num whitespace-nowrap text-right text-ink">{r.B}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{r.ours.toFixed(4)}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{r.marssim.toFixed(4)}</td>
+              <td class="num whitespace-nowrap text-right">{r.gap.toFixed(6)}</td>
+              <td class={r.rel > 0.05 ? "num whitespace-nowrap text-right font-semibold text-warn" : "num whitespace-nowrap text-right"}>{(r.rel * 100).toFixed(3)}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p>
+      It matters where it is largest, which is exactly where detection limits are argued over: at very
+      low background the fixed term is the whole answer. At a realistic counting background it is
+      well under a percent.
+    </p>
+
+    <h2>The statistics, derived</h2>
+    <div class="not-prose my-3 space-y-5">
+      {DERIVATION_CASES.map((c) => (
+        <div class="card p-4">
+          <p class="text-[14px] font-semibold text-ink"><span class="num">{c.id}</span> — {c.title}</p>
+          <p class="mt-0.5 text-[12px] text-ink-faint">In the code: {c.where}</p>
+          <ol class="mt-2 list-decimal space-y-1 pl-5 text-[14px] leading-relaxed text-ink-muted">
+            {c.steps.map((s) => <li>{s}</li>)}
+          </ol>
+        </div>
+      ))}
+    </div>
+    <p>
+      The two expressions are then checked against their algebraic form at each of the three
+      confidence levels the screen offers and at {BACKGROUNDS.length} backgrounds —
+      {" "}{formChecks} comparisons, worst difference
+      {" "}<span class="num">{formWorst === 0 ? "0" : formWorst.toExponential(2)}</span>.
+    </p>
+
+    <h3>Identities</h3>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th class="text-left">Identity</th><th class="text-right">Hand</th><th class="text-right">Tool</th><th class="text-right">Difference</th></tr>
+        </thead>
+        <tbody>
+          {identities.map(({ c, tool, expect, diff }) => (
+            <tr>
+              <td class="font-normal text-ink">{c.title}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id}</span></td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(expect)}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(tool)}</td>
+              <td class="num whitespace-nowrap text-right">{diff === 0 ? "0" : diff.toExponential(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Six of the seven are exact arithmetic and are held to double precision. The seventh, the
+      square-root-of-time rule, is an <em>asymptote</em>: the ratio exceeds 2 at any finite background
+      and falls towards it as the background rises, because the k² term decays as 1/t while the rest
+      decays as 1/√t. It is measured at a high background and accepted within
+      {" "}<span class="num">{ID_TOLERANCE("sqrtTime")}</span>, and the test additionally requires the
+      ratio to be above 2 and to decrease monotonically with background — the shape, not just the value.
+    </p>
+    <details class="not-prose my-3 rounded-md border border-line bg-surface px-3 py-2 text-[14px]">
+      <summary class="cursor-pointer font-medium text-ink">Derivations of the identities</summary>
+      <div class="mt-3 space-y-4">
+        {IDENTITY_CASES.map((c) => (
+          <div>
+            <p class="text-[13px] font-semibold text-ink"><span class="num">{c.id}</span> — {c.title}</p>
+            <ol class="mt-1 list-decimal space-y-0.5 pl-5 text-ink-muted">{c.steps.map((s) => <li>{s}</li>)}</ol>
+          </div>
+        ))}
+      </div>
+    </details>
+
+    <h2>Worked cases</h2>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th class="text-left">Case</th><th class="text-right">By hand</th><th class="text-right">Tool</th><th class="text-right">Difference</th></tr>
+        </thead>
+        <tbody>
+          {worked.map(({ c, got, diff }) => (
+            <tr>
+              <td class="font-normal text-ink">{c.title}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id}</span></td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(c.expect, 11)} {c.unit}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(got, 11)} {c.unit}</td>
+              <td class="num whitespace-nowrap text-right">{diff === 0 ? "0" : diff.toExponential(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div class="not-prose my-3 space-y-5">
+      {WORKED_CASES.map((c) => (
+        <div class="card p-4">
+          <p class="text-[14px] font-semibold text-ink"><span class="num">{c.id}</span> — {c.title}</p>
+          <ol class="mt-2 list-decimal space-y-1 pl-5 text-[14px] leading-relaxed text-ink-muted">
+            {c.steps.map((s) => <li>{s}</li>)}
+          </ol>
+        </div>
+      ))}
+    </div>
+
+    <h2>Where the calculator must refuse</h2>
+    <p>
+      Six of these nine were open when this report was written. Two are worth naming: a surveyor
+      efficiency of zero returned <em>infinity</em>, and an efficiency of 1.5 — more counts than
+      emissions — was accepted and produced a detection limit better than the detector can achieve.
+      All three efficiencies on this screen are fractions and none of them was bounded.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th class="text-left">Input</th><th class="text-left">Why there is no answer</th><th class="text-right">Refused</th></tr>
+        </thead>
+        <tbody>
+          {refusals.map(({ c, refused }) => (
+            <tr>
+              <td class="font-normal text-ink">{c.title}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id}</span></td>
+              <td>{c.why}</td>
+              <td class={refused ? "whitespace-nowrap text-right text-ink" : "whitespace-nowrap text-right font-semibold text-warn"}>{refused ? "yes" : "no"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h2>What this report does not establish</h2>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead><tr><th class="text-left">Not established</th><th class="text-left">Why</th></tr></thead>
+        <tbody>
+          {UNVERIFIED.map((v) => (
+            <tr>
+              <td class="font-normal text-ink">{v.what}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{v.id}</span></td>
+              <td>{v.why}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Primary sources</h2>
+    <ul>
+      {["marssim", "currie"].map((k) => SOURCES[k] && (
+        <li>
+          <strong>{SOURCES[k].label}</strong> — {SOURCES[k].cite}
+          {" "}<a href={SOURCES[k].url} rel="noopener" class="underline">link</a>. {SOURCES[k].access}
+        </li>
+      ))}
+    </ul>
+  </section>
+</Base>

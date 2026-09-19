@@ -647,6 +647,10 @@
     "slug": "validation-gamma-shielding",
     "title": "Gamma dose rate validation — the constant, the coefficients and the cutoff · RadCalc"
   },
+  "/validation/mda/": {
+    "slug": "validation-mda",
+    "title": "MDA validation — reproducing MARSSIM's own worked examples · RadCalc"
+  },
   "/validation/specific-activity/": {
     "slug": "validation-specific-activity",
     "title": "Specific activity validation — molar masses and the becquerel per gram · RadCalc"

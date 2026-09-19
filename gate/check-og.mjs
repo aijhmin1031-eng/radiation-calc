@@ -18,7 +18,13 @@ for (const p of paths) {
   if (!e) { fail.push(`${p}: 매니페스트에 없다 — npm run make-og 를 돌릴 것`); continue; }
   const f = join(DIST, p === "/" ? "index.html" : p.replace(/^\//, ""), "index.html");
   const html = readFileSync(f.replace(/index\.html[\\/]index\.html$/, "index.html"), "utf8");
-  const now = (html.match(/<title>([^<]*)<\/title>/)?.[1] ?? "").replace(/\s+/g, " ").trim();
+  /* ★★ **`make-og` 와 같은 정규화를 써야 한다**(2026-09-19에 잡았다). 제목에 아포스트로피가
+     들어간 쪽이 처음 생기자, 산출 HTML 은 `&#39;` 로 이스케이프하는데 `make-og` 는 그것을
+     풀어 매니페스트에 넣고 이쪽은 안 풀어 **「제목이 바뀌었다」가 영영 떴다.**
+     같은 파일을 읽어도 **읽는 법이 다르면 다른 값**이다 — 비교하는 두 자리는 한 함수를 쓴다. */
+  const unescape = (x) => x.replace(/&amp;/g, "&").replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"').replace(/\s+/g, " ").trim();
+  const now = unescape(html.match(/<title>([^<]*)<\/title>/)?.[1] ?? "");
   if (now !== e.title) fail.push(`${p}: 제목이 바뀌었는데 그림이 그대로다\n       구울 때 「${e.title}」\n       지금  「${now}」`);
   if (!existsSync(join("public/og", `${e.slug}.png`))) fail.push(`${p}: public/og/${e.slug}.png 이 없다`);
   if (!html.includes(`/og/${e.slug}.png`)) fail.push(`${p}: 쪽이 자기 그림(${e.slug}.png)을 가리키지 않는다`);
