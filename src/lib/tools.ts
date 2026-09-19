@@ -117,7 +117,7 @@ export const TOOLS: Tool[] = [
     question: "How thick must acrylic be to stop Y-90 beta, and how much bremsstrahlung does lead make instead?",
     blurb: "Infinite-medium dose rate, Katz–Penfold range, transmission through absorbers, and bremsstrahlung yield by atomic number.",
     assumes: [
-      "Katz–Penfold range, which depends on mass thickness rather than the material.",
+      "Katz–Penfold range, an empirical fit to absorption measurements, which depends on mass thickness rather than the material.",
       "The infinite-medium dose rate is exact by energy conservation — every beta deposits its energy locally.",
       "Bremsstrahlung yield is an approximation that scales with atomic number.",
     ],

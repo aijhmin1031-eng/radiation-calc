@@ -1,6 +1,7 @@
 ---
 import ToolPage from "../components/ToolPage.astro";
 import Beta from "../components/calc/Beta.tsx";
+import { u } from "../lib/site";
 ---
 <ToolPage slug="beta">
   <Beta slot="tool" client:only="react" />
@@ -24,9 +25,13 @@ import Beta from "../components/calc/Beta.tsx";
     <p>
       Electron range is tabulated as a mass thickness in g/cm² rather than a distance, because to
       first order a given mass of material stops electrons regardless of what the material is. The
-      Katz–Penfold relation, R = 0.412 E<sup>1.265 − 0.0954 ln E</sup> for energies from 0.01 to 3
-      MeV, is the standard empirical fit and is accurate to roughly 10%. Dividing by density converts
-      it to a thickness.
+      Katz–Penfold relation, R = 0.412 E<sup>1.265 − 0.0954 ln E</sup> g/cm² from 0.01 MeV up to a
+      branch point at 2.5 MeV, above which R = 0.530 E − 0.106, is the standard empirical fit.
+      Dividing by density converts it to a thickness. It is a fit to absorption measurements, so the
+      thickness it gives is a depth of penetration rather than the length of the electron's path,
+      which is longer. How far below the path length it sits, and what this site could and could not
+      establish about the fit, are set out in the
+      <a href={u("/validation/beta/")} class="underline">validation report</a>.
     </p>
     <p>
       The consequence is that any material works if you use enough of it, and the practical choice is
@@ -43,7 +48,9 @@ import Beta from "../components/calc/Beta.tsx";
       wrong one. Decelerating electrons radiate, and the fraction of the beta energy converted into
       bremsstrahlung X-rays rises with the atomic number of the absorber. The thick-target
       approximation, f ≈ 3.5 × 10⁻⁴ · Z · E<sub>max</sub>, puts lead an order of magnitude worse than
-      acrylic for the same beta.
+      acrylic for the same beta. Checked against the radiation yields NIST tabulates, that expression
+      understates lead's disadvantage rather than overstating it — the measured comparison is in the
+      <a href={u("/validation/beta/")} class="underline">validation report</a>.
     </p>
     <p>
       The bremsstrahlung is a continuous X-ray spectrum reaching up to the full beta energy, with a

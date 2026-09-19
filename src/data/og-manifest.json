@@ -635,6 +635,10 @@
     "slug": "validation",
     "title": "Validation — how the results on this site are checked · RadCalc"
   },
+  "/validation/beta/": {
+    "slug": "validation-beta",
+    "title": "Beta calculator validation — what an empirical fit can and cannot be checked against · RadCalc"
+  },
   "/validation/decay/": {
     "slug": "validation-decay",
     "title": "Decay calculator validation — the decay law and the half-lives it uses · RadCalc"

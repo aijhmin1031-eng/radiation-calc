@@ -29,13 +29,17 @@ import { WORKED_CASES as GAMMA_WORKED, EMISSION_REFS, DERIVATION_CASES, INTERP_C
 import { WORKED_CASES as SA_WORKED, MASS_REFS, DERIVATION_CASES as SA_DERIV,
          IDENTITY_CASES as SA_IDENT, REFUSAL_CASES as SA_REFUSAL }
   from "../src/validation/specific-activity.cases.ts";
+import { WORKED_CASES as BETA_WORKED, FIT_CASES, UNVERIFIED, ESTAR,
+         DERIVATION_CASES as BETA_DERIV, REFUSAL_CASES as BETA_REFUSAL }
+  from "../src/validation/beta.cases.ts";
 import { REPORTS } from "../src/validation/registry.ts";
 import { createRequire } from "node:module";
 const NUCLIDES = createRequire(import.meta.url)("../src/data/nuclides.json");
 
 const DIST = "dist/calc";
 const CASE_FILES = ["src/validation/units.cases.ts", "src/validation/decay.cases.ts",
-                    "src/validation/gamma.cases.ts", "src/validation/specific-activity.cases.ts"];
+                    "src/validation/gamma.cases.ts", "src/validation/specific-activity.cases.ts",
+                    "src/validation/beta.cases.ts"];
 /** ★★ **화면의 반올림은 한 가지가 아니다**(첫 판에서 이것 때문에 B-01 이 걸렸다).
  *  환산표는 `fmt(v, 6)` 로 **6자리**, 그 아래 「환산이 아닌 단계」의 으뜸 숫자는 `fmt(v, 4)` 로
  *  **4자리**다. 자를 하나로 두면 둘 중 하나가 틀린다 — 느슨하게 맞추면 표의 결함을 놓치고,
@@ -145,6 +149,43 @@ console.log(`① 커버리지(감마) — 사슬 고리 ${GAMMA_LINKS.length}가
 console.log(`① 커버리지(붕괴) — 갈래 ${DECAY_MODES.length}/3 덮음 · 손계산 ${DECAY_WORKED.length} · ` +
             `반감기 기준 ${HALFLIFE_REFS.length}종(자료 ${Object.keys(NUCLIDES).length}종 중) · 항등식 ${IDENTITY_CASES.length}`);
 
+/* ★ 베타는 커버리지의 뜻이 또 다르다 — **경험식 셋이 전부 덮였는가**, 그리고
+   **「세우지 못한 것」이 목록으로 남아 있는가**다.
+   ★★★ 뒤엣것이 이 보고서의 절반이다. 경험식은 정확도를 주장할 수 없으므로, 그 목록이
+     비면 보고서가 **스스로를 과장하는 쪽으로 조용히 바뀐다.** 게이트가 그것을 막는다. */
+{
+  const need = ["B-F-01", "B-F-02", "B-F-03"];
+  for (const id of need)
+    if (!FIT_CASES.some((c) => c.id === id)) fail.push(`① 베타: 경험식 케이스 ${id} 이 없다`);
+  for (const c of FIT_CASES) {
+    if (!c.published) fail.push(`① 베타 ${c.id}: 공표된 꼴이 비었다`);
+    if (!c.notEstablished || c.notEstablished.length < 40)
+      fail.push(`① 베타 ${c.id}: 「세우지 못한 것」이 비었거나 너무 짧다`);
+  }
+  if (UNVERIFIED.length < 5)
+    fail.push(`① 베타: 「세우지 못한 것」이 ${UNVERIFIED.length}건뿐이다 — 5건 이상이어야 한다`);
+  for (const c of BETA_WORKED)
+    if (!NUCLIDES[c.nuclide]) fail.push(`① 베타 케이스 ${c.id} 의 ${c.nuclide} 이 자료에 없다`);
+  /* ESTAR 자료가 도구 화면의 흡수체 여섯을 덮는가 — 하나라도 빠지면 Z 대조가 반쪽이 된다. */
+  for (const m of ["acrylic", "water", "glass", "aluminum", "iron", "lead"])
+    if (!ESTAR[m]?.rows?.length) fail.push(`① 베타: ESTAR 자료에 ${m} 이 없다`);
+  /* ★ 쪽이 「양을 섞지 않는다」는 판단을 계속 밝히고 있어야 한다 — 감마 쪽과 같은 자리다. */
+  const page4 = "src/pages/validation/beta.astro";
+  const src4 = readFileSync(page4, "utf8");
+  for (const must of ["detour factor", "What this report does not establish",
+                      "two quantities that are not the same"])
+    if (!src4.includes(must))
+      fail.push(`① ${page4} 에서 「${must}」가 사라졌다 — 무엇을 왜 대조하지 않는지가 쪽에서 빠지면 안 된다`);
+  /* ★ 옛 주장이 되살아나는지 — 출처 없이 적혀 있던 둘. */
+  for (const f of ["src/pages/beta.astro", "src/pages/methods.astro", "src/lib/tools.ts"]) {
+    const t = readFileSync(f, "utf8");
+    if (/accurate to roughly 10%/.test(t)) fail.push(`① ${f} 에 출처 없는 「roughly 10%」 주장이 되살아났다`);
+    if (/0\.01 to 3\s*\n?\s*MeV/.test(t)) fail.push(`① ${f} 에 「0.01 to 3 MeV」 범위가 되살아났다`);
+  }
+}
+console.log(`①-4 커버리지(베타) — 경험식 ${FIT_CASES.length} · 유도 ${BETA_DERIV.length} · ` +
+            `손계산 ${BETA_WORKED.length} · 거부 ${BETA_REFUSAL.length} · ★세우지 못한 것 ${UNVERIFIED.length}`);
+
 /* ══════════════ ①-5 보고서가 스스로 내린 판정 ══════════════
    ★★★ **2026-09-19 에 이 검사가 없어서 한 라운드를 놓쳤다.** 감마 보고서가 라이브에서
      「One or more checks fail」을 띄운 채 배포돼 있었다 — 항등식 `G-ID-10` 을 케이스 정본에
@@ -178,6 +219,7 @@ console.log(`① 커버리지(붕괴) — 갈래 ${DECAY_MODES.length}/3 덮음 
     ["decay", "src/validation/decay.cases.ts"],
     ["gamma-shielding", "src/validation/gamma.cases.ts"],
     ["specific-activity", "src/validation/specific-activity.cases.ts"],
+    ["beta", "src/validation/beta.cases.ts"],
   ];
   let ids = 0;
   for (const [tool, caseFile] of RENDERED) {

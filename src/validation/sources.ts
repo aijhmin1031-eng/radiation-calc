@@ -105,6 +105,20 @@ export const SOURCES: Record<string, Source> = {
     url: "https://physics.nist.gov/cuu/Constants/Table/allascii.txt",
     access: "Freely published by NIST.",
   },
+  estar: {
+    key: "estar",
+    label: "NIST ESTAR",
+    cite: "Berger, M. J., Coursey, J. S., Zucker, M. A. and Chang, J., ESTAR: Stopping Powers and Range Tables for Electrons, NIST Standard Reference Database 124, National Institute of Standards and Technology. The method description cites ICRU (1984) for the treatment of mean excitation energies.",
+    url: "https://physics.nist.gov/PhysRefData/Star/Text/ESTAR.html",
+    access: "Freely published by NIST as an online database.",
+  },
+  katzPenfold: {
+    key: "katzPenfold",
+    label: "Katz & Penfold (1952)",
+    cite: "Katz, L. and Penfold, A. S., Range-Energy Relations for Electrons and the Determination of Beta-Ray End-Point Energies by Absorption, Reviews of Modern Physics 24, 28-44 (1952). doi:10.1103/RevModPhys.24.28.",
+    url: "https://doi.org/10.1103/RevModPhys.24.28",
+    access: "Behind a subscription. The bibliographic record was confirmed through Crossref; the full text was not opened for this report, and what that limits is stated in the report itself.",
+  },
   podgorsak: {
     key: "podgorsak",
     label: "IAEA STI/PUB/1196",
@@ -172,6 +186,12 @@ export const STATEMENTS: Statement[] = [
     text: "atomic mass constant energy equivalent in MeV: 931.494 103 72, with a standard uncertainty of 0.000 000 29 MeV." },
   { id: "avogadro", source: "codata", locator: "Avogadro constant",
     text: "Avogadro constant: 6.022 140 76 e23 mol^-1, marked (exact)." },
+  { id: "estar-csda", source: "estar", locator: "Appendix, definition of CSDA range",
+    text: "CSDA range: a very close approximation to the average path length traveled by a charged particle as it slows down to rest, calculated in the continuous-slowing-down approximation. In this approximation, the rate of energy loss at every point along the track is assumed to be equal to the total stopping power. Energy-loss fluctuations are neglected. The CSDA range is obtained by integrating the reciprocal of the total stopping power with respect to energy." },
+  { id: "estar-projected", source: "estar", locator: "Appendix, definitions of projected range and detour factor",
+    text: "Projected range: average value of the depth to which a charged particle will penetrate in the course of slowing down to rest. This depth is measured along the initial direction of the particle. Detour factor: ratio of the projected range to the CSDA range. As the result of multiple scattering, the trajectory of the particle is wiggly rather than straight, and the detour factor is always smaller than unity." },
+  { id: "estar-yield", source: "estar", locator: "Appendix, definition of radiation yield",
+    text: "Radiation yield: average fraction of the initial kinetic energy of an electron that is converted to bremsstrahlung energy as a particle slows down to rest, calculated in the continuous-slowing-down approximation. Important only for electrons." },
   { id: "kerma", source: "podgorsak", locator: "Section 2.7.4, Eqs (2.29) and (2.30)",
     text: "Collision kerma in air and exposure are related by K_col = X · (W_air/e). Total air kerma is larger by the factor 1/(1 − g), where g is the fraction of the charged-particle energy lost to bremsstrahlung." },
 ];
