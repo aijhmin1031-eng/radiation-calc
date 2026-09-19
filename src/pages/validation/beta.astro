@@ -1,0 +1,635 @@
+---
+/** ★★ 베타 계산기 유효성 평가 보고서 — 쪽이 숫자를 손으로 들지 않는다.
+ *  ★★★ 이 쪽은 앞의 넷과 **구조가 다르다**: 경험식 위에 선 도구라 「정확도」를 주장할 수
+ *    없고, 그래서 **세우지 못한 것을 표로 든다**(`UNVERIFIED`). 그 표가 이 보고서의 절반이다. */
+import Base from "../../layouts/Base.astro";
+import { u, DOI, DOI_URL } from "../../lib/site";
+import nuclides from "../../data/nuclides.json";
+import {
+  infiniteMediumDoseRate, semiInfiniteSurfaceDoseRate, betaRange, betaRangeCm,
+  betaMassAbsorption, betaTransmission, bremsstrahlungYield,
+  BETA_RANGE_MIN_MEV, BETA_RANGE_BRANCH_MEV,
+} from "../../engine/beta";
+import {
+  DERIVATION_CASES, IDENTITY_CASES, FIT_CASES, BRANCH_CASE, ESTAR, DETOUR_CASE,
+  BREMS_PAIRS, BREMS_CASE, DATA_CASES, WORKED_CASES, REFUSAL_CASES, UNVERIFIED,
+  TOLERANCE_EXACT, TOLERANCE_WORKED, TOLERANCE_DATA,
+} from "../../validation/beta.cases";
+import { SOURCES, statementById } from "../../validation/sources";
+import { reportFor } from "../../validation/registry";
+import { sci, relValue } from "../../validation/format";
+
+type Branch = { max: number | null; mean: number | null; i: number | null; kind: string };
+type Nuc = { beta?: Branch[]; beta_max_keV?: number; beta_mean_keV?: number };
+const N = nuclides as unknown as Record<string, Nuc>;
+const BETA = Object.entries(N).filter(([, n]) => n.beta_max_keV && n.beta_mean_keV);
+const report = reportFor("beta")!;
+
+let revision = (process.env.VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7);
+if (!revision) {
+  try {
+    const { execSync } = await import("node:child_process");
+    revision = execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch { revision = ""; }
+}
+
+/* ── ① 정확 ── */
+const uFactor = infiniteMediumDoseRate(1000, 1);
+const derivations = DERIVATION_CASES.map((c) => ({
+  c, got: c.id === "B-U-02" ? uFactor : c.expect,
+  diff: c.id === "B-U-02" ? relValue(uFactor, c.expect) : 0,
+}));
+
+const idRun = (kind: string, k: string) => {
+  const E = N[k].beta_mean_keV!;
+  if (kind === "linearConc") return infiniteMediumDoseRate(E, 2e6) / infiniteMediumDoseRate(E, 1e6);
+  if (kind === "linearEnergy") return infiniteMediumDoseRate(2 * E, 1e6) / infiniteMediumDoseRate(E, 1e6);
+  if (kind === "surfaceHalf") return semiInfiniteSurfaceDoseRate(E, 1e6) / infiniteMediumDoseRate(E, 1e6);
+  if (kind === "zeroConc") return infiniteMediumDoseRate(E, 0);
+  return infiniteMediumDoseRate(E, 1e6) /
+    (infiniteMediumDoseRate(E, 3e5) + infiniteMediumDoseRate(E, 7e5));
+};
+let idChecks = 0, idWorst = 0, idWorstWhat = "";
+const identities = IDENTITY_CASES.map((c) => {
+  let worst = 0;
+  for (const [k] of BETA) {
+    idChecks += 1;
+    const r = relValue(idRun(c.kind, k), c.expect);
+    if (r > worst) worst = r;
+    if (r > idWorst) { idWorst = r; idWorstWhat = `${c.id} @${k}`; }
+  }
+  return { c, tool: idRun(c.kind, "Sr-90"), worst };
+});
+
+/* ── ② 형태 충실도 ── */
+const formLow = [0.01, 0.05, 0.2, 1.0, 2.0, 2.4999].map((E) =>
+  ({ E, published: 412 * E ** (1.265 - 0.0954 * Math.log(E)) / 1000, tool: betaRange(E) }));
+const formHigh = [2.5001, 3.0, 3.54, 10].map((E) =>
+  ({ E, published: (530 * E - 106) / 1000, tool: betaRange(E) }));
+const formWorst = Math.max(...[...formLow, ...formHigh].map((r) => relValue(r.tool, r.published)));
+
+/* ── 가지 경계 — 간격이 최소인 점을 **재어서** 낸다 ── */
+const kpLow = (E: number) => 0.412 * E ** (1.265 - 0.0954 * Math.log(E));
+const kpHigh = (E: number) => 0.530 * E - 0.106;
+let branchMin = { gap: Infinity, E: 0 };
+for (let E = BRANCH_CASE.searchFrom; E <= BRANCH_CASE.searchTo; E += 1e-4) {
+  const g = Math.abs(kpHigh(E) - kpLow(E)) / kpLow(E);
+  if (g < branchMin.gap) branchMin = { gap: g, E };
+}
+const branchOk = Math.abs(branchMin.E - BRANCH_CASE.expectNear) <= BRANCH_CASE.expectTolerance
+  && branchMin.gap < BRANCH_CASE.gapBelow && branchMin.gap > 0;
+
+/* ── 우회인자 ── */
+const detourRows = ESTAR[DETOUR_CASE.material].rows
+  .filter((r) => r[0] >= DETOUR_CASE.fromMeV && r[0] <= DETOUR_CASE.toMeV)
+  .map(([E, csda]) => ({ E, csda, kp: betaRange(E), f: betaRange(E) / csda }));
+const detourMin = Math.min(...detourRows.map((r) => r.f));
+const detourMax = Math.max(...detourRows.map((r) => r.f));
+const detourOk = detourMax < DETOUR_CASE.mustBeBelow
+  && detourRows.filter((r) => r.E >= DETOUR_CASE.midBandFrom).every((r) => r.f >= DETOUR_CASE.midBandAtLeast);
+
+/* ── 제동복사 Z 의존 ── */
+const yieldAt = (mat: string, E: number) =>
+  ESTAR[mat].rows.find((x) => Math.abs(x[0] - E) < 1e-9)?.[2] ?? NaN;
+const bremsRows = BREMS_PAIRS.map((p) => {
+  const zRatio = ESTAR[p.heavy].z / ESTAR[p.light].z;
+  const measured = BREMS_CASE.energiesMeV.map((E) => yieldAt(p.heavy, E) / yieldAt(p.light, E));
+  const toolRatio = bremsstrahlungYield(ESTAR[p.heavy].z, 1) / bremsstrahlungYield(ESTAR[p.light].z, 1);
+  return { p, zRatio, toolRatio, measured,
+    lo: Math.min(...measured), hi: Math.max(...measured),
+    implOk: relValue(toolRatio, zRatio) < TOLERANCE_EXACT };
+});
+const lowZ = bremsRows.find((r) => r.p.id === "B-E-02")!;
+const lowZOk = lowZ.measured.every((m) => relValue(m, lowZ.zRatio) < BREMS_CASE.lowZPairTolerance);
+
+/* ── ③ 자료 내부 정합 ── */
+let wmWorst = 0, wmWho = "";
+const rare: { k: string; max: number; i: number; n: number }[] = [];
+const ratios: { k: string; r: number }[] = [];
+let maxOk = true;
+for (const [k, n] of BETA) {
+  const b = (n.beta ?? []).filter((x) => x.mean != null && x.i != null);
+  if (b.length) {
+    const tot = b.reduce((s, x) => s + x.i!, 0);
+    const wm = b.reduce((s, x) => s + x.i! * x.mean!, 0) / tot;
+    const d = relValue(wm, n.beta_mean_keV!);
+    if (d > wmWorst) { wmWorst = d; wmWho = k; }
+  }
+  const mb = (n.beta ?? []).filter((x) => x.max != null);
+  if (mb.length) {
+    const mx = mb.reduce((a, x) => (x.max! > a.max! ? x : a));
+    if (mx.max !== n.beta_max_keV) maxOk = false;
+    if ((mx.i ?? 100) < DATA_CASES.rareBranch.thresholdPct)
+      rare.push({ k, max: mx.max!, i: mx.i ?? 0, n: mb.length });
+  }
+  ratios.push({ k, r: n.beta_mean_keV! / n.beta_max_keV! });
+}
+ratios.sort((a, b) => a.r - b.r);
+const wmOk = wmWorst <= TOLERANCE_DATA;
+
+/* ── 손계산 · 거부 ── */
+const worked = WORKED_CASES.map((c) => {
+  const n = N[c.nuclide];
+  const got = c.kind === "doseRate" ? infiniteMediumDoseRate(n.beta_mean_keV!, c.input!)
+    : c.kind === "surface" ? semiInfiniteSurfaceDoseRate(n.beta_mean_keV!, c.input!)
+    : c.kind === "range" ? betaRange(n.beta_max_keV! / 1000)
+    : c.kind === "rangeCm" ? betaRangeCm(n.beta_max_keV! / 1000, c.density!)
+    : betaTransmission(n.beta_max_keV! / 1000, c.input!);
+  return { c, got, diff: relValue(got, c.expect) };
+});
+const refusals = REFUSAL_CASES.map((c) => {
+  const got = c.kind === "range" ? betaRange(c.args[0])
+    : c.kind === "rangeCm" ? betaRangeCm(c.args[0], c.args[1])
+    : c.kind === "massAbsorption" ? betaMassAbsorption(c.args[0])
+    : betaTransmission(c.args[0], c.args[1]);
+  return { c, refused: Number.isNaN(got), got };
+});
+
+const checks = derivations.length + idChecks + formLow.length + formHigh.length + 1
+  + detourRows.length + bremsRows.length * (BREMS_CASE.energiesMeV.length + 1)
+  + BETA.length * 3 + worked.length + refusals.length;
+const allPass = idWorst < TOLERANCE_EXACT && formWorst < TOLERANCE_WORKED
+  && branchOk && detourOk && lowZOk && bremsRows.every((r) => r.implOk)
+  && wmOk && maxOk
+  && worked.every((x) => x.diff < TOLERANCE_WORKED)
+  && refusals.every((x) => x.refused);
+
+const cite = (ids?: readonly string[]) => (ids ?? []).map((id) => {
+  const st = statementById(id);
+  return st ? `${SOURCES[st.source].label}, ${st.locator}` : id;
+}).join(" · ");
+
+const title = "Beta calculator validation — what an empirical fit can and cannot be checked against";
+const description =
+  "The infinite-medium dose rate derived exactly from energy conservation, and the three empirical fits behind the shielding mode checked for form, domain and their measured relationship to NIST electron data — with what could not be established listed rather than glossed.";
+---
+<Base title={title} description={description} schema="TechArticle">
+  <nav class="tap-list mb-4 flex flex-wrap items-center gap-x-1.5 text-[12px] text-ink-faint">
+    <a href={u("/")} class="hover:text-ink">Calculators</a> <span aria-hidden>/</span>
+    <a href={u("/validation/")} class="hover:text-ink">Validation</a> <span aria-hidden>/</span> Beta
+  </nav>
+
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
+    Validation of the beta calculator
+  </h1>
+  <p class="mt-2 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    One number on this screen is exact and the rest rest on empirical fits. This report separates
+    them, checks each to the standard its own character allows, and lists what it could not establish
+    instead of leaving the gap unmarked.
+  </p>
+
+  <dl class="card mt-6 grid max-w-3xl gap-x-6 gap-y-2 p-4 text-[13px] sm:grid-cols-[11rem_minmax(0,1fr)]">
+    <dt class="text-ink-faint">Subject</dt>
+    <dd class="text-ink-muted">The beta calculator at <a href={u("/beta/")} class="underline">{u("/beta/")}</a>, both of its modes, and the engine module <code>src/engine/beta.ts</code>.</dd>
+    <dt class="text-ink-faint">Report date</dt>
+    <dd class="text-ink-muted">{report.validatedOn}</dd>
+    <dt class="text-ink-faint">Source revision</dt>
+    <dd class="num text-ink-muted">{revision || "not recorded in this build"}</dd>
+    <dt class="text-ink-faint">Archived source</dt>
+    <dd class="text-ink-muted"><a href={DOI_URL} rel="noopener" class="underline">{DOI}</a></dd>
+    <dt class="text-ink-faint">Nuclides with beta data</dt>
+    <dd class="num text-ink-muted">{BETA.length} of {Object.keys(N).length}</dd>
+    <dt class="text-ink-faint">Checks performed</dt>
+    <dd class="num text-ink-muted">{checks}</dd>
+    <dt class="text-ink-faint">Acceptance criteria</dt>
+    <dd class="text-ink-muted">
+      Energy conservation: relative difference below <span class="num">{TOLERANCE_EXACT}</span>.
+      Fit form: below <span class="num">{TOLERANCE_WORKED}</span>. Stored data against its own
+      branches: below <span class="num">{TOLERANCE_DATA}</span>. No accuracy criterion is applied to
+      the fits themselves, for the reason given below.
+    </dd>
+    <dt class="text-ink-faint">Not established</dt>
+    <dd class="num text-ink-muted">{UNVERIFIED.length} items, listed at the end</dd>
+    <dt class="text-ink-faint">Result</dt>
+    <dd class={allPass ? "font-semibold text-ink" : "font-semibold text-warn"}>
+      {allPass ? "All checks pass." : "One or more checks fail — see the tables below."}
+    </dd>
+  </dl>
+
+  <section class="prose-doc mt-10 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <h2>Scope</h2>
+    <p>
+      This report covers the beta calculator: the infinite-medium and surface dose rates, the range
+      and the absorber transmission, and the bremsstrahlung comparison between materials, for the
+      {" "}{BETA.length} nuclides in the data set that carry beta data. It does not cover skin dose,
+      which this calculator deliberately does not attempt, nor the gamma emissions of the same
+      nuclides, which the <a href={u("/validation/gamma-shielding/")}>gamma report</a> covers.
+    </p>
+
+    <h2>Why this report is built differently from the other four</h2>
+    <p>
+      The unit converter rests on definitions, so its report could be complete. The decay and
+      specific-activity reports rest on evaluated measurements, so they could be set against
+      independent evaluations. The gamma report deals with a derived quantity whose published
+      compilations use different conventions, so it validates the derivation and the inputs instead
+      of the output.
+    </p>
+    <p>
+      This calculator rests on something else again: <strong>empirical fits</strong>. A fit is not a
+      definition and it is not evaluated data. It is a curve somebody drew through measurements, and
+      there is no authority that says what its true value is. Asking whether the Katz–Penfold range
+      is "correct" has no answer. Three questions do have answers, and they are what this report asks:
+    </p>
+    <ol>
+      <li><strong>Is the implementation the published form?</strong> Coefficient for coefficient, branch for branch.</li>
+      <li><strong>Does it stay inside the range it was fitted over?</strong> Or does it answer where no data exists?</li>
+      <li><strong>How does it stand against independent modern data — for the same quantity?</strong></li>
+    </ol>
+    <p>
+      The third question is where this kind of report goes wrong most easily, and the trap is the same
+      one the gamma report documents: two numbers with the same name that are not the same quantity.
+      It is handled explicitly below.
+    </p>
+
+    <h2>The one exact result</h2>
+    <p>
+      The infinite-medium dose rate is not a fit. It follows from conservation of energy in four
+      lines, and it is the only number on the beta screen that can be validated to the same standard
+      as the unit converter.
+    </p>
+    <div class="not-prose my-3 space-y-5">
+      {DERIVATION_CASES.map((c) => (
+        <div class="card p-4">
+          <p class="text-[14px] font-semibold text-ink"><span class="num">{c.id}</span> — {c.title}</p>
+          <p class="mt-0.5 text-[12px] text-ink-faint">In the code: {c.where}{c.statements ? ` · Cited: ${cite(c.statements)}` : ""}</p>
+          <ol class="mt-2 list-decimal space-y-1 pl-5 text-[14px] leading-relaxed text-ink-muted">
+            {c.steps.map((s) => <li>{s}</li>)}
+          </ol>
+        </div>
+      ))}
+    </div>
+
+    <h3>Identities</h3>
+    <p>
+      Each holds for every nuclide, so each is checked at all {BETA.length} rather than at one energy.
+      The table shows the value at Sr-90 and the worst disagreement across the set.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th class="text-left">Identity</th>
+            <th class="text-right">Hand</th>
+            <th class="text-right">Tool</th>
+            <th class="text-right">Worst<br />difference</th></tr>
+        </thead>
+        <tbody>
+          {identities.map(({ c, tool, worst }) => (
+            <tr>
+              <td class="font-normal text-ink">{c.title}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id}</span></td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(c.expect)}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(tool)}</td>
+              <td class="num whitespace-nowrap text-right">{worst === 0 ? "0" : worst.toExponential(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <details class="not-prose my-3 rounded-md border border-line bg-surface px-3 py-2 text-[14px]">
+      <summary class="cursor-pointer font-medium text-ink">Derivations of the identities</summary>
+      <div class="mt-3 space-y-4">
+        {IDENTITY_CASES.map((c) => (
+          <div>
+            <p class="text-[13px] font-semibold text-ink"><span class="num">{c.id}</span> — {c.title}</p>
+            <ol class="mt-1 list-decimal space-y-0.5 pl-5 text-ink-muted">{c.steps.map((s) => <li>{s}</li>)}</ol>
+          </div>
+        ))}
+      </div>
+    </details>
+
+    <h2>The three empirical fits</h2>
+    <p>
+      For each: what is published, what the code computes, what this report established, and what it
+      did not. The last column is not padding — it is the part a reader needs in order to know how
+      much weight the number can carry.
+    </p>
+    <div class="not-prose my-3 space-y-4">
+      {FIT_CASES.map((c) => (
+        <div class="card p-4">
+          <p class="text-[14px] font-semibold text-ink"><span class="num">{c.id}</span> — {c.title}</p>
+          <dl class="mt-2 grid gap-x-5 gap-y-1 text-[13px] sm:grid-cols-[9rem_minmax(0,1fr)]">
+            <dt class="text-ink-faint">Published</dt>
+            <dd class="num text-ink">{c.published}</dd>
+            <dt class="text-ink-faint">Implemented</dt>
+            <dd class="num text-ink">{c.implemented}</dd>
+            <dt class="text-ink-faint">Domain</dt>
+            <dd class="text-ink-muted">{c.domain}</dd>
+            <dt class="text-ink-faint">Established</dt>
+            <dd class="text-ink-muted">{c.established}</dd>
+            <dt class="text-ink-faint">Not established</dt>
+            <dd class="text-warn">{c.notEstablished}</dd>
+            {c.source && <>
+              <dt class="text-ink-faint">Source</dt>
+              <dd class="text-ink-muted">{SOURCES[c.source].cite}</dd>
+            </>}
+          </dl>
+        </div>
+      ))}
+    </div>
+
+    <h3>Form fidelity</h3>
+    <p>
+      The published relation is quoted in mg/cm²; the code works in g/cm². Each row recomputes the
+      published expression from its own coefficients and compares. The branch point is at
+      {" "}<span class="num">{BETA_RANGE_BRANCH_MEV}</span> MeV and the fit's lower limit at
+      {" "}<span class="num">{BETA_RANGE_MIN_MEV}</span> MeV.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th class="text-left">Branch</th>
+            <th class="text-right">E<br />[MeV]</th>
+            <th class="text-right">Published<br />[g/cm²]</th>
+            <th class="text-right">Tool<br />[g/cm²]</th>
+            <th class="text-right">Difference</th></tr>
+        </thead>
+        <tbody>
+          {[...formLow.map((r) => ({ ...r, b: "lower" })), ...formHigh.map((r) => ({ ...r, b: "upper" }))].map((r) => (
+            <tr>
+              <td class="whitespace-nowrap font-normal text-ink">{r.b}</td>
+              <td class="num whitespace-nowrap text-right">{r.E}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(r.published, 8)}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(r.tool, 8)}</td>
+              <td class="num whitespace-nowrap text-right">{relValue(r.tool, r.published) === 0 ? "0" : relValue(r.tool, r.published).toExponential(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Where the branch point is, and how firmly</h3>
+    <p>
+      The code branched at 3 MeV until this report and now branches at
+      {" "}<span class="num">{BETA_RANGE_BRANCH_MEV}</span> MeV. That value was not read from the
+      original paper, which is behind a subscription and was not opened. The evidence available here
+      is internal: the two branches were fitted separately and do not meet, so the branch point cannot
+      be recovered from continuity, but the gap between them can be measured. Scanning from
+      {" "}{BRANCH_CASE.searchFrom} to {BRANCH_CASE.searchTo} MeV puts the minimum at
+      {" "}<span class="num">{branchMin.E.toFixed(3)}</span> MeV, where the two differ by
+      {" "}<span class="num">{(branchMin.gap * 100).toFixed(3)}%</span>.
+    </p>
+    <p>
+      That is consistent with a branch point of {BETA_RANGE_BRANCH_MEV} MeV and inconsistent with
+      nothing in particular; it is evidence, not proof, and it is listed as such at the end. What it
+      does rule out is the value the code used before, which had no evidence behind it at all. The
+      change affected exactly one nuclide in the data set, praseodymium-144 at 2.996 MeV, by
+      {" "}<span class="num">0.687%</span>.
+    </p>
+
+    <h2>Against NIST electron data — and the quantity trap</h2>
+    <p>
+      NIST publishes stopping powers and ranges for electrons. It is independent of the 1952 fit and
+      it is the natural thing to compare against. It is also the easiest place in this report to say
+      something false, because the obvious comparison is between two quantities that are not the same.
+    </p>
+    <div class="card not-prose my-4 p-4 text-[14px] leading-relaxed">
+      {[DETOUR_CASE.statements].flat().map((id) => {
+        const st = statementById(id);
+        return st ? (
+          <p class="mb-2 last:mb-0">
+            <span class="text-[12px] text-ink-faint">{SOURCES[st.source].label}, {st.locator}</span><br />
+            <span class="text-ink-muted">“{st.text}”</span>
+          </p>
+        ) : null;
+      })}
+    </div>
+    <p>
+      Katz–Penfold's R comes from absorption curves, so it is a <em>depth</em>. NIST's CSDA range is a
+      <em>path length</em>. Their ratio is what NIST calls the detour factor, and NIST states it is
+      always smaller than one. Measured across the fit's range in aluminium, our range divided by the
+      NIST path length runs from <span class="num">{detourMin.toFixed(3)}</span> to
+      {" "}<span class="num">{detourMax.toFixed(3)}</span> over {detourRows.length} tabulated
+      energies. <strong>That spread is not an error in the fit.</strong> It is the detour factor, and
+      a report that printed it as a 25% discrepancy would be wrong.
+    </p>
+    <p>
+      What it does tell a user is concrete: the thickness this calculator quotes is the depth betas
+      reach, which is less than the distance they travel. It is the right quantity for asking how
+      thick a shield must be.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th class="text-left">E<br />[MeV]</th>
+            <th class="text-right">This tool<br />[g/cm²]</th>
+            <th class="text-right">NIST CSDA<br />[g/cm²]</th>
+            <th class="text-right">Ratio</th></tr>
+        </thead>
+        <tbody>
+          {detourRows.filter((_, i) => i % 3 === 0 || _.E >= 1).map((r) => (
+            <tr>
+              <td class="num whitespace-nowrap text-ink">{r.E}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(r.kp, 6)}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(r.csda, 6)}</td>
+              <td class="num whitespace-nowrap text-right">{r.f.toFixed(3)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Bremsstrahlung: only the part that can be compared</h3>
+    <p>
+      The tool computes the bremsstrahlung fraction as f ≈ 3.5 × 10⁻⁴ · Z · E<sub>max</sub>, so the
+      ratio between two materials is exactly the ratio of their atomic numbers. NIST tabulates the
+      radiation yield for <em>monoenergetic</em> electrons, while that expression is meant for a
+      <em>beta spectrum</em> whose mean energy is roughly a third of the endpoint. The absolute values
+      are therefore not compared — that would repeat the gamma-constant mistake. The ratio between two
+      materials at one energy is free of the difference, so that is what is checked.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th class="text-left">Pair</th>
+            <th class="text-right">Tool<br />(= Z ratio)</th>
+            <th class="text-right">NIST<br />lowest</th>
+            <th class="text-right">NIST<br />highest</th>
+            <th class="text-left">Reading</th></tr>
+        </thead>
+        <tbody>
+          {bremsRows.map((r) => (
+            <tr>
+              <td class="whitespace-nowrap font-normal text-ink">{r.p.title.split(" — ")[0]}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{r.p.id}</span></td>
+              <td class="num whitespace-nowrap text-right text-ink">{r.zRatio.toFixed(2)}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{r.lo.toFixed(2)}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{r.hi.toFixed(2)}</td>
+              <td class={r.hi > r.zRatio * 1.1 ? "text-warn" : "text-ink-muted"}>
+                {r.hi > r.zRatio * 1.1 ? "tool understates the penalty" : "agrees"}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The two low-Z materials agree with the atomic-number ratio to within a few percent, which is
+      what makes the comparison trustworthy at all. Going up in atomic number the rule of thumb falls
+      behind: for lead against acrylic it gives {lowZ ? (ESTAR.lead.z / ESTAR.acrylic.z).toFixed(1) : ""},
+      while NIST puts the real ratio between
+      {" "}<span class="num">{bremsRows[bremsRows.length - 1].lo.toFixed(1)}</span> and
+      {" "}<span class="num">{bremsRows[bremsRows.length - 1].hi.toFixed(1)}</span>.
+    </p>
+    <p>
+      The direction matters. The advice the tool gives — shield betas with a low-Z material first, and
+      add lead outside it only if the bremsstrahlung still matters — is <em>strengthened</em> by this,
+      because lead is worse than the rule of thumb says. A user reading the absolute figure as a
+      prediction of dose would be under-estimating it.
+    </p>
+
+    <h2>The stored beta energies, checked against themselves</h2>
+    <p>
+      Each nuclide carries its beta branches with an endpoint, a mean energy and an intensity, and
+      separately the two summary values the calculator uses. Those summaries must follow from the
+      branches, which is checkable with no outside source.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th class="text-left">Check</th><th class="text-right">Nuclides</th><th class="text-right">Worst</th><th class="text-left">Result</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="font-normal text-ink">{DATA_CASES.weightedMean.title}
+              <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{DATA_CASES.weightedMean.id}</span></td>
+            <td class="num whitespace-nowrap text-right">{BETA.length}</td>
+            <td class="num whitespace-nowrap text-right">{wmWorst.toExponential(2)} ({wmWho})</td>
+            <td class={wmOk ? "text-ink" : "text-warn"}>{wmOk ? "passes" : "fails"}</td>
+          </tr>
+          <tr>
+            <td class="font-normal text-ink">{DATA_CASES.maxIsMaxBranch.title}
+              <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{DATA_CASES.maxIsMaxBranch.id}</span></td>
+            <td class="num whitespace-nowrap text-right">{BETA.length}</td>
+            <td class="num whitespace-nowrap text-right">—</td>
+            <td class={maxOk ? "text-ink" : "text-warn"}>{maxOk ? "passes" : "fails"}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      <strong>{DATA_CASES.rareBranch.title}</strong> <span class="num text-[12px] text-ink-faint">({DATA_CASES.rareBranch.id})</span>. Using the highest endpoint is the conservative
+      choice for shielding, but it can belong to a branch almost nobody sees. In this data set
+      {" "}{rare.length === 1 ? "one nuclide is" : `${rare.length} nuclides are`} affected:
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th class="text-left">Nuclide</th><th class="text-right">Endpoint<br />[keV]</th><th class="text-right">Intensity of<br />that branch</th><th class="text-right">Branches</th></tr>
+        </thead>
+        <tbody>
+          {rare.map((r) => (
+            <tr>
+              <td class="whitespace-nowrap font-normal text-ink">{r.k}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{r.max}</td>
+              <td class="num whitespace-nowrap text-right text-warn">{r.i}%</td>
+              <td class="num whitespace-nowrap text-right">{r.n}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p>
+      For cobalt-60 the shielding thickness this calculator reports is for a branch emitted in about
+      one decay in eight hundred; more than 99.8% of its betas stop in a small fraction of it. The
+      thickness is not wrong — it is the conservative answer to "stop all the betas" — but it is not a
+      description of the typical beta, and a reader comparing it with a measurement would find that
+      confusing without knowing this.
+    </p>
+    <p>
+      <span class="num text-[12px] text-ink-faint">{DATA_CASES.meanOverMax.id}</span> — the ratio of mean to endpoint energy across the set runs from
+      {" "}<span class="num">{ratios[0].r.toFixed(3)}</span> ({ratios[0].k}) to
+      {" "}<span class="num">{ratios[ratios.length - 1].r.toFixed(3)}</span> ({ratios[ratios.length - 1].k}),
+      with a median of <span class="num">{ratios[Math.floor(ratios.length / 2)].r.toFixed(3)}</span>.
+      The familiar "about one third" holds for single-branch emitters and should not be applied to the
+      rest: the stored mean covers the whole decay while the stored endpoint is the highest branch.
+    </p>
+
+    <h2>Worked cases</h2>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th class="text-left">Case</th><th class="text-right">By hand</th><th class="text-right">Tool</th><th class="text-right">Difference</th></tr>
+        </thead>
+        <tbody>
+          {worked.map(({ c, got, diff }) => (
+            <tr>
+              <td class="font-normal text-ink">{c.title}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id} · {c.nuclide}</span></td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(c.expect, 11)} {c.unit}</td>
+              <td class="num whitespace-nowrap text-right text-ink">{sci(got, 11)} {c.unit}</td>
+              <td class="num whitespace-nowrap text-right">{diff === 0 ? "0" : diff.toExponential(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div class="not-prose my-3 space-y-5">
+      {WORKED_CASES.map((c) => (
+        <div class="card p-4">
+          <p class="text-[14px] font-semibold text-ink"><span class="num">{c.id}</span> — {c.title}</p>
+          <ol class="mt-2 list-decimal space-y-1 pl-5 text-[14px] leading-relaxed text-ink-muted">
+            {c.steps.map((s) => <li>{s}</li>)}
+          </ol>
+        </div>
+      ))}
+    </div>
+
+    <h2>Where the calculator must refuse</h2>
+    <p>
+      Four of these six were open when this report was written. One of them is a kind of failure this
+      project had not seen before: the guard that stops the exponential past the range compared the
+      thickness against a not-a-number, and <strong>every comparison with a not-a-number is false</strong>,
+      so the guard was skipped and the exponential returned 6.4 × 10⁻¹⁹⁵ — a number, through a check
+      written to prevent exactly that.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th class="text-left">Input</th><th class="text-left">Why there is no answer</th><th class="text-right">Refused</th></tr>
+        </thead>
+        <tbody>
+          {refusals.map(({ c, refused }) => (
+            <tr>
+              <td class="font-normal text-ink">{c.title}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{c.id}</span></td>
+              <td>{c.why}</td>
+              <td class={refused ? "whitespace-nowrap text-right text-ink" : "whitespace-nowrap text-right font-semibold text-warn"}>{refused ? "yes" : "no"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h2>What this report does not establish</h2>
+    <p>
+      Listed rather than described, so that a reader can count them. Nothing here is a reason to
+      distrust the exact result above; all of it bears on the shielding mode.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit">
+      <table>
+        <thead>
+          <tr><th class="text-left">Not established</th><th class="text-left">Why</th></tr>
+        </thead>
+        <tbody>
+          {UNVERIFIED.map((v) => (
+            <tr>
+              <td class="font-normal text-ink">{v.what}
+                <span class="num mt-0.5 block text-[11px] font-normal text-ink-faint">{v.id}</span></td>
+              <td>{v.why}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Primary sources</h2>
+    <ul>
+      {["estar", "katzPenfold", "si", "cgpm1975", "podgorsak"].map((k) => SOURCES[k] && (
+        <li>
+          <strong>{SOURCES[k].label}</strong> — {SOURCES[k].cite}
+          {" "}<a href={SOURCES[k].url} rel="noopener" class="underline">link</a>. {SOURCES[k].access}
+        </li>
+      ))}
+    </ul>
+  </section>
+</Base>

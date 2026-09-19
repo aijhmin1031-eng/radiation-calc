@@ -79,7 +79,7 @@ const pending = REPORTS.filter((r) => r.status !== "published").length;
       <li>Buildup coefficients are not supplied; the Berger form accepts values you provide.</li>
       <li>Skin dose from surface contamination is not calculated.</li>
       <li>Decay chains assume a simple unbranched series.</li>
-      <li>Beta range uses the Katz–Penfold empirical fit, accurate to roughly 10%.</li>
+      <li>Beta range uses the Katz–Penfold empirical fit. It gives a depth of penetration, not the path length, and no accuracy is claimed for it here — see the validation report.</li>
       <li>Bremsstrahlung yield uses a thick-target approximation and is an order-of-magnitude guide.</li>
     </ul>
 
