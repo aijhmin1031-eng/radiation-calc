@@ -24,7 +24,8 @@ export const REPORTS: ValidationReport[] = [
     summary: "The infinite-medium dose rate is derived exactly from conservation of energy; the three empirical fits behind the shielding mode are checked for form and domain and set against NIST electron data for the same quantity, not a similar one. What could not be established is listed rather than glossed." },
   { tool: "specific-activity", status: "published", validatedOn: "2026-09-18",
     summary: "Derived by hand from the definitions of the mole and the becquerel, with every molar mass set against the evaluated atomic masses. The report found that the calculator had been using mass numbers in place of molar masses, states the size of the error it caused, and records its removal." },
-  { tool: "mda", status: "planned" },
+  { tool: "mda", status: "published", validatedOn: "2026-09-19",
+    summary: "The three worked examples MARSSIM prints in its own text are reproduced by this engine, which is a stronger check than a derivation because it fails when the algebra is right and the answer is not. Where the calculator departs from the standard, the size and the direction of the departure are measured." },
   { tool: "alara", status: "planned" },
 ];
 
