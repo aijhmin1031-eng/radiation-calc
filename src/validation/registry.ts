@@ -26,7 +26,8 @@ export const REPORTS: ValidationReport[] = [
     summary: "Derived by hand from the definitions of the mole and the becquerel, with every molar mass set against the evaluated atomic masses. The report found that the calculator had been using mass numbers in place of molar masses, states the size of the error it caused, and records its removal." },
   { tool: "mda", status: "published", validatedOn: "2026-09-19",
     summary: "The three worked examples MARSSIM prints in its own text are reproduced by this engine, which is a stronger check than a derivation because it fails when the algebra is right and the answer is not. Where the calculator departs from the standard, the size and the direction of the departure are measured." },
-  { tool: "alara", status: "planned" },
+  { tool: "alara", status: "published", validatedOn: "2026-09-19",
+    summary: "A calculator with no data to compare against, so every expression is derived instead. The point-source assumption is turned into a distance criterion by solving the finite-source case exactly, and all nine inputs that have no answer are enumerated — every one of them was returning a number." },
 ];
 
 export const reportFor = (tool: string) => REPORTS.find((r) => r.tool === tool);
