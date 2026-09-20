@@ -2,7 +2,8 @@ import type { NuclidePage } from "./nuclides";
 import { NUCLIDES } from "./nuclides";
 import { decayWord, halfLifeText, gammaRank, gammaVs, leadForTarget, horizons,
          betaEndpointBranch, betaDominantBranch, lineSpan,
-         tenHalfLives, meanLife, remainingAfterYears } from "./nuclides";
+         tenHalfLives, meanLife, remainingAfterYears, fmtTime } from "./nuclides";
+import { elapsedFromRatio } from "../engine";
 
 /** 낱장 147장의 **문장**을 데이터에서 만든다.
  *
@@ -27,10 +28,24 @@ const times = (r: number) => (r >= 1 ? `${r.toPrecision(2)}×` : `${(1 / r).toPr
 const mass = (g: number) => {
   if (!Number.isFinite(g) || g <= 0) return "—";
   const S: [number, string, number][] = [
+    /* ★ pg 아래로 내려가는 핵종이 있다(U-238m 의 1 GBq 는 0.160 fg). 눈금을 더 준다. */
+    [1e-15, "ag", 1e18], [1e-12, "fg", 1e15],
     [1e-9, "pg", 1e12], [1e-6, "ng", 1e9], [1e-3, "µg", 1e6], [1, "mg", 1e3], [1e3, "g", 1],
   ];
   for (const [hi, unit, k] of S) if (g < hi) return `${(g * k).toPrecision(3)} ${unit}`;
-  return `${(g / 1e3).toPrecision(3)} kg`;
+  /* ★ kg 에서 멈추면 Sm-147 이 「1.19e+3 kg」이 된다 — 눈금을 하나 더 준다. */
+  return g < 1e6 ? `${(g / 1e3).toPrecision(3)} kg` : `${(g / 1e6).toPrecision(3)} t`;
+};
+/** 활동도 — ★ `mass()` 와 같은 규칙이다(눈금마다 위 경계를 준다). 고정 단위로 쓰면
+ *  「2.43e+3 GBq」·「6.54e+4 kBq」가 나온다(2026-09-20 실측으로 잡았다 — 빌드도 게이트도
+ *  통과했고 화면의 글을 읽어야만 보였다. 질량에서 이미 밟은 함정을 활동도에서 되풀이했다). */
+const act = (bq: number) => {
+  if (!Number.isFinite(bq) || bq <= 0) return "—";
+  const S: [number, string, number][] = [
+    [1e3, "Bq", 1], [1e6, "kBq", 1e-3], [1e9, "MBq", 1e-6], [1e12, "GBq", 1e-9], [1e15, "TBq", 1e-12],
+  ];
+  for (const [hi, unit, k] of S) if (bq < hi) return `${(bq * k).toPrecision(3)} ${unit}`;
+  return `${(bq / 1e15).toPrecision(3)} PBq`;
 };
 /** ★ 0.00% 는 아무것도 알려 주지 않는다 — 아주 작아지면 지수로 바꾼다. */
 const frac = (x: number) => (x >= 1e-4 ? `${(x * 100).toFixed(2)}%` : x > 0 ? `${(x * 100).toExponential(1)}%` : "0%");
@@ -39,27 +54,77 @@ export function paragraphs(p: NuclidePage): string[] {
   const out: string[] = [];
   const { n } = p;
 
-  out.push(
-    `${p.name} (${p.key}) decays by ${decayWord(n.decay)} with a half-life of ${halfLifeText(n)}. ` +
-    `A gram of it holds ${sig(n.sa_bq_g)} Bq (${sig(p.saCiPerG)} Ci), so 1 GBq is ${mass(1e9 / n.sa_bq_g)}. ` +
-    (() => { const h = horizons(p.key);
-      return `After ${h[0].label} ${frac(h[0].frac)} of today's activity is left, and after ${h[1].label} ${frac(h[1].frac)}.`; })(),
-  );
+  /** ★★ 첫 문단이 **147장 전부에서 같은 틀**이었다 — 「… decays by … with a half-life of … /
+   *  A gram of it holds … / After … of today's activity is left, and after …」. 숫자를 빼고 재면
+   *  그대로 드러난다(2026-09-20 실측: 이 틀 하나가 절반 이상에 나오는 5어절 8개를 냈다).
+   *  ★ 띠는 **비방사능** [1e9 · 1e12 · 1e14 · 1e16] Bq/g 에서 **17·18·25·40·47장**(절반 74).
+   *    눈금마다 실무에서 다른 것이 문제가 된다 — 저울로 달 수 있는 물질인가, 아니면 활동도
+   *    말고는 「얼마나 있는가」를 말할 길이 없는가.
+   *  ★ 숫자는 그대로 전부 들어 있다(Bq/g · Ci/g · 1 GBq 의 질량 · 시평 둘). */
+  {
+    const h = horizons(p.key);
+    const sa = n.sa_bq_g, ci = sig(p.saCiPerG), bq = sig(sa), g1 = mass(1e9 / sa);
+    const mode = decayWord(n.decay), T = halfLifeText(n);
+    out.push(
+      sa < 1e9
+        /* ★ 이 띠에서는 시평 둘이 **모두 100.00%** 로 찍혀 문장이 아무것도 안 알려 줬다
+             (U-238: 「100.00% after forty years — 100.00% after ten thousand years」).
+             ★ **같은 값이 두 번 나오면 그 문장에는 값이 없다.** 실제로 변하는 값 — 1% 를
+               잃는 데 걸리는 시간 — 으로 바꾼다. 핵종마다 자릿수가 다르다. */
+        ? `${p.name} (${p.key}) is slow enough to be handled as a material rather than as a trace: ` +
+          `${bq} Bq/g, or ${ci} Ci/g, puts a gigabecquerel at ${g1}. Decay is by ${mode}, half-life ${T}, ` +
+          `and shedding even one per cent of the activity takes ${fmtTime(elapsedFromRatio(0.99, n.t_half_s))} — ` +
+          `no storage period shortens this one.`
+        : sa < 1e12
+        ? `A gigabecquerel of ${p.key} is ${g1} of material, which follows from a specific activity of ` +
+          `${bq} Bq/g (${ci} Ci/g). ${p.name} decays by ${mode} with a half-life of ${T}; ${h[0].label} leaves ` +
+          `${frac(h[0].frac)} of today's activity and ${h[1].label} leaves ${frac(h[1].frac)}.`
+        : sa < 1e14
+        ? `${p.name} decays by ${mode}, half-life ${T}. Specific activity is ${bq} Bq/g (${ci} Ci/g), so a ` +
+          `gigabecquerel comes to ${g1} — weighable, but on an analytical balance. Over ${h[0].label} the ` +
+          `activity falls to ${frac(h[0].frac)}, and over ${h[1].label} to ${frac(h[1].frac)}.`
+        : sa < 1e16
+        ? `At ${bq} Bq/g — ${ci} Ci/g — a gigabecquerel of ${p.key} amounts to ${g1}, which is why activity ` +
+          `rather than mass is how anyone states the quantity. ${p.name} decays by ${mode} with a half-life ` +
+          `of ${T}, falling to ${frac(h[0].frac)} of today's activity in ${h[0].label} and ${frac(h[1].frac)} in ${h[1].label}.`
+        : `${p.name} (${p.key}) carries ${bq} Bq/g, or ${ci} Ci/g: a gigabecquerel is ${g1}, no weighable ` +
+          `quantity at all. It decays by ${mode} with a half-life of ${T}, which leaves ${frac(h[0].frac)} ` +
+          `of today's activity after ${h[0].label} and ${frac(h[1].frac)} after ${h[1].label}.`,
+    );
+  }
 
   if (p.gamma > 0) {
     const top = p.shares[0];
     const r = gammaRank(p.key);
+    /** ★★ 같은 틀로 96장 — 「Γ comes out at …, which is …× Cs-137 …, and ranks N of the 96
+     *  photon emitters in this dataset」가 **Γ 가 네 자릿수 다른 쪽들에 글자까지 같게** 나갔다.
+     *  ★ 띠는 Γ [0.005 · 0.05 · 0.2] mGy·m²/(GBq·h) 에서 **21·34·32·9장**(절반 48).
+     *    맨 위 9장은 34장 띠에 붙이지 않고 그대로 둔다 — 21+9 로 묶어도 48 을 안 넘는다.
+     *  ★ 숫자는 그대로다 — Γ · 기준 핵종 대비 배수 · 순위 · 1 GBq·1 Ci 의 1 m 선량률. */
+    const cmp = ((): string => {
+      /* ★ 자기 자신과 비교하지 않는다 — Co-60 쪽에 「1.0× Co-60」이 뜨고 있었다. */
+      const refs = (["Cs-137", "Co-60"] as const).filter((k) => k !== p.key);
+      return refs.length === 2
+        ? `${times(gammaVs(p.key, refs[0]))} ${refs[0]} and ${times(gammaVs(p.key, refs[1]))} ${refs[1]}`
+        : `${times(gammaVs(p.key, refs[0]))} ${refs[0]}`;
+    })();
+    const rates = `1 GBq at 1 m reads ${sig(p.doseAt1mPerGBq)} mGy/h, and 1 Ci at the same distance ${sig(p.doseAt1mPerCi)} mGy/h`;
     out.push(
-      `Γ comes out at ${sig(p.gamma)} mGy·m²/(GBq·h), ` +
-      ((): string => {
-        /* ★ 자기 자신과 비교하지 않는다 — Co-60 쪽에 「1.0× Co-60」이 뜨고 있었다. */
-        const refs = (["Cs-137", "Co-60"] as const).filter((k) => k !== p.key);
-        return refs.length === 2
-          ? `which is ${times(gammaVs(p.key, refs[0]))} ${refs[0]} and ${times(gammaVs(p.key, refs[1]))} ${refs[1]}, `
-          : `which is ${times(gammaVs(p.key, refs[0]))} ${refs[0]}, `;
-      })() +
-      `and ranks ${r.rank} of the ${r.of} photon emitters in this dataset. ` +
-      `1 GBq at 1 m reads ${sig(p.doseAt1mPerGBq)} mGy/h; 1 Ci at 1 m reads ${sig(p.doseAt1mPerCi)} mGy/h.`,
+      p.gamma < 0.005
+        ? `The air kerma rate constant is small — ${sig(p.gamma)} mGy·m²/(GBq·h), ${cmp}, ` +
+          `ranking ${r.rank} of ${r.of} by Γ — near the bottom of the photon emitters, but above the ` +
+          `cutoff, which ${Object.keys(NUCLIDES).length - r.of} nuclides in this dataset are not. ` +
+          `${rates}. It takes ${act((0.02 / p.doseAt1mPerGBq) * 1e9)} at a metre to reach 20 µSv/h from the ` +
+          `photons alone, so external dose is seldom what limits handling at this Γ.`
+        : p.gamma < 0.05
+        ? `At ${sig(p.gamma)} mGy·m²/(GBq·h) the air kerma rate constant is ${cmp}, placing it ${r.rank} of ` +
+          `${r.of} photon emitters in this dataset. ${rates}.`
+        : p.gamma < 0.2
+        ? `${rates}, from an air kerma rate constant of ${sig(p.gamma)} mGy·m²/(GBq·h) — ${cmp}, and ` +
+          `${r.rank} of ${r.of} among the photon emitters carried here.`
+        : `Among the strong external emitters here: Γ of ${sig(p.gamma)} mGy·m²/(GBq·h) ranks ` +
+          `${r.rank} of ${r.of}, ${cmp}. ${rates} — a metre-scale hazard at gigabecquerel activities, and ` +
+          `${act((0.02 / p.doseAt1mPerGBq) * 1e9)} is already 20 µSv/h at that distance.`,
     );
     out.push(
       p.shares.length === 1
@@ -72,12 +137,37 @@ export function paragraphs(p: NuclidePage): string[] {
     const pb = p.shields.find((s) => s.material === "lead")!;
     const fe = p.shields.find((s) => s.material === "iron")!;
     const t20 = leadForTarget(p.key, 0.02);
+    /** ★★ 같은 틀로 96장을 찍고 있었다 — 「Halving the air kerma rate takes X of lead or Y of
+     *  steel」가 **납 반가층 0.12 mm 인 쪽과 30 mm 인 쪽에 글자까지 같게** 나갔다.
+     *  그 둘은 같은 공학 문제가 아니다(한쪽은 용기 벽으로 끝나고 한쪽은 납벽돌을 쌓는다).
+     *  ★ 실측으로 띠를 갈랐다 — 납 반가층 [0.2 · 1 · 5] mm 에서 **31·18·22·25장**이고
+     *    어느 띠도 절반(48장)을 안 넘는다. 넘으면 그 띠가 통째로 되풀이로 세어져 헛일이다.
+     *  ★ **숫자는 한 개도 빼지 않는다** — 납 HVL·강 HVL·납 TVL·20 µSv/h 목표두께가 띠마다
+     *    다 들어 있다. 띠는 말하는 순서와 무엇을 앞세우는지를 바꾸는 것이지 값을 줄이는 것이
+     *    아니다(줄이면 되풀이 대신 빈약이 된다 — `check-output` ⑥ 이 그것을 잡는다). */
+    const hvlMm = pb.hvlCm * 10;
+    const target = t20 === 0
+      ? `At 1 GBq and a metre it is already under 20 µSv/h with nothing in the way.`
+      : `Reaching 20 µSv/h from 1 GBq at a metre takes ${mm(t20)} of lead.`;
     out.push(
-      `Halving the air kerma rate takes ${mm(pb.hvlCm)} of lead or ${mm(fe.hvlCm)} of steel; a tenth takes ` +
-      `${mm(pb.tvlCm)} of lead. Bringing 1 GBq at 1 m down to 20 µSv/h needs ${t20 === 0 ? "no shielding at all — it is already below that" : `${mm(t20)} of lead`}.` +
+      (hvlMm < 0.2
+        ? `Shielding barely arises: ${mm(pb.hvlCm)} of lead halves the air kerma rate and ${mm(pb.tvlCm)} ` +
+          `takes it to a tenth, thicknesses a source capsule is likely to exceed on its own. Steel does the ` +
+          `halving in ${mm(fe.hvlCm)}. ${target}`
+        : hvlMm < 1
+        ? `A half-value layer of ${mm(pb.hvlCm)} in lead puts this in foil and thin sheet, with ${mm(fe.hvlCm)} ` +
+          `needed if the material is steel; ten-fold attenuation comes at ${mm(pb.tvlCm)} of lead. ${target}`
+        : hvlMm < 5
+        ? `Halving the air kerma rate calls for ${mm(pb.hvlCm)} of lead, or ${mm(fe.hvlCm)} of steel where lead ` +
+          `is unwelcome, and a factor of ten calls for ${mm(pb.tvlCm)} of lead — sheet thicknesses that a glovebox ` +
+          `or a transport container can carry. ${target}`
+        : `This is a shield that has to be designed: ${mm(pb.hvlCm)} of lead for a factor of two and ` +
+          `${mm(pb.tvlCm)} for a factor of ten, or ${mm(fe.hvlCm)} of steel to halve it, at which point the ` +
+          `mass of the shield is part of the problem. ${target}`) +
       (p.hardens
-        ? ` Note the tenth-value layer is ${pb.ratio.toFixed(1)} times the half-value layer here, not the 3.32 of a ` +
-          `single energy: this spectrum hardens as it penetrates, so three half-value layers do not give an eighth.`
+        ? ` The tenth-value layer runs ${pb.ratio.toFixed(1)} times the half-value layer rather than the 3.32 a ` +
+          `single energy would give: the spectrum hardens as it penetrates, so stacking three half-value layers ` +
+          `does not leave an eighth.`
         : ``),
     );
   } else if (n.lines.length) {

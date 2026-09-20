@@ -92,7 +92,15 @@ export interface NuclidePage {
 export const fmtTime = (s: number): string => {
   if (!Number.isFinite(s) || s <= 0) return "—";
   const y = s / 31557600;
+  /* ★ 눈금이 「million years」에서 멈춰 Sm-147 이 「1.56e+3 million years」가 됐다
+     (2026-09-20). 질량·활동도에서 이미 두 번 밟은 것과 같은 함정 —
+     **눈금마다 위 경계를 준다.** */
+  if (y >= 1e12) return `${(y / 1e12).toPrecision(3)} trillion years`;
+  if (y >= 1e9) return `${(y / 1e9).toPrecision(3)} billion years`;
   if (y >= 1e6) return `${(y / 1e6).toPrecision(3)} million years`;
+  /* ★ toPrecision(3) 은 1000 을 넘으면 지수로 떨어진다 — 「4.33e+3 years」가 그것이다.
+     1000~10⁶ 년은 자릿점을 찍는다(아래 일·시·분 가지는 y < 1 일 때만 도므로 안 걸린다). */
+  if (y >= 1000) return `${Math.round(y).toLocaleString("en-US")} years`;
   if (y >= 1) return `${y.toPrecision(3)} years`;
   const d = s / 86400;
   if (d >= 1) return `${d.toPrecision(3)} days`;
