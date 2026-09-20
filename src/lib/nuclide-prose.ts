@@ -254,3 +254,59 @@ export function decayCaption(key: string): string {
          `constant — ${frac(remainingAfterYears(key, 40))} is left after forty years — and the mean ` +
          `life 1/λ is ${tau}.`;
 }
+
+/** 구획 제목 — ★★ 147장에 **글자까지 같은 제목 넷**이 서 있었다
+ *  (`Key figures` · `How the activity falls` · `What this page does not tell you` ·
+ *  `Open X in a calculator`). 이웃 lab 이 애드센스에서 걸린 모양이 정확히 그것이다.
+ *
+ *  ★★ **이름을 다른 상수로 바꾸는 것은 아무 소용이 없다**(2026-09-20 에 이미 확인하고 버렸다) —
+ *    재는 자가 핵종 이름을 지운 뒤 비교하므로 「X at a glance」는 147장에서 같은 문자열이다.
+ *    내려가게 하려면 **제목이 쪽마다 다른 것을 말해야** 한다.
+ *  ★ 그래서 제목이 **그 쪽에 실제로 있는 것**을 말하도록 했다 — 표에 어떤 줄이 있는지,
+ *    붕괴 표가 어느 눈금을 덮는지, 무엇이 한계인지, 어떤 계산기로 이어지는지.
+ *    훑는 사람에게도 이쪽이 낫다: 제목만 읽어도 그 쪽에 감마가 있는지 알 수 있다.
+ *  ★ 문체는 **명사형**을 지킨다(플랫폼 관행). 문장형 제목을 쓰지 않는다.
+ *  ★★ **숫자를 제목에 쓰지 않는다** — 재는 자가 숫자를 `#` 으로 바꾸므로 「5 calculators」와
+ *    「3 calculators」가 **같은 문자열로 접힌다.** 세는 말은 낱말로 쓰거나 아예 쓰지 않는다.
+ *  ★ 모의로 먼저 쟀다: 제목 틀 중앙 **75.0% → 20.0%**, 전 낱장 공통 제목 **4 → 0개**. */
+export function sectionHeads(p: NuclidePage) {
+  const n = p.n, D = 86400, Y = 31557600, t10 = 10 * n.t_half_s;
+  const g = p.gamma > 0, b = Boolean(p.betaMaxMeV), a = Boolean(n.alpha?.length);
+  return {
+    /* 표에 실제로 서는 줄을 그대로 부른다. */
+    figures:
+      g && b ? "Half-life, specific activity, dose rate and beta energies"
+      : g    ? "Half-life, specific activity and dose rate"
+      : b    ? "Half-life, specific activity and beta endpoint"
+      :        "Half-life, decay mode and specific activity",
+    /* 붕괴 표가 덮는 눈금 — 열 반감기가 어디까지 가는가.
+       ★ 첫 판의 경계가 틀렸다(2026-09-20, 눈으로 잡았다) — 100년에서 바로 「millennia」로
+         넘어가는 바람에 **H-3(열 반감기 123년)·Cs-137(301년)·Sr-90(288년)이 「천년 단위」**
+         라고 말했다. 이름이 그 눈금을 실제로 가리키는지 **값을 넣어 확인할 것.** */
+    decay:
+      t10 < D          ? "Activity over the first hours"
+      : t10 < 30 * D   ? "Activity over days and weeks"
+      : t10 < 10 * Y   ? "Activity over months and years"
+      : t10 < 1000 * Y ? "Activity over decades and centuries"
+      : t10 < 1e6 * Y  ? "Activity over millennia"
+      :                  "Activity over geological time",
+    /* 그 쪽에서 실제로 문제가 되는 한계.
+       ★★ 감마를 먼저 보면 **Pu-239·U-238 이 「Limits of these dose rates」**가 된다 —
+         Γ 가 1e-5 도 안 되는 알파 방출체이고 **그 쪽 본문은 「외부선량이 한계가 되는 일은
+         드물다」고 말한다.** 제목이 본문과 어긋나면 제목이 거짓말을 하는 것이다.
+       ★ 그래서 알파가 있고 Γ 가 약한 띠(0.005, 산문에서 쓰는 것과 같은 문턱)이면
+         섭취 쪽을 든다. */
+    limits:
+      a && p.gamma < 0.005 ? "Limits — intake, not external dose"
+      : g ? "Limits of these dose rates"
+      : a ? "Limits — intake, not external dose"
+      : b ? "Limits of these range figures"
+      :     "Limits of these figures",
+    /* 이어지는 계산기 — 목록은 아래가 온전히 든다. 제목은 가려 주는 말이다. */
+    tools:
+      g && b ? `Gamma, beta and decay calculators for ${p.key}`
+      : g    ? `Gamma and decay calculators for ${p.key}`
+      : b    ? `Beta and decay calculators for ${p.key}`
+      :        `Decay and mass calculators for ${p.key}`,
+  };
+}

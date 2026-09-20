@@ -117,7 +117,7 @@ const BOILER_MEDIAN_MAX = 0.30;   // 되풀이 몫 중앙 (2026-09-20 ③ 뒤 �
 const BOILER_WORST_MAX  = 0.42;   // 한 장의 되풀이 몫 (실측 0.388, cd-109)
 const WORDS_MEDIAN_MAX  = 0.19;   // 숫자 뺀 낱말 겹침 중앙 (실측 0.166)
 const NEAR_DUP_MAX      = 3;   // 낱말 겹침 95% 이상인 쌍의 수 (실측 2)
-const HEAD_MEDIAN_MAX   = 0.78;   // 제목 틀 겹침 중앙 (실측 0.750 · 이 라운드에서 안 건드렸다)
+const HEAD_MEDIAN_MAX   = 0.24;   // 제목 틀 겹침 중앙 (2026-09-20 ④ 뒤 실측 0.200)
 
 /** 본문 산문만 — 표의 숫자와 곁칸은 글이 아니다. `<p>` 만 든다. */
 /** ★★ `<p>` 만 세던 첫 판에 **같은 종류의 사각**이 있었다(2026-09-20, ④ 를 흉본 자리에서
@@ -199,6 +199,12 @@ if (nearDup > NEAR_DUP_MAX)
   fail.push(`④-2 낱말이 95% 이상 같은 쌍이 ${nearDup}쌍 — 상한 ${NEAR_DUP_MAX}쌍 (${dupNames.join(", ")})`);
 if (hMed > HEAD_MEDIAN_MAX)
   fail.push(`④-2 제목 틀 겹침 중앙 ${(hMed * 100).toFixed(1)}% — 상한 ${(HEAD_MEDIAN_MAX * 100).toFixed(0)}%`);
+/** ★★ 이때까지 `universal` 은 **세기만 하고 막지는 않았다.** 이웃 lab 이 애드센스에서
+ *  탈락한 실측 원인이 바로 「장 제목이 **글자 그대로** 같고 본문만 달랐다」인데,
+ *  그 모양을 **보고만 하고 통과시키고 있었다.** 재는 것과 막는 것은 다른 층이다.
+ *  ★ 2026-09-20 에 넷을 걷어 0개로 만들었다 — 하나라도 되살아나면 그 자리에서 막는다. */
+if (universal.length)
+  fail.push(`④-2 147장 **전부**에 글자까지 같은 제목이 ${universal.length}개 — ${universal.map((h) => `「${h}」`).join(" ")}. 제목이 쪽마다 다른 것을 말해야 한다`);
 note(`되풀이 몫 중앙 ${(bMed * 100).toFixed(1)}% · 최악 ${(bWorst.f * 100).toFixed(1)}% (${bWorst.d})`);
 note(`낱말 겹침 중앙 ${(wMed * 100).toFixed(1)}% · 거의 같은 쌍 ${nearDup}쌍${dupNames.length ? ` (${dupNames.join(", ")})` : ""}`);
 note(`제목 틀 중앙 ${(hMed * 100).toFixed(1)}% · 전 낱장 공통 제목 ${universal.length}개: ${universal.map((h) => `「${h}」`).join(" ")}`);
