@@ -55,6 +55,17 @@ for (const vp of [{ w: 1280, h: 900, tag: "데스크톱" }, { w: 390, h: 844, ta
     const pg = await ctx.newPage();
     const errs = [];
     pg.on("pageerror", (e) => errs.push(String(e)));
+    /** ★★ 「Failed to load resource: … 404」만 적혀 있으면 **무엇이 실패했는지 알 수 없다**
+     *  (2026-09-20 에 이틀을 잡아먹었다 — 서버측 404 로그는 0건인데 브라우저는 404 를 본다고
+     *  하니 **내 서버로 간 요청이 아니라는 것**조차 메시지만 보고는 알 수 없었다).
+     *  ★ 실패한 요청의 **주소와 상태**를 함께 적는다. 게이트가 내는 말은 그것만 보고
+     *    다음 손을 정할 수 있어야 한다. */
+    pg.on("response", (res) => {
+      if (res.status() >= 400) errs.push(`HTTP ${res.status()} ← ${res.url()}`);
+    });
+    pg.on("requestfailed", (req) => {
+      errs.push(`요청 실패 ${req.failure()?.errorText ?? "?"} ← ${req.url()}`);
+    });
     pg.on("console", (m) => { if (m.type() === "error") errs.push(m.text()); });
     await pg.goto(`http://localhost:4321/calc${p}`, { waitUntil: "networkidle" });
     await pg.waitForTimeout(500);
