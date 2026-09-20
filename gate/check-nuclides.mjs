@@ -113,9 +113,9 @@ note(`${sample.length}쌍 · 중앙 ${(median * 100).toFixed(1)}% · 최대 ${(w
    ★ 아래 상한은 **래칫**이다 — 지금 값에 맞춰 두어 **나빠지는 것만** 막는다.
      되풀이를 허브로 옮긴 뒤 이 수들을 함께 내린다. **고치기 전 값을 박아 두는 것**이 요점이다. */
 console.log("\n④-2 심사자가 읽는 것 — 산문 전체 · 숫자 제외 · 제목 틀");
-const BOILER_MEDIAN_MAX = 0.51;   // 되풀이 몫 중앙 (2026-09-20 ② 뒤 실측 0.487)
-const BOILER_WORST_MAX  = 0.67;   // 한 장의 되풀이 몫 (실측 0.640, zr-95)
-const WORDS_MEDIAN_MAX  = 0.27;   // 숫자 뺀 낱말 겹침 중앙 (실측 0.251)
+const BOILER_MEDIAN_MAX = 0.30;   // 되풀이 몫 중앙 (2026-09-20 ③ 뒤 실측 0.279)
+const BOILER_WORST_MAX  = 0.42;   // 한 장의 되풀이 몫 (실측 0.388, cd-109)
+const WORDS_MEDIAN_MAX  = 0.19;   // 숫자 뺀 낱말 겹침 중앙 (실측 0.166)
 const NEAR_DUP_MAX      = 3;   // 낱말 겹침 95% 이상인 쌍의 수 (실측 2)
 const HEAD_MEDIAN_MAX   = 0.78;   // 제목 틀 겹침 중앙 (실측 0.750 · 이 라운드에서 안 건드렸다)
 
