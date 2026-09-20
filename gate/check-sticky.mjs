@@ -4,6 +4,7 @@
  *  ③ 지나친 뒤 뜨는가(높이·불투명·맨 위) ④ 칸이 실제로 눌리는가 ⑤ 앵커가 바에 안 가리는가
  *  ⑥ JS 없이 아무 일도 안 일어나는가 ⑦ 좁은 화면에서 한 줄인가. */
 import { chromium } from "playwright";
+import { LAUNCH } from "./chromium.mjs";
 import { createServer } from "node:http";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { extname, join, relative } from "node:path";
@@ -44,8 +45,7 @@ const all = walk(DIST).filter((f) => f.endsWith(".html"))
 const paths = all.filter((p) => !p.startsWith("/nuclides/") || p === "/nuclides/" || SAMPLE.includes(p));
 console.log(`   쪽 ${paths.length}장 (핵종 낱장 ${all.filter((p) => p.startsWith("/nuclides/")).length - 1}장 중 ${SAMPLE.length}장 표본)`);
 
-const browser = await chromium.launch(
-  process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
+const browser = await chromium.launch(LAUNCH);
 
 for (const vp of [{ w: 1280, h: 900, tag: "데스크톱" }, { w: 360, h: 780, tag: "모바일" }]) {
   const ctx = await browser.newContext({ viewport: { width: vp.w, height: vp.h } });

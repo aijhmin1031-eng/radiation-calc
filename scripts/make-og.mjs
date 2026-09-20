@@ -13,6 +13,7 @@
  * 실행: npm run build && npm run make-og
  */
 import { chromium } from "playwright";
+import { LAUNCH } from "../gate/chromium.mjs";
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
@@ -22,7 +23,6 @@ const stripBase = (p) => (p === BASE ? "/" : p.startsWith(BASE + "/") ? p.slice(
 const OUT = new URL("../public/og/", import.meta.url).pathname;
 const MANIFEST = new URL("../src/data/og-manifest.json", import.meta.url).pathname;
 const ART = new URL("../public/img/tools/", import.meta.url).pathname;
-const EXE = process.env.CHROMIUM_PATH || undefined;
 
 if (!existsSync(join(DIST, "sitemap-0.xml"))) {
   console.error("❌ dist 가 없다 — 먼저 `npm run build`");
@@ -78,7 +78,7 @@ const card = ({ heading, art }) => `<!doctype html><meta charset="utf-8">
 </div>
 ${art ? `<div class="r"><img src="${art}"></div>` : ""}`;
 
-const browser = await chromium.launch(EXE ? { executablePath: EXE } : {});
+const browser = await chromium.launch(LAUNCH);
 const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
 const manifest = {};
 for (const p of paths) {

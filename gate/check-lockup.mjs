@@ -4,6 +4,7 @@
  *    **보이는 결과**를 맞춘다 — 이 레포들의 게이트가 이미 그 층에서 일한다.
  *    이 파일을 세 lab 에 같은 내용으로 두고, 각자 자기 산출물을 잰다. */
 import { chromium } from "playwright";
+import { LAUNCH } from "./chromium.mjs";
 import { createServer } from "node:http";
 import { readFileSync, existsSync } from "node:fs";
 import { extname, join } from "node:path";
@@ -30,11 +31,7 @@ if (!ORIGIN) await new Promise((r) => srv.listen(4322, r));
 const ROOT_URL = ORIGIN || "http://localhost:4322";
 
 const fail = [];
-/** 크로미움 경로 — 원격 컨테이너는 미리 깔린 것을 쓰고, CI 는 `playwright install` 이
- *  받아 둔 기본 경로를 쓴다(그때는 executablePath 를 주지 않는다). */
-const EXE = process.env.PW_CHROMIUM || process.env.CHROMIUM_PATH
-  || (existsSync("/opt/pw-browsers/chromium") ? "/opt/pw-browsers/chromium" : undefined);
-const browser = await chromium.launch(EXE ? { executablePath: EXE } : {});
+const browser = await chromium.launch(LAUNCH);
 for (const theme of ["light", "dark"]) {
   for (const [w, h, tag] of [[1280, 900, "데스크톱"], [390, 844, "모바일"]]) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, colorScheme: theme });

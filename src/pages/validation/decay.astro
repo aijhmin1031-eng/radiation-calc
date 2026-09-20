@@ -67,7 +67,7 @@ const worked = WORKED_CASES.map((c) => {
   const T = N[c.nuclide].t_half_s;
   const secs = (c.input.t ?? 0) * UNIT_S[c.input.tu ?? "s"];
   const tool = c.mode === "remaining" ? decayActivity(c.input.a0, T, secs)
-    : c.mode === "when" ? elapsedFromRatio(c.input.target! / c.input.a0, T)
+    : c.mode === "when" ? elapsedFromRatio((c.input.target!) / c.input.a0, T)
     : halfLifeFromTwoPoints(c.input.a0, c.input.a1!, secs);
   return { c, tool, diff: relValue(tool, c.expect) };
 });

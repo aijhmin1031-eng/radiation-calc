@@ -8,6 +8,7 @@
  *    ② 첫 그림의 글자(로그인한 사람에게 「Sign in」이 보이면 안 된다)
  *    ③ 머리글 높이 예산(줄이 하나 늘 때마다 모바일에서 40px 씩 먹는다). */
 import { chromium } from "playwright";
+import { LAUNCH } from "./chromium.mjs";
 import { createServer } from "node:http";
 import { readFileSync, existsSync } from "node:fs";
 import { extname, join } from "node:path";
@@ -52,8 +53,7 @@ const SESSION = JSON.stringify({
   user: { email: "tester@example.com", user_metadata: { name: "알토리" } },
 });
 
-const browser = await chromium.launch(
-  process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
+const browser = await chromium.launch(LAUNCH);
 
 for (const [w, h, tag] of [[1280, 900, "데스크톱"], [390, 844, "모바일"]]) {
   console.log(`\n── ${tag} ${w}×${h} ──`);

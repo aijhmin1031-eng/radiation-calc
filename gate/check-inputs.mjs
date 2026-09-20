@@ -11,6 +11,7 @@
  *    ③ 무효 입력에 **이유가 화면에 뜨는가**(말 없이 「—」만 두면 고장으로 읽힌다).
  */
 import { chromium } from "playwright";
+import { LAUNCH } from "./chromium.mjs";
 import { createServer } from "node:http";
 import { readFileSync, existsSync } from "node:fs";
 import { extname, join } from "node:path";
@@ -37,7 +38,7 @@ const BAD = ["", "-5", "abc", "-0.001"];
 const fail = [];
 let checked = 0, reasons = 0, blocked = 0;
 
-const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
+const browser = await chromium.launch(LAUNCH);
 const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
 
 /** 화면에 그려진 답과 새어 나온 값을 함께 읽는다. */

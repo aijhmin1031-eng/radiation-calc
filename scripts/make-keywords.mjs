@@ -21,6 +21,7 @@
  */
 import { createRequire } from "node:module";
 import { chromium } from "playwright";
+import { LAUNCH } from "../gate/chromium.mjs";
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -93,8 +94,7 @@ const place = (glyph, ox) => glyph.path.commands.map((c) => {
  *  `HI` 는 반듯한 기둥 둘이라 좁아 보이고 `LD` 는 L 아래가 비어 넓어 보인다.
  *  쌍마다 **흰 폭의 평균**이 같아지도록 자간을 이분법으로 푼다. 레터링 장인이 손으로 하는 보정이다. */
 async function profiles(chars) {
-  const browser = await chromium.launch(
-    process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
+  const browser = await chromium.launch(LAUNCH);
   const page = await browser.newPage();
   const specs = chars.map((ch) => ({ ch, d: pathData(place(font.charToGlyph(ch), 0)) }));
   const out = await page.evaluate((specs) => {

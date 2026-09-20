@@ -2,6 +2,7 @@
  *  ★ 이 레포들이 밟은 함정이 전부 「빌드는 통과하는」 종류였다. 속성이 아니라
  *    getComputedStyle·getBoundingClientRect 로 재고, 계산이 실제로 도는지까지 본다. */
 import { chromium } from "playwright";
+import { LAUNCH } from "./chromium.mjs";
 import { createServer } from "node:http";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { extname, join, relative } from "node:path";
@@ -43,10 +44,8 @@ const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
 const paths = walk(DIST).filter((f) => f.endsWith(".html"))
   .map((f) => "/" + relative(DIST, f).replace(/index\.html$/, "").replace(/\\/g, "/"));
 
-// ★ CI 는 `npx playwright install` 로 받은 것을 쓰고, 로컬 컨테이너는 이미 있는 것을 가리킨다.
-//   판이 어긋나면 "Executable doesn't exist" 로 죽으므로 경로를 열어 둔다.
-const browser = await chromium.launch(
-  process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
+// ★ 크로미움 경로는 `gate/chromium.mjs` 한 곳이 정한다 — 열한 자리가 제각각 적고 있었다.
+const browser = await chromium.launch(LAUNCH);
 // ★ 두 뷰포트를 돈다 — 데스크톱만 돌면 모바일 전용 UI 가 통째로 시야 밖이다
 for (const vp of [{ w: 1280, h: 900, tag: "데스크톱" }, { w: 390, h: 844, tag: "모바일" }]) {
   const ctx = await browser.newContext({ viewport: { width: vp.w, height: vp.h } });
