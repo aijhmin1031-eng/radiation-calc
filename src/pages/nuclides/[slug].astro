@@ -3,7 +3,7 @@ import Base from "../../layouts/Base.astro";
 import { u, DATA_SOURCES } from "../../lib/site";
 import { ALL_KEYS, NUCLIDES, nuclidePage, slugOf, longName, decayWord, halfLifeText, elementName,
          belowCutoff, alphaSpread } from "../../lib/nuclides";
-import { paragraphs, decayCaption } from "../../lib/nuclide-prose";
+import { paragraphs, decayCaption, sectionHeads } from "../../lib/nuclide-prose";
 import { nuclideSeo } from "../../lib/nuclide-seo";
 
 export function getStaticPaths() {
@@ -36,6 +36,7 @@ const shown = p.shares.slice(0, 14);
  *  ★ 남기는 경고는 **그 핵종의 숫자를 든 것**뿐이다 — 숫자가 없으면 그 줄이 아예 사라진다.
  *    없는 위험을 147번 경고하지 않는다. */
 const cut = belowCutoff(key);
+const H = sectionHeads(p);
 const al = alphaSpread(key);
 const pb = p.shields.find((s) => s.material === "lead");
 const hubLinks = { lines: "/nuclides/#lines", hvl: "/nuclides/#hvl", tvl: "/nuclides/#tvl",
@@ -74,7 +75,7 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
   </section>
 
   <section class="mt-8 max-w-3xl">
-    <h2 class="text-[20px] font-semibold text-ink">Key figures</h2>
+    <h2 class="text-[20px] font-semibold text-ink">{H.figures}</h2>
     <table class="mt-3">
       <tbody>
         <tr><td>Half-life</td><td>{halfLifeText(n)} ({sig(n.t_half_s, 4)} s)</td></tr>
@@ -194,7 +195,7 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
   )}
 
   <section class="mt-8 max-w-3xl">
-    <h2 class="text-[20px] font-semibold text-ink">How the activity falls</h2>
+    <h2 class="text-[20px] font-semibold text-ink">{H.decay}</h2>
     {/* ★ 표에 **없는** 값만 든다 — 표는 반감기 배수와 남는 비율을 주고, 여기서는 그 배수의
         **경과 시간**과 평균수명을 준다. 표와 같은 것을 산문으로 되풀이하지 않는다.
         ★ 평균수명 / 반감기 = 1.44 는 **모든 핵종에서 같으므로 찍지 않는다**(82/6 과 같은 규칙). */}
@@ -211,7 +212,7 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
   </section>
 
   <section class="mt-8 max-w-3xl">
-    <h2 class="text-[20px] font-semibold text-ink">What this page does not tell you</h2>
+    <h2 class="text-[20px] font-semibold text-ink">{H.limits}</h2>
     {/* ★★ 일반 경고 세 줄은 허브(`/nuclides/#limits`)로 보냈다 — 147장에 **글자까지 같게**
         서 있던 것이라 심사자가 읽는 산문의 되풀이 몫을 크게 키우고 있었다.
         ★ 대신 **이 쪽의 숫자를 든 줄**만 남긴다. 숫자가 없으면 그 줄이 사라지므로 쪽마다
@@ -234,7 +235,7 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
   </section>
 
   <section class="mt-8 max-w-3xl">
-    <h2 class="text-[20px] font-semibold text-ink">Open {p.key} in a calculator</h2>
+    <h2 class="text-[20px] font-semibold text-ink">{H.tools}</h2>
     <ul class="mt-3 space-y-1.5">
       {TOOLS_FOR.filter((t) => t.when).map((t) => (
         <li><a href={u(t.href)} data-prefill={t.prefill ? p.key : undefined} class="underline text-[15px]">{t.label}</a></li>
