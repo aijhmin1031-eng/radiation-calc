@@ -1,6 +1,8 @@
 import type { NuclidePage } from "./nuclides";
+import { NUCLIDES } from "./nuclides";
 import { decayWord, halfLifeText, gammaRank, gammaVs, leadForTarget, horizons,
-         betaEndpointBranch, betaDominantBranch } from "./nuclides";
+         betaEndpointBranch, betaDominantBranch, lineSpan,
+         tenHalfLives, meanLife, remainingAfterYears } from "./nuclides";
 
 /** 낱장 147장의 **문장**을 데이터에서 만든다.
  *
@@ -83,7 +85,11 @@ export function paragraphs(p: NuclidePage): string[] {
       `All ${n.lines.length} recorded photon lines sit below the 20 keV cutoff, so Γ is zero by convention and no ` +
       `external dose rate is quoted. The strongest line is ${Math.max(...n.lines.map(([e]) => e)).toFixed(2)} keV. ` +
       `A monitor calibrated on Cs-137 under-responds at these energies, so a reading taken without an energy ` +
-      `correction understates ${p.key} rather than missing it outright.`,
+      `correction understates ${p.key} rather than missing it outright. ` +
+      ((): string => { const l = lineSpan(p.key)!;
+        return `The recorded spectrum runs ${l.loKeV.toPrecision(3)} to ${l.hiKeV.toPrecision(3)} keV and ` +
+               `carries ${l.totPct.toPrecision(3)}% emission probability in all, which sets what a thin-window ` +
+               `or proportional detector has to see.`; })(),
     );
   }
 
@@ -123,8 +129,38 @@ export function paragraphs(p: NuclidePage): string[] {
       `This dataset records no photon, beta or alpha lines for ${p.key} — a statement about the harvest and its ` +
       `thresholds, not a claim that the nuclide emits nothing. Half-life, decay mode and specific activity are ` +
       `therefore available here and dose rate and shielding are not. Nuclides in this position are normally ` +
-      `assayed destructively rather than with a survey meter.`,
+      `assayed destructively rather than with a survey meter. At ${sig(n.sa_bq_g)} Bq per gram, a 1 kBq ` +
+      `aliquot is ${mass(1e3 / n.sa_bq_g)} of ${p.key} — the quantity that has to be recovered, dissolved ` +
+      `and counted before any of it becomes a number.`,
     );
   }
   return out;
+}
+
+/** 붕괴 표의 캡션 — **표에 없는 값**(십 반감기의 경과 시간·평균수명)만 든다.
+ *
+ *  ★★ 147장에 같은 문장을 두면 그것이 곧 되풀이다(2026-09-20 실측: 한 문장을 147장에 넣자
+ *    되풀이 몫 중앙이 52.8 → 55.3% 로 되올랐다). 게이트가 세는 것은 「**절반 이상의 쪽에
+ *    나오는 5어절**」이므로, 반감기 자릿수로 띠를 나누면 어느 띠도 절반을 넘지 않는다
+ *    (실측 36·48·34·29장, 절반은 74장).
+ *  ★ 숫자를 피하려고 띠를 나눈 것이 아니다 — **6시간짜리와 10억년짜리에 같은 말을 하는 것이
+ *    애초에 틀린 글**이다. 띠마다 그 눈금에서 실제로 문제가 되는 것을 말한다.
+ *  ★ 평균수명/반감기 = 1.44 는 모든 핵종에서 같으므로 **찍지 않는다**(82/6 과 같은 규칙). */
+export function decayCaption(key: string): string {
+  const T = NUCLIDES[key].t_half_s, D = 86400, Y = 31557600;
+  const ten = tenHalfLives(key), tau = meanLife(key);
+  if (T < D)
+    return `Ten half-lives is ${ten}, so the activity moves measurably while a count is running: every ` +
+           `figure has to carry the time it was referred to. The mean life 1/λ is ${tau}.`;
+  if (T < Y)
+    return `Ten half-lives is ${ten} — a storage problem rather than a disposal one, with ` +
+           `${frac(remainingAfterYears(key, 1))} of today's activity still there after a year. ` +
+           `The mean life 1/λ is ${tau}.`;
+  if (T < 1000 * Y)
+    return `Ten half-lives is ${ten}, which puts decay storage out of reach: ` +
+           `${frac(remainingAfterYears(key, 40))} survives forty years. The mean life 1/λ, the quantity that ` +
+           `enters an integrated dose, is ${tau}.`;
+  return `Ten half-lives is ${ten}. On any timescale a facility can be planned over the activity is ` +
+         `constant — ${frac(remainingAfterYears(key, 40))} is left after forty years — and the mean ` +
+         `life 1/λ is ${tau}.`;
 }

@@ -95,6 +95,114 @@ if (median > MEDIAN_MAX) fail.push(`본문 겹침 중앙 ${(median * 100).toFixe
 if (worst[2] > PAIR_MAX) fail.push(`${worst[0]}↔${worst[1]} 겹침 ${(worst[2] * 100).toFixed(1)}% — 상한 ${(PAIR_MAX * 100).toFixed(0)}%`);
 note(`${sample.length}쌍 · 중앙 ${(median * 100).toFixed(1)}% · 최대 ${(worst[2] * 100).toFixed(1)}% (${worst[0]}↔${worst[1]})`);
 
+/* ── ④-2 **심사자가 읽는 것**으로 다시 잰다 ──────────────────
+   ★★★ 2026-09-20 에 ④ 가 **절반만 보고 있었다는 것**을 알았다(애드센스 관점 실측).
+     두 가지가 시야 밖이었다.
+     ① **자리** — ④ 는 `<section class="prose-doc">` 안만 본다. 그런데 각 구획의 설명 문단
+        (「Emission probability is how often a line appears…」, 「Solved for this nuclide's whole
+        photon spectrum…」, 「What this page does not tell you」의 항목들)은 **그 바깥**에 있다.
+        prose-doc 156어 · 본문 전체 산문 326어 — **절반이 안 보였다.**
+     ② **자** — ④ 의 `grams()` 는 `[^a-z0-9 ]` 라 **숫자를 남긴다.** 핵종마다 숫자가 다르니
+        겹침이 씻겨 내려간다. 그런데 **심사자는 숫자가 아니라 문장을 읽는다.**
+        같은 쪽을 두 자로 재면 숫자 포함 9.9% · 숫자 제외 31.9%로 갈렸다.
+   ★★ **④ 를 고치지 않고 나란히 둔다.** ④ 는 「자료가 실제로 다른가」를 재고(그것도 필요하다),
+     ④-2 는 「설명을 되풀이하는가」를 잰다. **두 질문은 다른 질문이다.**
+   ★★★ 머릿수는 **되풀이 몫**이다 — 「그 쪽 산문 중 절반 이상의 다른 낱장에도 나오는 몫」.
+     쌍끼리의 겹침보다 읽는 사람의 경험에 가깝다: 한 장을 열었을 때 **몇 할이 남의 쪽에서 본
+     문장인가**. 2026-09-20 실측 **중앙 66.4% · 최악 80.6%**(6구획 쪽이 76.1%로 가장 심하다).
+   ★ 아래 상한은 **래칫**이다 — 지금 값에 맞춰 두어 **나빠지는 것만** 막는다.
+     되풀이를 허브로 옮긴 뒤 이 수들을 함께 내린다. **고치기 전 값을 박아 두는 것**이 요점이다. */
+console.log("\n④-2 심사자가 읽는 것 — 산문 전체 · 숫자 제외 · 제목 틀");
+const BOILER_MEDIAN_MAX = 0.51;   // 되풀이 몫 중앙 (2026-09-20 ② 뒤 실측 0.487)
+const BOILER_WORST_MAX  = 0.67;   // 한 장의 되풀이 몫 (실측 0.640, zr-95)
+const WORDS_MEDIAN_MAX  = 0.27;   // 숫자 뺀 낱말 겹침 중앙 (실측 0.251)
+const NEAR_DUP_MAX      = 3;   // 낱말 겹침 95% 이상인 쌍의 수 (실측 2)
+const HEAD_MEDIAN_MAX   = 0.78;   // 제목 틀 겹침 중앙 (실측 0.750 · 이 라운드에서 안 건드렸다)
+
+/** 본문 산문만 — 표의 숫자와 곁칸은 글이 아니다. `<p>` 만 든다. */
+/** ★★ `<p>` 만 세던 첫 판에 **같은 종류의 사각**이 있었다(2026-09-20, ④ 를 흉본 자리에서
+ *  똑같이 밟았다). 147장의 「What this page does not tell you」는 `<li>` 목록이라
+ *  **한 번도 세지 않았다** — 일반 경고 세 줄이 글자까지 같게 서 있는 동안 게이트는 초록이었다.
+ *  ★ 그렇다고 `<li>` 를 통째로 넣으면 안 된다 — 거기엔 **링크 라벨**도 있다
+ *    (「Decay and half-life」·「Mass and activity」). 그것은 UI 이고 147장에서 같은 것이
+ *    **정상**이다. 넣으면 게이트가 영영 빨갛고, 늘 빨간 게이트는 없는 게이트다.
+ *  ★ 실측으로 갈랐다 — 낱장의 `<li>` 어수 분포는 **3·5 어(라벨 572건)와 25~38 어(산문 502건)**
+ *    둘뿐이고 **그 사이가 완전히 비어 있다.** 12 어는 그 20어짜리 빈 골짜기 한가운데다
+ *    (경계에 걸리는 항목이 0건이므로 글꼴·문구가 조금 바뀌어도 흔들리지 않는다). */
+const LI_PROSE_MIN_WORDS = 12;
+const proseAll = (main) => {
+  const x = main.replace(/<aside[\s\S]*?<\/aside>/gi, " ").replace(/<table[\s\S]*?<\/table>/gi, " ")
+                .replace(/<nav[\s\S]*?<\/nav>/gi, " ");
+  const txt = (h) => h.replace(/<[^>]+>/g, " ").replace(/&[a-z#0-9]+;/gi, " ");
+  const ps = [...x.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)].map((m) => txt(m[1]));
+  const lis = [...x.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)].map((m) => txt(m[1]))
+    .filter((t) => t.trim().split(/\s+/).filter(Boolean).length >= LI_PROSE_MIN_WORDS);
+  return [...ps, ...lis].join(" ");
+};
+/** ★ 숫자를 **버린다** — 남기면 핵종마다 다른 수가 겹침을 씻어 내려 검사가 헛돈다. */
+const wordList = (s) => s.toLowerCase().replace(/[^a-z ]/g, " ").split(/\s+/).filter(Boolean);
+const wordGrams = (w, n = 5) => {
+  const g = []; for (let i = 0; i + n <= w.length; i++) g.push(w.slice(i, i + n).join(" ")); return g;
+};
+/** 제목에서 그 핵종을 지운다 — 남는 것이 「틀」이다. */
+const headSkeleton = (main, d) => {
+  const sym = d.split("-")[0], a = d.split("-")[1] ?? "";
+  return [...main.matchAll(/<h[23][^>]*>([\s\S]*?)<\/h[23]>/gi)]
+    .map((m) => m[1].replace(/<[^>]+>/g, " ").toLowerCase()
+      .replace(new RegExp(`\\b${sym}\\w*[- ]?${a}\\w*\\b`, "g"), "x")
+      .replace(/[0-9]+/g, "#").replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+};
+
+const gramList = new Map(), gramSet = new Map(), heads = new Map();
+for (const [d, p] of pages) {
+  const g = wordGrams(wordList(proseAll(p.main)));
+  gramList.set(d, g); gramSet.set(d, new Set(g));
+  heads.set(d, new Set(headSkeleton(p.main, d)));
+}
+/* 되풀이 몫 — 각 5어절이 몇 장에 나오는지 세고, 절반 이상에 나오는 것의 비중을 잰다. */
+const freq = new Map();
+for (const g of gramSet.values()) for (const x of g) freq.set(x, (freq.get(x) ?? 0) + 1);
+const half = keys.length / 2;
+const boiler = keys.map((d) => {
+  const g = gramList.get(d);
+  return { d, f: g.length ? g.filter((x) => freq.get(x) >= half).length / g.length : 0 };
+}).sort((a, b) => a.f - b.f);
+const bMed = boiler[Math.floor(boiler.length / 2)].f, bWorst = boiler[boiler.length - 1];
+
+const wSample = [], hSample = [];
+for (let i = 0; i < keys.length; i++)
+  for (let j = i + 1; j < keys.length; j += 7) {
+    wSample.push(jac(gramSet.get(keys[i]), gramSet.get(keys[j])));
+    hSample.push(jac(heads.get(keys[i]), heads.get(keys[j])));
+  }
+wSample.sort((a, b) => a - b); hSample.sort((a, b) => a - b);
+const wMed = wSample[Math.floor(wSample.length / 2)], hMed = hSample[Math.floor(hSample.length / 2)];
+/* 거의 같은 쌍 — **전수**로 센다(표본이 아니다). 몇 쌍인지가 곧 위험의 크기다. */
+let nearDup = 0; const dupNames = [];
+for (let i = 0; i < keys.length; i++) for (let j = i + 1; j < keys.length; j++) {
+  if (jac(gramSet.get(keys[i]), gramSet.get(keys[j])) >= 0.95) {
+    nearDup++; if (dupNames.length < 6) dupNames.push(`${keys[i]}↔${keys[j]}`);
+  }
+}
+/** 147장 **전부**에 글자까지 같은 제목 틀 — 이웃 lab 이 걸린 바로 그 모양이다. */
+const allHeads = [...heads.values()];
+const universal = allHeads.length ? [...allHeads[0]].filter((h) => allHeads.every((s) => s.has(h))) : [];
+
+if (bMed > BOILER_MEDIAN_MAX)
+  fail.push(`④-2 되풀이 몫 중앙 ${(bMed * 100).toFixed(1)}% — 상한 ${(BOILER_MEDIAN_MAX * 100).toFixed(0)}%. 설명을 낱장마다 되풀이한다`);
+if (bWorst.f > BOILER_WORST_MAX)
+  fail.push(`④-2 ${bWorst.d} 의 되풀이 몫 ${(bWorst.f * 100).toFixed(1)}% — 상한 ${(BOILER_WORST_MAX * 100).toFixed(0)}%`);
+if (wMed > WORDS_MEDIAN_MAX)
+  fail.push(`④-2 낱말 겹침 중앙 ${(wMed * 100).toFixed(1)}% — 상한 ${(WORDS_MEDIAN_MAX * 100).toFixed(0)}%`);
+if (nearDup > NEAR_DUP_MAX)
+  fail.push(`④-2 낱말이 95% 이상 같은 쌍이 ${nearDup}쌍 — 상한 ${NEAR_DUP_MAX}쌍 (${dupNames.join(", ")})`);
+if (hMed > HEAD_MEDIAN_MAX)
+  fail.push(`④-2 제목 틀 겹침 중앙 ${(hMed * 100).toFixed(1)}% — 상한 ${(HEAD_MEDIAN_MAX * 100).toFixed(0)}%`);
+note(`되풀이 몫 중앙 ${(bMed * 100).toFixed(1)}% · 최악 ${(bWorst.f * 100).toFixed(1)}% (${bWorst.d})`);
+note(`낱말 겹침 중앙 ${(wMed * 100).toFixed(1)}% · 거의 같은 쌍 ${nearDup}쌍${dupNames.length ? ` (${dupNames.join(", ")})` : ""}`);
+note(`제목 틀 중앙 ${(hMed * 100).toFixed(1)}% · 전 낱장 공통 제목 ${universal.length}개: ${universal.map((h) => `「${h}」`).join(" ")}`);
+
 /* ── ⑤ 계산기 링크가 실제로 복원되는가 ───────────────────── */
 console.log("\n⑤ 계산기 프리필이 실제로 복원되는가");
 const srv = createServer((q, r) => {
