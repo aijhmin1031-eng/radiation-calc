@@ -16,6 +16,7 @@
  *    커버리지 하한을 걸어 두어, 조작이 실패했는데 조용히 통과하는 일이 없게 한다.
  */
 import { chromium } from "playwright";
+import { LAUNCH } from "./chromium.mjs";
 import { createServer } from "node:http";
 import { readFileSync, existsSync } from "node:fs";
 import { extname, join } from "node:path";
@@ -345,8 +346,7 @@ function parseShown(s) {
   return Number(m[1]) * 10 ** Number(exp);
 }
 
-const browser = await chromium.launch(
-  { ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
+const browser = await chromium.launch(LAUNCH);
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 await page.goto(`http://127.0.0.1:${PORT}/calc/units/`, { waitUntil: "networkidle" });
 await page.waitForTimeout(500);

@@ -17,6 +17,7 @@
  *    광고하지 않는다」) ③ 감마가 없는 핵종에 감마 값이 새지 않는가.
  */
 import { chromium } from "playwright";
+import { LAUNCH } from "./chromium.mjs";
 import { createServer } from "node:http";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { extname, join } from "node:path";
@@ -222,7 +223,7 @@ const srv = createServer((q, r) => {
 });
 await new Promise((r) => srv.listen(0, r));
 const PORT = srv.address().port;
-const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
+const browser = await chromium.launch(LAUNCH);
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
 let checked = 0;
 for (const [key, slug] of [["Co-60", "co-60"], ["Ir-192", "ir-192"], ["Sr-90", "sr-90"], ["Am-241", "am-241"], ["Tc-99m", "tc-99m"]]) {

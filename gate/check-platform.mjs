@@ -16,6 +16,7 @@
  *  ★ 칸(탭)이 없는 층은 칸 검사를 건너뛴다 — 우산에는 구획 탭이 없다(컨트롤뿐이다).
  */
 import { chromium } from "playwright";
+import { LAUNCH } from "./chromium.mjs";
 import { createServer } from "node:http";
 import { readFileSync, existsSync } from "node:fs";
 import { extname, join } from "node:path";
@@ -56,8 +57,7 @@ const srv = createServer((q, r) => {
 });
 await new Promise((r) => srv.listen(0, r));
 const PORT = srv.address().port;
-const browser = await chromium.launch(
-  process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
+const browser = await chromium.launch(LAUNCH);
 
 for (const theme of ["light", "dark"]) {
   const S = SPEC[theme];

@@ -14,6 +14,7 @@
  *    꺼짐: 내비에 칸이 없고 · 도구 쪽에 저장 조작부가 없고 · 낱장이 **없다고 밝힌다**
  */
 import { chromium } from "playwright";
+import { LAUNCH } from "./chromium.mjs";
 import { createServer } from "node:http";
 import { readFileSync, existsSync } from "node:fs";
 import { extname, join } from "node:path";
@@ -34,8 +35,7 @@ const srv = createServer((q, r) => {
 await new Promise((r) => srv.listen(0, r));
 const PORT = srv.address().port;
 
-const browser = await chromium.launch(
-  process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
+const browser = await chromium.launch(LAUNCH);
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 const fail = [];
 
