@@ -92,7 +92,7 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
 
   {shown.length > 0 && (
     <section class="mt-8 max-w-3xl">
-      <h2 class="text-[20px] font-semibold text-ink">Photon lines and what each contributes</h2>
+      <h2 class="text-[20px] font-semibold text-ink">{H.lines}</h2>
       <p class="mt-2 text-[14px] leading-relaxed text-ink-muted">
         {cut
           ? `${cut.count} further ${plural(cut.count, "line", "lines")} below the 20 keV cutoff, the highest at ` +
@@ -120,7 +120,7 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
 
   {p.shields.length > 0 && (
     <section class="mt-8 max-w-3xl">
-      <h2 class="text-[20px] font-semibold text-ink">Half- and tenth-value layers</h2>
+      <h2 class="text-[20px] font-semibold text-ink">{H.shield}</h2>
       <p class="mt-2 text-[14px] leading-relaxed text-ink-muted">
         Solved numerically across all {p.shares.length} {plural(p.shares.length, "line", "lines")}, narrow beam.
         {" "}<a href={u(hubLinks.hvl)} class="underline">Why not one representative energy</a>.
@@ -144,7 +144,7 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
 
   {p.betaRanges.length > 0 && (
     <section class="mt-8 max-w-3xl">
-      <h2 class="text-[20px] font-semibold text-ink">Beta range and bremsstrahlung</h2>
+      <h2 class="text-[20px] font-semibold text-ink">{H.beta}</h2>
       <p class="mt-2 text-[14px] leading-relaxed text-ink-muted">
         Katz–Penfold fit to the {sig(p.betaMaxMeV ?? NaN)} MeV endpoint — ±10%, and a stopping thickness
         rather than an attenuation length.
@@ -171,7 +171,7 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
       수확이 한 번 바뀌면 147장 어딘가에 맨 `0` 이 뜨고 **빌드는 통과한다.** */}
   {Boolean(n.alpha?.length) && (
     <section class="mt-8 max-w-3xl">
-      <h2 class="text-[20px] font-semibold text-ink">Alpha lines</h2>
+      <h2 class="text-[20px] font-semibold text-ink">{H.alpha}</h2>
       {al && (
         <p class="mt-2 text-[14px] leading-relaxed text-ink-muted">
           {al.count === 1

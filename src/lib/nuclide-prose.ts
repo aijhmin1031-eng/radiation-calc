@@ -1,7 +1,7 @@
 import type { NuclidePage } from "./nuclides";
 import { NUCLIDES } from "./nuclides";
 import { decayWord, halfLifeText, gammaRank, gammaVs, leadForTarget, horizons,
-         betaEndpointBranch, betaDominantBranch, lineSpan,
+         betaEndpointBranch, betaDominantBranch, lineSpan, alphaSpread,
          tenHalfLives, meanLife, remainingAfterYears, fmtTime } from "./nuclides";
 import { elapsedFromRatio } from "../engine";
 
@@ -73,8 +73,7 @@ export function paragraphs(p: NuclidePage): string[] {
                잃는 데 걸리는 시간 — 으로 바꾼다. 핵종마다 자릿수가 다르다. */
         ? `${p.name} (${p.key}) is slow enough to be handled as a material rather than as a trace: ` +
           `${bq} Bq/g, or ${ci} Ci/g, puts a gigabecquerel at ${g1}. Decay is by ${mode}, half-life ${T}, ` +
-          `and shedding even one per cent of the activity takes ${fmtTime(elapsedFromRatio(0.99, n.t_half_s))} — ` +
-          `no storage period shortens this one.`
+          `and shedding even one per cent of the activity takes ${fmtTime(elapsedFromRatio(0.99, n.t_half_s))}.`
         : sa < 1e12
         ? `A gigabecquerel of ${p.key} is ${g1} of material, which follows from a specific activity of ` +
           `${bq} Bq/g (${ci} Ci/g). ${p.name} decays by ${mode} with a half-life of ${T}; ${h[0].label} leaves ` +
@@ -115,7 +114,7 @@ export function paragraphs(p: NuclidePage): string[] {
           `ranking ${r.rank} of ${r.of} by Γ — near the bottom of the photon emitters, but above the ` +
           `cutoff, which ${Object.keys(NUCLIDES).length - r.of} nuclides in this dataset are not. ` +
           `${rates}. It takes ${act((0.02 / p.doseAt1mPerGBq) * 1e9)} at a metre to reach 20 µSv/h from the ` +
-          `photons alone, so external dose is seldom what limits handling at this Γ.`
+          `photons alone.`
         : p.gamma < 0.05
         ? `At ${sig(p.gamma)} mGy·m²/(GBq·h) the air kerma rate constant is ${cmp}, placing it ${r.rank} of ` +
           `${r.of} photon emitters in this dataset. ${rates}.`
@@ -165,9 +164,8 @@ export function paragraphs(p: NuclidePage): string[] {
           `${mm(pb.tvlCm)} for a factor of ten, or ${mm(fe.hvlCm)} of steel to halve it, at which point the ` +
           `mass of the shield is part of the problem. ${target}`) +
       (p.hardens
-        ? ` The tenth-value layer runs ${pb.ratio.toFixed(1)} times the half-value layer rather than the 3.32 a ` +
-          `single energy would give: the spectrum hardens as it penetrates, so stacking three half-value layers ` +
-          `does not leave an eighth.`
+        ? ` The tenth-value layer runs ${pb.ratio.toFixed(1)} times the half-value layer, not the 3.32 a single ` +
+          `energy would give.`
         : ``),
     );
   } else if (n.lines.length) {
@@ -209,20 +207,42 @@ export function paragraphs(p: NuclidePage): string[] {
     out.push(
       `Alpha emission is led by ${(top[0] / 1000).toPrecision(4)} MeV at ${top[1]}%` +
       (n.alpha.length > 1 ? `, one of ${n.alpha.length} recorded lines` : ``) +
-      `. Nothing of that reaches through skin, so ${p.key} contributes no external dose; what matters is intake, ` +
-      `and committed dose per becquerel is outside what this site computes.`,
+      `. None of it reaches through skin, so the limit here is intake, not external dose.`,
     );
   }
 
-  if (!n.lines.length && !n.beta?.length && !n.alpha?.length) {
-    out.push(
-      `This dataset records no photon, beta or alpha lines for ${p.key} — a statement about the harvest and its ` +
-      `thresholds, not a claim that the nuclide emits nothing. Half-life, decay mode and specific activity are ` +
-      `therefore available here and dose rate and shielding are not. Nuclides in this position are normally ` +
-      `assayed destructively rather than with a survey meter. At ${sig(n.sa_bq_g)} Bq per gram, a 1 kBq ` +
-      `aliquot is ${mass(1e3 / n.sa_bq_g)} of ${p.key} — the quantity that has to be recovered, dissolved ` +
-      `and counted before any of it becomes a number.`,
+  /* ★★ 조건은 `n.lines.length` 가 아니라 **`p.shares.length`** 다(2026-09-21 실측으로 고쳤다).
+     Gd-148 은 기록된 선이 **있는데 전부 20 keV 컷오프 아래**라, 선량률·차폐 절이 통째로 빠져
+     244어로 얇으면서도 `n.lines.length` 로는 안 걸렸다 — 문장을 더해도 그 쪽만 안 붙었다.
+     **얇게 만드는 것은 「선이 있는가」가 아니라 「컷오프를 넘는 선이 있는가」다.**
+     안쪽의 좁은 조건이 「선이 정말 하나도 없다」는 문장을 맡는다. */
+  if (!p.shares.length) {
+    /* ★ 시평은 **이 블록에서 다시 구한다.** 위쪽 분기의 `h` 는 그 분기의 지역 변수이고,
+       그것을 그대로 쓰면 **타입 검사는 통과하고 빌드가 죽는다**(`h is not defined`) —
+       실제로 그렇게 죽였다. Astro 의 쪽 생성은 죽은 쪽에서 멈추므로 **dist 가 반쯤 남고**,
+       그 반쪽을 재던 게이트가 「색인 0쪽 · 통과」를 찍었다(그 구멍은 게이트에서 막았다). */
+    const hz = (key: string) => {
+      const g2 = horizons(key);
+      return `Decay is the only handle: ${g2[0].label} leaves ${frac(g2[0].frac)} of today's activity ` +
+             `and ${g2[1].label} leaves ${frac(g2[1].frac)}, with ten half-lives at ` +
+             `${tenHalfLives(key)} and a mean life of ${meanLife(key)} per atom.`;
+    };
+    /* 「선이 하나도 없다」는 말은 **정말 하나도 없을 때만** 한다 — 알파만 있는 낱장은
+       위에서 알파를 이미 말했다. */
+    if (!n.lines.length && !n.beta?.length && !n.alpha?.length) out.push(
+      /* ★★ **설명은 쪽마다 두지 않는다** — 이 파일의 규칙인데 이 문단이 그것을 어기고 있었다
+         (2026-09-21 실측). 「수확과 문턱에 대한 진술이지 방출이 없다는 뜻이 아니다」·「이런
+         핵종은 보통 파괴분석으로 잰다」는 **선이 없는 핵종 전부에 똑같이 해당**하므로, 낱장에
+         두면 그 낱장들이 서로 베낀 것처럼 보인다. 실측: Ca-41 ↔ Ni-59 의 겹치는 8어절 148개
+         중 가장 긴 덩어리가 바로 이 문단이었다. 남기는 것은 **이 핵종의 수**뿐이다. */
+      `At ${sig(n.sa_bq_g)} Bq per gram, a 1 kBq aliquot of ${p.key} is ${mass(1e3 / n.sa_bq_g)} — ` +
+      `the quantity that has to be recovered, dissolved and counted, because this dataset carries no ` +
+      `photon, beta or alpha line for it above the reporting thresholds.`,
     );
+    /* ★ 광자선이 없는 낱장은 **쓸 것이 적어 얇아진다**(실측 232~264어, 하한 250). 분량을
+       채우려고 일반론을 더하면 그 낱장들끼리 다시 겹친다 — 더하는 것은 **이 핵종에서만
+       다른 수**다. 시평 둘·열 반감기·평균 수명은 핵종마다 자릿수가 갈린다. */
+    out.push(hz(p.key));
   }
   return out;
 }
@@ -278,7 +298,12 @@ export function sectionHeads(p: NuclidePage) {
       g && b ? "Half-life, specific activity, dose rate and beta energies"
       : g    ? "Half-life, specific activity and dose rate"
       : b    ? "Half-life, specific activity and beta endpoint"
-      :        "Half-life, decay mode and specific activity",
+      /* ★★ 선이 하나도 없는 핵종은 **제목을 가를 것이 없다** — 감마도 베타도 알파도 없으니
+         아래 넷이 전부 상수가 되고, 그 낱장들끼리 **제목 순서가 글자 그대로 같아진다**
+         (실측: Ca-41 ↔ Ni-59 · Fe-55 ↔ Ra-228). 이름을 넣어도 소용없다 — 게이트가 이름을
+         지우고 센다(그리고 그것이 맞다: 이름만 갈아 끼운 제목은 갈린 제목이 아니다).
+         그래서 **이 핵종의 수**를 제목에 들린다. 표에 실제로 서는 두 줄이다. */
+      :        `Half-life ${halfLifeText(n)}, ${sig(n.sa_bq_g)} Bq/g, and no line recorded`,
     /* 붕괴 표가 덮는 눈금 — 열 반감기가 어디까지 가는가.
        ★ 첫 판의 경계가 틀렸다(2026-09-20, 눈으로 잡았다) — 100년에서 바로 「millennia」로
          넘어가는 바람에 **H-3(열 반감기 123년)·Cs-137(301년)·Sr-90(288년)이 「천년 단위」**
@@ -302,6 +327,47 @@ export function sectionHeads(p: NuclidePage) {
       : a ? "Limits — intake, not external dose"
       : b ? "Limits of these range figures"
       :     "Limits of these figures",
+    /** ★★★ **아래 넷은 틀 그 자체였다**(2026-09-21). 낱장의 제목 넷이 템플릿에 **글자로
+     *  박혀** 있어서, 같은 붕괴 모드끼리는 **제목 순서가 글자 그대로 같았다** — 147장 중
+     *  **136장이 20개 묶음**으로 접혔고 가장 큰 묶음이 26장이다. 이웃 사이트를 애드센스에서
+     *  탈락시킨 모양 그대로다.
+     *  ★★ **그런데 게이트는 「0건」이라고 말하고 있었다.** 마지막 제목(`tools`)이 핵종 이름을
+     *    들어 순서가 갈렸기 때문이다 — **한 줄이 검사를 통째로 속였다.** 지금은 게이트가
+     *    이름을 지우고 다시 센다.
+     *  ★★ 앞선 판의 「전 낱장 공통 제목 4 → 0개」도 **참이지만 다른 것을 잰 값**이다 —
+     *    「147장 전부에 있는가」와 「같은 묶음 안에서 같은가」는 다른 질문이고, 실패 모드는
+     *    뒤엣것이다. **재는 자를 고를 때 그 자가 실제 실패 모드를 재는지 확인할 것.**
+     *  고치는 방법은 제목을 없애는 것이 아니라 **제목이 이 핵종의 수를 들게** 하는 것이다.
+     *  읽는 사람에게도 그쪽이 낫다 — 「Photon lines」보다 「662 keV carries 95% of the dose
+     *  rate」가 쪽을 열기 전에 말을 한다. */
+    lines: (() => {
+      if (!p.shares.length) return "Photon lines and what each contributes";
+      const top = p.shares.reduce((a, b) => (b.share > a.share ? b : a));
+      const keV = (x: number) => (x >= 100 ? String(Math.round(x)) : x.toPrecision(3));
+      if (p.shares.length === 1) return `A single photon line at ${keV(top.eKeV)} keV`;
+      if (top.share >= 0.8) return `${keV(top.eKeV)} keV carries ${Math.round(top.share * 100)}% of the dose rate`;
+      if (p.linesFor90 <= 3) return `${keV(top.eKeV)} keV leads, and ${p.linesFor90} lines make 90%`;
+      return `${p.shares.length} lines above the cutoff, and what each contributes`;
+    })(),
+    /* 납이 없으면(자료에 안 실린 조합) 표의 첫 줄을 든다 — 제목이 표와 어긋나지 않는다. */
+    shield: (() => {
+      const r = p.shields.find((x) => x.material === "lead") ?? p.shields[0];
+      return r ? `${mm(r.hvlCm)} of ${r.material} halves this spectrum`
+               : "Half- and tenth-value layers";
+    })(),
+    beta: (() => {
+      const r = p.betaRanges.find((x) => /acrylic/i.test(x.material)) ?? p.betaRanges[0];
+      return r && p.betaMaxMeV
+        ? `${mm(r.cm)} of ${r.material} stops the ${sig(p.betaMaxMeV)} MeV endpoint`
+        : "Beta range and bremsstrahlung";
+    })(),
+    alpha: (() => {
+      const a = alphaSpread(p.key);
+      if (!a) return "Alpha lines";
+      return a.count === 1
+        ? `One alpha line at ${a.topMeV.toPrecision(4)} MeV`
+        : `${a.count} alpha lines, strongest ${a.topMeV.toPrecision(4)} MeV`;
+    })(),
     /* 이어지는 계산기 — 목록은 아래가 온전히 든다. 제목은 가려 주는 말이다. */
     tools:
       g && b ? `Gamma, beta and decay calculators for ${p.key}`

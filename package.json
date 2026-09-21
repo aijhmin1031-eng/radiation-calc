@@ -8,13 +8,14 @@
     "preview": "astro preview",
     "test": "tsx --test src/engine/*.test.ts src/lib/*.test.ts src/validation/*.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json && astro check",
-    "gate": "node gate/check-gates.mjs && node gate/check-output.mjs && node gate/check-render.mjs && node gate/check-lockup.mjs && node gate/check-inputs.mjs && node gate/check-save.mjs && node gate/check-sticky.mjs && node gate/check-header.mjs && node gate/check-platform.mjs && node gate/check-nuclides.mjs && node gate/check-og.mjs && tsx gate/check-validation.mjs",
+    "gate": "node gate/check-gates.mjs && node gate/check-output.mjs && node gate/check-render.mjs && node gate/check-lockup.mjs && node gate/check-inputs.mjs && node gate/check-save.mjs && node gate/check-sticky.mjs && node gate/check-header.mjs && node gate/check-platform.mjs && node gate/check-nuclides.mjs && node gate/check-og.mjs && node gate/check-adsense.mjs && tsx gate/check-validation.mjs",
     "make-keywords": "node scripts/make-keywords.mjs",
     "make-dataset": "tsx scripts/make-dataset.mjs",
     "make-og": "node scripts/make-og.mjs",
     "check-og": "node gate/check-og.mjs",
     "check-validation": "tsx gate/check-validation.mjs",
-    "check-gates": "node gate/check-gates.mjs"
+    "check-gates": "node gate/check-gates.mjs",
+    "check-adsense": "node gate/check-adsense.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.2.0",
