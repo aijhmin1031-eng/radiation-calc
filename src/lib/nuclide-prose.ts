@@ -1,5 +1,6 @@
 import type { NuclidePage } from "./nuclides";
-import { NUCLIDES } from "./nuclides";
+import { NUCLIDES, nuclidePage } from "./nuclides";
+import { dominantProgeny, daughterLabel, CHAIN_TRUNCATED } from "./decay-chain";
 import { decayWord, halfLifeText, gammaRank, gammaVs, leadForTarget, horizons,
          betaEndpointBranch, betaDominantBranch, lineSpan, alphaSpread,
          tenHalfLives, meanLife, remainingAfterYears, fmtTime } from "./nuclides";
@@ -22,6 +23,13 @@ import { elapsedFromRatio } from "../engine";
 const pct = (x: number, d = 1) => `${(x * 100).toFixed(d)}%`;
 const mm = (cm: number, d = 3) => `${(cm * 10).toPrecision(d)} mm`;
 const sig = (x: number, d = 3) => (Number.isFinite(x) ? x.toPrecision(d) : "—");
+/** ★ `toPrecision` 은 1000 부터 **지수 표기**로 넘어가 「7.0e+2× the thickness above」가 된다
+ *  (2026-09-23 조립된 문장을 읽다 잡았다 — 빌드도 게이트도 통과한다). 문장에 들어가는 배수는
+ *  유효숫자 둘로 반올림하되 **늘 고정 표기**로 쓴다. */
+const ratioText = (r: number) => {
+  const p = Math.pow(10, Math.max(0, 1 - Math.floor(Math.log10(r))));
+  return `${(Math.round(r * p) / p).toLocaleString("en-US")}×`;
+};
 const times = (r: number) => (r >= 1 ? `${r.toPrecision(2)}×` : `${(1 / r).toPrecision(2)}× less than`);
 /** ★ 질량은 자리수가 24자리를 넘나든다(Tc-99m 의 5 pg 대 Ca-41 의 0.3 g) — 고정 소수점으로
  *  쓰면 `0.0000239 g`, 단위 고르기를 잘못하면 `2.39e+4 ng` 가 된다. **눈금마다 위 경계를 준다.** */
@@ -108,8 +116,18 @@ export function paragraphs(p: NuclidePage): string[] {
         : `${times(gammaVs(p.key, refs[0]))} ${refs[0]}`;
     })();
     const rates = `1 GBq at 1 m reads ${sig(p.doseAt1mPerGBq)} mGy/h, and 1 Ci at the same distance ${sig(p.doseAt1mPerCi)} mGy/h`;
+    /** ★★★ **연쇄가 잘린 쪽에는 「작다」·순위·「몇 GBq 라야 20 µSv/h」를 주지 않는다**
+     *  (2026-09-23). Ra-226 쪽이 「small — 88× less than Cs-137 … ranking 80 of 96 … 22.8 GBq
+     *  라야 20 µSv/h」라고 소개하고 있었다. 그 값은 **Ra-226 자신의 것**이고 라듐 선원의
+     *  광자장은 거의 전부 자손의 것인데 Rn-222 이하가 이 자료에 없다.
+     *  ★ 뒤에 단서를 붙이는 것으로는 모자란다 — **앞 문장이 이미 판단을 준다.**
+     *    순위는 특히 나쁘다: 남들은 상수가 곧 전체 장인데 이 쪽만 아니기 때문이다. */
     out.push(
-      p.gamma < 0.005
+      CHAIN_TRUNCATED.includes(p.key)
+        ? `The air kerma rate constant recorded for ${p.key} is ${sig(p.gamma)} mGy·m²/(GBq·h). ${rates} — ` +
+          `for that emission alone. No ranking against the other emitters here is drawn: for most of them the ` +
+          `constant is the whole field, and for ${p.key} it is not.`
+        : p.gamma < 0.005
         ? `The air kerma rate constant is small — ${sig(p.gamma)} mGy·m²/(GBq·h), ${cmp}, ` +
           `ranking ${r.rank} of ${r.of} by Γ — near the bottom of the photon emitters, but above the ` +
           `cutoff, which ${Object.keys(NUCLIDES).length - r.of} nuclides in this dataset are not. ` +
@@ -145,11 +163,22 @@ export function paragraphs(p: NuclidePage): string[] {
      *    다 들어 있다. 띠는 말하는 순서와 무엇을 앞세우는지를 바꾸는 것이지 값을 줄이는 것이
      *    아니다(줄이면 되풀이 대신 빈약이 된다 — `check-output` ⑥ 이 그것을 잡는다). */
     const hvlMm = pb.hvlCm * 10;
-    const target = t20 === 0
+    /** ★★★ **연쇄가 잘린 쪽에서는 광자 숫자로 결론을 내지 않는다**(2026-09-23).
+     *  U-238 쪽이 「**Shielding barely arises**」·「이미 20 µSv/h 아래」라고 끝맺고 있었다 —
+     *  자기 광자만 세면 맞지만 **실제 선원에서 나오는 결론이 아니다.** 두께 값은 그대로 주고
+     *  (계산은 맞다) **판단 문장만 거둔다.** 앞 문단의 단서가 왜인지를 든다. */
+    const truncated = CHAIN_TRUNCATED.includes(p.key);
+    const target = truncated
+      ? ``
+      : t20 === 0
       ? `At 1 GBq and a metre it is already under 20 µSv/h with nothing in the way.`
       : `Reaching 20 µSv/h from 1 GBq at a metre takes ${mm(t20)} of lead.`;
     out.push(
-      (hvlMm < 0.2
+      (truncated
+        ? `For ${p.key}'s own photons, ${mm(pb.hvlCm)} of lead halves the air kerma rate, ${mm(fe.hvlCm)} ` +
+          `if the material is steel, and ${mm(pb.tvlCm)} of lead takes it to a tenth. What thickness the ` +
+          `source in front of you needs is a question about its chain, not about this line list.`
+        : hvlMm < 0.2
         ? `Shielding barely arises: ${mm(pb.hvlCm)} of lead halves the air kerma rate and ${mm(pb.tvlCm)} ` +
           `takes it to a tenth, thicknesses a source capsule is likely to exceed on its own. Steel does the ` +
           `halving in ${mm(fe.hvlCm)}. ${target}`
@@ -197,9 +226,83 @@ export function paragraphs(p: NuclidePage): string[] {
       `. That endpoint stops in ${mm(acrylic.cm)} of ` +
       /* ★ 「몇 배」를 쓰지 않는다 — 수율이 Z 에 비례하므로 그 비는 82/6 으로 **모든 핵종에서
          같다.** 쪽마다 다른 척하는 숫자를 147번 찍는 것이 정확히 틀에 값만 갈아 끼우는 짓이다. */
-      `acrylic or ${mm(glass.cm)} of glass. Of the beta energy, ${frac(p.bremsLow)} turns into X-rays in ` +
-      `acrylic and ${frac(p.bremsLead)} in lead.`,
+      /** ★★★ **제동복사도 모핵종의 종점으로 계산된다**(2026-09-23). Sr-90 쪽이 0.546 MeV 로
+       *  「납에서 1.57%」라고 적는데 실제 선원에서 그 X선을 내는 것은 **Y-90 의 2.28 MeV** 다 —
+       *  **베타를 납으로 막으면 안 되는 이유가 정확히 이것**이라 값이 낮게 나가면 결론이 뒤집힌다.
+       *  ★ 여기서는 **누구의 에너지인지 밝히고**, 딸의 값은 아래 연쇄 문단이 든다. */
+      `acrylic or ${mm(glass.cm)} of glass. Of ${dominantProgeny(p.key)?.betaHotter ? `${p.key}'s own` : `the`} ` +
+      `beta energy, ${frac(p.bremsLow)} turns into X-rays in acrylic and ${frac(p.bremsLead)} in lead.`,
     );
+  }
+
+  /** ★★★ **막아야 할 것이 딸핵종인 경우**(2026-09-23). 그전에는 낱장이 딸을 한 번도 말하지
+   *  않아 Ru-106 쪽이 「0.0215 mm 의 아크릴」이라고 적고 있었다 — Rh-106 의 3.54 MeV 에는
+   *  **17 mm 남짓**이 필요하니 800배 틀린 결론이었다. 숫자는 맞고 결론이 틀렸다.
+   *  ★ 판단은 `lib/decay-chain.ts` 한 곳이 든다 — 게이트가 **같은 목록**을 읽는다.
+   *  ★ **분기비를 쓰지 않는다**(자료에 없다). 쓰는 것은 신원·반감기·종점·감마상수뿐이다.
+   *  ★ 문장 꼴을 `present`/`ingrowing` 과 베타/감마로 갈라 둔다 — 11장에 같은 틀을 찍으면
+   *    그것이 곧 이 파일이 경계하는 「값만 갈아 끼운 글」이 된다. */
+  /** ★★★ **이 자료에 다음이 없으면 위의 광자 수치는 이 핵종 자신의 것뿐이다**(2026-09-23).
+   *  Ra-226 쪽이 그 값을 「small · 88× less than Cs-137」이라고 소개하고 「22.8 GBq 라야
+   *  20 µSv/h」까지 계산해 주고 있었다 — 라듐 선원의 광자장은 거의 전부 자손의 것인데
+   *  Rn-222·Pb-214·Bi-214 는 이 자료에 없다.
+   *  ★ **맞는 값을 지어내지 않는다.** 얼마나 높아지는지는 우리가 모르므로 쓰지 않고,
+   *    **조건문으로만** 말한다. 아는 것은 「그 다음이 이 자료에 없다」 하나뿐이다. */
+  if (CHAIN_TRUNCATED.includes(p.key)) {
+    /* ★ 딸의 이름을 못 낼 수 있다 — 원소기호는 **이 자료에 있는 핵종에서만** 나오는데,
+       Ra-226 의 딸 라돈은 자료에 한 종도 없다. 주기율표를 기억으로 적지 않고,
+       **이름을 모르면 이름 없이** 말한다(모르는 것을 아는 척하지 않는다). */
+    const next = daughterLabel(p.key);
+    out.push(
+      `These photon figures are ${p.key}'s own. ` +
+      (next ? `Its decay product ${next} is not in this dataset, and neither is what follows it, so nothing below `
+            : `What it decays into is not in this dataset, so nothing below `) +
+      `${p.key} is counted here. A source left sealed long enough for the chain to build up reads higher than ` +
+      `this — how much higher is outside what this page can compute.`,
+    );
+  }
+
+  const prog = dominantProgeny(p.key);
+  if (prog) {
+    const d = NUCLIDES[prog.key];
+    const dp = nuclidePage(prog.key);
+    const dHl = halfLifeText(d);
+    const dAcr = dp.betaRanges.find((r) => r.material === "acrylic");
+    const parentAcr = p.betaRanges.find((r) => r.material === "acrylic");
+    const ratio = dAcr && parentAcr && parentAcr.cm > 0 ? dAcr.cm / parentAcr.cm : 0;
+
+    if (prog.presence === "present" && prog.betaHotter && dAcr) {
+      out.push(
+        `${p.key} does not stand alone. ${prog.key} follows it with a half-life of ${dHl}, so ingrowth is ` +
+        `complete within ${fmtTime(d.t_half_s * 7)} of separation. Its endpoint is ` +
+        `${sig((d.beta_max_keV ?? 0) / 1000)} MeV and stops in ${mm(dAcr.cm)} of acrylic` +
+        (ratio > 1.5 ? `, ${ratioText(ratio)} the thickness above` : ``) +
+        `. The shield is sized on ${prog.key}, and so is the bremsstrahlung: ${frac(dp.bremsLow)} of that ` +
+        `energy turns into X-rays in acrylic and ${frac(dp.bremsLead)} in lead.` +
+        (prog.gammaHotter ? ` ${prog.key} also carries the photons here — ` +
+          `${sig(d.gamma_const)} mGy·m²/(GBq·h), against nothing recorded for ${p.key}.` : ``),
+      );
+    } else if (prog.presence === "present" && prog.gammaHotter) {
+      out.push(
+        `The photon field around ${p.key} is ${prog.key}'s. ${prog.key} (${dHl}) follows close enough to be ` +
+        `present in any aged source, and its air kerma rate constant is ${sig(d.gamma_const)} mGy·m²/(GBq·h)` +
+        (n.gamma_const > 0 ? `, against ${sig(n.gamma_const)} for ${p.key}` : `, where no photon line is recorded for ${p.key}`) +
+        `. Shield for ${prog.key}.`,
+      );
+    } else {
+      out.push(
+        `${prog.key} grows in beneath ${p.key} with a half-life of ${dHl}. How much of it is present depends on ` +
+        /* ★ 이성질체 전이는 **같은 원소**라 「화학적으로 분리」가 성립하지 않는다 —
+           그 경우 기준 시점은 분리가 아니라 **그 이성질체가 만들어진 때**다. */
+        (d.z === n.z ? `how long ago the isomer was produced` : `how long ago the material was chemically separated`) +
+        `, which this page cannot know — ` +
+        `at full ingrowth it brings ` +
+        (prog.gammaHotter ? `${sig(d.gamma_const)} mGy·m²/(GBq·h) of air kerma rate constant` : ``) +
+        (prog.gammaHotter && prog.betaHotter ? ` and ` : ``) +
+        (prog.betaHotter ? `a ${sig((d.beta_max_keV ?? 0) / 1000)} MeV beta endpoint` : ``) +
+        `, which the figures above do not include.`,
+      );
+    }
   }
 
   if (n.alpha?.length) {
@@ -207,7 +310,16 @@ export function paragraphs(p: NuclidePage): string[] {
     out.push(
       `Alpha emission is led by ${(top[0] / 1000).toPrecision(4)} MeV at ${top[1]}%` +
       (n.alpha.length > 1 ? `, one of ${n.alpha.length} recorded lines` : ``) +
-      `. None of it reaches through skin, so the limit here is intake, not external dose.`,
+      /** ★★★ **「the limit here」가 쪽 전체로 번졌다**(2026-09-23). 광자장이 있는 알파 방출체
+       *  **12장**이 납 두께를 주면서 동시에 「여기서 한계는 섭취이지 외부선량이 아니다」라고
+       *  말하고 있었다 — **쪽이 스스로 모순**이다. Am-241 은 59.5 keV 때문에 감마 선원으로
+       *  쓰이고, Ra-226 은 고전적인 외부 위험이다.
+       *  ★ 맞는 것은 **알파에 대한 진술**이다. 「None of it」의 it 은 알파인데 결론만 쪽 전체를
+       *    가져갔다. 광자가 있으면 **거기까지만** 말하고 나머지는 위 수치에 맡긴다. */
+      (p.gamma > 0
+        ? `. None of it reaches through skin, so the alpha is an intake hazard rather than an external one — ` +
+          `the photon figures above are the separate question.`
+        : `. None of it reaches through skin, so the limit here is intake, not external dose.`),
     );
   }
 
