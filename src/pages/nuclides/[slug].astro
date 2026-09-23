@@ -5,6 +5,7 @@ import { ALL_KEYS, NUCLIDES, nuclidePage, slugOf, longName, decayWord, halfLifeT
          belowCutoff, alphaSpread } from "../../lib/nuclides";
 import { paragraphs, decayCaption, sectionHeads } from "../../lib/nuclide-prose";
 import { nuclideSeo } from "../../lib/nuclide-seo";
+import { isTooShortLived } from "../../lib/nuclide-noindex";
 
 export function getStaticPaths() {
   return ALL_KEYS.map((key) => ({ params: { slug: slugOf(key) }, props: { key } }));
@@ -59,7 +60,7 @@ const TOOLS_FOR: { href: string; label: string; when: boolean; prefill?: boolean
 ];
 const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).slice(0, 8);
 ---
-<Base schema="TechArticle" title={seo.title} description={seo.description}>
+<Base schema="TechArticle" title={seo.title} description={seo.description} noindex={isTooShortLived(key)}>
   <nav class="tap-list mb-4 flex flex-wrap items-center gap-x-1.5 text-[12px] text-ink-faint">
     <a href={u("/")} class="hover:text-ink">Calculators</a> <span aria-hidden>/</span>
     <a href={u("/nuclides/")} class="hover:text-ink">Nuclides</a> <span aria-hidden>/</span> {p.key}

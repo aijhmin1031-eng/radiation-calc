@@ -5,6 +5,7 @@ import sitemap from "@astrojs/sitemap";
 import { lastmodFor, HAS_GIT } from "./src/lib/lastmod.mjs";
 import tailwind from "@astrojs/tailwind";
 import { SITE_URL_DEFAULT, BASE_PATH } from "./brand.ts";
+import { NOINDEX_SLUGS } from "./src/lib/nuclide-noindex.ts";
 
 const site = process.env.SITE_URL || SITE_URL_DEFAULT;
 
@@ -29,8 +30,12 @@ export default defineConfig({
     react(), mdx(), tailwind({ applyBaseStyles: false }),
     // ★ noindex 인 쪽이 사이트맵에 새는 것은 이 레포들이 되풀이해 밟은 함정이다.
     //   새 noindex 쪽을 만들면 여기서도 빼야 한다.
+    // ★ 반감기 1초 미만 이성질체 10장도 뺀다 — 정본은 src/lib/nuclide-noindex.ts 다.
+    //   낱장이 `noindex` 를 쓰는 것과 여기서 사이트맵을 거르는 것은 **같은 한 목록**을 본다.
     sitemap({
-      filter: (page) => !/\/saved\/$/.test(page),
+      filter: (page) =>
+        !/\/saved\/$/.test(page) &&
+        !NOINDEX_SLUGS.some((s) => page.endsWith(`/nuclides/${s}/`)),
       /** `lastmod` — **쪽마다 그 내용이 마지막으로 바뀐 커밋 날짜**. 정본·판단은
        *  `src/lib/lastmod.mjs` 가 든다(빌드 시각을 박지 않는 이유, 얕은 클론을 가려내는 법).
        *  ★ 날짜를 모르는 주소는 `lastmod` **없이** 나간다 — 지어내지 않는다. */
