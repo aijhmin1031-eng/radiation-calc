@@ -1,5 +1,6 @@
 import type { NuclidePage } from "./nuclides";
-import { NUCLIDES } from "./nuclides";
+import { NUCLIDES, nuclidePage } from "./nuclides";
+import { dominantProgeny } from "./decay-chain";
 import { decayWord, halfLifeText, gammaRank, gammaVs, leadForTarget, horizons,
          betaEndpointBranch, betaDominantBranch, lineSpan, alphaSpread,
          tenHalfLives, meanLife, remainingAfterYears, fmtTime } from "./nuclides";
@@ -22,6 +23,13 @@ import { elapsedFromRatio } from "../engine";
 const pct = (x: number, d = 1) => `${(x * 100).toFixed(d)}%`;
 const mm = (cm: number, d = 3) => `${(cm * 10).toPrecision(d)} mm`;
 const sig = (x: number, d = 3) => (Number.isFinite(x) ? x.toPrecision(d) : "—");
+/** ★ `toPrecision` 은 1000 부터 **지수 표기**로 넘어가 「7.0e+2× the thickness above」가 된다
+ *  (2026-09-23 조립된 문장을 읽다 잡았다 — 빌드도 게이트도 통과한다). 문장에 들어가는 배수는
+ *  유효숫자 둘로 반올림하되 **늘 고정 표기**로 쓴다. */
+const ratioText = (r: number) => {
+  const p = Math.pow(10, Math.max(0, 1 - Math.floor(Math.log10(r))));
+  return `${(Math.round(r * p) / p).toLocaleString("en-US")}×`;
+};
 const times = (r: number) => (r >= 1 ? `${r.toPrecision(2)}×` : `${(1 / r).toPrecision(2)}× less than`);
 /** ★ 질량은 자리수가 24자리를 넘나든다(Tc-99m 의 5 pg 대 Ca-41 의 0.3 g) — 고정 소수점으로
  *  쓰면 `0.0000239 g`, 단위 고르기를 잘못하면 `2.39e+4 ng` 가 된다. **눈금마다 위 경계를 준다.** */
@@ -200,6 +208,55 @@ export function paragraphs(p: NuclidePage): string[] {
       `acrylic or ${mm(glass.cm)} of glass. Of the beta energy, ${frac(p.bremsLow)} turns into X-rays in ` +
       `acrylic and ${frac(p.bremsLead)} in lead.`,
     );
+  }
+
+  /** ★★★ **막아야 할 것이 딸핵종인 경우**(2026-09-23). 그전에는 낱장이 딸을 한 번도 말하지
+   *  않아 Ru-106 쪽이 「0.0215 mm 의 아크릴」이라고 적고 있었다 — Rh-106 의 3.54 MeV 에는
+   *  **17 mm 남짓**이 필요하니 800배 틀린 결론이었다. 숫자는 맞고 결론이 틀렸다.
+   *  ★ 판단은 `lib/decay-chain.ts` 한 곳이 든다 — 게이트가 **같은 목록**을 읽는다.
+   *  ★ **분기비를 쓰지 않는다**(자료에 없다). 쓰는 것은 신원·반감기·종점·감마상수뿐이다.
+   *  ★ 문장 꼴을 `present`/`ingrowing` 과 베타/감마로 갈라 둔다 — 11장에 같은 틀을 찍으면
+   *    그것이 곧 이 파일이 경계하는 「값만 갈아 끼운 글」이 된다. */
+  const prog = dominantProgeny(p.key);
+  if (prog) {
+    const d = NUCLIDES[prog.key];
+    const dp = nuclidePage(prog.key);
+    const dHl = halfLifeText(d);
+    const dAcr = dp.betaRanges.find((r) => r.material === "acrylic");
+    const parentAcr = p.betaRanges.find((r) => r.material === "acrylic");
+    const ratio = dAcr && parentAcr && parentAcr.cm > 0 ? dAcr.cm / parentAcr.cm : 0;
+
+    if (prog.presence === "present" && prog.betaHotter && dAcr) {
+      out.push(
+        `${p.key} does not stand alone. ${prog.key} follows it with a half-life of ${dHl}, so ingrowth is ` +
+        `complete within ${fmtTime(d.t_half_s * 7)} of separation. Its endpoint is ` +
+        `${sig((d.beta_max_keV ?? 0) / 1000)} MeV and stops in ${mm(dAcr.cm)} of acrylic` +
+        (ratio > 1.5 ? `, ${ratioText(ratio)} the thickness above` : ``) +
+        `. The shield is sized on ${prog.key}.` +
+        (prog.gammaHotter ? ` ${prog.key} also carries the photons here — ` +
+          `${sig(d.gamma_const)} mGy·m²/(GBq·h), against nothing recorded for ${p.key}.` : ``),
+      );
+    } else if (prog.presence === "present" && prog.gammaHotter) {
+      out.push(
+        `The photon field around ${p.key} is ${prog.key}'s. ${prog.key} (${dHl}) follows close enough to be ` +
+        `present in any aged source, and its air kerma rate constant is ${sig(d.gamma_const)} mGy·m²/(GBq·h)` +
+        (n.gamma_const > 0 ? `, against ${sig(n.gamma_const)} for ${p.key}` : `, where no photon line is recorded for ${p.key}`) +
+        `. Shield for ${prog.key}.`,
+      );
+    } else {
+      out.push(
+        `${prog.key} grows in beneath ${p.key} with a half-life of ${dHl}. How much of it is present depends on ` +
+        /* ★ 이성질체 전이는 **같은 원소**라 「화학적으로 분리」가 성립하지 않는다 —
+           그 경우 기준 시점은 분리가 아니라 **그 이성질체가 만들어진 때**다. */
+        (d.z === n.z ? `how long ago the isomer was produced` : `how long ago the material was chemically separated`) +
+        `, which this page cannot know — ` +
+        `at full ingrowth it brings ` +
+        (prog.gammaHotter ? `${sig(d.gamma_const)} mGy·m²/(GBq·h) of air kerma rate constant` : ``) +
+        (prog.gammaHotter && prog.betaHotter ? ` and ` : ``) +
+        (prog.betaHotter ? `a ${sig((d.beta_max_keV ?? 0) / 1000)} MeV beta endpoint` : ``) +
+        `, which the figures above do not include.`,
+      );
+    }
   }
 
   if (n.alpha?.length) {
