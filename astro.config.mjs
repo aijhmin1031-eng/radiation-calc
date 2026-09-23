@@ -2,11 +2,22 @@ import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
+import { lastmodFor, HAS_GIT } from "./src/lib/lastmod.mjs";
 import tailwind from "@astrojs/tailwind";
 import { SITE_URL_DEFAULT, BASE_PATH } from "./brand.ts";
 import { NOINDEX_SLUGS } from "./src/lib/nuclide-noindex.ts";
 
 const site = process.env.SITE_URL || SITE_URL_DEFAULT;
+
+/** 사이트맵이 주는 절대 주소에서 **base 를 떼어** 정본 경로로 되돌린다. */
+const canonicalOf = (url) => {
+  const p = new URL(url).pathname;
+  const b = BASE_PATH.replace(/\/$/, "");
+  return b && p.startsWith(b) ? p.slice(b.length) || "/" : p;
+};
+
+/** ★ **못 넣었으면 못 넣었다고 찍는다** — 조용하면 「넣었겠거니」 하고 넘어간다. */
+if (!HAS_GIT) console.warn("[sitemap] git 이력을 읽지 못했다 — lastmod 를 쓰지 않는다(지어내지 않는다).");
 
 export default defineConfig({
   site,
@@ -21,8 +32,18 @@ export default defineConfig({
     //   새 noindex 쪽을 만들면 여기서도 빼야 한다.
     // ★ 반감기 1초 미만 이성질체 10장도 뺀다 — 정본은 src/lib/nuclide-noindex.ts 다.
     //   낱장이 `noindex` 를 쓰는 것과 여기서 사이트맵을 거르는 것은 **같은 한 목록**을 본다.
-    sitemap({ filter: (page) => !/\/saved\/$/.test(page)
-      && !NOINDEX_SLUGS.some((s) => page.endsWith(`/nuclides/${s}/`)) }),
+    sitemap({
+      filter: (page) =>
+        !/\/saved\/$/.test(page) &&
+        !NOINDEX_SLUGS.some((s) => page.endsWith(`/nuclides/${s}/`)),
+      /** `lastmod` — **쪽마다 그 내용이 마지막으로 바뀐 커밋 날짜**. 정본·판단은
+       *  `src/lib/lastmod.mjs` 가 든다(빌드 시각을 박지 않는 이유, 얕은 클론을 가려내는 법).
+       *  ★ 날짜를 모르는 주소는 `lastmod` **없이** 나간다 — 지어내지 않는다. */
+      serialize: (item) => {
+        const d = lastmodFor(canonicalOf(item.url));
+        return d ? { ...item, lastmod: d } : item;
+      },
+    }),
   ],
   // ★★ `envPrefix` 는 **Vite 설정 안**이다. Astro 최상위에 두면 조용히 무시되고,
   //   빌드는 통과하는데 **로그인·저장만 영영 꺼진 채** 배포된다(실측으로 밟았다 2026-09-14).
