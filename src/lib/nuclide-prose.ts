@@ -1,6 +1,6 @@
 import type { NuclidePage } from "./nuclides";
 import { NUCLIDES, nuclidePage } from "./nuclides";
-import { dominantProgeny } from "./decay-chain";
+import { dominantProgeny, daughterLabel, CHAIN_TRUNCATED } from "./decay-chain";
 import { decayWord, halfLifeText, gammaRank, gammaVs, leadForTarget, horizons,
          betaEndpointBranch, betaDominantBranch, lineSpan, alphaSpread,
          tenHalfLives, meanLife, remainingAfterYears, fmtTime } from "./nuclides";
@@ -116,8 +116,18 @@ export function paragraphs(p: NuclidePage): string[] {
         : `${times(gammaVs(p.key, refs[0]))} ${refs[0]}`;
     })();
     const rates = `1 GBq at 1 m reads ${sig(p.doseAt1mPerGBq)} mGy/h, and 1 Ci at the same distance ${sig(p.doseAt1mPerCi)} mGy/h`;
+    /** ★★★ **연쇄가 잘린 쪽에는 「작다」·순위·「몇 GBq 라야 20 µSv/h」를 주지 않는다**
+     *  (2026-09-23). Ra-226 쪽이 「small — 88× less than Cs-137 … ranking 80 of 96 … 22.8 GBq
+     *  라야 20 µSv/h」라고 소개하고 있었다. 그 값은 **Ra-226 자신의 것**이고 라듐 선원의
+     *  광자장은 거의 전부 자손의 것인데 Rn-222 이하가 이 자료에 없다.
+     *  ★ 뒤에 단서를 붙이는 것으로는 모자란다 — **앞 문장이 이미 판단을 준다.**
+     *    순위는 특히 나쁘다: 남들은 상수가 곧 전체 장인데 이 쪽만 아니기 때문이다. */
     out.push(
-      p.gamma < 0.005
+      CHAIN_TRUNCATED.includes(p.key)
+        ? `The air kerma rate constant recorded for ${p.key} is ${sig(p.gamma)} mGy·m²/(GBq·h). ${rates} — ` +
+          `for that emission alone. No ranking against the other emitters here is drawn: for most of them the ` +
+          `constant is the whole field, and for ${p.key} it is not.`
+        : p.gamma < 0.005
         ? `The air kerma rate constant is small — ${sig(p.gamma)} mGy·m²/(GBq·h), ${cmp}, ` +
           `ranking ${r.rank} of ${r.of} by Γ — near the bottom of the photon emitters, but above the ` +
           `cutoff, which ${Object.keys(NUCLIDES).length - r.of} nuclides in this dataset are not. ` +
@@ -153,11 +163,22 @@ export function paragraphs(p: NuclidePage): string[] {
      *    다 들어 있다. 띠는 말하는 순서와 무엇을 앞세우는지를 바꾸는 것이지 값을 줄이는 것이
      *    아니다(줄이면 되풀이 대신 빈약이 된다 — `check-output` ⑥ 이 그것을 잡는다). */
     const hvlMm = pb.hvlCm * 10;
-    const target = t20 === 0
+    /** ★★★ **연쇄가 잘린 쪽에서는 광자 숫자로 결론을 내지 않는다**(2026-09-23).
+     *  U-238 쪽이 「**Shielding barely arises**」·「이미 20 µSv/h 아래」라고 끝맺고 있었다 —
+     *  자기 광자만 세면 맞지만 **실제 선원에서 나오는 결론이 아니다.** 두께 값은 그대로 주고
+     *  (계산은 맞다) **판단 문장만 거둔다.** 앞 문단의 단서가 왜인지를 든다. */
+    const truncated = CHAIN_TRUNCATED.includes(p.key);
+    const target = truncated
+      ? ``
+      : t20 === 0
       ? `At 1 GBq and a metre it is already under 20 µSv/h with nothing in the way.`
       : `Reaching 20 µSv/h from 1 GBq at a metre takes ${mm(t20)} of lead.`;
     out.push(
-      (hvlMm < 0.2
+      (truncated
+        ? `For ${p.key}'s own photons, ${mm(pb.hvlCm)} of lead halves the air kerma rate, ${mm(fe.hvlCm)} ` +
+          `if the material is steel, and ${mm(pb.tvlCm)} of lead takes it to a tenth. What thickness the ` +
+          `source in front of you needs is a question about its chain, not about this line list.`
+        : hvlMm < 0.2
         ? `Shielding barely arises: ${mm(pb.hvlCm)} of lead halves the air kerma rate and ${mm(pb.tvlCm)} ` +
           `takes it to a tenth, thicknesses a source capsule is likely to exceed on its own. Steel does the ` +
           `halving in ${mm(fe.hvlCm)}. ${target}`
@@ -217,6 +238,26 @@ export function paragraphs(p: NuclidePage): string[] {
    *  ★ **분기비를 쓰지 않는다**(자료에 없다). 쓰는 것은 신원·반감기·종점·감마상수뿐이다.
    *  ★ 문장 꼴을 `present`/`ingrowing` 과 베타/감마로 갈라 둔다 — 11장에 같은 틀을 찍으면
    *    그것이 곧 이 파일이 경계하는 「값만 갈아 끼운 글」이 된다. */
+  /** ★★★ **이 자료에 다음이 없으면 위의 광자 수치는 이 핵종 자신의 것뿐이다**(2026-09-23).
+   *  Ra-226 쪽이 그 값을 「small · 88× less than Cs-137」이라고 소개하고 「22.8 GBq 라야
+   *  20 µSv/h」까지 계산해 주고 있었다 — 라듐 선원의 광자장은 거의 전부 자손의 것인데
+   *  Rn-222·Pb-214·Bi-214 는 이 자료에 없다.
+   *  ★ **맞는 값을 지어내지 않는다.** 얼마나 높아지는지는 우리가 모르므로 쓰지 않고,
+   *    **조건문으로만** 말한다. 아는 것은 「그 다음이 이 자료에 없다」 하나뿐이다. */
+  if (CHAIN_TRUNCATED.includes(p.key)) {
+    /* ★ 딸의 이름을 못 낼 수 있다 — 원소기호는 **이 자료에 있는 핵종에서만** 나오는데,
+       Ra-226 의 딸 라돈은 자료에 한 종도 없다. 주기율표를 기억으로 적지 않고,
+       **이름을 모르면 이름 없이** 말한다(모르는 것을 아는 척하지 않는다). */
+    const next = daughterLabel(p.key);
+    out.push(
+      `These photon figures are ${p.key}'s own. ` +
+      (next ? `Its decay product ${next} is not in this dataset, and neither is what follows it, so nothing below `
+            : `What it decays into is not in this dataset, so nothing below `) +
+      `${p.key} is counted here. A source left sealed long enough for the chain to build up reads higher than ` +
+      `this — how much higher is outside what this page can compute.`,
+    );
+  }
+
   const prog = dominantProgeny(p.key);
   if (prog) {
     const d = NUCLIDES[prog.key];

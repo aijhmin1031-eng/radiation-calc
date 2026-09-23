@@ -24,7 +24,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = join(ROOT, "dist/calc/nuclides");
 
-const { WITH_DOMINANT_PROGENY } = await import("../src/lib/decay-chain.ts");
+const { WITH_DOMINANT_PROGENY, CHAIN_TRUNCATED } = await import("../src/lib/decay-chain.ts");
 const { NUCLIDES } = await import("../src/lib/nuclides.ts");
 
 const flat = (x) => x.replace(/<[^>]+>/g, " ").replace(/&[a-z#0-9]+;/gu, " ").replace(/\s+/g, " ");
@@ -69,6 +69,23 @@ for (const [key, prog] of WITH_DOMINANT_PROGENY) {
     fail.push(`${key}: ${prog.key} 를 부르기만 하고 ${prog.betaHotter ? "두께" : "감마상수"} 를 안 적는다`);
 }
 
+/** ★★★ **연쇄가 잘린 쪽이 광자 숫자로 결론을 내지 않는가**(2026-09-23, 두 번째 결함).
+ *  Ra-226 쪽이 Γ 를 「small — 88× less than Cs-137 · ranking 80 of 96」으로 소개하고
+ *  「22.8 GBq 라야 20 µSv/h」까지 계산했다. 그 값은 **Ra-226 자신의 것**이고 라듐 선원의
+ *  광자장은 거의 전부 자손의 것인데 Rn-222 이하가 이 자료에 없다.
+ *  ★ Ru-106 때와 다르다 — **맞는 값을 만들 수 없으므로 주장을 거둔다.** 그래서 이 검사는
+ *    「무엇이 있는가」가 아니라 **「무엇이 없어야 하는가」**를 묻는다. */
+const VERDICTS = ["constant is small", "barely arises", "with nothing in the way",
+                  "near the bottom of the photon emitters", "of the photon emitters in this dataset"];
+for (const key of CHAIN_TRUNCATED) {
+  const t = body(key.toLowerCase());
+  if (t === null) { fail.push(`${key}: 산출물이 없다`); continue; }
+  const said = VERDICTS.filter((v) => t.includes(v));
+  if (said.length) fail.push(`${key}: 연쇄가 잘렸는데 광자 숫자로 결론을 낸다 — ${said.join(" · ")}`);
+  if (!t.includes("is not in this dataset"))
+    fail.push(`${key}: 연쇄가 이 자료에서 끊긴다는 것을 말하지 않는다`);
+}
+
 // ③ 목록 밖의 쪽이 남의 딸 이야기를 들고 있지 않은가
 const MARKERS = ["does not stand alone", "grows in beneath", "The photon field around"];
 let strays = 0;
@@ -87,5 +104,6 @@ console.log(
   `check-progeny   ✅ 붕괴 연쇄 점검 통과 — 결론을 딸이 정하는 쪽 ${WITH_DOMINANT_PROGENY.length}장` +
   `(평형 ${present} · 자라는 중 ${WITH_DOMINANT_PROGENY.length - present}) · 전부 딸을 부르고 수치까지 적는다` +
   ` · 목록 밖에서 새어 나온 연쇄 문장 ${strays}건` +
+  ` · 연쇄가 이 자료에서 끊기는 쪽 ${CHAIN_TRUNCATED.length}장 — 전부 단서를 들고 결론을 내지 않는다` +
   `\n                ※ 못 보는 것: 문장이 맞는지 · **하한값이 맞는지**(그것은 decay-chain.ts 의 정의다) · 여러 걸음 연쇄`,
 );

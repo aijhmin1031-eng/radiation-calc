@@ -74,6 +74,34 @@ export function daughterOf(key: string): string | null {
   return null;
 }
 
+/**
+ * 딸핵종의 **이름**만 낸다 — 자료에 있든 없든. 신원은 산술이라 자료를 안 타기 때문이다.
+ * ★★ 이것이 필요한 이유(2026-09-23, 두 번째 결함): Ra-226 쪽이 「air kerma rate constant is
+ *   **small** — 88× less than Cs-137 … 22.8 GBq 라야 20 µSv/h」라고 적고 있었다. 그 값은
+ *   **Ra-226 자신의 것**이고, 라듐 선원의 광자장은 거의 전부 **자손**에서 나온다.
+ *   그런데 Rn-222·Pb-214·Bi-214 는 **이 자료에 없다.**
+ * ★★★ Ru-106 때와 다른 점: **맞는 숫자를 우리가 만들 수 없다.** 그러면 고치는 길은
+ *   값을 지어내는 것이 아니라 **주장을 거두는 것**이다 — 「이 자료에 그 다음이 없다」는
+ *   우리 자료에 대한 진술이라 물리를 기억으로 쓰지 않아도 참이다.
+ * ★ **알파 붕괴로 좁힌다.** 베타 붕괴에서 딸이 자료에 없는 것은 대개 **안정 핵종**이라
+ *   (Co-60 → Ni-60) 「연쇄가 이어진다」고 말하면 그쪽이 거짓이 된다. 안정 여부를 우리
+ *   자료로는 알 수 없으므로, 알 수 없는 것에 대해서는 말하지 않는다.
+ */
+export function daughterLabel(key: string): string | null {
+  const n = T[key];
+  if (!n) return null;
+  const za = daughterZA(n);
+  if (!za) return null;
+  const s = SYM[za[0]];
+  return s ? `${s}-${za[1]}` : null;
+}
+
+/** 알파 붕괴인데 **다음 핵종이 이 자료에 없어** 광자 수치가 그 핵종 자신의 것뿐인 쪽. */
+export const CHAIN_TRUNCATED = Object.keys(T).filter((k) => {
+  const n = T[k];
+  return String(n.decay).toUpperCase().startsWith("A") && n.gamma_const > 0 && !daughterOf(k);
+});
+
 export type Progeny = {
   key: string;
   /** 손에 쥐는 선원에 **이미 있다**(`present`)인가, 세월이 걸려 **자란다**(`ingrowing`)인가. */
