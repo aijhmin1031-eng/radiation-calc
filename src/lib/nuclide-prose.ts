@@ -226,8 +226,12 @@ export function paragraphs(p: NuclidePage): string[] {
       `. That endpoint stops in ${mm(acrylic.cm)} of ` +
       /* ★ 「몇 배」를 쓰지 않는다 — 수율이 Z 에 비례하므로 그 비는 82/6 으로 **모든 핵종에서
          같다.** 쪽마다 다른 척하는 숫자를 147번 찍는 것이 정확히 틀에 값만 갈아 끼우는 짓이다. */
-      `acrylic or ${mm(glass.cm)} of glass. Of the beta energy, ${frac(p.bremsLow)} turns into X-rays in ` +
-      `acrylic and ${frac(p.bremsLead)} in lead.`,
+      /** ★★★ **제동복사도 모핵종의 종점으로 계산된다**(2026-09-23). Sr-90 쪽이 0.546 MeV 로
+       *  「납에서 1.57%」라고 적는데 실제 선원에서 그 X선을 내는 것은 **Y-90 의 2.28 MeV** 다 —
+       *  **베타를 납으로 막으면 안 되는 이유가 정확히 이것**이라 값이 낮게 나가면 결론이 뒤집힌다.
+       *  ★ 여기서는 **누구의 에너지인지 밝히고**, 딸의 값은 아래 연쇄 문단이 든다. */
+      `acrylic or ${mm(glass.cm)} of glass. Of ${dominantProgeny(p.key)?.betaHotter ? `${p.key}'s own` : `the`} ` +
+      `beta energy, ${frac(p.bremsLow)} turns into X-rays in acrylic and ${frac(p.bremsLead)} in lead.`,
     );
   }
 
@@ -273,7 +277,8 @@ export function paragraphs(p: NuclidePage): string[] {
         `complete within ${fmtTime(d.t_half_s * 7)} of separation. Its endpoint is ` +
         `${sig((d.beta_max_keV ?? 0) / 1000)} MeV and stops in ${mm(dAcr.cm)} of acrylic` +
         (ratio > 1.5 ? `, ${ratioText(ratio)} the thickness above` : ``) +
-        `. The shield is sized on ${prog.key}.` +
+        `. The shield is sized on ${prog.key}, and so is the bremsstrahlung: ${frac(dp.bremsLow)} of that ` +
+        `energy turns into X-rays in acrylic and ${frac(dp.bremsLead)} in lead.` +
         (prog.gammaHotter ? ` ${prog.key} also carries the photons here — ` +
           `${sig(d.gamma_const)} mGy·m²/(GBq·h), against nothing recorded for ${p.key}.` : ``),
       );
@@ -305,7 +310,16 @@ export function paragraphs(p: NuclidePage): string[] {
     out.push(
       `Alpha emission is led by ${(top[0] / 1000).toPrecision(4)} MeV at ${top[1]}%` +
       (n.alpha.length > 1 ? `, one of ${n.alpha.length} recorded lines` : ``) +
-      `. None of it reaches through skin, so the limit here is intake, not external dose.`,
+      /** ★★★ **「the limit here」가 쪽 전체로 번졌다**(2026-09-23). 광자장이 있는 알파 방출체
+       *  **12장**이 납 두께를 주면서 동시에 「여기서 한계는 섭취이지 외부선량이 아니다」라고
+       *  말하고 있었다 — **쪽이 스스로 모순**이다. Am-241 은 59.5 keV 때문에 감마 선원으로
+       *  쓰이고, Ra-226 은 고전적인 외부 위험이다.
+       *  ★ 맞는 것은 **알파에 대한 진술**이다. 「None of it」의 it 은 알파인데 결론만 쪽 전체를
+       *    가져갔다. 광자가 있으면 **거기까지만** 말하고 나머지는 위 수치에 맡긴다. */
+      (p.gamma > 0
+        ? `. None of it reaches through skin, so the alpha is an intake hazard rather than an external one — ` +
+          `the photon figures above are the separate question.`
+        : `. None of it reaches through skin, so the limit here is intake, not external dose.`),
     );
   }
 

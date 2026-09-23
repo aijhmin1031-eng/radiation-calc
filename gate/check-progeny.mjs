@@ -86,6 +86,32 @@ for (const key of CHAIN_TRUNCATED) {
     fail.push(`${key}: 연쇄가 이 자료에서 끊긴다는 것을 말하지 않는다`);
 }
 
+/** ★★★ **「the limit here」가 쪽 전체로 번지지 않는가**(2026-09-23, 셋째 결함).
+ *  광자장이 있는 알파 방출체 **12장**이 납 두께를 주면서 동시에 「여기서 한계는 섭취이지
+ *  외부선량이 아니다」라고 말하고 있었다 — **쪽이 스스로 모순**이다(Am-241 은 59.5 keV 로
+ *  감마 선원으로 쓰이고 Ra-226 은 고전적인 외부 위험이다). */
+for (const key of Object.keys(NUCLIDES)) {
+  const n = NUCLIDES[key];
+  if (!(n.gamma_const > 0)) continue;
+  const t = body(key.toLowerCase());
+  if (t && t.includes("the limit here is intake, not external dose"))
+    fail.push(`${key}: 광자장(Γ=${n.gamma_const})이 있는데 「한계는 섭취이지 외부선량이 아니다」라고 말한다`);
+}
+
+/** ★★★ **제동복사도 모핵종의 종점으로 계산된다**(2026-09-23, 넷째 결함).
+ *  Sr-90 쪽이 0.546 MeV 로 「납에서 1.57%」라고 적는데 실제로 그 X선을 내는 것은 Y-90 의
+ *  2.28 MeV 다(6.54%). Ce-144 는 0.91% 대 8.60% 로 **9.5배**였다. **베타를 납으로 막으면
+ *  안 되는 이유가 정확히 이것**이라, 값이 낮게 나가면 결론이 뒤집힌다. */
+for (const [key, prog] of WITH_DOMINANT_PROGENY) {
+  if (!(prog.presence === "present" && prog.betaHotter)) continue;
+  const t = body(key.toLowerCase());
+  if (!t) continue;
+  if (t.includes("Of the beta energy"))
+    fail.push(`${key}: 제동복사가 누구 것인지 밝히지 않는다 — 딸(${prog.key})이 더 센데 모핵종 값이다`);
+  if (t.includes("beta energy") && !t.includes("and so is the bremsstrahlung"))
+    fail.push(`${key}: 딸(${prog.key})의 제동복사를 적지 않는다`);
+}
+
 // ③ 목록 밖의 쪽이 남의 딸 이야기를 들고 있지 않은가
 const MARKERS = ["does not stand alone", "grows in beneath", "The photon field around"];
 let strays = 0;
@@ -105,5 +131,6 @@ console.log(
   `(평형 ${present} · 자라는 중 ${WITH_DOMINANT_PROGENY.length - present}) · 전부 딸을 부르고 수치까지 적는다` +
   ` · 목록 밖에서 새어 나온 연쇄 문장 ${strays}건` +
   ` · 연쇄가 이 자료에서 끊기는 쪽 ${CHAIN_TRUNCATED.length}장 — 전부 단서를 들고 결론을 내지 않는다` +
+  ` · 광자장 있는 알파 쪽이 「섭취뿐」이라 말하는 것 0건 · 제동복사가 누구 것인지 밝히지 않는 쪽 0건` +
   `\n                ※ 못 보는 것: 문장이 맞는지 · **하한값이 맞는지**(그것은 decay-chain.ts 의 정의다) · 여러 걸음 연쇄`,
 );
