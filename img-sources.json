@@ -7,7 +7,10 @@
     "rules-kept": [
       "No text of any kind inside the image - the prompt forbids letters, numbers and labels, and the names and figures are carried by figcaption and alt instead.",
       "Amber appears once, on the stopping point, and nowhere else.",
-      "Not drawn to scale, and the caption says so rather than letting the drawing imply a ratio it cannot hold."
-    ]
+      "Not drawn to scale, and the caption says so rather than letting the drawing imply a ratio it cannot hold.",
+      "The mark is drawn in graphite only, although the favicon renders its reference line in amber. Inside a plate amber has a meaning - it marks the stopping point - and a second amber in the signature would invite the reader to look for one there too.",
+      "Measured in both themes: the signature reads 8.8:1 against the paper in light and 6.7:1 in dark, where the plate carries a brightness(.78) filter. A fainter signature disappears in dark mode."
+    ],
+    "signed": "A drawing-office signature block is composited in the lower right by scripts/sign-plate.mjs - the mark, the lab name and the domain. The generator is never asked to draw the logo or any lettering: image models reliably mangle both. The original, unsigned generation is kept at art/plates/daughter-shielding-raw.png, outside public/ so it is not served, because the same prompt does not return the same drawing twice and the signature has to be re-composited from something."
   }
 }
