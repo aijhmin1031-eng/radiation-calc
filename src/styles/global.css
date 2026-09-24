@@ -177,3 +177,17 @@ footer li a {
   min-height: 24px;
   padding-block: 2px;
 }
+
+/* ★★ 본문 삽화 — **RadiMeter 의 `figure.plate` 와 같은 규칙**이다(2026-09-24).
+   두 lab 이 같은 플랫폼에 사니 삽화 규약이 갈리면 층마다 다른 말을 하게 된다.
+   ★ 다크에서 밝은 삽화는 번쩍이는데 **어떤 게이트도 눈부심을 재지 않는다** —
+     쪽 바탕 휘도는 8% 대 삽화 80%라 어울리게는 못 만들고 `.78`(62%)로 덜어내기만 한다.
+     채도는 건드리지 않고 반전은 쓰지 않는다 — 앰버(정지점)는 뜻을 가진 색이다.
+   ★ 그림 속 글자는 모델에게 맡기지 않는다. 이 판에는 글자가 **하나도 없고**,
+     이름과 수치는 `figcaption` 과 `alt` 가 든다 — 모바일에서 그림이 작아져도 정보가 남는다. */
+.plate img { display:block; width:100%; height:auto; border:1px solid rgb(var(--c-line));
+             border-radius:.75rem; background:rgb(var(--c-panel)); }
+[data-theme=dark] .plate img { filter:brightness(.78); }
+:root:not([data-theme=light]) .plate img { filter:brightness(.78); }
+.plate figcaption { margin-top:.75rem; font-size:.8125rem; line-height:1.7; color:rgb(var(--c-ink-faint)); }
+.plate figcaption b { color:rgb(var(--c-ink-muted)); font-weight:600; }

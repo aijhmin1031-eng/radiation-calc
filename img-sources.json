@@ -1,0 +1,13 @@
+{
+  "_note": "Illustration provenance. Kept OUTSIDE public/ on purpose: a file placed in public/ is copied verbatim into the deployed tree, and a notes file there once shipped internal Korean memos to the public site (RadiMeter, 2026-09-18). Nothing here is served.",
+  "plates/daughter-shielding.webp": {
+    "page": "/calc/daughter-shielding/",
+    "made": "2026-09-24",
+    "how": "Generated with GPT Image 2 via the Pollo AI platform API, then resized to 1536w and 768w webp. Two passes: the first was discarded because it put a radiation trefoil on the capsule (this project does not use the hazard symbol decoratively) and because it drew the two shields only a few times apart in thickness, which is the one thing the page is about.",
+    "rules-kept": [
+      "No text of any kind inside the image - the prompt forbids letters, numbers and labels, and the names and figures are carried by figcaption and alt instead.",
+      "Amber appears once, on the stopping point, and nowhere else.",
+      "Not drawn to scale, and the caption says so rather than letting the drawing imply a ratio it cannot hold."
+    ]
+  }
+}

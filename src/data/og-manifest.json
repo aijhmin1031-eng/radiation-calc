@@ -11,6 +11,10 @@
     "slug": "beta",
     "title": "Beta dose rate calculator and shielding · RadCalc"
   },
+  "/daughter-shielding/": {
+    "slug": "daughter-shielding",
+    "title": "Nuclides whose daughter sets the shield · RadCalc"
+  },
   "/decay/": {
     "slug": "decay",
     "title": "Radioactive decay calculator — half-life and activity · RadCalc"
@@ -90,14 +94,6 @@
   "/nuclides/cd-109/": {
     "slug": "nuclides-cd-109",
     "title": "Cd-109 shielding — lead half-value layer and dose rate · RadCalc"
-  },
-  "/nuclides/cd-109m1/": {
-    "slug": "nuclides-cd-109m1",
-    "title": "Cd-109m1 shielding — lead half-value layer and dose rate · RadCalc"
-  },
-  "/nuclides/cd-109m2/": {
-    "slug": "nuclides-cd-109m2",
-    "title": "Cd-109m2 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/ce-139/": {
     "slug": "nuclides-ce-139",
@@ -235,10 +231,6 @@
     "slug": "nuclides-hg-203",
     "title": "Hg-203 shielding — lead half-value layer and dose rate · RadCalc"
   },
-  "/nuclides/hg-203m/": {
-    "slug": "nuclides-hg-203m",
-    "title": "Hg-203m shielding — lead half-value layer and dose rate · RadCalc"
-  },
   "/nuclides/ho-166/": {
     "slug": "nuclides-ho-166",
     "title": "Ho-166 beta shielding — range and bremsstrahlung · RadCalc"
@@ -310,10 +302,6 @@
   "/nuclides/na-24/": {
     "slug": "nuclides-na-24",
     "title": "Na-24 shielding — lead half-value layer and dose rate · RadCalc"
-  },
-  "/nuclides/na-24m/": {
-    "slug": "nuclides-na-24m",
-    "title": "Na-24m shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/nb-95/": {
     "slug": "nuclides-nb-95",
@@ -475,10 +463,6 @@
     "slug": "nuclides-sm-153",
     "title": "Sm-153 shielding — lead half-value layer and dose rate · RadCalc"
   },
-  "/nuclides/sm-153m/": {
-    "slug": "nuclides-sm-153m",
-    "title": "Sm-153m shielding — lead half-value layer and dose rate · RadCalc"
-  },
   "/nuclides/sn-113/": {
     "slug": "nuclides-sn-113",
     "title": "Sn-113 shielding — lead half-value layer and dose rate · RadCalc"
@@ -506,10 +490,6 @@
   "/nuclides/ta-182/": {
     "slug": "nuclides-ta-182",
     "title": "Ta-182 shielding — lead half-value layer and dose rate · RadCalc"
-  },
-  "/nuclides/ta-182m1/": {
-    "slug": "nuclides-ta-182m1",
-    "title": "Ta-182m1 half-life, decay mode and specific activity · RadCalc"
   },
   "/nuclides/ta-182m2/": {
     "slug": "nuclides-ta-182m2",
@@ -543,10 +523,6 @@
     "slug": "nuclides-tl-201",
     "title": "Tl-201 shielding — lead half-value layer and dose rate · RadCalc"
   },
-  "/nuclides/tl-201m/": {
-    "slug": "nuclides-tl-201m",
-    "title": "Tl-201m shielding — lead half-value layer and dose rate · RadCalc"
-  },
   "/nuclides/tl-204/": {
     "slug": "nuclides-tl-204",
     "title": "Tl-204 beta shielding — range and bremsstrahlung · RadCalc"
@@ -575,10 +551,6 @@
     "slug": "nuclides-u-238",
     "title": "U-238 specific activity and alpha line energies · RadCalc"
   },
-  "/nuclides/u-238m/": {
-    "slug": "nuclides-u-238m",
-    "title": "U-238m shielding — lead half-value layer and dose rate · RadCalc"
-  },
   "/nuclides/xe-133/": {
     "slug": "nuclides-xe-133",
     "title": "Xe-133 shielding — lead half-value layer and dose rate · RadCalc"
@@ -590,14 +562,6 @@
   "/nuclides/y-88/": {
     "slug": "nuclides-y-88",
     "title": "Y-88 shielding — lead half-value layer and dose rate · RadCalc"
-  },
-  "/nuclides/y-88m1/": {
-    "slug": "nuclides-y-88m1",
-    "title": "Y-88m1 shielding — lead half-value layer and dose rate · RadCalc"
-  },
-  "/nuclides/y-88m2/": {
-    "slug": "nuclides-y-88m2",
-    "title": "Y-88m2 shielding — lead half-value layer and dose rate · RadCalc"
   },
   "/nuclides/y-90/": {
     "slug": "nuclides-y-90",
