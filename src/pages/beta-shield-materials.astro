@@ -1,0 +1,203 @@
+---
+import Base from "../layouts/Base.astro";
+import { NUCLIDES, nuclidePage, halfLifeText, slugOf } from "../lib/nuclides";
+import { dominantProgeny } from "../lib/decay-chain";
+import { u } from "../lib/site";
+
+/** ★★ 숫자를 글자로 적지 않는다 — 표도 문장도 엔진과 자료에서 파생시킨다. */
+type Row = { key: string; e: number; acr: number; al: number; wat: number;
+             low: number; pb: number; g: number };
+const all: Row[] = Object.keys(NUCLIDES)
+  .map((key) => {
+    const p = nuclidePage(key), n = NUCLIDES[key];
+    const of = (m: string) => p.betaRanges.find((r) => r.material === m)?.cm ?? NaN;
+    return { key, e: n.beta_max_keV ?? 0, acr: of("acrylic"), al: of("aluminum"),
+             wat: of("water"), low: p.bremsLow, pb: p.bremsLead, g: n.gamma_const };
+  })
+  .filter((r) => r.e > 0)
+  .sort((a, b) => b.e - a.e);
+const top = all.slice(0, 10);
+
+/** ★★ **납/아크릴 비를 핵종별 사실로 쓰지 않는다.** 수율식이 Z 에 정비례하므로 그 비는
+ *  147장 전부에서 **같은 수**다(실측: 최소와 최대가 소수점까지 같다). 쪽마다 다른 척하는
+ *  숫자를 찍는 것이 곧 「틀에 값만 갈아 끼운 글」이다 — 한 번만, 식의 성질로 적는다. */
+const ZR = all[0].pb / all[0].low;
+const sameRatio = Math.abs(Math.max(...all.map((r) => r.pb / r.low)) -
+                           Math.min(...all.map((r) => r.pb / r.low))) < 1e-9;
+
+const mm = (cm: number, d = 3) => (Number.isFinite(cm) ? (cm * 10).toPrecision(d) : "—");
+const pct = (x: number, d = 2) => `${(x * 100).toFixed(d)}%`;
+const hardest = top[0];
+/** 딸이 더 센 경우 — 이 쪽의 수치를 모핵종으로 고르면 안 되는 자리다. */
+const withProgeny = all.filter((r) => dominantProgeny(r.key)?.betaHotter);
+/** ★★ **베타 표에 감마 선원이 섞인다.** Co-60 은 종점 1.49 MeV 로 상위에 들지만 실제
+ *  선원에서는 **광자장이 압도**한다 — 아무 말 없이 두면 「이 핵종은 아크릴로 막는다」로
+ *  읽힌다. 문턱은 `decay-chain.ts` 가 쓰는 것과 같은 0.01 mGy·m²/(GBq·h) 다.
+ *  ★ 표에서 빼지 않는다 — 종점은 맞는 값이고, 빼면 다른 거짓이 된다. **밝힌다.** */
+const GAMMA_FLOOR = 0.01;
+const gammaLed = top.filter((r) => r.g >= GAMMA_FLOOR).sort((a, b) => b.g - a.g);
+---
+<Base title="Shield materials for beta emitters"
+      description="A beta shield is two decisions: how thick, and what of. The thickness follows from the endpoint energy. The material follows from bremsstrahlung, which rises with atomic number — which is why lead is the wrong thing to put first."
+      schema="Article">
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
+    Shield materials for beta emitters
+  </h1>
+
+  <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <p>
+      Stopping a beta is two separate decisions, and only the first one is about thickness. A few
+      millimetres of almost anything will absorb the electrons. What the electrons leave behind on
+      the way is decided by what you chose to stop them with, and that is where lead — the reflex
+      answer for every other kind of radiation — is the wrong material to reach for first.
+    </p>
+
+    {/* ★ 이 판의 라벨 넉 장은 **생성 모델이 그린 것**이다(2026-09-24, 규칙을 실측으로 고쳤다).
+        원본 해상도 2배 확대로 읽어 확인했다 — ACRYLIC · BETA · LEAD · X-RAYS 전부 정확하다.
+        ★★ 다만 **자료에서 나온 숫자는 여전히 그리지 않는다** — 그림 속 숫자는 자료가 바뀌어도
+          따라오지 않아 조용히 낡는다. 수치는 `figcaption` 과 본문이 든다. */}
+    <figure class="mt-8 plate not-prose">
+      <img src={u("/img/plates/beta-shield-materials.webp")}
+           srcset={`${u("/img/plates/beta-shield-materials-768.webp")} 768w, ${u("/img/plates/beta-shield-materials.webp")} 1536w`}
+           sizes="(min-width: 768px) 768px, 100vw"
+           width="1536" height="1024" loading="lazy" decoding="async"
+           alt="Isometric pencil drawing of a beta shielding stack. A plain unmarked source capsule stands at the left of a machined base. Two panels stand upright further along: first a thick clear acrylic panel, then after a gap a much thinner dark cross-hatched lead plate. Dotted electron tracks labelled BETA leave the capsule and all come to rest inside the acrylic. From those stopping points wavy lines labelled X-RAYS continue through the rest of the acrylic, cross the gap and end inside the lead plate. Leader lines label the two panels ACRYLIC and LEAD." />
+      <figcaption>
+        The order is the whole point. The <b>acrylic</b> stops the electrons; the X-rays it makes in
+        doing so are then absorbed by a much thinner sheet of <b>lead</b> behind it. Put the lead
+        first and it becomes the X-ray source instead. At the hardest endpoint carried here
+        ({(hardest.e / 1000).toFixed(2)} MeV) the converted fraction is {pct(hardest.low)} in
+        acrylic against {pct(hardest.pb)} in lead.
+      </figcaption>
+    </figure>
+
+    <h2>Thickness follows from the endpoint</h2>
+    <p>
+      The range of a beta is set by the most energetic electrons in the spectrum, not the average
+      ones, so a shield is sized on the endpoint. {hardest.key} has the hardest beta in this
+      dataset at {(hardest.e / 1000).toFixed(2)} MeV, and it is stopped by {mm(hardest.acr)} mm of
+      acrylic or {mm(hardest.al)} mm of aluminium. Nothing in this dataset needs more than that.
+    </p>
+    <div class="pin-first mt-3">
+    <table class="lg:min-w-[40rem]">
+      <thead>
+        <tr><th>Nuclide</th><th>Endpoint (MeV)</th><th>Acrylic (mm)</th>
+            <th class="hidden lg:table-cell">Aluminium (mm)</th>
+            <th class="hidden lg:table-cell">Water (mm)</th></tr>
+      </thead>
+      <tbody>
+        {top.map((r) => (
+          <tr>
+            <td><a href={u(`/nuclides/${slugOf(r.key)}/`)} class="underline">{r.key}</a></td>
+            <td>{(r.e / 1000).toFixed(2)}</td>
+            <td>{mm(r.acr)}</td>
+            <td class="hidden lg:table-cell">{mm(r.al)}</td>
+            <td class="hidden lg:table-cell">{mm(r.wat)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    </div>
+    <p class="mt-2 text-[13px]">
+      The ten hardest beta emitters carried here, of {all.length}. Ranges are Katz–Penfold fits to
+      the endpoint: stopping thicknesses rather than attenuation lengths, good to about ±10%.
+    </p>
+    {gammaLed.length > 0 && (
+      <p>
+        Being on that list does not make a nuclide a beta shielding problem.
+        {" "}{gammaLed.map((r) => r.key).join(", ")} {gammaLed.length === 1 ? "is" : "are"} carried
+        here for {gammaLed.length === 1 ? "its" : "their"} endpoint, but in a real source the photon
+        field dominates — {gammaLed[0].key} has an air kerma rate constant of
+        {" "}{gammaLed[0].g.toPrecision(3)} mGy·m²/(GBq·h), and a few millimetres of acrylic does
+        nothing about that. For {gammaLed.length === 1 ? "it" : "those"} the beta shield is a
+        secondary detail inside a photon shield, not the shield.
+      </p>
+    )}
+
+    <h2>Material follows from bremsstrahlung</h2>
+    <p>
+      An electron brought to rest radiates part of its energy as X-rays. The fraction rises with the
+      atomic number of the absorber, and it rises with the energy of the electron. Stop a hard beta
+      in lead and a shield that was supposed to remove a short-range, easily absorbed radiation has
+      manufactured a penetrating one in its place, inside the shield, where it is hardest to deal
+      with. Stop the same beta in acrylic and the same conversion happens, but far less of it.
+    </p>
+    <div class="pin-first mt-3">
+    <table class="lg:min-w-[34rem]">
+      <thead>
+        <tr><th>Nuclide</th><th>Endpoint (MeV)</th>
+            <th>Converted in acrylic</th><th>Converted in lead</th></tr>
+      </thead>
+      <tbody>
+        {top.map((r) => (
+          <tr><td>{r.key}</td><td>{(r.e / 1000).toFixed(2)}</td>
+              <td>{pct(r.low)}</td><td>{pct(r.pb)}</td></tr>
+        ))}
+      </tbody>
+    </table>
+    </div>
+    <p class="mt-2 text-[13px]">
+      {sameRatio && (
+        <>The ratio between the two columns is {ZR.toFixed(1)} on every row, and it is the same on
+        every beta emitter in this dataset. That is not a measurement: the yield used here is
+        proportional to atomic number, so the ratio is fixed at 82/6 by the formula itself. What
+        actually varies from nuclide to nuclide is the size of the fractions, which follows the
+        endpoint — from {pct(Math.min(...all.map((r) => r.low)), 3)} to {pct(Math.max(...all.map((r) => r.low)))}
+        {" "}in acrylic across the {all.length} beta emitters here.</>
+      )}
+    </p>
+
+    <h2>Low atomic number first, high atomic number behind</h2>
+    <p>
+      The practical arrangement follows from those two facts. The electrons meet a low-Z absorber
+      first — acrylic, aluminium, or water in a tank — chosen thick enough to exceed the range from
+      the first table. Whatever X-rays that layer does produce then meet a second, thin, high-Z
+      layer placed behind it, where lead is exactly the right material, because photons are what it
+      is good at. Reverse the order and the first layer becomes the X-ray source.
+    </p>
+    <p>
+      Whether the second layer is needed at all is an activity question rather than a material one.
+      The converted fraction is small: at the hardest endpoint here it is {pct(hardest.low)} in
+      acrylic. At kilobecquerel activities that is nothing. At the tens of gigabecquerels used in
+      industrial sources it is not.
+    </p>
+
+    {withProgeny.length > 0 && (
+      <>
+        <h2>Which endpoint to size on</h2>
+        <p>
+          For {withProgeny.length} of the nuclides here the endpoint in the first table is not the
+          one that decides either answer. Each of them sits above a short-lived daughter with a
+          harder beta, and a source contains both, so both the thickness and the converted fraction
+          have to be taken from the daughter.
+          {" "}<a href={u("/daughter-shielding/")} class="underline">Nuclides whose daughter sets the
+          shield</a> lists them with the factor by which the parent figure understates the
+          thickness.
+        </p>
+      </>
+    )}
+
+    <h2>Limits of these figures</h2>
+    <p>
+      The converted fractions here come from a thick-target rule of thumb, linear in atomic number
+      and in endpoint energy. It is an order-of-magnitude guide whose purpose is to show why the
+      material matters, and it is not a substitute for a transport calculation: it says nothing
+      about where inside the absorber the X-rays are made, what their spectrum is, or how much of
+      it escapes. The ranges carry their own ±10%. Neither figure accounts for the container the
+      source already sits in, which for a sealed source may be doing most of the work described
+      here before anything is added.
+    </p>
+
+    <h2>Where to go next</h2>
+    <ul class="my-3 space-y-1">
+      <li><a href={u("/beta/")} class="underline">Beta dose rate and shielding</a> — range,
+        transmission and converted fraction for an endpoint and absorber you choose.</li>
+      <li><a href={u("/daughter-shielding/")} class="underline">Nuclides whose daughter sets the
+        shield</a> — the cases where the endpoint above is the wrong one.</li>
+      <li><a href={u("/methods/")} class="underline">Methods and data</a> — the formulas and where
+        the decay data come from.</li>
+      <li><a href={u("/dataset-limits/")} class="underline">Limits of this dataset</a> — what these
+        approximations do and do not cover.</li>
+    </ul>
+  </section>
+</Base>

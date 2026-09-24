@@ -131,6 +131,15 @@ const pending = REPORTS.filter((r) => r.status !== "published").length;
       reference data. Anyone wanting the tables themselves should take them from NIST.
     </p>
 
+    <h2>What is not carried</h2>
+    <p>
+      {/* ★ 고아 쪽을 만들지 않는다 — 한계를 다루는 자리에서 잇는다. */}
+      The formulas above describe what is computed. What the underlying table does not hold — decay
+      chains past one step, branching ratios, photon lines below the cutoff, and the emissions no
+      calculator here describes — is counted in
+      {" "}<a href={u("/dataset-limits/")} class="underline">limits of this dataset</a>.
+    </p>
+
     <h2>Corrections</h2>
     <p>
       If a value here disagrees with a source you trust, the disagreement is worth reporting — several

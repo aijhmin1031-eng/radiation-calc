@@ -19,6 +19,9 @@
  *   art/plates/<이름>-raw.png → public/img/plates/<이름>.webp + <이름>-768.webp
  */
 import { chromium } from "playwright";
+/* ★ 크로미움 경로는 **정본 한 곳**이다(`gate/chromium.mjs`). 스스로 읽으면
+   게이트 자기 점검이 막는다 — 같은 뜻을 여러 꼴로 적던 사고를 그렇게 끝냈다. */
+import { LAUNCH } from "../gate/chromium.mjs";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -59,7 +62,7 @@ mkdirSync(out, { recursive: true });
 const tmp = join(ROOT, ".sign.html");
 writeFileSync(tmp, html);
 
-const b = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || undefined });
+const b = await chromium.launch(LAUNCH);
 const p = await b.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
 await p.goto("file://" + tmp);
 await p.evaluate(() => document.fonts.ready);

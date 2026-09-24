@@ -7,9 +7,17 @@
     "slug": "alara",
     "title": "ALARA calculator — stay time and collective dose · RadCalc"
   },
+  "/beta-shield-materials/": {
+    "slug": "beta-shield-materials",
+    "title": "Shield materials for beta emitters · RadCalc"
+  },
   "/beta/": {
     "slug": "beta",
     "title": "Beta dose rate calculator and shielding · RadCalc"
+  },
+  "/dataset-limits/": {
+    "slug": "dataset-limits",
+    "title": "Limits of this dataset · RadCalc"
   },
   "/daughter-shielding/": {
     "slug": "daughter-shielding",
