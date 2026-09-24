@@ -1,6 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
-import { NUCLIDES, nuclidePage, halfLifeText, slugOf } from "../lib/nuclides";
+import { NUCLIDES, nuclidePage, slugOf } from "../lib/nuclides";
 import { dominantProgeny } from "../lib/decay-chain";
 import { u } from "../lib/site";
 
@@ -39,7 +39,7 @@ const gammaLed = top.filter((r) => r.g >= GAMMA_FLOOR).sort((a, b) => b.g - a.g)
 ---
 <Base title="Shield materials for beta emitters"
       description="A beta shield is two decisions: how thick, and what of. The thickness follows from the endpoint energy. The material follows from bremsstrahlung, which rises with atomic number — which is why lead is the wrong thing to put first."
-      schema="Article">
+      schema="TechArticle">
   <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
     Shield materials for beta emitters
   </h1>

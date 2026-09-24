@@ -1,6 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
-import { NUCLIDES, nuclidePage, halfLifeText, slugOf } from "../lib/nuclides";
+import { NUCLIDES, nuclidePage, slugOf } from "../lib/nuclides";
 import { CHAIN_TRUNCATED, WITH_DOMINANT_PROGENY, daughterLabel } from "../lib/decay-chain";
 import { NOINDEX_SLUGS } from "../lib/nuclide-noindex";
 import { DATA_SOURCES } from "../lib/site";
@@ -22,7 +22,7 @@ const CUTOFF_KEV   = 20;
 ---
 <Base title="Limits of this dataset"
       description="What the nuclide data on this site does not carry: decay chains beyond one step, branching ratios, photon lines below the cutoff, and the nuclides that are not here at all. Each limit is counted from the data rather than asserted."
-      schema="Article">
+      schema="TechArticle">
   <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
     Limits of this dataset
   </h1>

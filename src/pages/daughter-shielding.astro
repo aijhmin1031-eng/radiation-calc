@@ -1,6 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
-import { NUCLIDES, nuclidePage, halfLifeText, longName, fmtTime, slugOf } from "../lib/nuclides";
+import { NUCLIDES, nuclidePage, halfLifeText, fmtTime, slugOf } from "../lib/nuclides";
 import { WITH_DOMINANT_PROGENY } from "../lib/decay-chain";
 import { u } from "../lib/site";
 
@@ -39,7 +39,7 @@ const worst = beta[0];
 ---
 <Base title="Nuclides whose daughter sets the shield"
       description="For a handful of nuclides the thing you have to stop is not the nuclide you started with. Ru-106, Sr-90, Ce-144, Si-32 and Pb-210 each sit above a short-lived daughter whose beta is far harder, and the shield has to be sized on the daughter."
-      schema="Article">
+      schema="TechArticle">
   <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
     Nuclides whose daughter sets the shield
   </h1>
