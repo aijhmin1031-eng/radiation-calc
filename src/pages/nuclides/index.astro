@@ -150,5 +150,13 @@ const sig = (x: number, d = 3) => (Number.isFinite(x) && x > 0 ? x.toPrecision(d
       between visits. The derivations, their validation and the citations for both upstream datasets are on the
       <a href={u("/methods/")} class="underline">methods page</a>.
     </p>
+    <p class="mt-3">
+      {/* ★ 낱장 147장은 한 틀에서 나온다 — 그 틀이 **틀리는 경우**를 모아 둔 쪽으로 보낸다.
+          고르고 비교하는 판단이 들어간 글이라 낱장에서 파생시킬 수 없다. */}
+      For a handful of nuclides the endpoint on the page is not the one that decides the shield:
+      a short-lived daughter carries a harder beta, and the source contains both.
+      <a href={u("/daughter-shielding/")} class="underline">Nuclides whose daughter sets the shield</a>
+      {" "}lists them with the factor by which the parent figure understates the thickness.
+    </p>
   </section>
 </Base>

@@ -1,0 +1,227 @@
+---
+import Base from "../layouts/Base.astro";
+import { NUCLIDES, nuclidePage, halfLifeText, fmtTime, slugOf } from "../lib/nuclides";
+import { WITH_DOMINANT_PROGENY } from "../lib/decay-chain";
+import { u } from "../lib/site";
+
+/** ★★ **숫자를 글자로 적지 않는다.** 표도 문장도 `decay-chain.ts` 의 판정과 자료에서
+ *  파생시킨다 — 자료가 바뀌면 이 쪽이 저절로 따라오고, 한쪽만 낡는 사고가 없다.
+ *  그 판정의 근거(평형 문턱·절대 하한·한 걸음만 본다)는 그 파일 머리말이 든다. */
+const rows = WITH_DOMINANT_PROGENY
+  .map(([key, prog]) => {
+    const p = nuclidePage(key), d = nuclidePage(prog.key);
+    const acr = (x: typeof p) => x.betaRanges.find((r) => r.material === "acrylic")?.cm ?? NaN;
+    return { key, prog, p, d, n: NUCLIDES[key], dn: NUCLIDES[prog.key],
+             pAcr: acr(p), dAcr: acr(d) };
+  })
+  .sort((a, b) => {
+    const r = (x: typeof a) => (x.pAcr > 0 && x.dAcr > 0 ? x.dAcr / x.pAcr : 0);
+    return r(b) - r(a);
+  });
+
+const beta = rows.filter((r) => r.prog.betaHotter && r.pAcr > 0 && r.dAcr > 0);
+/** ★★ **`present` 인 것만 든다.** 첫 판이 `ingrowing` 인 Ir-192m2 를 여기 섞어 놓고
+ *  「a source of them **has** a photon field」라고 단정했다 — 그것은 분리 시점에 달린 일이라
+ *  우리가 말하지 않기로 한 바로 그 주장이다. 같은 핵종이 아래 「분리 시점에 달린 경우」
+ *  절에도 들어가 **한 쪽이 스스로 모순**이었다. 조립된 문장을 읽어야만 보였다. */
+const photon = rows.filter((r) => r.prog.gammaHotter && !r.prog.betaHotter && r.prog.presence === "present");
+const ingrowing = rows.filter((r) => r.prog.presence === "ingrowing");
+
+const mm = (cm: number, d = 3) => (Number.isFinite(cm) ? `${(cm * 10).toPrecision(d)}` : "—");
+const sig = (x: number, d = 3) => (Number.isFinite(x) ? x.toPrecision(d) : "—");
+/** ★ `toPrecision` 은 1000 부터 지수 표기로 넘어간다(낱장에서 「7.0e+2×」로 한 번 나갔다).
+ *  문장·표에 들어가는 배수는 유효숫자 둘로 반올림하되 늘 고정 표기로 쓴다. */
+const ratio = (r: number) => {
+  const p = Math.pow(10, Math.max(0, 1 - Math.floor(Math.log10(r))));
+  return (Math.round(r * p) / p).toLocaleString("en-US");
+};
+const worst = beta[0];
+---
+<Base title="Nuclides whose daughter sets the shield"
+      description="For a handful of nuclides the thing you have to stop is not the nuclide you started with. Ru-106, Sr-90, Ce-144, Si-32 and Pb-210 each sit above a short-lived daughter whose beta is far harder, and the shield has to be sized on the daughter."
+      schema="TechArticle">
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
+    Nuclides whose daughter sets the shield
+  </h1>
+
+  <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <p>
+      A decay table gives the energies of the nuclide you look up. A source gives you that nuclide
+      and everything it has decayed into. For most of the nuclides on this site the difference does
+      not matter: the daughter is stable, or it is so long-lived that nothing has accumulated. For
+      {rows.length} of them it matters a great deal, and for {beta.length} of those the figure that
+      decides the shield belongs to the daughter rather than to the parent.
+    </p>
+    <p>
+      {worst && (
+        <>
+          The extreme case is {worst.key}. Its own beta endpoint is
+          {" "}{sig((worst.n.beta_max_keV ?? 0) / 1000)} MeV, which stops in {mm(worst.pAcr)} mm of
+          acrylic — a figure that would suggest no shield is needed at all. But {worst.prog.key}
+          {" "}follows it with a half-life of {halfLifeText(worst.dn)}, and its
+          {" "}{sig((worst.dn.beta_max_keV ?? 0) / 1000)} MeV endpoint needs {mm(worst.dAcr)} mm,
+          {" "}{ratio(worst.dAcr / worst.pAcr)} times as much.
+        </>
+      )}
+    </p>
+
+    {/* ★ 삽화 규약은 `global.css` 의 `.plate` 하나다 — RadiMeter 와 같은 규칙이다.
+        ★ **그림 안에 글자가 하나도 없다.** 이름과 수치는 `figcaption` 과 `alt` 가 든다 —
+          모바일에서 그림이 작아져도 정보가 남고, 모델에게 글자를 맡기지 않는다. */}
+    <figure class="mt-8 plate not-prose">
+      <img src={u("/img/plates/daughter-shielding.webp")}
+           srcset={`${u("/img/plates/daughter-shielding-768.webp")} 768w, ${u("/img/plates/daughter-shielding.webp")} 1536w`}
+           sizes="(min-width: 768px) 768px, 100vw"
+           width="1536" height="1024" loading="lazy" decoding="async"
+           alt="Isometric pencil drawing. A plain unmarked cylindrical source capsule stands at the left of a long machined base. Two clear shields stand upright further along it: the nearer one is so thin it reads as a single drawn line, the farther one is a thick slab. Two dotted particle tracks leave the capsule. The upper one halts at the face of the thin sheet. The lower one passes through the thin sheet, enters the thick slab, and ends at a small amber dot buried inside it, well short of the far face." />
+      <figcaption>
+        The two tracks are the same source. The upper one is the <b>parent</b>'s beta, which the
+        thin sheet stops; the lower one is the <b>daughter</b>'s, which passes through it and is
+        stopped only inside the thick slab. The thicknesses are not drawn to scale — for
+        {" "}{worst ? `${worst.key} the real ratio is ${ratio(worst.dAcr / worst.pAcr)}:1` : "some of these nuclides the ratio runs into the hundreds"},
+        {" "}which no single drawing can hold.
+      </figcaption>
+    </figure>
+
+    <h2>Beta endpoints, parent against daughter</h2>
+    {/* ★ 7열은 390px 에 못 들어간다 — **스크롤 컨테이너(`pin-first`)에 넣고** 첫 칸을 고정한다.
+        안 넣으면 문서가 통째로 넘친다(실측 252px). 좁은 화면에서 덜 중요한 세 칸은 접는다 —
+        모바일에 남는 것은 **누가 누구를, 얼마나**다. */}
+    <div class="pin-first mt-3">
+    <table class="lg:min-w-[44rem]">
+      <thead>
+        <tr><th>Parent</th><th>Daughter</th><th class="hidden lg:table-cell">Daughter half-life</th>
+            <th class="hidden lg:table-cell">Parent endpoint (MeV)</th>
+            <th class="hidden lg:table-cell">Daughter endpoint (MeV)</th>
+            <th>Acrylic needed (mm)</th><th>Factor</th></tr>
+      </thead>
+      <tbody>
+        {beta.map((r) => (
+          <tr>
+            <td><a href={u(`/nuclides/${slugOf(r.key)}/`)} class="underline">{r.key}</a></td>
+            <td><a href={u(`/nuclides/${slugOf(r.prog.key)}/`)} class="underline">{r.prog.key}</a></td>
+            <td class="hidden lg:table-cell">{halfLifeText(r.dn)}</td>
+            <td class="hidden lg:table-cell">{sig((r.n.beta_max_keV ?? 0) / 1000)}</td>
+            <td class="hidden lg:table-cell">{sig((r.dn.beta_max_keV ?? 0) / 1000)}</td>
+            <td>{mm(r.pAcr)} → {mm(r.dAcr)}</td>
+            <td>{ratio(r.dAcr / r.pAcr)}×</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    </div>
+    <p class="mt-2 text-[13px]">
+      Ranges are Katz–Penfold fits to the endpoint, so they are stopping thicknesses rather than
+      attenuation lengths, and they carry about ±10%.
+    </p>
+
+    <h2>Time to ingrowth</h2>
+    <p>
+      None of these daughters has to be added to the source. Each one grows in from the parent until
+      its activity matches, and because every daughter here is short compared with its parent, that
+      state is reached and then held. The question is only how long a freshly separated source takes
+      to get there — seven daughter half-lives puts it within a percent.
+    </p>
+    <ul class="my-3 space-y-1">
+      {beta.map((r) => (
+        <li>
+          <strong>{r.key} → {r.prog.key}</strong>: {fmtTime(r.dn.t_half_s * 7)} after separation.
+        </li>
+      ))}
+    </ul>
+    <p>
+      On any practical timescale, then, these parents are not encountered alone. A shield sized on
+      the parent's own endpoint is undersized from the first day of use.
+    </p>
+
+    <h2>Bremsstrahlung and the choice of material</h2>
+    <p>
+      The same substitution changes which material to shield with. Stopping a beta converts part of
+      its energy into X-rays, and the yield rises with both the beta energy and the atomic number of
+      the absorber. That is why a beta shield is built from a low-Z material and backed, if the
+      activity is high enough to need it, by a thin high-Z layer for the X-rays — never from lead
+      alone. Sizing that decision on the parent understates the X-ray production, because the
+      daughter's beta is the harder one.
+    </p>
+    <div class="pin-first mt-3">
+    <table class="lg:min-w-[40rem]">
+      <thead>
+        <tr><th>Parent</th>
+            <th class="hidden lg:table-cell">In acrylic, parent</th>
+            <th class="hidden lg:table-cell">In acrylic, daughter</th>
+            <th>In lead, parent</th><th>In lead, daughter</th></tr>
+      </thead>
+      <tbody>
+        {beta.map((r) => (
+          <tr>
+            <td>{r.key}</td>
+            <td class="hidden lg:table-cell">{(r.p.bremsLow * 100).toFixed(2)}%</td>
+            <td class="hidden lg:table-cell">{(r.d.bremsLow * 100).toFixed(2)}%</td>
+            <td>{(r.p.bremsLead * 100).toFixed(2)}%</td>
+            <td>{(r.d.bremsLead * 100).toFixed(2)}%</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    </div>
+
+    {photon.length > 0 && (
+      <>
+        <h2>Photon fields that belong to the daughter</h2>
+        <p>
+          The same thing happens with photons. {photon.map((r) => r.key).join(", ")}
+          {photon.length === 1 ? " carries" : " carry"} no photon line worth shielding, yet a source
+          of {photon.length === 1 ? "it" : "them"} has a photon field, because the daughter supplies
+          one.
+        </p>
+        <ul class="my-3 space-y-1">
+          {photon.map((r) => (
+            <li>
+              <strong>{r.key} → {r.prog.key}</strong> ({halfLifeText(r.dn)}):
+              air kerma rate constant {sig(r.dn.gamma_const)} mGy·m²/(GBq·h), against
+              {" "}{r.n.gamma_const > 0 ? sig(r.n.gamma_const) : "no recorded line"} for {r.key}.
+            </li>
+          ))}
+        </ul>
+      </>
+    )}
+
+    {ingrowing.length > 0 && (
+      <>
+        <h2>Cases that depend on the separation date</h2>
+        <p>
+          Where the daughter's half-life is long, how much of it is present depends on when the
+          material was last separated, and no page can know that.
+          {" "}{ingrowing.map((r) => `${r.key} → ${r.prog.key} (${halfLifeText(r.dn)})`).join(", ")}
+          {" "}{ingrowing.length === 1 ? "falls" : "fall"} into this group. The individual pages say
+          what full ingrowth would bring and stop there.
+        </p>
+      </>
+    )}
+
+    <h2>Limits of this page</h2>
+    <p>
+      This is a one-step test. It compares a nuclide with the nuclide it decays into, and it says
+      nothing about what happens further down a chain. Where the next nuclide is not carried in this
+      dataset at all — Ra-226 and U-238 among them — the figures on those pages cover the parent's
+      own emission only, and the pages say so rather than drawing a conclusion from them. Branching
+      ratios are not used anywhere here, because the dataset does not carry them; the identity of a
+      daughter follows from the decay mode and the atomic and mass numbers, and its half-life,
+      endpoint and air kerma rate constant are read from the same tables as everything else.
+    </p>
+
+    <h2>Where to go next</h2>
+    <ul class="my-3 space-y-1">
+      <li><a href={u("/nuclides/")} class="underline">Nuclide data</a> — the individual pages, each of
+        which repeats the warning above for its own case.</li>
+      <li><a href={u("/beta-shield-materials/")} class="underline">Shield materials for beta
+        emitters</a> — how thick, and what of: the bremsstrahlung argument for low-Z first.</li>
+      <li><a href={u("/beta/")} class="underline">Beta dose rate and shielding</a> — range and
+        bremsstrahlung for an endpoint you choose.</li>
+      <li><a href={u("/methods/")} class="underline">Methods and data</a> — where the decay data come
+        from and how the constants are computed.</li>
+      <li><a href={u("/dataset-limits/")} class="underline">Limits of this dataset</a> — why this
+        comparison stops after one step.</li>
+    </ul>
+  </section>
+</Base>

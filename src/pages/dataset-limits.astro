@@ -1,0 +1,123 @@
+---
+import Base from "../layouts/Base.astro";
+import { NUCLIDES, nuclidePage, slugOf } from "../lib/nuclides";
+import { CHAIN_TRUNCATED, WITH_DOMINANT_PROGENY, daughterLabel } from "../lib/decay-chain";
+import { NOINDEX_SLUGS } from "../lib/nuclide-noindex";
+import { DATA_SOURCES } from "../lib/site";
+import { u } from "../lib/site";
+
+/** ★★ 이 쪽의 수는 **자료를 세어** 나온다. 한계를 글자로 적으면 자료가 자라도 그대로 남아
+ *  **한계에 대한 진술이 먼저 낡는다** — 그것보다 나쁜 것은 없다. */
+const keys = Object.keys(NUCLIDES);
+const count = (f: (k: string) => boolean) => keys.filter(f).length;
+
+const noLines      = count((k) => !NUCLIDES[k].lines?.length);
+const belowCut     = count((k) => (NUCLIDES[k].lines?.length ?? 0) > 0 && nuclidePage(k).shares.length === 0);
+const noBeta       = count((k) => !NUCLIDES[k].beta?.length);
+const noAlpha      = count((k) => !NUCLIDES[k].alpha?.length);
+const elements     = new Set(keys.map((k) => NUCLIDES[k].sym)).size;
+const truncated    = CHAIN_TRUNCATED;
+const progeny      = WITH_DOMINANT_PROGENY;
+const CUTOFF_KEV   = 20;
+---
+<Base title="Limits of this dataset"
+      description="What the nuclide data on this site does not carry: decay chains beyond one step, branching ratios, photon lines below the cutoff, and the nuclides that are not here at all. Each limit is counted from the data rather than asserted."
+      schema="TechArticle">
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
+    Limits of this dataset
+  </h1>
+
+  <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <p>
+      Every calculator here reads from one table of {keys.length} nuclides covering {elements}
+      elements. What that table holds decides what the answers can mean, and several of the
+      questions people arrive with cannot be answered from it at all. This page is a list of those,
+      counted from the data rather than asserted, so that it stays true as the data grows.
+    </p>
+
+    <h2>Decay chains, beyond one step</h2>
+    <p>
+      The table holds nuclides, not chains. Where a nuclide's decay product happens also to be in
+      the table, this site can compare the two and does — that comparison is what
+      {" "}<a href={u("/daughter-shielding/")} class="underline">nuclides whose daughter sets the
+      shield</a> is built from, and it covers {progeny.length} of the {keys.length}. It is a
+      one-step comparison and it stops there. Nothing here follows a chain down to its stable end,
+      and no calculator on this site builds up a mixture and lets it evolve.
+    </p>
+    {truncated.length > 0 && (
+      <p>
+        For {truncated.length} of them the next nuclide is not in the table at all:
+        {" "}{truncated.map((k, i) => (
+          <>{i > 0 ? ", " : ""}<a href={u(`/nuclides/${slugOf(k)}/`)} class="underline">{k}</a>
+          {" "}(decays to {daughterLabel(k) ?? "a nuclide not carried here"})</>
+        ))}. Those pages give the constant recorded for the nuclide itself and decline to draw a
+        conclusion from it, because for an aged source of any of them the progeny supply most of
+        the field and this table cannot say how much.
+      </p>
+    )}
+
+    <h2>Branching ratios</h2>
+    <p>
+      The table records which decay mode a nuclide takes, not how the decays divide between modes
+      when there is more than one. Nothing on this site therefore states what fraction of decays
+      goes down a particular branch, and the daughter identities used in the comparison above follow
+      from the decay mode and the atomic and mass numbers — arithmetic — rather than from a
+      branching table. Where a nuclide has a mode not recorded here, its products are simply absent.
+    </p>
+
+    <h2>Photon lines below the cutoff</h2>
+    <p>
+      Air kerma rate constants are summed over recorded photon lines above {CUTOFF_KEV} keV.
+      The cutoff is a convention and it has consequences at both ends of the table.
+      {" "}{noLines} nuclides have no photon line recorded at all, and a further {belowCut} have
+      lines that are all below the cutoff, so their constant is zero by that convention rather than
+      by physics. A page that says no line is recorded is making a statement about this table, not
+      about the nuclide.
+    </p>
+
+    <h2>Emissions the table does not describe</h2>
+    <p>
+      {noBeta} of the {keys.length} carry no beta spectrum and {noAlpha} carry no alpha lines, so
+      the corresponding sections are absent from those pages. Beyond that, some emissions are
+      outside the scope of every calculator here: neutrons from spontaneous fission or from (α,n)
+      reactions in the surrounding material, internal conversion and Auger electrons, and
+      characteristic X-rays following electron capture where they are not in the recorded line
+      list. For the heavy actinides in particular, a shield designed from the photon and alpha
+      figures on this site is not a complete shield.
+    </p>
+
+    <h2>Pages not offered for indexing</h2>
+    <p>
+      {NOINDEX_SLUGS.length} nuclide pages are marked <code>noindex</code> and left out of the
+      sitemap. All of them have half-lives under a second, which is short enough that the question
+      a shielding calculator answers — how thick, of what — has no practical form. The pages remain
+      and remain linked, because a decay chain can arrive at them; they are simply not offered to
+      search engines as answers.
+    </p>
+
+    <h2>What the numbers themselves carry</h2>
+    <p>
+      Half-lives, photon energies and emission probabilities, beta maximum and mean energies, and
+      alpha energies come from the IAEA Nuclear Data Section's Livechart interface, which serves
+      ENSDF. Attenuation coefficients come from the NIST tables. Both are harvested once and
+      committed, so results do not change between visits and the version is fixed. The derived
+      quantities each carry their own approximation — beta ranges are a Katz–Penfold fit good to
+      about ±10%, bremsstrahlung yield is a thick-target rule of thumb linear in atomic number and
+      energy, and buildup is a fitted factor rather than a transport calculation. None of them is a
+      substitute for a measurement, and this site is not a substitute for a dosimetry service.
+    </p>
+    <ul class="my-3 space-y-1">
+      {DATA_SOURCES.map((d) => <li><a href={d.url} rel="noopener" class="underline">{d.name}</a></li>)}
+    </ul>
+
+    <h2>Where to go next</h2>
+    <ul class="my-3 space-y-1">
+      <li><a href={u("/methods/")} class="underline">Methods and data</a> — the formulas, the
+        sources and their terms.</li>
+      <li><a href={u("/validation/")} class="underline">Validation</a> — how the results here are
+        checked against independent figures.</li>
+      <li><a href={u("/nuclides/")} class="underline">Nuclide data</a> — the {keys.length} pages
+        themselves.</li>
+    </ul>
+  </section>
+</Base>
