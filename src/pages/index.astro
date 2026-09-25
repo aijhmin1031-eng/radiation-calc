@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import { u, SITE_NAME } from "../lib/site";
 import { TOOLS } from "../lib/tools";
+import { NOTES } from "../lib/notes";
 import Keyword from "../components/Keyword.astro";
 ---
 <Base title="Radiation protection calculators"
@@ -59,6 +60,33 @@ import Keyword from "../components/Keyword.astro";
       </li>
     ))}
   </ul>
+
+  {/* ★★ 읽을 글 구획(2026-09-26). 소유주가 화면에서 잡았다 — 「Shield materials for beta
+      emitters … 이건 랜딩페이지에서 어디로 어디로 들어와야 해? 찾기가 힘드네」.
+      실측: 허브에서 가는 길이 **0개**였고, 닿는 유일한 경로가 `/beta/` 본문 **산문 속의
+      링크 한 개**였다. 그 도구를 열어 읽지 않으면 이 글들이 있다는 것조차 알 수 없었다.
+      ★ 허브의 뼈대가 **도구 목록**이라 읽을 글이 설 자리가 구조에 없었던 것이지,
+        링크를 빠뜨린 것이 아니다 — 그래서 자리를 만든다.
+      ★ 도구 카드와 **다른 구획**으로 둔다: 하나는 쓰는 것이고 하나는 읽는 것이다.
+        `TOOLS` 에 끼워 넣으면 신뢰도 삼항·입력 요구가 빈 카드가 생긴다(까닭은 `notes.ts`). */}
+  <section class="mt-14">
+    <h2 class="text-[18px] font-semibold text-ink">Longer notes</h2>
+    <p class="mt-1 max-w-2xl text-[14px] leading-relaxed text-ink-muted">
+      Questions the calculators raise but cannot answer inside a form — where the reference
+      sheets mislead, what to build a shield out of, and where the data runs out.
+    </p>
+    <ul class="mt-4 grid gap-3 sm:grid-cols-3">
+      {NOTES.map((n) => (
+        <li class="card p-4 transition-colors hover:border-accent/50">
+          <a href={u(n.path)} class="no-underline">
+            <h3 class="text-[15px] font-semibold leading-snug text-ink">{n.name}</h3>
+            <p class="mt-1 text-[13px] leading-snug text-ink-muted">{n.question}</p>
+            <p class="mt-2 text-[12px] leading-snug text-ink-faint">{n.blurb}</p>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
 
   <section class="prose-doc mt-16 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
     <h2>Why the constants are computed, not copied</h2>
