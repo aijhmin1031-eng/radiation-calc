@@ -56,6 +56,35 @@ console.log(`\n① 크로미움 경로 정본 — playwright 를 쓰는 파일 $
 const { CHROMIUM_EXE } = await import("./chromium.mjs");
 console.log(`   ${CHROMIUM_EXE ? `경로 ${CHROMIUM_EXE}` : "경로 미지정 — playwright 기본값(CI)"}`);
 
+/** ② ★★★ **게이트가 CI 에 붙어 있는가**(2026-09-26 신설).
+ *
+ *  계기: `check-notes` 를 세우고 `package.json` 의 `gate` 에만 등록한 채 PR 을 올렸다.
+ *  **CI 는 게이트를 단계마다 따로 부른다** — `npm run gate` 를 쓰지 않는다. 그래서 그
+ *  게이트는 **로컬에서만 도는 게이트**가 될 뻔했고, 진행 중인 CI 실행의 step 목록을
+ *  손으로 훑다가 없는 것을 보고서야 알았다.
+ *
+ *  ★ **이 레포의 규율은 「게이트가 CI 에 붙어 있다」에 서 있다.** 붙어 있지 않으면
+ *    그 게이트는 **내가 기억할 때만 도는 것**이고, 그것은 게이트가 아니다.
+ *  ★ **자리가 둘인 것 자체가 함정이다** — `package.json` 과 워크플로. 사람이 한쪽만
+ *    적는 것을 막을 방법은 **세는 것**뿐이다.
+ *  ★ **수를 적지 않는다** — 게이트가 늘 때마다 낡는다. 파일을 훑어서 센다. */
+const WORKFLOW = ".github/workflows/ci.yml";
+const wf = readFileSync(join(ROOT, WORKFLOW), "utf8");
+const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
+const gateScript = pkg.scripts?.gate ?? "";
+const gateFiles = readdirSync(join(ROOT, "gate"))
+  .filter((f) => f.startsWith("check-") && f.endsWith(".mjs") && f !== "check-gates.mjs");
+const notInCI = gateFiles.filter((f) => !wf.includes(`gate/${f}`));
+const notInScript = gateFiles.filter((f) => !gateScript.includes(`gate/${f}`));
+if (notInCI.length)
+  fail.push(`${WORKFLOW} 에 없는 게이트 ${notInCI.length}개 — ${notInCI.join(" · ")}`
+    + "  (CI 는 단계마다 따로 부른다 — package.json 의 gate 에 넣는 것만으로는 안 돈다)");
+if (notInScript.length)
+  fail.push(`package.json 의 gate 에 없는 게이트 ${notInScript.length}개 — ${notInScript.join(" · ")}`);
+console.log(`\n② 게이트가 두 자리에 다 적혔는가 — 게이트 ${gateFiles.length}개 (check-gates 는 제외)`);
+if (!notInCI.length && !notInScript.length)
+  console.log(`   ${WORKFLOW} ✓ · package.json 의 gate ✓`);
+
 if (fail.length) {
   console.error(`\n❌ 게이트 자기 점검 ${fail.length}건`);
   for (const m of fail) console.error("   " + m);
