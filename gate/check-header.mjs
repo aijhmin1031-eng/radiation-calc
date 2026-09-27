@@ -78,8 +78,18 @@ for (const [w, h, tag] of [[1280, 900, "데스크톱"], [390, 844, "모바일"]]
         signedOutShown: vis(out), signedInShown: vis(inn),
         who: inn?.getAttribute("data-who") || "",
         chipBox: chip ? r(chip) : null, tgBox: tg ? r(tg) : null,
-        themeText: [...hd.querySelectorAll(".rmt-theme-on-light,.rmt-theme-on-dark")]
-          .filter((e) => getComputedStyle(e).display !== "none").map((e) => e.textContent.trim()).join("/"),
+        /** ★★ 2026-09-26 에 손잡이가 **점 + 낱말(LIGHT/DARK)** 에서 **해·달 그림**으로
+         *  바뀌었는데 이 검사가 따라오지 않아 **게이트가 4건 빨간 채로 나갔다.**
+         *  옛 검사는 `.rmt-theme-on-*` 의 **글자**를 읽었는데 그 클래스는 이제 SVG 안의
+         *  `<g>` 라 글자가 0자다 — 즉 정상인데 실패로 보였다.
+         *  ★ 묻는 것은 그대로다: **무엇을 누르는지 알 수 있는가.** 답하는 방법만 바뀐다 —
+         *    ① 두 그림 중 **정확히 하나**만 그려지는가(테마에 맞는 쪽) · ② 그림뿐이므로
+         *    **읽어 줄 이름이 있는가**(aria-label/title). 점에는 뜻이 없지만 해·달에는
+         *    있고, 화면낭독기에는 그 뜻이 안 가므로 이름이 반드시 있어야 한다. */
+        themeGlyphs: [...hd.querySelectorAll(".rmt-theme-on-light,.rmt-theme-on-dark")]
+          .filter((e) => getComputedStyle(e).display !== "none")
+          .map((e) => (e.classList.contains("rmt-theme-on-dark") ? "moon" : "sun")),
+        themeName: (tg?.getAttribute("aria-label") || tg?.getAttribute("title") || tg?.textContent || "").trim(),
         overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         /** ★★ **머리글·꼬리말이 본문과 면으로 갈리는가**(2026-09-16 소유주 지적
          *  「여기는 메뉴와 본문 배경색이 비슷해보여」). 실측 명도차가 **채널당 4**였다.
@@ -134,7 +144,10 @@ for (const [w, h, tag] of [[1280, 900, "데스크톱"], [390, 844, "모바일"]]
       if (box && (box.h < 24 || box.w < 24)) fail.push(`${tag} ${who}: ${name} 표적 ${box.w}×${box.h} < 24`);
     if (m.overflow > 1) fail.push(`${tag} ${who}: 가로 넘침 ${m.overflow}px`);
     if (m.height > BUDGET[w]) fail.push(`${tag} ${who}: 머리글 ${m.height}px > 예산 ${BUDGET[w]}px`);
-    if (!m.themeText) fail.push(`${tag} ${who}: 테마 손잡이에 글자가 없다(점만 있으면 무엇인지 모른다)`);
+    if (m.themeGlyphs.length !== 1)
+      fail.push(`${tag} ${who}: 테마 손잡이의 그림이 ${m.themeGlyphs.length}개다(해·달 중 정확히 하나여야 한다) — ${m.themeGlyphs.join("+") || "없음"}`);
+    if (m.themeName.length < 4)
+      fail.push(`${tag} ${who}: 테마 손잡이에 읽어 줄 이름이 없다(「${m.themeName}」) — 그림뿐이므로 화면낭독기에는 이름이 전부다`);
 
     // 실제로 눌러서 테마가 바뀌고 **저장되는지** — 읽기만 하던 그전 상태의 재발을 막는다
     if (!signed && m.toggle) {
@@ -153,7 +166,7 @@ for (const [w, h, tag] of [[1280, 900, "데스크톱"], [390, 844, "모바일"]]
       /* ★ 없는 것을 찍으려다 **게이트가 죽으면 안 된다** — 역테스트에서 실제로 죽었고,
          그러면 결함 목록 대신 스택 추적이 나와 무엇이 틀렸는지가 가려진다. */
       const box = (b) => (b ? `${b.w}×${b.h}` : "없음");
-      note(`${who} — 머리글 ${m.height}px · 칩 ${box(m.chipBox)} · 손잡이 ${box(m.tgBox)} (${m.themeText || "글자없음"}) · 전환 ${flip.before}→${flip.after}(저장 ${flip.saved})`);
+      note(`${who} — 머리글 ${m.height}px · 칩 ${box(m.chipBox)} · 손잡이 ${box(m.tgBox)} (${m.themeGlyphs.join("+") || "그림없음"}·「${m.themeName}」) · 전환 ${flip.before}→${flip.after}(저장 ${flip.saved})`);
     } else if (!signed && !m.toggle) {
       note(`${who} — 머리글 ${m.height}px · 칩 ${m.chipBox ? "있음" : "없음"} · 손잡이 없음`);
     } else if (signed) {
