@@ -57,11 +57,16 @@ const twinReason = (a, b) =>
 /** 승인 전에 있으면 안 되는 광고 원천. */
 const AD_HOSTS = ["pagead2.googlesyndication.com", "googleads.g.doubleclick.net", "adservice.google.com"];
 /** 이 lab 이 부르는 것으로 **밝혀져 있는** 바깥 원천. 늘리려면 플랫폼 개인정보 문서
- *  (`/radimeter/privacy/`, 정본은 `web/src/lib/third-parties.ts`)에 **먼저** 적는다. */
+ *  (**우산 루트 `/privacy`**)에 **먼저** 적는다. 2026-09-28 에 옮겼다 —
+ *  그전에는 `/radimeter/privacy/` 를 정본으로 적고 있었다. */
 const DECLARED = [/\.supabase\.co$/, /^accounts\.google\.com$/];
-/** 플랫폼 층의 법무 문서. 이 lab 에는 면책만 살고 나머지는 RadiMeter 밑에 산다 —
- *  **한 오리진이므로 그것이 맞는 구조**이고, 물어야 하는 것은 「닿는가」다. */
-const REQUIRED_LINKS = ["/calc/disclaimer/", "/radimeter/privacy/", "/radimeter/terms/", "/radimeter/contact/"];
+/** 플랫폼 층의 법무 문서. 이 lab 에는 면책만 살고 **나머지는 우산 루트**에 산다 —
+ *  한 오리진의 정책은 한 벌이어야 하고, 물어야 하는 것은 「닿는가」다.
+ *  ★ 2026-09-28 에 `/radimeter/` 밑에서 루트로 옮겼다. 사이트의 79% 가 이 lab 인데
+ *    하단의 Privacy 가 RadiMeter 의 측정 데이터 설명으로 가고 있었고, 애드센스가
+ *    요구하는 광고 쿠키 고지는 **루트 문서에만** 있다.
+ *  ★ 끝 슬래시 없음이 우산 쪽의 정본이다(꼬리말·사이트맵·canonical 일치). */
+const REQUIRED_LINKS = ["/calc/disclaimer/", "/privacy", "/terms", "/contact"];
 
 function walk(d, out = []) {
   for (const e of readdirSync(d)) {
