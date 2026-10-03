@@ -204,7 +204,7 @@ const description =
 
     <h2>The implementation under test</h2>
     <p>The three modes are three expressions:</p>
-    <pre class="card my-3 overflow-x-auto p-3 text-[13px]"><code>lambda      = (tHalfS) =&gt; LN2 / tHalfS
+    <pre class="card my-3 overflow-x-auto p-3 text-[13px]" tabindex="0"><code>lambda      = (tHalfS) =&gt; LN2 / tHalfS
 decayActivity        = a0 * Math.exp(-lambda(tHalfS) * elapsedS)
 elapsedFromRatio     = -Math.log(ratio) / lambda(tHalfS)
 halfLifeFromTwoPoints = (LN2 * elapsedS) / Math.log(a0 / a1)</code></pre>
@@ -222,7 +222,7 @@ halfLifeFromTwoPoints = (LN2 * elapsedS) / Math.log(a0 / a1)</code></pre>
       from one second to 10¹⁷ seconds; the table shows the value at one day and the worst disagreement
       seen across all of them.
     </p>
-    <div class="not-prose my-3 pin-first table-fit">
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
       <table>
         <thead>
           <tr><th>Identity</th>
@@ -267,7 +267,7 @@ halfLifeFromTwoPoints = (LN2 * elapsedS) / Math.log(a0 / a1)</code></pre>
       would be meaningless here, because the uncertainties differ by two orders of magnitude between
       nuclides — Ni-63 carries ±2.4% and Ir-192 ±0.018%.
     </p>
-    <div class="not-prose my-3 pin-first table-fit">
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
       <table>
         <thead>
           <tr><th>Nuclide</th>
@@ -332,7 +332,7 @@ halfLifeFromTwoPoints = (LN2 * elapsedS) / Math.log(a0 / a1)</code></pre>
       Take the nuclides where the two evaluations recommend the same number of years, so that no
       evaluation difference remains and only the conversion is left.
     </p>
-    <div class="not-prose my-3 pin-first table-fit">
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
       <table>
         <thead>
           <tr><th>Nuclide</th>
@@ -367,7 +367,7 @@ halfLifeFromTwoPoints = (LN2 * elapsedS) / Math.log(a0 / a1)</code></pre>
       here is that the arithmetic the tool performs on that half-life is the arithmetic the decay law
       calls for, end to end, including the secondary figure the screen prints alongside the answer.
     </p>
-    <div class="not-prose my-3 pin-first table-fit">
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
       <table>
         <thead>
           <tr><th>Case</th>
@@ -410,7 +410,7 @@ halfLifeFromTwoPoints = (LN2 * elapsedS) / Math.log(a0 / a1)</code></pre>
       produces a number there is worse than one that produces nothing, because the number will be
       written down.
     </p>
-    <div class="not-prose my-3 pin-first table-fit">
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
       <table>
         <thead><tr><th>Asked</th><th>Why there is no answer</th><th class="whitespace-nowrap text-right">Returned</th></tr></thead>
         <tbody>
@@ -441,7 +441,7 @@ halfLifeFromTwoPoints = (LN2 * elapsedS) / Math.log(a0 / a1)</code></pre>
     </p>
 
     <h2>Coverage and result</h2>
-    <div class="not-prose my-4 overflow-x-auto table-fit">
+    <div class="not-prose my-4 overflow-x-auto table-fit" tabindex="0">
       <table>
         <thead><tr><th>Check</th><th class="whitespace-nowrap text-right">Count</th><th class="whitespace-nowrap text-right">Result</th></tr></thead>
         <tbody>

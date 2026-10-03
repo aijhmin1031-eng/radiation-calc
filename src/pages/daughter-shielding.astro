@@ -87,7 +87,7 @@ const worst = beta[0];
     {/* ★ 7열은 390px 에 못 들어간다 — **스크롤 컨테이너(`pin-first`)에 넣고** 첫 칸을 고정한다.
         안 넣으면 문서가 통째로 넘친다(실측 252px). 좁은 화면에서 덜 중요한 세 칸은 접는다 —
         모바일에 남는 것은 **누가 누구를, 얼마나**다. */}
-    <div class="pin-first mt-3">
+    <div class="pin-first mt-3" tabindex="0">
     <table class="lg:min-w-[44rem]">
       <thead>
         <tr><th>Parent</th><th>Daughter</th><th class="hidden lg:table-cell">Daughter half-life</th>
@@ -143,7 +143,7 @@ const worst = beta[0];
       alone. Sizing that decision on the parent understates the X-ray production, because the
       daughter's beta is the harder one.
     </p>
-    <div class="pin-first mt-3">
+    <div class="pin-first mt-3" tabindex="0">
     <table class="lg:min-w-[40rem]">
       <thead>
         <tr><th>Parent</th>

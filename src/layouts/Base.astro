@@ -192,7 +192,7 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
             148px 이었다(잠금장치 144 + 칸 185 = 329 > 가용 328 — **1px 차이로** 접혔다).
             위 줄에 잠금장치와 컨트롤(288px)을 두면 320px 에서도 두 줄이고, 브랜드 왼쪽 ·
             컨트롤 오른쪽이라 우산·RadiMeter 와 같은 배치가 된다. */}
-        <nav class="order-last w-full flex flex-wrap items-center gap-0.5 text-[13px] sm:order-none sm:ml-auto sm:w-auto sm:gap-1">
+        <nav aria-label="Primary" class="order-last w-full flex flex-wrap items-center gap-0.5 text-[13px] sm:order-none sm:ml-auto sm:w-auto sm:gap-1">
           {NAVI.map((n) => (
             <a href={u(n.href)} aria-current={navOn(n.href) ? "page" : undefined} class={navCls(n.href)}>{n.label}</a>
           ))}
@@ -238,7 +238,7 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
           : <span class="flex-1"></span>}
         {/* 손가락 표적 24px(WCAG 2.5.8) — 13px 글자는 줄 높이가 18px 뿐이라
             세로 여백으로만 넓힌다(바 높이 45px 예산은 그대로다). */}
-        <nav class="ml-auto flex items-center gap-1 text-[13px]">
+        <nav aria-label="Primary (compact)" class="ml-auto flex items-center gap-1 text-[13px]">
           {NAVI.map((n) => (
             <a href={u(n.href)} aria-current={navOn(n.href) ? "page" : undefined} class={navCls(n.href)}>{n.label}</a>
           ))}
@@ -268,7 +268,7 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
 
     <footer class="mt-16 border-t border-line-strong bg-panel">
       <div class="mx-auto max-w-content space-y-5 px-5 py-8 text-[13px] sm:px-8">
-        <nav class="flex flex-wrap gap-x-4 gap-y-1.5">
+        <nav aria-label="Site" class="flex flex-wrap gap-x-4 gap-y-1.5">
           {TOOLS.map((t) => <a href={u(`/${t.slug}/`)} class="text-ink-muted hover:text-ink">{t.name}</a>)}
         </nav>
         <div>
@@ -284,7 +284,7 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
           cross-checking. They <strong>do not replace</strong> an accredited calibration, a shielding
           design, a dose assessment, or a radiation survey by a qualified person.
         </p>
-        <nav class="flex flex-wrap gap-x-4 gap-y-1.5 text-ink-faint">
+        <nav aria-label="Platform documents" class="flex flex-wrap gap-x-4 gap-y-1.5 text-ink-faint">
           <a href={u("/disclaimer/")} class="hover:text-ink">Disclaimer</a>
           <a href={u("/methods/")} class="hover:text-ink">Methods and data</a>
           <a href={u("/validation/")} class="hover:text-ink">Validation</a>

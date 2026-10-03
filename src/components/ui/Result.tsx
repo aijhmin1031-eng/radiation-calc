@@ -24,7 +24,10 @@ export function Headline({ value, unit, label, note, stale }: {
   return (
     <div className={`rounded-lg border px-4 py-4 transition-opacity ${
       stale ? "border-line bg-surface opacity-60" : "border-accent/40 bg-accent-soft"}`}>
-      <p className="label mb-1.5">{label}</p>
+      {/* ★ `.label` 의 ink-faint 는 다크의 강조 바탕(58 46 26) 위에서 4.35:1 — AA 미달(2026-10-03 axe).
+          바탕이 색을 가진 칸이라 `on-tint` 로 한 단 짙게(실측 다크 6.03 · 라이트 6.04). `label` 클래스는
+          남긴다 — `check-validation` 이 `p.label` 로 으뜸 답을 찾는다(클래스를 갈아 끼웠더니 14건이 빨개졌다). */}
+      <p className="label on-tint mb-1.5">{label}</p>
       <p className="flex flex-wrap items-baseline gap-1.5">
         <span className="num text-[30px] font-semibold leading-none text-ink sm:text-[36px]">
           {typeof value === "number" ? fmt(value) : value}

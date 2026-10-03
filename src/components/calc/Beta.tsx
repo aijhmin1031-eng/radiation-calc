@@ -102,7 +102,7 @@ export default function Beta() {
 
           {/* ★ 첫 칸 고정 — 좁은 화면에서 오른쪽으로 밀면 **어느 흡수체 줄인지** 사라진다
               (2026-09-17, 유효성 평가 쪽에 세운 게이트가 이 기존 결함을 찾아냈다). */}
-          <div className="card pin-first">
+          <div className="card pin-first" tabIndex={0} role="region" aria-label="Absorber table — scrolls sideways on narrow screens">
             <table>
               <thead><tr><th>Absorber</th><th className="text-right">Thickness to stop</th><th className="text-right">Bremsstrahlung</th></tr></thead>
               <tbody>

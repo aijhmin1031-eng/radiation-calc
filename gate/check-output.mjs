@@ -116,6 +116,28 @@ for (const p of pages) {
 }
 note("면책 · 이름 · IAEA/NIST 출처");
 
+/* ── ⑧ 404 쪽이 산출 루트에 있는가 ─────────────────────────────
+ *  ★★ Vercel 은 **산출 루트의 `404.html`** 만 없는 주소에 내준다. Astro 는 `dist/calc/404.html` 에
+ *    굽고, 그것을 올리는 것은 `scripts/copy-404.mjs`(빌드 끝)다. 그 한 단계가 빠지면 빌드는 통과하고
+ *    라이브에서 평문 `NOT_FOUND` 가 나간다 — 이웃 lab 이 `404.astro` 를 두고도 그랬다(2026-10-03 실측).
+ *  재는 것: 루트 사본이 있는가 · base 아래 원본과 **같은 내용**인가 · `noindex` 인가 · 이 lab 의 쪽인가(이름·길). */
+console.log("\n⑧ 404 쪽이 산출 루트에 있는가");
+{
+  const rootFile = join(DIST, "..", "404.html");
+  const baseFile = join(DIST, "404.html");
+  if (!existsSync(baseFile)) fail.push("dist/calc/404.html 이 없다 — src/pages/404.astro 가 없거나 빌드가 굽지 않았다");
+  else if (!existsSync(rootFile)) fail.push("dist/404.html 이 없다 — scripts/copy-404.mjs 가 빌드 끝에 안 돌았다(라이브는 평문 NOT_FOUND 가 된다)");
+  else {
+    const a = readFileSync(baseFile, "utf8"), b = readFileSync(rootFile, "utf8");
+    if (a !== b) fail.push("dist/404.html 이 dist/calc/404.html 과 다르다 — 낡은 사본이다");
+    if (!/name="robots"[^>]*noindex/.test(a)) fail.push("404 쪽에 noindex 가 없다");
+    if (!a.includes(SITE_NAME)) fail.push("404 쪽에 이름이 없다 — 이 lab 의 쪽이 아니다");
+    const ways = (a.match(/href="\/calc\/[^"]*"/g) || []).length;
+    if (ways < 8) fail.push(`404 쪽의 길이 ${ways}개뿐이다 — 막다른 쪽`);
+    note(`루트 사본 있음 · 원본과 같음 · noindex · 길 ${ways}개`);
+  }
+}
+
 console.log(fail.length ? `\n❌ ${fail.length}건\n` + fail.map((x) => "   " + x).join("\n")
                         : "\n✅ 산출물 점검 통과");
 process.exit(fail.length ? 1 : 0);

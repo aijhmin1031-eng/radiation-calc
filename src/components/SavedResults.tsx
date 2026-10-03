@@ -131,7 +131,7 @@ export default function SavedResults() {
           ) : <>No saved result matches that filter.</>}
         </div>
       ) : (
-        <div className="card overflow-x-auto">
+        <div className="card overflow-x-auto" tabIndex={0}>
           <table>
             <thead>
               <tr><th>Reference</th><th>Name</th><th>Calculator</th><th>Saved</th><th className="text-right">Actions</th></tr>

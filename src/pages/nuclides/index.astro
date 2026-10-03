@@ -115,7 +115,7 @@ const sig = (x: number, d = 3) => (Number.isFinite(x) && x > 0 ? x.toPrecision(d
         1280px 에서는 표가 984px 로 맞으므로 스크롤이 생기지 않는다(데스크톱에서
         컨테이너 안이 넘치면 `check-render` 가 결함으로 센다). 좁은 화면의 가로
         스크롤은 이 레포에서 설계된 동작이다. */}
-    <div class="pin-first mt-3">
+    <div class="pin-first mt-3" tabindex="0">
     <table class="lg:min-w-[44rem]">
       <thead>
         <tr><th>Nuclide</th><th class="hidden lg:table-cell">Name</th><th>Half-life</th><th class="hidden lg:table-cell">Decay</th><th>Emissions</th><th class="hidden lg:table-cell">Γ</th></tr>

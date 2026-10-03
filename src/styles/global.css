@@ -34,7 +34,11 @@
   --c-panel: 241 242 238;       /* 머리글·꼬리말·압축 고정 바 */
   --c-line: 216 218 211;
   --c-line-strong: 188 191 182;
-  --c-accent: 168 94 4;
+  /* ★★ 143 78 0, 그전 168 94 4 (2026-10-03 플랫폼 공통). 옛 값은 종이(232 234 230) 위에서 4.06:1 —
+     WCAG AA(4.5:1)에 못 미쳐 axe 가 플랫폼 4곳에서 300 노드 넘게 잡았다(링크·눈썹·활성 칸). 같은 색상에서
+     명도만 내려 5.3:1(종이)·6.3:1(표면)·5.7:1(패널)·5.3:1(accent-soft). 다크 테마의 242 163 60 은 8.8:1 이라 그대로.
+     정본은 플랫폼 세 레포가 같은 값을 적는 것이다 — check-platform 의 SPEC.onInk 가 함께 바뀐다. */
+  --c-accent: 143 78 0;
   --c-accent-soft: 244 232 212;
   /* ★ 입력 오류는 **앰버가 아니다** — DESIGN 규약상 앰버는 활성·포커스·기준선 전용이라
      오류에 쓰면 「지금 고른 칸」과 「틀린 칸」이 같은 색이 된다. 대비 6.5:1 인 붉은색을 따로 둔다. */
@@ -78,6 +82,9 @@ a { color: inherit; }
 .field:focus { box-shadow: 0 0 0 3px rgb(var(--c-accent) / 0.28); }
 select.field { @apply pr-8; }
 .label { @apply block text-[12px] font-medium uppercase tracking-wide text-ink-faint mb-1; }
+/* 색을 가진 바탕(강조 바탕) 위의 라벨 — ink-faint 는 다크의 58 46 26 위에서 4.35:1 로 AA 미달(2026-10-03 axe).
+   한 단 짙은 ink-muted(다크 6.03 · 라이트 6.04). 특이도 (0,2,0) 이라 순서와 무관하게 `.label` 을 이긴다. */
+.label.on-tint { color: rgb(var(--c-ink-muted)); }
 
 /* ★★ **칸 제목과 칸 안의 소제목은 다른 층인데 같은 서식이었다**(2026-09-18 소유주가 화면에서
    잡았다 — 「1단열 제목이 calculators … 제목처럼 보이게 서식을 입혀줘 … 오른쪽은 제목이 없네」).
@@ -143,6 +150,13 @@ tbody tr:hover td { background: rgb(var(--c-accent-soft) / 0.35); }
    ★ 끄는 규칙을 더 세게 걸지 않는다 — 줄이 표식을 달면 고정 칸이 **그 표식을 따라온다.** */
 .pin-first table tbody tr.is-marked td:first-child {
   background: color-mix(in srgb, rgb(var(--c-accent-soft)) 50%, var(--pin-bg));
+}
+/* ★★ **가로 스크롤 영역은 키보드로 들어갈 수 있어야 한다**(2026-10-03, axe `scrollable-region-focusable`
+   [serious] 35노드·8쪽). 표·코드 블록이 좁은 화면에서 옆으로 스크롤하는데 `tabindex="0"` 이 없어
+   마우스 없이는 가려진 열에 닿을 길이 없었다. 마크업(`tabindex="0"`, 59자리)이 고치고, 여기는
+   그 포커스가 **보이게** 한다 — 안 보이는 포커스는 없는 포커스다. 앰버는 포커스 전용 색이다. */
+.pin-first:focus-visible, .overflow-x-auto:focus-visible, pre:focus-visible {
+  outline: 2px solid rgb(var(--c-accent)); outline-offset: 2px;
 }
 
 /* ★★ **대조표는 내용 폭으로 둔다**(2026-09-17). 사이트의 표는 기본이 전폭(`w-full`)인데,

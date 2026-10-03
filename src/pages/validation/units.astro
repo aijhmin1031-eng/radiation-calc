@@ -174,7 +174,7 @@ const description =
       The converter holds, for each quantity, one multiplier per unit taking that unit to the
       quantity's base unit, and performs every conversion as a single expression:
     </p>
-    <pre class="card my-3 overflow-x-auto p-3 text-[13px]"><code>return (value * t[from]) / t[to];</code></pre>
+    <pre class="card my-3 overflow-x-auto p-3 text-[13px]" tabindex="0"><code>return (value * t[from]) / t[to];</code></pre>
     <p>
       There is no table of pairs and no special case. It follows that verifying each unit's multiplier
       against its published definition verifies every conversion within that quantity, since each is
@@ -191,7 +191,7 @@ const description =
       Every expected value in this report traces to one of the statements below, each read from the
       source named rather than from memory or from a secondary compilation.
     </p>
-    <div class="not-prose my-4 overflow-x-auto table-fit">
+    <div class="not-prose my-4 overflow-x-auto table-fit" tabindex="0">
       <table>
         <thead><tr><th>Statement</th><th>Source</th></tr></thead>
         <tbody>
@@ -228,7 +228,7 @@ const description =
           {" "}{Object.keys(UNITS[q].u).length * (Object.keys(UNITS[q].u).length - 1)} ordered
           conversions between them.
         </p>
-        <div class="not-prose my-3 pin-first table-fit">
+        <div class="not-prose my-3 pin-first table-fit" tabindex="0">
           <table>
             <thead>
               {/* ★ 사례번호를 **독립 열로 두지 않는다**(2026-09-17). 좁은 화면에서 열 하나가
@@ -287,7 +287,7 @@ const description =
       records and source certificates. They are the same arithmetic the single-expression argument above predicts,
       performed independently so that the prediction is tested rather than assumed.
     </p>
-    <div class="not-prose my-3 pin-first table-fit">
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
       <table>
         <thead>
           <tr><th>Conversion</th><th class="whitespace-nowrap text-right">Hand</th><th class="whitespace-nowrap text-right">Tool</th><th class="whitespace-nowrap text-right">Difference</th></tr>
@@ -328,7 +328,7 @@ const description =
       the rest, with one difference: the constant in the first is measured, not defined, so the result
       inherits its uncertainty. The value used is {W_AIR_J_PER_C} J/C.
     </p>
-    <div class="not-prose my-3 pin-first table-fit">
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
       <table>
         <thead>
           <tr><th>Step</th><th class="whitespace-nowrap text-right">Hand</th><th class="whitespace-nowrap text-right">Tool</th><th class="whitespace-nowrap text-right">Difference</th></tr>
@@ -381,7 +381,7 @@ const description =
       is the second, for anything that reaches the engine by another route. Where a <code>NaN</code>
       does reach the display it is drawn as a dash, never as a number.
     </p>
-    <div class="not-prose my-3 pin-first table-fit">
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
       <table>
         <thead><tr><th>Asked</th><th>Why it must refuse</th><th class="whitespace-nowrap text-right">Returned</th></tr></thead>
         <tbody>
@@ -426,7 +426,7 @@ const description =
     </p>
 
     <h2>Coverage and result</h2>
-    <div class="not-prose my-4 overflow-x-auto table-fit">
+    <div class="not-prose my-4 overflow-x-auto table-fit" tabindex="0">
       <table>
         <thead><tr><th>Check</th><th class="whitespace-nowrap text-right">Count</th><th class="whitespace-nowrap text-right">Result</th></tr></thead>
         <tbody>

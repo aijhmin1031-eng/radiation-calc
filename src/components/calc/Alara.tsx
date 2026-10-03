@@ -121,7 +121,7 @@ export default function Alara() {
         </>
       ) : (
         <>
-          <div className="card overflow-x-auto">
+          <div className="card overflow-x-auto" tabIndex={0}>
             <table>
               <thead><tr><th>Task</th><th className="text-right">Workers</th><th className="text-right">Hours</th>
                 <th className="text-right">Rate ({rateU})</th><th className="text-right">person·mSv</th></tr></thead>
