@@ -24,7 +24,7 @@ import { extname, join } from "node:path";
 /* ───────── 플랫폼 정본 (세 레포가 같은 값을 적는다) ───────── */
 const SPEC = {
   light: { paper: "rgb(232, 234, 230)", panel: "rgb(241, 242, 238)", line: "rgb(188, 191, 182)",
-           idle: "rgb(82, 87, 90)", onBg: "rgb(244, 232, 212)", onInk: "rgb(168, 94, 4)" },
+           idle: "rgb(82, 87, 90)", onBg: "rgb(244, 232, 212)", onInk: "rgb(143, 78, 0)" },
   dark:  { paper: "rgb(18, 21, 23)",   panel: "rgb(32, 37, 42)",   line: "rgb(73, 82, 90)",
            idle: "rgb(169, 176, 181)", onBg: "rgb(58, 46, 26)",    onInk: "rgb(242, 163, 60)" },
 };

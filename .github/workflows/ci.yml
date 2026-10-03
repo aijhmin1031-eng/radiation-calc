@@ -82,6 +82,14 @@ jobs:
       - name: 플랫폼 껍데기 정본 (Chromium)
         run: node gate/check-platform.mjs
 
+      # ★★ 접근성 — 플랫폼 네 곳에 axe-core 를 처음 돌리자 **같은 결함 하나가 300 노드 넘게**
+      #   나왔다(라이트 강조색 168 94 4 가 종이 위에서 4.06:1 — WCAG AA 4.5:1 미달). 사람 눈에는
+      #   멀쩡했고 `check-render` 는 「안 보이는 글자」만 잰다 — **보이지만 기준 미달**은 그 자의
+      #   시야 밖이다. critical·serious 0 을 지키고 moderate·minor 는 세어 찍는다.
+      #   역테스트 둘로 확인했다(강조색 되돌림 → serious · nav 이름 하나 삭제 → 참고에만).
+      - name: 접근성 (axe-core · Chromium)
+        run: node gate/check-a11y.mjs
+
       # ★★ 낱장 147장을 한꺼번에 늘리는 것이 그 작업의 유일한 진짜 위험이었다 —
       #   이웃 lab 이 애드센스에서 탈락한 원인이 「장 제목이 글자까지 같고 본문만 다른」 글
       #   묶음이었다. **어수 검사는 이것을 못 본다**(되풀이되는 설명으로 채워도 어수는 는다).

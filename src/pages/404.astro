@@ -1,0 +1,64 @@
+---
+import Base from "../layouts/Base.astro";
+import { SITE_NAME, u } from "../lib/site";
+import { TOOLS } from "../lib/tools";
+
+/** 없는 주소로 들어온 사람을 평문 한 줄에 두지 않는다 (2026-10-03).
+ *
+ *  ★★ 그전에는 이 쪽이 **아예 없었고**, 우산을 거쳐 `/calc/없는주소` 를 열면 Vercel 의 평문
+ *    `NOT_FOUND`(84 B)가 나갔다 — 머리글도, 돌아갈 길도 없이. 이웃 lab(RadiMeter)은 `404.astro`
+ *    를 두고도 **같은 평문**이 나가고 있었다: Astro 가 `outDir` 아래(`dist/<base>/404.html`)에
+ *    굽는데 Vercel 은 **산출 루트의 `404.html`** 만 404 쪽으로 쓴다. 그래서 이 레포는 빌드 끝에
+ *    `scripts/copy-404.mjs` 가 그 파일을 산출 루트로 올리고, `check-output` ⑧ 이 그것을 잰다.
+ *  ★ `noindex` — 사이트맵은 Astro 가 404 를 스스로 뺀다. 공유 그림은 홈 카드로 받는다(`Base`). */
+const LINKS = [
+  { href: "/", label: "Calculators", d: "The seven calculators, each with its methods and validation." },
+  { href: "/nuclides/", label: "Nuclide reference", d: "One page per nuclide with its computed constants." },
+  { href: "/methods/", label: "Methods and data", d: "Equations, data sources and the range of validity." },
+  { href: "/validation/", label: "Validation", d: "Where each calculator has been checked, and where it has not." },
+  { href: "/disclaimer/", label: "Disclaimer", d: "What these results are for and what they are not." },
+];
+---
+<Base
+  title="Page not found"
+  description={`That page does not exist on ${SITE_NAME}. Everything the site has is listed here.`}
+  noindex
+  share={false}
+>
+  <p class="text-[11px] font-semibold tracking-[0.14em] text-accent uppercase">Error 404</p>
+  <h1 class="mt-2 text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
+    There is no page at this address
+  </h1>
+  <p class="mt-4 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    The link may be out of date, or a letter may be off. Nothing has been lost &mdash; every
+    calculator and every document on {SITE_NAME} is reachable from the list below. If a link on
+    this site brought you here, that link is a defect worth reporting through the contact page in
+    the footer.
+  </p>
+
+  <h2 class="mt-8 text-[13px] font-semibold uppercase tracking-[0.12em] text-ink-faint">Calculators</h2>
+  <ul class="mt-3 grid gap-2 sm:grid-cols-2">
+    {TOOLS.map((t) => (
+      <li>
+        <a href={u(`/${t.slug}/`)}
+           class="block rounded-lg border border-line bg-surface p-4 transition-colors hover:border-accent/40">
+          <span class="text-sm font-bold text-ink">{t.name}</span>
+          <span class="mt-1 block text-[13px] text-ink-muted">{t.question}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  <h2 class="mt-8 text-[13px] font-semibold uppercase tracking-[0.12em] text-ink-faint">Elsewhere on the site</h2>
+  <ul class="mt-3 grid gap-2 sm:grid-cols-2">
+    {LINKS.map((l) => (
+      <li>
+        <a href={u(l.href)}
+           class="block rounded-lg border border-line bg-surface p-4 transition-colors hover:border-accent/40">
+          <span class="text-sm font-bold text-ink">{l.label}</span>
+          <span class="mt-1 block text-[13px] text-ink-muted">{l.d}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</Base>
