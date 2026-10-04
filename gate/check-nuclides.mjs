@@ -21,6 +21,9 @@ import { LAUNCH } from "./chromium.mjs";
 import { createServer } from "node:http";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { extname, join } from "node:path";
+/** ★ 손글 정본은 TS 다(`src/data/nuclide-notes.ts`). 이 게이트는 `node` 로 돌므로 tsx 의 ESM API 로
+ *  읽는다 — `check-progeny` 처럼 실행기를 tsx 로 바꾸면 `package.json`·CI 두 자리를 함께 고쳐야 한다. */
+import { tsImport } from "tsx/esm/api";
 
 const DIST = "dist/calc", BASE = "/calc", DIR = join(DIST, "nuclides");
 const MIME = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript", ".svg": "image/svg+xml",
@@ -114,11 +117,11 @@ note(`${sample.length}쌍 · 중앙 ${(median * 100).toFixed(1)}% · 최대 ${(w
    ★ 아래 상한은 **래칫**이다 — 지금 값에 맞춰 두어 **나빠지는 것만** 막는다.
      되풀이를 허브로 옮긴 뒤 이 수들을 함께 내린다. **고치기 전 값을 박아 두는 것**이 요점이다. */
 console.log("\n④-2 심사자가 읽는 것 — 산문 전체 · 숫자 제외 · 제목 틀");
-const BOILER_MEDIAN_MAX = 0.30;   // 되풀이 몫 중앙 (2026-09-20 ③ 뒤 실측 0.279)
+const BOILER_MEDIAN_MAX = 0.26;   // 되풀이 몫 중앙 (2026-10-04 손글 26장 뒤 실측 0.236 · 그전 0.279)
 const BOILER_WORST_MAX  = 0.42;   // 한 장의 되풀이 몫 (실측 0.388, cd-109)
-const WORDS_MEDIAN_MAX  = 0.19;   // 숫자 뺀 낱말 겹침 중앙 (실측 0.166)
+const WORDS_MEDIAN_MAX  = 0.16;   // 숫자 뺀 낱말 겹침 중앙 (2026-10-04 실측 0.145 · 그전 0.166)
 const NEAR_DUP_MAX      = 3;   // 낱말 겹침 95% 이상인 쌍의 수 (실측 2)
-const HEAD_MEDIAN_MAX   = 0.24;   // 제목 틀 겹침 중앙 (2026-09-20 ④ 뒤 실측 0.200)
+const HEAD_MEDIAN_MAX   = 0.18;   // 제목 틀 겹침 중앙 (2026-10-04 실측 0.154 · 그전 0.200)
 
 /** 본문 산문만 — 표의 숫자와 곁칸은 글이 아니다. `<p>` 만 든다. */
 /** ★★ `<p>` 만 세던 첫 판에 **같은 종류의 사각**이 있었다(2026-09-20, ④ 를 흉본 자리에서
@@ -209,6 +212,66 @@ if (universal.length)
 note(`되풀이 몫 중앙 ${(bMed * 100).toFixed(1)}% · 최악 ${(bWorst.f * 100).toFixed(1)}% (${bWorst.d})`);
 note(`낱말 겹침 중앙 ${(wMed * 100).toFixed(1)}% · 거의 같은 쌍 ${nearDup}쌍${dupNames.length ? ` (${dupNames.join(", ")})` : ""}`);
 note(`제목 틀 중앙 ${(hMed * 100).toFixed(1)}% · 전 낱장 공통 제목 ${universal.length}개: ${universal.map((h) => `「${h}」`).join(" ")}`);
+
+/* ── ④-3 손글 단락 — 자료 쪽에 사람이 쓴 글이 실제로 서 있는가 ──────────
+   ★★ 계기(2026-10-04). 되풀이를 66% → 28% 로 내리고 제목 틀을 0건으로 만든 뒤에도, 낱장 147장은
+     **한 틀에서 나온 자료 쪽**이고 색인 쪽의 72% 다 — 애드센스 심사의 남은 불확실성 중 가장 큰 것이
+     「자동 생성 자료 쪽 묶음」으로 읽힐 가능성이다. 그래서 방문 상위 20종(`rl_visits`) + 실무 필수 6종,
+     26장에 **손으로 쓴 글**(`src/data/nuclide-notes.ts`)을 둔다. 글이 못 서 있으면 라운드가 없는 것이다.
+   ★ 재는 것 — ① 글의 핵종이 자료에 있고 **그 쪽에만** 그려졌는가(그려진 구획 수 = 글 수)
+     ② 제목·문단 수가 정본과 같은가, 구획이 `.prose-doc` 밖인가(안이면 절 번호가 붙는다)
+     ③ 120어 이상인가 ④ **숫자가 없는가** — 글 속 숫자는 자료가 바뀌어도 따라오지 않아 조용히
+     낡는다(그림 속 숫자와 같은 함정). 핵종 표기(`Ba-137m`·`Pu-241`)의 숫자만 예외다.
+     ⑤ 두 글이 **여덟 낱말 이상 같은 구절**을 공유하지 않는가 — 틀에 이름만 갈아 끼운 글이 아닌가
+     ⑥ 제목이 명사구인가 — How/What/Why/When/Where 로 시작하지 않고 now/today/yet/soon 으로 끝나지 않는다
+       (RadiMeter `check-headings` 와 같은 두 어투만 좁게 막는다 — 통과해도 명사구라는 뜻은 아니다).
+   ★ 글 본문은 **그려진 것**으로 잰다 — 정본이 아니라 산출물. 정본은 키·제목·문단 수를 대는 데 쓴다.
+     읽는 사람이 보는 것이 산출물이고, 정본만 재면 「그리는 자리」가 빠진 것을 못 본다. */
+console.log("\n④-3 손글 단락 — 그 쪽에 서 있는가 · 120어 · 숫자 없음 · 공유 구절 없음 · 명사구 제목");
+const NOTE_MIN_WORDS = 120, NOTE_GRAM = 8;
+const { NUCLIDE_NOTES } = await tsImport("../src/data/nuclide-notes.ts", import.meta.url);
+const noteKeys = Object.keys(NUCLIDE_NOTES);
+const decode = (h) => h.replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+const DESIG = /\b[A-Z][a-z]?-\d{1,3}m?\b/g;
+let renderedNotes = 0; const noteText = new Map();
+for (const [d, p] of pages) {
+  for (const m of p.main.matchAll(/<section([^>]*)data-note="([^"]+)"([^>]*)>([\s\S]*?)<\/section>/g)) {
+    renderedNotes++;
+    const attrs = m[1] + m[3], key = m[2], body = m[4];
+    if (key.toLowerCase() !== d) fail.push(`④-3 ${d}: 다른 핵종(${key})의 손글이 그려졌다`);
+    if (/prose-doc/.test(attrs)) fail.push(`④-3 ${d}: 손글 구획이 prose-doc 안에 있다 — 절 번호가 붙는다`);
+    const h = decode((body.match(/<h2[^>]*>([\s\S]*?)<\/h2>/) || [, ""])[1].replace(/<[^>]+>/g, "")).trim();
+    const ps = [...body.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)].map((x) => decode(x[1].replace(/<[^>]+>/g, "")).trim());
+    noteText.set(key, { h, ps });
+  }
+}
+if (renderedNotes !== noteKeys.length)
+  fail.push(`④-3 그려진 손글 구획 ${renderedNotes}개 — 정본은 ${noteKeys.length}장. 그리는 자리가 빠졌거나 새고 있다`);
+const seenGram = new Map(), sharedPairs = new Set();
+let noteMin = Infinity, noteSum = 0, strayDigits = 0;
+for (const key of noteKeys) {
+  const src = NUCLIDE_NOTES[key];
+  if (!nuc[key]) { fail.push(`④-3 ${key}: 자료에 없는 핵종에 손글이 있다`); continue; }
+  const got = noteText.get(key);
+  if (!got) { fail.push(`④-3 ${key}: 손글이 그 쪽에 안 그려졌다`); continue; }
+  if (got.h !== src.heading) fail.push(`④-3 ${key}: 그려진 제목이 정본과 다르다 — 「${got.h}」`);
+  if (got.ps.length !== src.paragraphs.length) fail.push(`④-3 ${key}: 문단 ${got.ps.length}개 — 정본 ${src.paragraphs.length}개`);
+  if (/^(how|what|why|when|where)\b/i.test(got.h) || /\b(now|today|yet|soon)\W*$/i.test(got.h))
+    fail.push(`④-3 ${key}: 제목이 명사구가 아니다 — 「${got.h}」`);
+  const text = [got.h, ...got.ps].join(" ");
+  const words = text.split(/\s+/).filter(Boolean).length;
+  noteMin = Math.min(noteMin, words); noteSum += words;
+  if (words < NOTE_MIN_WORDS) fail.push(`④-3 ${key}: ${words}어 — 하한 ${NOTE_MIN_WORDS}어`);
+  const stray = text.replace(DESIG, "").match(/.{0,24}\d.{0,24}/);
+  if (stray) { strayDigits++; fail.push(`④-3 ${key}: 글에 숫자가 있다 — 「…${stray[0].trim()}…」. 수치는 표가 든다`); }
+  for (const g of new Set(wordGrams(wordList(text), NOTE_GRAM))) {
+    const first = seenGram.get(g);
+    if (first === undefined) { seenGram.set(g, key); continue; }
+    const pair = `${first}↔${key}`;
+    if (!sharedPairs.has(pair)) { sharedPairs.add(pair); fail.push(`④-3 ${pair}: 같은 ${NOTE_GRAM}낱말 구절 — 「${g}」`); }
+  }
+}
+note(`${noteKeys.length}장 · 그려진 구획 ${renderedNotes}개 · 어수 최소 ${noteMin} 합 ${noteSum} · 숫자 밖 ${strayDigits}건 · 공유 ${NOTE_GRAM}-그램 ${sharedPairs.size}쌍`);
 
 /* ── ⑤ 계산기 링크가 실제로 복원되는가 ───────────────────── */
 console.log("\n⑤ 계산기 프리필이 실제로 복원되는가");
@@ -304,5 +367,5 @@ await ctx.close(); await browser.close(); srv.close();
 note(`${checked}개 링크를 눌러 확인`);
 
 console.log(fail.length ? `\n❌ ${fail.length}건\n` + fail.map((x) => "   " + x).join("\n")
-  : `\n✅ 핵종 낱장 — ${dirs.length}장 · 깨진 숫자 0 · 감마 누출 0 · 본문 겹침 중앙 ${(median * 100).toFixed(1)}% · 프리필 ${checked}개 복원 · 목록 표 7폭`);
+  : `\n✅ 핵종 낱장 — ${dirs.length}장 · 깨진 숫자 0 · 감마 누출 0 · 본문 겹침 중앙 ${(median * 100).toFixed(1)}% · 손글 ${noteKeys.length}장 · 프리필 ${checked}개 복원 · 목록 표 7폭`);
 process.exit(fail.length ? 1 : 0);
