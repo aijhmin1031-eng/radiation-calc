@@ -1,6 +1,10 @@
 name: CI
 on:
-  push: { branches: ["**"] }
+  # ★ push 는 main 만 — 그전에는 ["**"] + pull_request 라 **같은 SHA 가 두 번** 돌았다
+  #   (2026-10-03 PR #57 실측: run 37162360278(push) · 37162380566(pull_request), 각 12분).
+  #   비공개 레포는 Actions 분을 먹고, 이웃 lab 은 그 분이 바닥나 CI 가 열흘 죽었다(RadiMeter 일지 2026-09-25).
+  #   브랜치 작업은 전부 PR 로 가므로 잃는 신호는 PR 없는 브랜치 푸시 하나뿐이다.
+  push: { branches: [main] }
   pull_request:
 jobs:
   check:
