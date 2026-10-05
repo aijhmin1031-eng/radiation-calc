@@ -117,11 +117,11 @@ note(`${sample.length}쌍 · 중앙 ${(median * 100).toFixed(1)}% · 최대 ${(w
    ★ 아래 상한은 **래칫**이다 — 지금 값에 맞춰 두어 **나빠지는 것만** 막는다.
      되풀이를 허브로 옮긴 뒤 이 수들을 함께 내린다. **고치기 전 값을 박아 두는 것**이 요점이다. */
 console.log("\n④-2 심사자가 읽는 것 — 산문 전체 · 숫자 제외 · 제목 틀");
-const BOILER_MEDIAN_MAX = 0.26;   // 되풀이 몫 중앙 (2026-10-04 손글 26장 뒤 실측 0.236 · 그전 0.279)
-const BOILER_WORST_MAX  = 0.42;   // 한 장의 되풀이 몫 (실측 0.388, cd-109)
-const WORDS_MEDIAN_MAX  = 0.16;   // 숫자 뺀 낱말 겹침 중앙 (2026-10-04 실측 0.145 · 그전 0.166)
+const BOILER_MEDIAN_MAX = 0.22;   // 되풀이 몫 중앙 (2026-10-05 손글 147장 뒤 실측 0.190 · 26장 뒤 0.236 · 그전 0.279)
+const BOILER_WORST_MAX  = 0.30;   // 한 장의 되풀이 몫 (2026-10-05 실측 0.265 sn-113m · 그전 0.388 cd-109)
+const WORDS_MEDIAN_MAX  = 0.12;   // 숫자 뺀 낱말 겹침 중앙 (2026-10-05 실측 0.096 · 26장 뒤 0.145 · 그전 0.166)
 const NEAR_DUP_MAX      = 3;   // 낱말 겹침 95% 이상인 쌍의 수 (실측 2)
-const HEAD_MEDIAN_MAX   = 0.18;   // 제목 틀 겹침 중앙 (2026-10-04 실측 0.154 · 그전 0.200)
+const HEAD_MEDIAN_MAX   = 0.17;   // 제목 틀 겹침 중앙 (2026-10-05 실측 0.143 · 26장 뒤 0.154 · 그전 0.200)
 
 /** 본문 산문만 — 표의 숫자와 곁칸은 글이 아니다. `<p>` 만 든다. */
 /** ★★ `<p>` 만 세던 첫 판에 **같은 종류의 사각**이 있었다(2026-09-20, ④ 를 흉본 자리에서
@@ -232,7 +232,9 @@ const NOTE_MIN_WORDS = 120, NOTE_GRAM = 8;
 const { NUCLIDE_NOTES } = await tsImport("../src/data/nuclide-notes.ts", import.meta.url);
 const noteKeys = Object.keys(NUCLIDE_NOTES);
 const decode = (h) => h.replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">");
-const DESIG = /\b[A-Z][a-z]?-\d{1,3}m?\b/g;
+/** ★ 이성질체 번호까지 든다(`Cd-109m1`·`Ir-192m2`) — 2026-10-05 에 147장을 다 쓰고 돌리니 **자가 이성질체 이름을 몰라서**
+ *  13장을 「글에 숫자」로 걸었다. 자가 재는 대상을 자가 모르면 그 실패는 글의 결함이 아니라 자의 결함이다. */
+const DESIG = /\b[A-Z][a-z]?-\d{1,3}m?\d?\b/g;
 let renderedNotes = 0; const noteText = new Map();
 for (const [d, p] of pages) {
   for (const m of p.main.matchAll(/<section([^>]*)data-note="([^"]+)"([^>]*)>([\s\S]*?)<\/section>/g)) {
