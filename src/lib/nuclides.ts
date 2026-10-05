@@ -10,6 +10,17 @@ import {
 import { lineShares, meanPhotonEnergyKeV, spectrumHVL, spectrumTVL, spectrumLayer, type LineShare } from "../engine/spectrum";
 
 export const NUCLIDES = nuclides as unknown as NuclideMap;
+
+/** ★★ 자료의 붕괴 모드 표기 둘이 **주된 가지가 아니었다**(2026-10-05, 손글 147장을 쓰며 자료와 대조하다 잡았다).
+ *  수확 스크립트는 IAEA 응답의 첫 줄(`decay_1`)을 그대로 적는데, 그 줄이 **부가지**인 핵종이 있다 —
+ *  · `Pu-241`: 「A」로 적혀 있었으나 실제는 베타 붕괴가 99.998%(알파는 흔적). 자료의 `beta_yield_pct` 가 그것을 들고
+ *    있었는데 표기만 어긋나 있었다. 쪽의 「Decay mode」 행 · 산문의 「decays by …」 · 목록 열이 전부 틀린 말을 하고 있었다.
+ *  · `Nb-95m`: 「B-」로 적혀 있었으나 이성질체 전이가 94%, 베타는 6%.
+ *  ★ 자료 파일을 손으로 고치지 않는다 — 다시 수확하면 되돌아간다. **읽는 자리에서 덮는다**(모든 소비자가 이 맵을 읽는다:
+ *    낱장·목록·산문·`decay-chain`). 수확 스크립트가 주된 가지를 고르게 되면 이 표는 비어야 한다 — 그때 지운다.
+ *  ★ 기준은 **같은 자료 안의 수율**(`beta_yield_pct`·`alpha_yield_pct`)과 평가 자료의 가지 비율이고 기억이 아니다. */
+const DECAY_FIX: Record<string, string> = { "Pu-241": "B-", "Nb-95m": "IT" };
+for (const [k, mode] of Object.entries(DECAY_FIX)) if (NUCLIDES[k]) NUCLIDES[k].decay = mode;
 export const ATTEN = attenuation as unknown as Record<Material, Row[]>;
 
 /** ★ 원소 이름은 **미국 철자**로 쓴다 — 엔진의 물질 이름이 이미 `aluminum` 이다.
