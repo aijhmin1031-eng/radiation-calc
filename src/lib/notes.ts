@@ -55,4 +55,39 @@ export const NOTES: Note[] = [
       "The edges of the nuclide and attenuation data, counted from the data itself rather than " +
       "written down — so the statement cannot go stale while the dataset grows.",
   },
+  /* ★ 2026-10-06 — 애드센스 「가치가 별로 없는 콘텐츠」 판정 뒤 소유주 지시 「각 lab 에 전문가 글
+   *   3~5편」으로 넷을 더했다. 넷 다 **숫자를 자료에서 파생**시키고(쪽 머리말), 이 lab 의 도구가
+   *   답하지 못하는 질문에서 출발한다 — 도구 쪽 산문과 겹치지 않게 주제를 골랐다. */
+  {
+    path: "/check-sources/",
+    name: "Nuclides for check and calibration sources",
+    question: "Why Cs-137, Co-57, Ba-133 and Eu-152 — and what does each actually test?",
+    blurb:
+      "Half-life against replacement interval, photon energy against what is being tested, and " +
+      "the daughters a source certificate quietly depends on.",
+  },
+  {
+    path: "/natural-series/",
+    name: "Natural decay series",
+    question: "When is uranium not in equilibrium, and what does that do to a measurement?",
+    blurb:
+      "Radon and chemistry breaking the chains, the 186 keV peak shared by U-235 and Ra-226, " +
+      "separated thorium dimming and recovering, and 1 Bq/g expressed in grams.",
+  },
+  {
+    path: "/hard-to-measure/",
+    name: "Hard-to-measure nuclides",
+    question: "How is Ni-63 declared in a drum nobody opens?",
+    blurb:
+      "Scaling factors to Co-60 and Cs-137, why they hold only within a family of origin, and how " +
+      "far the ratios drift over a decommissioning project.",
+  },
+  {
+    path: "/positron-emitters/",
+    name: "Positron emitters and 511 keV",
+    question: "How much more shielding does annihilation radiation need?",
+    blurb:
+      "What a 511 keV intensity near 200% means, lead and tungsten against Tc-99m, decay through " +
+      "a working day, and why a 511 keV peak is not an identification.",
+  },
 ];

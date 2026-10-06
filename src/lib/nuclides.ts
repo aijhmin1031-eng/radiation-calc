@@ -18,8 +18,16 @@ export const NUCLIDES = nuclides as unknown as NuclideMap;
  *  · `Nb-95m`: 「B-」로 적혀 있었으나 이성질체 전이가 94%, 베타는 6%.
  *  ★ 자료 파일을 손으로 고치지 않는다 — 다시 수확하면 되돌아간다. **읽는 자리에서 덮는다**(모든 소비자가 이 맵을 읽는다:
  *    낱장·목록·산문·`decay-chain`). 수확 스크립트가 주된 가지를 고르게 되면 이 표는 비어야 한다 — 그때 지운다.
- *  ★ 기준은 **같은 자료 안의 수율**(`beta_yield_pct`·`alpha_yield_pct`)과 평가 자료의 가지 비율이고 기억이 아니다. */
-const DECAY_FIX: Record<string, string> = { "Pu-241": "B-", "Nb-95m": "IT" };
+ *  ★ 기준은 **같은 자료 안의 수율**(`beta_yield_pct`·`alpha_yield_pct`)과 평가 자료의 가지 비율이고 기억이 아니다.
+ *  ★★ 둘을 더 잡았다(2026-10-06, 긴 글 「Natural decay series」를 쓰며 K-40 쪽과 대조하다) — 둘 다 「EC+B+」로
+ *    적혀 쪽이 「electron capture with beta-plus」라고 말하면서, 같은 쪽의 손글은 「베타가 주 가지」라고 하고 있었다.
+ *  · `Cl-36`: 같은 자료의 `beta` 가 b- 98.1% 를 든다. LNHB(DDEP) 표 「Cl-36 disintegrates by 98.1 % beta-minus
+ *    decay to the ground state of Ar-36 ; 1.9 % electron capture and 0.0015 % beta-plus」.
+ *  · `K-40`: 이 자료에는 베타 줄이 **아예 없다**(수확 공백). LNHB(DDEP) 표 「β− emission to the ground state of
+ *    40Ca at 89.56 (7) %, by electron capture to the 1460-keV level of 40Ar at 10.34 (7) %」.
+ *    ★ 그 표는 `http://www.lnhb.fr/nuclides/<핵종>_tables.pdf` 로 받아 읽었다(IAEA Livechart API 는 이 컨테이너에서
+ *      Cloudflare 확인 쪽에 막혔다). 딸은 이 덮어쓰기를 따라 Ar-36·Ca-40 이 된다(`decay-chain` 이 같은 맵을 읽는다). */
+const DECAY_FIX: Record<string, string> = { "Pu-241": "B-", "Nb-95m": "IT", "Cl-36": "B-", "K-40": "B-" };
 for (const [k, mode] of Object.entries(DECAY_FIX)) if (NUCLIDES[k]) NUCLIDES[k].decay = mode;
 export const ATTEN = attenuation as unknown as Record<Material, Row[]>;
 

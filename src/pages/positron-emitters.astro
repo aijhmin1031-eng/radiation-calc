@@ -1,0 +1,220 @@
+---
+import Base from "../layouts/Base.astro";
+import { NUCLIDES, nuclidePage, halfLifeText, fmtTime, slugOf } from "../lib/nuclides";
+import { u } from "../lib/site";
+
+/** ★★ 양전자 방출체와 511 keV — 2026-10-06 소유주 지시 「각 lab 에 전문가 글 3~5편」의 넷째 편.
+ *  **숫자를 글자로 적지 않는다** — 양전자 몫(511 keV 세기의 절반)·반가층·감쇠·재생은 전부
+ *  자료와 엔진에서 파생시킨다. 이 표에는 β+ 스펙트럼이 없으므로 **양전자 비정은 숫자로 쓰지 않는다.**
+ *  ★ 바깥 출처: AAPM Task Group 108 보고서(PET 차폐) — 이름만 든다. 납 앞치마의 「0.5 mm 납 당량」은
+ *    진단 X선 쪽의 흔한 등급으로만 언급하고, 투과율은 우리 자료의 반가층으로 계산한다. */
+const N = NUCLIDES;
+const pct = (x: number, d = 1) => `${(x * 100).toFixed(d)}%`;
+const mm = (cm: number, d = 3) => (Number.isFinite(cm) ? (cm * 10).toPrecision(d) : "—");
+const link = (k: string) => u(`/nuclides/${slugOf(k)}/`);
+const after = (k: string, s: number) => Math.pow(2, -s / N[k].t_half_s);
+const H = 3600, DAY = 86400, YEAR = 31557600;
+
+/** 511 keV 선이 기록된 핵종 — 자료에서 찾는다. 양전자 몫 = 세기/2(소멸 한 번에 광자 둘). */
+const ANNIH = Object.keys(N)
+  .map((k) => ({ k, l: N[k].lines.find(([e]) => Math.abs(e - 511) < 0.5) }))
+  .filter((r) => r.l)
+  .map(({ k, l }) => {
+    const other = N[k].lines.filter(([e, i]) => Math.abs(e - 511) >= 0.5 && e >= 20 && i > 1)
+      .sort((a, b) => b[1] - a[1])[0];
+    return { k, i511: l![1], beta: l![1] / 2, other, g: N[k].gamma_const, t: halfLifeText(N[k]) };
+  })
+  .sort((a, b) => b.beta - a.beta);
+const strong = ANNIH.filter((r) => r.beta > 50);
+const weak = ANNIH.filter((r) => r.beta <= 50);
+const A = (k: string) => ANNIH.find((r) => r.k === k)!;
+
+/** 차폐 — F-18 은 511 keV 한 줄이라 반가층이 곧 그 에너지의 값이다. */
+const sh = (k: string, m: string) => nuclidePage(k).shields.find((s) => s.material === m)!;
+const f18Pb = sh("F-18", "lead"), f18W = sh("F-18", "tungsten"), f18C = sh("F-18", "concrete");
+const tcPb = sh("Tc-99m", "lead");
+const csPb = sh("Cs-137", "lead");
+const apronCm = 0.05;
+const apronT = Math.pow(2, -apronCm / f18Pb.hvlCm);
+const gRatio = N["F-18"].gamma_const / N["Tc-99m"].gamma_const;
+
+/** 시간 — 하루 일과 안의 감쇠와 발생기 재생. */
+const f18Day = [1, 2, 4, 8].map((h) => ({ h, f: after("F-18", h * H) }));
+const gaRegrow = [1, 2, 4].map((h) => ({ h, f: 1 - after("Ga-68", h * H) }));
+const gaTen = fmtTime(10 * N["Ga-68"].t_half_s);
+const geYear = after("Ge-68", YEAR);
+const na = A("Na-22");
+const naOther = na.other ? na.other[0] : NaN;
+---
+<Base title="Positron emitters and 511 keV shielding"
+      description="What the 511 keV line in decay data means and why its intensity can approach 200%, how much more lead annihilation radiation needs than Tc-99m, how fast F-18 and Ga-68 decay through a working day, and why a 511 keV peak alone does not identify a positron emitter. Computed from the nuclide data."
+      schema="TechArticle">
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
+    Positron emitters and 511 keV shielding
+  </h1>
+
+  <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <p>
+      A positron emitter is, for shielding purposes, a source of 511 keV photons, and it behaves quite
+      differently from the gamma emitters that most radiation work is organised around. The photons do
+      not come from the nucleus. Their energy is fixed by the electron mass rather than by nuclear
+      structure, so every positron emitter shares the same principal line. And the nuclides used in
+      medicine have half-lives measured in minutes, so the source changes during the time it takes to
+      handle it. This note goes through each of those with figures computed from the nuclide table.
+    </p>
+
+    <h2>Annihilation radiation</h2>
+    <p>
+      In positron decay a proton in the nucleus becomes a neutron and the nucleus emits a positron and
+      a neutrino. The positron slows down in the surrounding material, combines with an electron, and
+      the pair annihilates. Almost always the result is two photons of 511 keV each — the rest energy of
+      the electron — travelling in nearly opposite directions. The photons therefore originate where the
+      positron stopped, a short distance from the decaying atom, and the source of the radiation is in
+      effect the vial wall, the syringe, or the tissue around the injection site.
+    </p>
+    <p>
+      Positron emission always competes with electron capture, which leads to the same daughter without
+      emitting a positron, and positron emission is only possible when the decay energy exceeds twice the
+      electron rest energy. The share of decays that go by positron emission is a property of each
+      nuclide, and it can be read straight from the decay data.
+    </p>
+
+    <h2>Reading the 511 keV line in decay data</h2>
+    <p>
+      Decay data record annihilation radiation as a line at 511 keV with an intensity per hundred
+      decays. Because each positron gives two photons, the intensity can approach 200%, and half of it is
+      the number of positrons per hundred decays. The nuclides in this table with a recorded 511 keV
+      line are below.
+    </p>
+    <div class="pin-first mt-3" tabindex="0">
+    <table class="lg:min-w-[42rem]">
+      <thead>
+        <tr><th>Nuclide</th><th>Half-life</th><th>511 keV photons per 100 decays</th>
+            <th>Positrons per 100 decays</th>
+            <th class="hidden lg:table-cell">Other main line (keV)</th></tr>
+      </thead>
+      <tbody>
+        {ANNIH.map((r) => (
+          <tr>
+            <td><a href={link(r.k)} class="underline">{r.k}</a></td>
+            <td>{r.t}</td>
+            <td>{r.i511.toPrecision(3)}</td>
+            <td>{r.beta.toPrecision(3)}</td>
+            <td class="hidden lg:table-cell">{r.other ? r.other[0].toFixed(0) : "—"}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    </div>
+    <p class="mt-2 text-[13px]">
+      Positrons per hundred decays are half the recorded 511 keV intensity. The last column is the most
+      intense other photon line above 20 keV, where there is one.
+    </p>
+    <p>
+      {strong.map((r) => r.k).join(", ")} are positron emitters in the practical sense: most of their
+      decays produce a positron. F-18 emits nothing else above 20 keV, so its photon field is
+      annihilation radiation and nothing more. Ga-68 adds a weak line at
+      {" "}{A("Ga-68").other ? A("Ga-68").other![0].toFixed(0) : "—"} keV. Na-22 adds a
+      {" "}{naOther.toFixed(0)} keV photon in almost every decay, which is why Na-22 is a long-lived
+      reference for 511 keV and also a source of true-coincidence summing when the two photons arrive
+      together in a detector close to the source. For {weak.map((r) => r.k).join(", ")} the positron branch is
+      minor, and their 511 keV line is a small feature beside their other emissions.
+    </p>
+
+    <h2>Lead, tungsten and concrete at 511 keV</h2>
+    <p>
+      F-18 has a single line, so the half-value layers computed for its spectrum are the half-value
+      layers of 511 keV photons themselves: {mm(f18Pb.hvlCm)} mm of lead, {mm(f18W.hvlCm)} mm of tungsten
+      and {mm(f18C.hvlCm)} mm of concrete, with a tenth-value layer in lead of
+      {" "}{mm(f18Pb.tvlCm)} mm. Compared with the sources nuclear medicine was built around, that is a
+      different order of shielding. The lead half-value layer for Tc-99m is {mm(tcPb.hvlCm, 2)} mm, so
+      each halving costs {(f18Pb.hvlCm / tcPb.hvlCm).toFixed(0)} times as much lead at 511 keV, and F-18
+      has an air kerma rate constant {gRatio.toFixed(1)} times that of Tc-99m per becquerel. Even
+      Cs-137, at {mm(csPb.hvlCm)} mm, is not far above it.
+    </p>
+    <p>
+      Two practical consequences follow. Syringe and vial shields for positron emitters are made of
+      tungsten and are much thicker than their Tc-99m counterparts, because tungsten's higher density
+      achieves the same attenuation in a size that can still be handled. And protective aprons designed
+      for diagnostic X-rays do little at this energy: a layer of {apronCm * 10} mm of lead, a common
+      lead-equivalence rating for such aprons, transmits {pct(apronT, 0)} of a narrow 511 keV beam on
+      the half-value layer above. Lead-equivalence is in any case specified at X-ray tube energies, and
+      aprons made from lead-free composites can do worse at 511 keV than their rating suggests.
+    </p>
+    <p>
+      The figures here are narrow-beam values. For room shielding, where scattered photons reach the
+      point of interest around and through the barrier, broad-beam transmission data apply; the AAPM
+      Task Group 108 report on PET and PET/CT shielding gives them for lead, concrete and iron, and also
+      takes account of the attenuation of the photons in a patient's own body. The
+      <a href={u("/gamma-shielding/")} class="underline"> gamma shielding calculator</a> here includes a
+      buildup factor for a point source and is a first estimate, not a room design.
+    </p>
+
+    <h2>Decay through a working day</h2>
+    <p>
+      With half-lives of {halfLifeText(N["F-18"])} for F-18 and {halfLifeText(N["Ga-68"])} for Ga-68, the
+      activity in hand changes noticeably between dispensing and use. For F-18:
+    </p>
+    <ul class="my-3 space-y-1">
+      {f18Day.map((d, i) => (
+        <li>after {d.h} hour{d.h === 1 ? "" : "s"}, {pct(d.f)} of the activity remains{i === f18Day.length - 1 ? "." : ";"}</li>
+      ))}
+    </ul>
+    <p>
+      This works in both directions. A dose ordered for a time of injection has to be dispensed with
+      more activity than will be given, by a factor that grows exponentially with the delay, and a
+      delay in the schedule raises the activity needed from the dispensing laboratory accordingly. On the other side, F-18 waste only
+      needs to be held: after 24 hours {pct(after("F-18", DAY), 4)} of the activity remains, so storage
+      for decay disposes of it within days. The
+      <a href={u("/decay/")} class="underline"> decay calculator</a> gives the exact factor for any
+      interval.
+    </p>
+
+    <h3>The Ge-68/Ga-68 generator</h3>
+    <p>
+      Ga-68 is usually obtained from a generator in which its parent, Ge-68
+      ({halfLifeText(N["Ge-68"])}), is held on a column. Ge-68 has no photon line in this table; the
+      radiation from a generator is the annihilation radiation of the Ga-68 growing on it. After an
+      elution removes the Ga-68, it grows back to {pct(gaRegrow[0].f, 0)} of its equilibrium activity in
+      one hour, {pct(gaRegrow[1].f, 0)} in two and {pct(gaRegrow[2].f, 0)} in four, and is fully back
+      within {gaTen}. The parent sets the generator's working life: after one year a generator retains
+      {" "}{pct(geYear, 0)} of its Ge-68, and the Ga-68 it can deliver falls in proportion. The same
+      parent–daughter pair is used in sealed form, as Ge-68 phantoms for PET calibration, where the
+      daughter is permanently in equilibrium.
+    </p>
+
+    <h2>A 511 keV peak is not an identification</h2>
+    <p>
+      In gamma spectrometry a peak at 511 keV does not by itself show that a positron emitter is
+      present. Any photon above twice the electron rest energy can create an electron–positron pair in
+      the detector or in the material around it, and the positron's annihilation then produces 511 keV
+      photons. High-energy gamma emitters, cosmic radiation and the shielding of the spectrometer all
+      contribute a 511 keV peak in this way, and it is present in most background spectra. The
+      annihilation peak is also visibly wider than neighbouring gamma peaks, because the motion of the
+      electrons involved spreads the photon energies slightly. A positron emitter is identified by its
+      other lines where it has them, by the decay of the 511 keV peak with the right half-life, or by
+      coincidence between the two back-to-back photons — the principle on which positron emission
+      tomography is built.
+    </p>
+
+    <h2>Limits of these figures</h2>
+    <p>
+      The positron itself is not modelled here. This table carries no positron spectrum for these
+      nuclides, so nothing on this site gives positron ranges, and the point-source figures assume all
+      annihilation happens at the source. Bremsstrahlung from positrons, three-photon annihilation and
+      the attenuation of the photons in the source container are also outside these figures.
+    </p>
+
+    <h2>Where to go next</h2>
+    <ul class="my-3 space-y-1">
+      <li><a href={u("/gamma-shielding/")} class="underline">Gamma shielding</a> — dose rate through a
+        chosen thickness, with buildup.</li>
+      <li><a href={u("/alara/")} class="underline">Time, distance, shielding</a> — stay time and the
+        inverse square law for a handling task.</li>
+      <li><a href={u("/check-sources/")} class="underline">Nuclides for check and calibration
+        sources</a> — Na-22 and Ge-68 among the others.</li>
+      <li><a href={link("F-18")} class="underline">F-18</a>, <a href={link("Ga-68")} class="underline">Ga-68</a>
+        {" "}and <a href={link("Na-22")} class="underline">Na-22</a> — the full data pages.</li>
+    </ul>
+  </section>
+</Base>
