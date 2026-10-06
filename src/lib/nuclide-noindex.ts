@@ -26,5 +26,31 @@ const T = nuclides as unknown as Record<string, { t_half_s: number }>;
  *  사이트맵만 어긋나므로, 갈라지는 날에는 두 곳을 함께 고친다. */
 export const isTooShortLived = (key: string) => T[key].t_half_s < NOINDEX_BELOW_S;
 
-export const NOINDEX_SLUGS = Object.keys(T).filter(isTooShortLived).map((k) => k.toLowerCase());
+/** ★★ **색인은 실무에서 만나는 핵종만 든다**(2026-10-06). 애드센스가 「가치가 별로 없는 콘텐츠」로 사이트를 돌려보냈다.
+ *  색인 208쪽 중 137쪽(66%)이 한 틀에서 나온 핵종 자료 쪽이었고, 구글의 기준은 「다른 사이트와 비교한 독창성」이다.
+ *  소유주 결정(「1 2 4번 진행해」): 선원·교정·의료·연료주기·환경(NORM)에서 **독립된 쓸모**가 있는 핵종만 색인하고
+ *  나머지(이성질체 · 핵 준위 · 연쇄의 중간 고리 · 실험실 밖에서 못 만나는 악티나이드)는 `noindex,follow` 로 둔다.
+ *  ★ 쪽은 **지우지 않는다** — 허브·도구·붕괴 연쇄에서 닿고 링크도 따라간다. 색인 대상에서만 뺀다.
+ *  ★ 기준은 쪽마다 손글이 적은 **첫 단락의 역할**이다(`data/nuclide-notes.ts`): 그 핵종을 사람이 손에 쥐거나(선원·의약품),
+ *    규제·측정에서 이름으로 부르거나(연료주기·NORM·해체의 핵심 핵종), 검색으로 찾을 이유가 있는가. 「같은 자료의 한 줄」인
+ *    쪽은 뺀다. 방문 상위 26종은 전부 든다(`rl_visits`, 2026-10-04).
+ *  ★ 이 목록을 늘리면 사이트맵도 같이 는다(`astro.config.mjs` 가 `NOINDEX_SLUGS` 를 읽는다). 줄이는 쪽도 마찬가지다. */
+export const INDEXED: ReadonlySet<string> = new Set([
+  /* 방문 상위 + 실무 필수 26 (2026-10-04) */
+  "Am-241", "Co-60", "Cs-137", "Na-22", "P-32", "Co-57", "Ni-63", "Ba-133", "Ir-192", "Sr-90", "C-14", "I-131",
+  "Pu-239", "Eu-152", "Kr-85", "Po-210", "Mn-54", "Cs-134", "Ra-226", "K-40", "H-3", "F-18", "Tc-99m", "I-125", "Se-75", "Cf-252",
+  /* 선원 · 교정 · 계측 */
+  "Cd-109", "Ce-139", "Y-88", "Sb-124", "Pm-147", "Tl-204", "Cl-36", "Fe-55", "Eu-154", "Ni-59",
+  /* 의료 · 생명과학 */
+  "Mo-99", "Ga-67", "Ga-68", "Ge-68", "In-111", "Lu-177", "Y-90", "Sm-153", "Sr-89", "Ra-223", "Re-188", "Ho-166",
+  "Tl-201", "Xe-133", "Cr-51", "Au-198",
+  /* 연료주기 · 환경 · NORM · 해체 */
+  "Pu-238", "Pu-240", "Pu-241", "Am-243", "Np-237", "Cm-244", "U-238", "U-235", "U-234", "U-233", "Th-232", "Th-230",
+  "Ra-228", "Pb-210", "Cs-135", "I-129", "Tc-99", "Se-79",
+]);
+
+/** 낱장의 `noindex` 와 사이트맵 거르기가 **같은 한 목록**을 본다. */
+export const isNoindex = (key: string) => isTooShortLived(key) || !INDEXED.has(key);
+
+export const NOINDEX_SLUGS = Object.keys(T).filter(isNoindex).map((k) => k.toLowerCase());
 
