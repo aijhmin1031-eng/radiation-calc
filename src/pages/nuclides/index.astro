@@ -1,9 +1,13 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { u, DATA_SOURCES } from "../../lib/site";
-import { ALL_KEYS, NUCLIDES, slugOf, longName, halfLifeText, decayWord, emissionKinds } from "../../lib/nuclides";
+import { ALL_KEYS, NUCLIDES, nuclidePage, longName, halfLifeText, decayWord, emissionKinds } from "../../lib/nuclides";
+import { PAGE_KEYS } from "../../lib/nuclide-pages";
+import NuclideRef from "../../components/NuclideRef.astro";
 
-const rows = ALL_KEYS.map((key) => {
+/** ★★★ 목록은 **쪽이 있는 핵종만** 든다(2026-10-06 ④ — 검색 제외 77장을 지웠다). 계산기는 자료의
+ *  전부를 받으므로 그 수(`ALL_KEYS.length`)를 한 문장으로 밝힌다. 수는 전부 자료에서 센다. */
+const rows = PAGE_KEYS.map((key) => {
   const n = NUCLIDES[key];
   const kinds = emissionKinds(n);
   return { key, n, kinds, label: kinds.length ? kinds.join(" + ") : "none recorded" };
@@ -13,6 +17,9 @@ const noPhoton = rows.filter((r) => !r.kinds.includes("gamma"));
 const KIND_WORD: Record<string, string> = { gamma: "photon", xray: "X-ray only", beta: "beta", alpha: "alpha" };
 const words = (ks: string[]) => (ks.length ? ks.map((k) => KIND_WORD[k]).join(", ") : "none recorded");
 const sig = (x: number, d = 3) => (Number.isFinite(x) && x > 0 ? x.toPrecision(d) : "—");
+/** 아래 「반가층이 더해지지 않을 때」 절의 예 — 그전에는 그 비를 글자로 적어 두었다(「eighty-four」). 자료에서 낸다.
+ *  ★ Sn-113 은 쪽이 없다(2026-10-06 ④) — 그래서 「here」가 아니라 「in the dataset」이라고 말한다. */
+const sn113Ratio = (nuclidePage("Sn-113").shields.find((s) => s.material === "lead")?.ratio ?? NaN).toFixed(0);
 ---
 <Base schema="CollectionPage" title="Nuclide reference — half-lives, emission lines, dose rates and shielding"
       description={`Reference sheets for ${rows.length} nuclides: half-life, decay mode, specific activity, emission lines with their share of the dose rate, spectrum-solved half- and tenth-value layers, beta range and bremsstrahlung — computed from IAEA decay data and NIST attenuation coefficients.`}>
@@ -22,7 +29,10 @@ const sig = (x: number, d = 3) => (Number.isFinite(x) && x > 0 ? x.toPrecision(d
 
   <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">Nuclide reference</h1>
   <p class="mt-2 text-[15px] leading-relaxed text-ink-muted">
-    One sheet per nuclide, for the {rows.length} nuclides this site carries decay data for.
+    One sheet per nuclide, for the {rows.length} nuclides with a use of their own — sources and calibration,
+    medicine, the fuel cycle, naturally occurring material and decommissioning. The calculators accept all
+    {ALL_KEYS.length} nuclides in the dataset, each wherever its emissions apply, including the isomers and
+    intermediate chain members that have no sheet here.
   </p>
 
   <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
@@ -66,8 +76,8 @@ const sig = (x: number, d = 3) => (Number.isFinite(x) && x > 0 ? x.toPrecision(d
       For a single energy the tenth-value layer is always 3.32 times the half-value layer, and stacking
       three half-value layers leaves an eighth. Neither holds for a broad spectrum. The first layer
       removes the soft part cheaply and what comes through is harder than what went in, so the second
-      layer removes less than the first. Tin-113 is the extreme case here, with a tenth-value layer
-      eighty-four times its half-value layer. Every sheet prints the ratio so the reader can see when
+      layer removes less than the first. Tin-113 is the extreme case in the dataset, with a tenth-value
+      layer {sn113Ratio} times its half-value layer. Every sheet prints the ratio so the reader can see when
       the rule of thumb has stopped working.
     </p>
 
@@ -105,13 +115,14 @@ const sig = (x: number, d = 3) => (Number.isFinite(x) && x > 0 ? x.toPrecision(d
   </section>
 
   <section class="mt-8">
-    <h2 class="text-[20px] font-semibold text-ink">All {rows.length} nuclides</h2>
+    <h2 class="text-[20px] font-semibold text-ink">The {rows.length} nuclides with a sheet</h2>
     <p class="mt-2 max-w-3xl text-[14px] leading-relaxed text-ink-muted">
       {gammaCount} emit photons above the cutoff; the rest are listed too. On a wide screen the table
       also carries the decay mode and Γ, the air kerma rate constant in mGy·m²/(GBq·h) at δ = 20 keV;
       on a narrow one both are on the sheet itself rather than squeezed into the list.
     </p>
-    {/* ★ 148행 × 6열은 390px 에 못 들어간다 — **스크롤 컨테이너에 넣는다.**
+    {/* ★ 이 표는 390px 에 못 들어간다 — **스크롤 컨테이너에 넣는다**(147행 시절에 정했고, 쪽이 있는
+        핵종만 남은 뒤에도 열 수는 같다).
         1280px 에서는 표가 984px 로 맞으므로 스크롤이 생기지 않는다(데스크톱에서
         컨테이너 안이 넘치면 `check-render` 가 결함으로 센다). 좁은 화면의 가로
         스크롤은 이 레포에서 설계된 동작이다. */}
@@ -123,7 +134,7 @@ const sig = (x: number, d = 3) => (Number.isFinite(x) && x > 0 ? x.toPrecision(d
       <tbody>
         {rows.map((r) => (
           <tr>
-            <td><a href={u(`/nuclides/${slugOf(r.key)}/`)} class="underline">{r.key}</a></td>
+            <td><NuclideRef k={r.key} /></td>
             {/* ★ 좁은 화면에서는 뺀다 — 「Ac-227」 옆의 「Actinium-227」 은 중복이고
                 174px 를 먹어 가로 스크롤을 그만큼 늘린다. */}
             <td class="hidden lg:table-cell">{longName(r.key)}</td>

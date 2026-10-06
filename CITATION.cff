@@ -9,7 +9,8 @@ cff-version: 1.2.0
 message: "If you use these figures or this code, please cite both this work and the upstream data sources listed below."
 title: "RadCalc — nuclide reference sheets and spectrum-solved shielding for radiation protection"
 abstract: >-
-  Reference sheets for 147 nuclides with half-life, decay mode, specific activity, photon, beta and
+  Reference sheets for 70 nuclides in practical use (the calculators use all 147 in the dataset) with
+  half-life, decay mode, specific activity, photon, beta and
   alpha emission lines, and — for photon emitters — air kerma rate constants and half- and
   tenth-value layers solved across the whole emission spectrum rather than read from a single-energy
   table. The spectrum solution matters where a nuclide's dose rate is not dominated by one line:

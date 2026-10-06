@@ -39,9 +39,18 @@ const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
  *    `check-nuclides`(전 쪽)가 본다. 층을 갈라 둔다.
  *  ★ 표본은 **방출 종류가 서로 다른 넷**이다 — 감마가 많은 쪽 · 베타만 · 알파만 ·
  *    기록이 아예 없는 쪽. 구획이 붙고 떨어지는 경우를 전부 덮는다. */
-const SAMPLE = ["/nuclides/i-131/", "/nuclides/sr-90/", "/nuclides/am-241/", "/nuclides/ca-41/"];
+const SAMPLE = ["/nuclides/i-131/", "/nuclides/sr-90/", "/nuclides/am-241/", "/nuclides/ni-59/"];
 const all = walk(DIST).filter((f) => f.endsWith(".html"))
   .map((f) => "/" + relative(DIST, f).replace(/index\.html$/, "").replace(/\\/g, "/"));
+/** ★★ **표본이 없는 쪽을 가리키면 조용히 줄어들었다**(2026-10-06 ④ 에 드러났다). 넷째 표본 `ca-41`(기록이 아예
+ *  없는 쪽)은 검색 제외 77장과 함께 지워졌는데, 아래 거르개는 「있는 쪽 중 표본에 든 것」을 고르므로 **셋만 돌고
+ *  통과**했을 것이다 — 「기록 없는 쪽」 경우가 시야에서 빠진 채로. 같은 경우의 `ni-59` 로 바꾸고, 표본이 산출물에
+ *  없으면 그 자리에서 멈춘다. */
+const lostSample = SAMPLE.filter((p) => !all.includes(p));
+if (lostSample.length) {
+  console.error(`❌ 표본 쪽이 산출물에 없다 — ${lostSample.join(", ")}. 지워진 쪽이면 같은 경우(방출 종류)의 다른 쪽으로 바꿀 것`);
+  process.exit(1);
+}
 const paths = all.filter((p) => !p.startsWith("/nuclides/") || p === "/nuclides/" || SAMPLE.includes(p));
 console.log(`   쪽 ${paths.length}장 (핵종 낱장 ${all.filter((p) => p.startsWith("/nuclides/")).length - 1}장 중 ${SAMPLE.length}장 표본)`);
 

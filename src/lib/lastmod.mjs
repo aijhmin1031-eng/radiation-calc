@@ -76,11 +76,14 @@ function newest(paths) {
 
 const page = (...p) => join(ROOT, "src/pages", ...p);
 
-/** 핵종 낱장 147장의 원천 — 데이터와 **생성기들**. */
+/** 핵종 낱장의 원천 — 데이터와 **생성기들**.
+ *  ★ `nuclide-pages.ts` 를 든다(2026-10-06 ④) — 어느 핵종에 쪽이 있는지가 낱장의 내용도 바꾼다
+ *    (같은 원소의 이웃이 링크인지 글자인지). 목록을 고친 날이 그 쪽들의 날짜다. */
 const NUCLIDE_SOURCES = [
   join(ROOT, "src/data/nuclides.json"),
   join(ROOT, "src/lib/nuclide-prose.ts"),
   join(ROOT, "src/lib/nuclide-seo.ts"),
+  join(ROOT, "src/lib/nuclide-pages.ts"),
   page("nuclides/[slug].astro"),
 ];
 
@@ -100,7 +103,7 @@ export function lastmodFor(path) {
 
   if (seg[0] === "nuclides")
     return seg.length === 1
-      ? newest([page("nuclides/index.astro"), join(ROOT, "src/data/nuclides.json")])
+      ? newest([page("nuclides/index.astro"), join(ROOT, "src/data/nuclides.json"), join(ROOT, "src/lib/nuclide-pages.ts")])
       : newest(NUCLIDE_SOURCES);
 
   if (seg[0] === "validation")

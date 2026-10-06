@@ -1,5 +1,8 @@
 /** 핵종 낱장 실측 — **147장을 한 틀로 찍지 않았는가.**
  *
+ *  ★★★ 2026-10-06 ④ 부터 낱장은 **쪽 목록**(`src/lib/nuclide-pages.ts`)의 핵종에만 선다 — 검색 제외 77장을 지웠고
+ *    자료·계산기는 147종 그대로다. 아래 「147장」은 그때까지의 기록이다. 이 게이트가 재는 대상은 산출물의 낱장 전부다.
+ *
  *  ★★ 계기(2026-09-16 소유주 「radcalc 이 사이트에 우리만의 특별한 기능을 추가할 것이 뭐가
  *    있을까? 유사한 사이트가 너무 많아」). 답으로 핵종 낱장 147장을 세웠는데, **쪽을 한꺼번에
  *    147장 늘리는 것 자체가 이 작업의 유일한 진짜 위험**이다 — 이웃 lab 이 애드센스에서 실제로
@@ -35,16 +38,20 @@ const note = (s) => console.log("   " + s);
 
 const nuc = JSON.parse(readFileSync("src/data/nuclides.json", "utf8"));
 const dirs = readdirSync(DIR, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);
+/** ★★★ 쪽은 **쪽 목록**(`src/lib/nuclide-pages.ts`)에 있는 핵종에만 선다(2026-10-06 ④ — 검색 제외 77장을 지웠다).
+ *  자료는 147종 그대로이므로 「자료와 1:1」이 아니라 **「쪽 목록과 1:1」**을 잰다. 목록을 손으로 다시 적지 않고
+ *  정본을 그대로 읽는다 — 두 곳에 적으면 한쪽이 반드시 낡는다. */
+const { PAGE_KEYS, hasPage } = await tsImport("../src/lib/nuclide-pages.ts", import.meta.url);
 
-/* ── ① 147종이 전부 있는가 ───────────────────────────────── */
-console.log("\n① 낱장이 데이터와 1:1 인가");
-const want = Object.keys(nuc).map((k) => k.toLowerCase()).sort();
+/* ── ① 쪽 목록의 핵종이 전부 있고, 목록 밖의 쪽은 없는가 ───────────── */
+console.log("\n① 낱장이 쪽 목록과 1:1 인가 (자료의 나머지는 쪽이 없어야 한다)");
+const want = PAGE_KEYS.map((k) => k.toLowerCase()).sort();
 const got = [...dirs].sort();
 const missing = want.filter((k) => !got.includes(k));
 const extra = got.filter((k) => !want.includes(k));
 if (missing.length) fail.push(`낱장 없음: ${missing.slice(0, 6).join(", ")}${missing.length > 6 ? ` 외 ${missing.length - 6}` : ""}`);
-if (extra.length) fail.push(`데이터에 없는 낱장: ${extra.join(", ")}`);
-note(`데이터 ${want.length}종 · 낱장 ${got.length}장`);
+if (extra.length) fail.push(`쪽 목록에 없는 낱장(지운 쪽이 되살아났다): ${extra.slice(0, 6).join(", ")}${extra.length > 6 ? ` 외 ${extra.length - 6}` : ""}`);
+note(`자료 ${Object.keys(nuc).length}종 · 쪽 목록 ${want.length}종 · 낱장 ${got.length}장`);
 
 /* ── ② 깨진 숫자 ─────────────────────────────────────────── */
 console.log("\n② 깨진 숫자가 화면에 나갔는가 (NaN · Infinity · undefined · null)");
@@ -117,11 +124,15 @@ note(`${sample.length}쌍 · 중앙 ${(median * 100).toFixed(1)}% · 최대 ${(w
    ★ 아래 상한은 **래칫**이다 — 지금 값에 맞춰 두어 **나빠지는 것만** 막는다.
      되풀이를 허브로 옮긴 뒤 이 수들을 함께 내린다. **고치기 전 값을 박아 두는 것**이 요점이다. */
 console.log("\n④-2 심사자가 읽는 것 — 산문 전체 · 숫자 제외 · 제목 틀");
-const BOILER_MEDIAN_MAX = 0.22;   // 되풀이 몫 중앙 (2026-10-05 손글 147장 뒤 실측 0.190 · 26장 뒤 0.236 · 그전 0.279)
-const BOILER_WORST_MAX  = 0.30;   // 한 장의 되풀이 몫 (2026-10-05 실측 0.265 sn-113m · 그전 0.388 cd-109)
-const WORDS_MEDIAN_MAX  = 0.12;   // 숫자 뺀 낱말 겹침 중앙 (2026-10-05 실측 0.096 · 26장 뒤 0.145 · 그전 0.166)
-const NEAR_DUP_MAX      = 3;   // 낱말 겹침 95% 이상인 쌍의 수 (실측 2)
-const HEAD_MEDIAN_MAX   = 0.17;   // 제목 틀 겹침 중앙 (2026-10-05 실측 0.143 · 26장 뒤 0.154 · 그전 0.200)
+/* ★★ 2026-10-06 ④ 에 **잴 대상이 147장 → 70장으로 바뀌었다**(검색 제외 77장을 지웠다). 같은 자로 다시 재니
+     모두 내려갔고(아래 괄호의 첫 값), 래칫의 규칙대로 **같은 여유를 두고 함께 내렸다** — 그대로 두면 70장이
+     지금보다 나빠져도 147장 시절의 여유 안에서 조용히 통과한다. 되풀이 몫의 「절반 이상에 나오는」 문턱도
+     `keys.length / 2` 라 대상과 함께 움직인다 — 147장 시절 값과 직접 비교하지 말 것. */
+const BOILER_MEDIAN_MAX = 0.21;   // 되풀이 몫 중앙 (2026-10-06 ④ 70장 실측 0.182 · 10-05 147장 0.190 · 26장 뒤 0.236 · 그전 0.279)
+const BOILER_WORST_MAX  = 0.28;   // 한 장의 되풀이 몫 (2026-10-06 ④ 실측 0.241 ga-68 · 10-05 0.265 sn-113m · 그전 0.388 cd-109)
+const WORDS_MEDIAN_MAX  = 0.11;   // 숫자 뺀 낱말 겹침 중앙 (2026-10-06 ④ 실측 0.088 · 10-05 0.096 · 26장 뒤 0.145 · 그전 0.166)
+const NEAR_DUP_MAX      = 1;   // 낱말 겹침 95% 이상인 쌍의 수 (2026-10-06 ④ 실측 0 · 147장 시절 2 — 두 쌍 모두 지운 쪽이 끼어 있었다)
+const HEAD_MEDIAN_MAX   = 0.12;   // 제목 틀 겹침 중앙 (2026-10-06 ④ 실측 0.091 · 10-05 0.143 · 26장 뒤 0.154 · 그전 0.200)
 
 /** 본문 산문만 — 표의 숫자와 곁칸은 글이 아니다. `<p>` 만 든다. */
 /** ★★ `<p>` 만 세던 첫 판에 **같은 종류의 사각**이 있었다(2026-09-20, ④ 를 흉본 자리에서
@@ -247,13 +258,18 @@ for (const [d, p] of pages) {
     noteText.set(key, { h, ps });
   }
 }
-if (renderedNotes !== noteKeys.length)
-  fail.push(`④-3 그려진 손글 구획 ${renderedNotes}개 — 정본은 ${noteKeys.length}장. 그리는 자리가 빠졌거나 새고 있다`);
+/* ★★ 손글은 147장 전부 자료로 남지만(되살릴 때를 위해) **그려지는 것은 쪽이 있는 핵종의 글뿐**이다(2026-10-06 ④).
+   그래서 기대값은 「정본의 글 수」가 아니라 「쪽이 있는 핵종의 글 수」다. 쪽 없는 글은 산출물이 없으므로 여기서
+   재지 않는다 — 되살리면 그 쪽에 그려지고, 그때 아래 검사를 전부 다시 받는다. */
+const shownNotes = noteKeys.filter((k) => hasPage(k));
+if (renderedNotes !== shownNotes.length)
+  fail.push(`④-3 그려진 손글 구획 ${renderedNotes}개 — 쪽이 있는 핵종의 글은 ${shownNotes.length}장. 그리는 자리가 빠졌거나 새고 있다`);
 const seenGram = new Map(), sharedPairs = new Set();
 let noteMin = Infinity, noteSum = 0, strayDigits = 0;
 for (const key of noteKeys) {
-  const src = NUCLIDE_NOTES[key];
   if (!nuc[key]) { fail.push(`④-3 ${key}: 자료에 없는 핵종에 손글이 있다`); continue; }
+  if (!hasPage(key)) continue;
+  const src = NUCLIDE_NOTES[key];
   const got = noteText.get(key);
   if (!got) { fail.push(`④-3 ${key}: 손글이 그 쪽에 안 그려졌다`); continue; }
   if (got.h !== src.heading) fail.push(`④-3 ${key}: 그려진 제목이 정본과 다르다 — 「${got.h}」`);
@@ -273,7 +289,8 @@ for (const key of noteKeys) {
     if (!sharedPairs.has(pair)) { sharedPairs.add(pair); fail.push(`④-3 ${pair}: 같은 ${NOTE_GRAM}낱말 구절 — 「${g}」`); }
   }
 }
-note(`${noteKeys.length}장 · 그려진 구획 ${renderedNotes}개 · 어수 최소 ${noteMin} 합 ${noteSum} · 숫자 밖 ${strayDigits}건 · 공유 ${NOTE_GRAM}-그램 ${sharedPairs.size}쌍`);
+note(`정본 ${noteKeys.length}장 중 쪽이 있는 ${shownNotes.length}장 · 그려진 구획 ${renderedNotes}개 · 어수 최소 ${noteMin} 합 ${noteSum} · 숫자 밖 ${strayDigits}건 · 공유 ${NOTE_GRAM}-그램 ${sharedPairs.size}쌍`);
+note(`안 본 것: 쪽이 없는 핵종의 글 ${noteKeys.length - shownNotes.length}장(자료로만 남는다 — 10-05 에 147장 전부 이 검사를 통과했다)`);
 
 /* ── ⑤ 계산기 링크가 실제로 복원되는가 ───────────────────── */
 console.log("\n⑤ 계산기 프리필이 실제로 복원되는가");
@@ -369,5 +386,5 @@ await ctx.close(); await browser.close(); srv.close();
 note(`${checked}개 링크를 눌러 확인`);
 
 console.log(fail.length ? `\n❌ ${fail.length}건\n` + fail.map((x) => "   " + x).join("\n")
-  : `\n✅ 핵종 낱장 — ${dirs.length}장 · 깨진 숫자 0 · 감마 누출 0 · 본문 겹침 중앙 ${(median * 100).toFixed(1)}% · 손글 ${noteKeys.length}장 · 프리필 ${checked}개 복원 · 목록 표 7폭`);
+  : `\n✅ 핵종 낱장 — ${dirs.length}장(자료 ${Object.keys(nuc).length}종 중 쪽 목록) · 깨진 숫자 0 · 감마 누출 0 · 본문 겹침 중앙 ${(median * 100).toFixed(1)}% · 손글 ${shownNotes.length}장 · 프리필 ${checked}개 복원 · 목록 표 7폭`);
 process.exit(fail.length ? 1 : 0);

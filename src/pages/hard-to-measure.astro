@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
-import { NUCLIDES, nuclidePage, halfLifeText, decayWord, slugOf } from "../lib/nuclides";
+import NuclideRef from "../components/NuclideRef.astro";
+import { NUCLIDES, nuclidePage, halfLifeText, decayWord } from "../lib/nuclides";
 import { u } from "../lib/site";
 
 /** ★★ 측정 곤란 핵종과 척도인자 — 2026-10-06 소유주 지시 「각 lab 에 전문가 글 3~5편」의 셋째 편.
@@ -13,7 +14,7 @@ const YEAR = 31557600;
 const N = NUCLIDES;
 const pct = (x: number, d = 1) => `${(x * 100).toFixed(d)}%`;
 const mm = (cm: number) => (Number.isFinite(cm) ? (cm * 10).toPrecision(2) : "—");
-const link = (k: string) => u(`/nuclides/${slugOf(k)}/`);
+/* ★ 핵종 이름은 `NuclideRef` 로만 그린다 — 쪽이 있으면 링크, 없으면 이름만(2026-10-06 ④, 지운 77장으로 가는 죽은 링크를 막는다). */
 const acr = (k: string) => nuclidePage(k).betaRanges.find((r) => r.material === "acrylic")?.cm ?? NaN;
 const lam = (k: string) => Math.LN2 / N[k].t_half_s;
 const left = (k: string, y: number) => Math.pow(2, -y * YEAR / N[k].t_half_s);
@@ -81,7 +82,7 @@ const srMove = Math.ceil(Math.abs(1 - D("Sr-90").y20) * 100);
       <tbody>
         {HTM.map((r) => (
           <tr>
-            <td><a href={link(r.k)} class="underline">{r.k}</a></td>
+            <td><NuclideRef k={r.k} /></td>
             <td>{r.t}</td>
             <td class="hidden lg:table-cell">{r.mode}</td>
             <td>{r.e ? (r.e / 1000).toFixed(3) : "—"}</td>
@@ -156,7 +157,7 @@ const srMove = Math.ceil(Math.abs(1 - D("Sr-90").y20) * 100);
       <tbody>
         {DRIFT.map((r) => (
           <tr>
-            <td><a href={link(r.d)} class="underline">{r.d}</a> / <a href={link(r.k)} class="underline">{r.k}</a></td>
+            <td><NuclideRef k={r.d} /> / <NuclideRef k={r.k} /></td>
             <td>× {r.y5.toPrecision(3)}</td>
             <td>× {r.y10.toPrecision(3)}</td>
             <td>× {r.y20.toPrecision(3)}</td>

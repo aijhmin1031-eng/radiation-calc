@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
-import { NUCLIDES, nuclidePage, halfLifeText, fmtTime, slugOf } from "../lib/nuclides";
+import NuclideRef from "../components/NuclideRef.astro";
+import { NUCLIDES, nuclidePage, halfLifeText, fmtTime } from "../lib/nuclides";
 import { WITH_DOMINANT_PROGENY } from "../lib/decay-chain";
 import { u } from "../lib/site";
 
@@ -98,8 +99,8 @@ const worst = beta[0];
       <tbody>
         {beta.map((r) => (
           <tr>
-            <td><a href={u(`/nuclides/${slugOf(r.key)}/`)} class="underline">{r.key}</a></td>
-            <td><a href={u(`/nuclides/${slugOf(r.prog.key)}/`)} class="underline">{r.prog.key}</a></td>
+            <td><NuclideRef k={r.key} /></td>
+            <td><NuclideRef k={r.prog.key} /></td>
             <td class="hidden lg:table-cell">{halfLifeText(r.dn)}</td>
             <td class="hidden lg:table-cell">{sig((r.n.beta_max_keV ?? 0) / 1000)}</td>
             <td class="hidden lg:table-cell">{sig((r.dn.beta_max_keV ?? 0) / 1000)}</td>
@@ -212,8 +213,8 @@ const worst = beta[0];
 
     <h2>Where to go next</h2>
     <ul class="my-3 space-y-1">
-      <li><a href={u("/nuclides/")} class="underline">Nuclide data</a> — the individual pages, each of
-        which repeats the warning above for its own case.</li>
+      <li><a href={u("/nuclides/")} class="underline">Nuclide data</a> — the individual pages; where a
+        parent above has one, it repeats the warning for its own case.</li>
       <li><a href={u("/beta-shield-materials/")} class="underline">Shield materials for beta
         emitters</a> — how thick, and what of: the bremsstrahlung argument for low-Z first.</li>
       <li><a href={u("/beta/")} class="underline">Beta dose rate and shielding</a> — range and

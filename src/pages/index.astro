@@ -4,6 +4,15 @@ import { u, SITE_NAME } from "../lib/site";
 import { TOOLS } from "../lib/tools";
 import { NOTES } from "../lib/notes";
 import Keyword from "../components/Keyword.astro";
+import { ALL_KEYS, NUCLIDES, emissionKinds } from "../lib/nuclides";
+import { PAGE_KEYS } from "../lib/nuclide-pages";
+
+/** 「What is covered」의 수 — 그전에는 글자로 적혀 있었다(147 · 96 · 45). 자료에서 센다.
+ *  ★ 「beta or alpha only」 = 차단 에너지 위 광자선이 없고 베타나 알파가 있는 것(X선만 기록된 것도 든다 —
+ *    그것이 옛 45 를 다시 내는 정의다). ★ 쪽 수는 2026-10-06 ④ 부터 자료 수와 다르다. */
+const kindsOf = ALL_KEYS.map((k) => emissionKinds(NUCLIDES[k]));
+const photonCount = kindsOf.filter((ks) => ks.includes("gamma")).length;
+const betaAlphaOnly = kindsOf.filter((ks) => !ks.includes("gamma") && (ks.includes("beta") || ks.includes("alpha"))).length;
 ---
 <Base title="Radiation protection calculators"
       description="Seven calculators for routine radiation protection work — dose rate and shielding, decay, detection limits, unit conversion, specific activity, beta shielding and job planning. Free, no sign-in.">
@@ -109,13 +118,15 @@ import Keyword from "../components/Keyword.astro";
 
     <h2>What is covered</h2>
     <p>
-      147 nuclides, of which 96 emit photons and 45 emit only beta or alpha radiation — the pure beta
+      {ALL_KEYS.length} nuclides, of which {photonCount} emit photons and {betaAlphaOnly} emit only beta or alpha radiation — the pure beta
       and alpha emitters that dominate waste characterisation and decommissioning work, including
       H-3, C-14, Ni-63, Sr-90, Tc-99, I-129, Zr-93, Se-79 and the transuranics. Eight shielding
       materials with attenuation data from 1 keV to 20 MeV.
     </p>
     <p>
-      Every one of those nuclides has a <a href={u("/nuclides/")}>reference sheet</a> of its own:
+      All of them can be used in the calculators, and the {PAGE_KEYS.length} with a use of their own — in sources and
+      calibration, medicine, the fuel cycle, naturally occurring material and decommissioning — have a
+      <a href={u("/nuclides/")}>reference sheet</a> as well:
       half-life, decay mode and specific activity, the emission lines with each line's share of the
       dose rate beside its emission probability, and — for the photon emitters — half- and
       tenth-value layers solved for the whole spectrum rather than read off at one representative

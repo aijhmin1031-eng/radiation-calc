@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
-import { NUCLIDES, nuclidePage, slugOf } from "../lib/nuclides";
+import NuclideRef from "../components/NuclideRef.astro";
+import { NUCLIDES, nuclidePage } from "../lib/nuclides";
 import { dominantProgeny } from "../lib/decay-chain";
 import { u } from "../lib/site";
 
@@ -88,7 +89,7 @@ const gammaLed = top.filter((r) => r.g >= GAMMA_FLOOR).sort((a, b) => b.g - a.g)
       <tbody>
         {top.map((r) => (
           <tr>
-            <td><a href={u(`/nuclides/${slugOf(r.key)}/`)} class="underline">{r.key}</a></td>
+            <td><NuclideRef k={r.key} /></td>
             <td>{(r.e / 1000).toFixed(2)}</td>
             <td>{mm(r.acr)}</td>
             <td class="hidden lg:table-cell">{mm(r.al)}</td>

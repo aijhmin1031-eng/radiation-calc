@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import { SITE_NAME, u } from "../lib/site";
 import { TOOLS } from "../lib/tools";
+import { PAGE_KEYS } from "../lib/nuclide-pages";
 
 /** 없는 주소로 들어온 사람을 평문 한 줄에 두지 않는다 (2026-10-03).
  *
@@ -13,7 +14,8 @@ import { TOOLS } from "../lib/tools";
  *  ★ `noindex` — 사이트맵은 Astro 가 404 를 스스로 뺀다. 공유 그림은 홈 카드로 받는다(`Base`). */
 const LINKS = [
   { href: "/", label: "Calculators", d: "The seven calculators, each with its methods and validation." },
-  { href: "/nuclides/", label: "Nuclide reference", d: "One page per nuclide with its computed constants." },
+  /* ★ 「One page per nuclide」였다 — 2026-10-06 ④ 부터 쪽은 자료의 일부에만 있다. 수는 자료에서 센다. */
+  { href: "/nuclides/", label: "Nuclide reference", d: `Reference pages for ${PAGE_KEYS.length} nuclides in practical use, with their computed constants.` },
   { href: "/methods/", label: "Methods and data", d: "Equations, data sources and the range of validity." },
   { href: "/validation/", label: "Validation", d: "Where each calculator has been checked, and where it has not." },
   { href: "/disclaimer/", label: "Disclaimer", d: "What these results are for and what they are not." },

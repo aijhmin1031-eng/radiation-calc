@@ -5,11 +5,15 @@ import { ALL_KEYS, NUCLIDES, nuclidePage, slugOf, longName, decayWord, halfLifeT
          belowCutoff, alphaSpread } from "../../lib/nuclides";
 import { paragraphs, decayCaption, sectionHeads } from "../../lib/nuclide-prose";
 import { nuclideSeo } from "../../lib/nuclide-seo";
-import { isNoindex } from "../../lib/nuclide-noindex";
+import { PAGE_KEYS } from "../../lib/nuclide-pages";
 import { NUCLIDE_NOTES } from "../../data/nuclide-notes";
+import NuclideRef from "../../components/NuclideRef.astro";
 
+/** ★★★ 쪽은 **실무에서 만나는 핵종에만** 세운다(2026-10-06 ④ — 검색 제외 77장을 지웠다).
+ *  자료·계산기는 147종을 그대로 든다. 목록과 그 까닭은 `lib/nuclide-pages.ts` 가 든다.
+ *  그전에는 147장을 다 굽고 77장에 `noindex` 를 붙였다 — 이제 그 77장은 아예 없으므로 `noindex` 도 없다. */
 export function getStaticPaths() {
-  return ALL_KEYS.map((key) => ({ params: { slug: slugOf(key) }, props: { key } }));
+  return PAGE_KEYS.map((key) => ({ params: { slug: slugOf(key) }, props: { key } }));
 }
 const { key } = Astro.props as { key: string };
 const p = nuclidePage(key);
@@ -19,8 +23,9 @@ const n = p.n;
  *  왜 그 문구인지(비어 있는 질의를 골랐다 · 숫자를 제목에 넣지 않는다 · Γ>0 을 자로
  *  쓰지 않는다)는 그 파일이 든다. 여기서는 쓰기만 한다. */
 const seo = nuclideSeo(p);
-/** ★★ 손글 단락(2026-10-04) — 방문 상위 20종 + 실무 필수 6종, 26장에만 있다. 왜 쓰고 무엇을
- *  재는지는 `data/nuclide-notes.ts` 머리글과 `check-nuclides` ④-3 이 든다. 없는 쪽은 구획 자체가 없다. */
+/** ★★ 손글 단락(2026-10-04 26장 → 10-05 147장 전부). 왜 쓰고 무엇을 재는지는 `data/nuclide-notes.ts`
+ *  머리글과 `check-nuclides` ④-3 이 든다. 글이 없는 핵종이면 구획 자체가 없다.
+ *  ★ 2026-10-06 ④ 부터 쪽이 있는 핵종의 글만 그려진다 — 나머지 글은 자료로 남는다(되살릴 때를 위해). */
 const note = NUCLIDE_NOTES[key];
 
 const sig = (x: number, d = 3) => (Number.isFinite(x) ? x.toPrecision(d) : "—");
@@ -64,7 +69,7 @@ const TOOLS_FOR: { href: string; label: string; when: boolean; prefill?: boolean
 ];
 const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).slice(0, 8);
 ---
-<Base schema="TechArticle" title={seo.title} description={seo.description} noindex={isNoindex(key)}>
+<Base schema="TechArticle" title={seo.title} description={seo.description}>
   <nav class="tap-list mb-4 flex flex-wrap items-center gap-x-1.5 text-[12px] text-ink-faint">
     <a href={u("/")} class="hover:text-ink">Calculators</a> <span aria-hidden>/</span>
     <a href={u("/nuclides/")} class="hover:text-ink">Nuclides</a> <span aria-hidden>/</span> {p.key}
@@ -259,8 +264,9 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
     {related.length > 0 && (
       <p class="mt-4 text-[14px] text-ink-muted">
         Other {elementName(n.sym)} nuclides:{" "}
+        {/* ★ 같은 원소의 이웃은 자료에 있는 것을 다 든다 — 쪽이 없는 것은 이름만(`NuclideRef`). */}
         {related.map((k, i) => (
-          <>{i > 0 ? ", " : ""}<a href={u(`/nuclides/${slugOf(k)}/`)} class="underline">{k}</a></>
+          <>{i > 0 ? ", " : ""}<NuclideRef k={k} /></>
         ))}
       </p>
     )}
