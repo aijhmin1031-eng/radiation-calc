@@ -170,7 +170,14 @@ export default function SavedResults() {
       )}
 
       <p className="text-[12px] text-ink-faint">
-        {rows.length} saved · signed in as {displayName(user)} · results are private to your account
+        {rows.length} saved · signed in as {displayName(user)} · results are private to your account ·{" "}
+        {/* ★ 2026-10-06 — 우산의 `/account/` 가 이 오리진을 떠나면서 로그아웃할 자리가 여기 하나다. */}
+        <button type="button" className="underline hover:text-ink"
+          onClick={async () => {
+            try { await supabase?.auth.signOut(); } catch { /* 세션이 이미 없으면 그대로 둔다 */ }
+            try { localStorage.removeItem("rl-profile-name"); } catch { /* 저장소가 막힌 창 */ }
+            setUser(null);
+          }}>Sign out</button>
       </p>
     </div>
   );

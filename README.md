@@ -10,6 +10,27 @@
 
 우산 정본은 `aijhmin1031-eng/radiation-lab`, 절차는 `radiation-meter-tester/docs/umbrella-setup.md`.
 
+## ★★ Cloudflare Workers 로 옮겼다 — apex 의 주인공이 됐다 (2026-10-06)
+
+애드센스가 2026-10-06 00:48 에 radiation-lab.com 을 「가치가 별로 없는 콘텐츠」로 돌려보냈다. 소유주 결정:
+**apex 는 RadCalc 하나에 집중**하고, RadiMeter · 처분 lab 은 하위 도메인(`radimeter.` · `disposal.`)으로 내보낸다.
+그리고 광고가 실릴 두 층(우산 · RadCalc)을 **Vercel Hobby(애드센스 금지) 에서 Cloudflare Workers Free 로** 옮긴다.
+
+| 무엇 | 전 | 후 |
+|---|---|---|
+| 배포 | Vercel `radiation-calc` → 우산이 `/calc/*` 를 재작성 | **Worker `radiation-lab-calc`**, 라우트 `radiation-lab.com/calc/*` (`wrangler.jsonc`) |
+| 배포 방아쇠 | Vercel Git 연동 | `.github/workflows/deploy.yml` — main 에 들어오면 빌드 → `wrangler deploy` → workers.dev 실측 |
+| 계정 칩 | 우산 `/account/`(실제로는 RadiMeter 껍데기) | **`/calc/saved/`** — 로그인 단추 · 저장 목록 · 로그아웃(새로 넣음) |
+| 처분 lab 링크 | `/disposal/` | `https://disposal.radiation-lab.com/` |
+
+- ★ **세션은 이제 오리진별이다.** apex 에서 로그인해도 하위 도메인은 따로 로그인한다. 자료는 같은 Supabase 프로젝트라 그대로다.
+- ★ **비밀값은 `CLOUDFLARE_API_TOKEN` 하나**(radiation-lab 전용: Workers Scripts · Workers Routes · DNS, 존 radiation-lab.com).
+  `CLOUDFLARE_ACCOUNT_ID` · `VITE_SUPABASE_URL` · `VITE_SUPABASE_ANON_KEY` 는 저장소 **변수**다(anon 키는 원래 브라우저에 실린다).
+- ★ 404 는 Worker 의 `404-page` 가 **가장 가까운 `404.html`**(`dist/calc/404.html`)을 낸다. `copy-404` 가 만드는
+  `dist/404.html` 은 Vercel 의 자리였고, Vercel 을 걷을 때 함께 걷는다.
+- ★ 끝 슬래시는 `auto-trailing-slash` — `/calc/mda` 는 307 로 `/calc/mda/` 가 된다(정본은 슬래시 있는 쪽 그대로).
+- Vercel 프로젝트 `radiation-calc` 는 전환이 끝날 때까지 되돌릴 자리로 두고, 끝나면 Git 연동을 끊는다.
+
 ## ★★ 새 세션은 여기부터 (2026-09-20 기준)
 
 ### 현재 상태

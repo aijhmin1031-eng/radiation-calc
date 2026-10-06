@@ -1,0 +1,44 @@
+name: Deploy (Cloudflare Workers)
+# ★★ 2026-10-06 — RadCalc 은 Vercel 이 아니라 Cloudflare Workers 에서 나간다(Vercel Hobby 는 애드센스 금지).
+#   Vercel 이 하던 것과 같게 **main 에 들어오면 바로** 배포한다 — 게이트(ci.yml)를 기다리지 않는 것도 그대로다.
+#   게이트가 빨간 커밋이 라이브로 나갈 수 있다는 점은 그전과 같다(README 「배포」).
+# ★ 비밀값은 CLOUDFLARE_API_TOKEN 하나(radiation-lab 전용 토큰: Workers Scripts·Routes·DNS, 존 radiation-lab.com).
+#   계정 ID 와 Supabase 공개 값 둘은 비밀이 아니라 저장소 변수(vars)다 — anon 키는 원래 브라우저에 실린다.
+on:
+  push: { branches: [main] }
+  workflow_dispatch:
+concurrency: { group: deploy-calc, cancel-in-progress: false }
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # ★ lastmod 는 커밋 이력에서 나온다 — 얕은 클론이면 사이트맵 lastmod 가 비거나 틀린다.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with: { node-version: "22", cache: npm }
+      - run: npm ci
+      - name: Build
+        run: npm run build
+        env:
+          SITE_URL: https://radiation-lab.com
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+      - name: Asset headers
+        run: cp deploy/_headers dist/_headers
+      - name: Deploy
+        run: npx --yes wrangler@4 deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      # ★ 배포가 「성공」이라고 말해도 라우트가 안 붙었으면 라이브는 옛것이다 — 주소로 직접 잰다.
+      #   apex 가 아직 Cloudflare 로 넘어오기 전(DNS only)에는 workers.dev 만 잰다.
+      - name: Smoke test
+        run: |
+          set -e
+          for p in /calc/ /calc/nuclides/ /calc/gamma-shielding/; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "https://radiation-lab-calc.jhmin1031.workers.dev$p")
+            echo "workers.dev $p -> $code"; test "$code" = 200
+          done

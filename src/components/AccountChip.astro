@@ -26,9 +26,16 @@
  *     남의 집에 남지 않는다.
  *   ★ `next` 는 **경로만** 넘긴다(오리진은 같다). 받는 쪽이 `/` 로 시작하고 `//` 가 아닌
  *     것만 받아들여 열린 리다이렉트를 막는다.
+ *
+ * ★★ 2026-10-06 — 칩은 이 lab 의 `/calc/saved/` 로 간다. RadiMeter·처분 lab 이 하위 도메인으로
+ *   나가면서(애드센스 「가치가 별로 없는 콘텐츠」 판정 뒤 소유주 결정) 우산의 `/account/` 는 더 이상
+ *   이 오리진에 없다 — 그 쪽은 RadiMeter 의 껍데기였고 지금은 `radimeter.radiation-lab.com/account/` 에
+ *   산다. 세션은 오리진별이므로 **이 오리진에서 로그인·로그아웃할 자리**가 여기 있어야 한다.
+ *   `/calc/saved/` 가 로그인 단추 · 저장 목록 · 로그아웃을 함께 든다. 옛 `/account/` 는 우산이 301 한다.
  */
+import { u } from "../lib/site";
 const REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z0-9]+)\.supabase\.co/)?.[1] ?? "";
-const ACCOUNT = `/account/?next=${encodeURIComponent(Astro.url.pathname)}`;
+const ACCOUNT = u("/saved/");
 ---
 
 {REF && (
@@ -63,7 +70,7 @@ const ACCOUNT = `/account/?next=${encodeURIComponent(Astro.url.pathname)}`;
         var who = document.documentElement.dataset.acctWho || "";
         var el = a.querySelector("[data-acct-in]");
         if (el && who) el.setAttribute("data-who", who);
-        var label = who ? "Signed in as " + who + " — account settings" : "Sign in";
+        var label = who ? "Signed in as " + who + " — saved results and sign out" : "Sign in";
         a.setAttribute("aria-label", label);
         a.title = label;
       })();

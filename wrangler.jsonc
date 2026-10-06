@@ -1,0 +1,27 @@
+// RadCalc on Cloudflare Workers (static assets only, no Worker script).
+//
+// ★★ Why not Vercel any more (2026-10-06): Vercel Hobby's fair-use policy forbids commercial
+//   use and names Google AdSense explicitly. RadCalc is the apex's ad-bearing content, so it is
+//   served from Cloudflare (Workers Free allows commercial use). The domain was already on
+//   Cloudflare (Registrar + DNS), so nothing moved except where the files are served from.
+//
+// ★ The route, not a Custom Domain: the umbrella Worker owns `radiation-lab.com` and this Worker
+//   takes only `radiation-lab.com/calc/*`. Routes win over a Custom Domain on the same hostname.
+//   `/calc` without the slash is not matched here on purpose — the umbrella 301s it to `/calc/`.
+//
+// ★ The asset tree mirrors the URL space: Astro's outDir is `dist/calc`, so `/calc/foo/` is
+//   `dist/calc/foo/index.html`. `404-page` serves the nearest 404.html — `dist/calc/404.html`.
+{
+  "name": "radiation-lab-calc",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "radiation-lab.com/calc/*", "zone_name": "radiation-lab.com" }
+  ],
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  }
+}

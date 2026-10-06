@@ -1,0 +1,4 @@
+# Copied to dist/_headers by .github/workflows/deploy.yml (the asset root, not dist/calc).
+# Astro fingerprints everything under _astro/, so it can be cached for a year.
+/calc/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
