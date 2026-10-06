@@ -1,0 +1,278 @@
+---
+import Base from "../layouts/Base.astro";
+import { NUCLIDES, halfLifeText, slugOf } from "../lib/nuclides";
+import { batemanChain } from "../engine/decay";
+import { u } from "../lib/site";
+
+/** ★★ 자연 붕괴 계열 — 2026-10-06 소유주 지시 「각 lab 에 전문가 글 3~5편」의 둘째 편.
+ *  **숫자를 글자로 적지 않는다** — 반감기·평형 시간·Th-228 의 골·186 keV 몫은 전부 자료와
+ *  Bateman 식에서 파생시킨다. 이 표에 **없는** 계열 구성원(Rn-222·Bi-214·Tl-208 …)의 수치는
+ *  쓰지 않는다 — 자료가 없는 숫자는 출처 없는 숫자다.
+ *  ★ 바깥 숫자는 둘뿐이고 둘 다 출처를 밝힌다: ① 동위원소 존재비·원자량(CIAAW)
+ *    ② 자연 기원 물질 규제 문턱 1 Bq/g · 10 Bq/g(IAEA GSR Part 3). */
+const YEAR = 31557600;
+const N = NUCLIDES;
+const has = (k: string) => Boolean(N[k]);
+const lam = (k: string) => Math.LN2 / N[k].t_half_s;
+const pct = (x: number, d = 1) => `${(x * 100).toFixed(d)}%`;
+const link = (k: string) => u(`/nuclides/${slugOf(k)}/`);
+
+/** 계열 — 주 경로만(가지는 본문이 밝힌다). 구성원 이름은 물리 사실이고, 반감기는 자료가 든다. */
+const SERIES = [
+  { name: "Uranium-238 series", end: "Pb-206",
+    chain: ["U-238", "Th-234", "Pa-234m", "U-234", "Th-230", "Ra-226", "Rn-222", "Po-218", "Pb-214",
+            "Bi-214", "Po-214", "Pb-210", "Bi-210", "Po-210"] },
+  { name: "Thorium-232 series", end: "Pb-208",
+    chain: ["Th-232", "Ra-228", "Ac-228", "Th-228", "Ra-224", "Rn-220", "Po-216", "Pb-212", "Bi-212",
+            "Po-212", "Tl-208"] },
+  { name: "Uranium-235 series", end: "Pb-207",
+    chain: ["U-235", "Th-231", "Pa-231", "Ac-227", "Th-227", "Ra-223", "Rn-219", "Po-215", "Pb-211",
+            "Bi-211", "Tl-207"] },
+].map((s) => ({ ...s, carried: s.chain.filter(has).length }));
+const totalMembers = SERIES.reduce((a, s) => a + s.chain.length, 0);
+const totalCarried = SERIES.reduce((a, s) => a + s.carried, 0);
+
+/** ① Pb-210 — 라돈이 빠졌다가 다시 갇힌 뒤 90% 평형까지. */
+const pb210To90 = Math.log2(10) * N["Pb-210"].t_half_s / YEAR;
+/** ② 새 Pb-210 선원에서 Po-210 이 자라는 모양(Bi-210 경유). */
+const poOverPb = (y: number) => {
+  const a = batemanChain(1 / lam("Pb-210"), [lam("Pb-210"), lam("Bi-210"), lam("Po-210")], y * YEAR);
+  return a[2] / a[0];
+};
+/** ③ 분리한 토륨 — Th-232 와 Th-228 은 1:1, 라듐은 0 에서 시작. Ac-228(시간 단위)은 곧바로 지나간다고 둔다. */
+const th228 = (y: number) => {
+  const t = y * YEAR;
+  const free = Math.exp(-lam("Th-228") * t);
+  const grow = batemanChain(1 / lam("Th-232"), [lam("Th-232"), lam("Ra-228"), lam("Th-228")], t)[2];
+  return free + grow;
+};
+let dip = { y: 0, a: 1 };
+for (let y = 0; y <= 30; y += 0.01) { const a = th228(y); if (a < dip.a) dip = { y, a }; }
+/** ④ 정제 우라늄 — U-234 에서 Th-230·Ra-226 이 자라는 속도. */
+const refined = (y: number) =>
+  batemanChain(1 / lam("U-234"), [lam("U-234"), lam("Th-230"), lam("Ra-226")], y * YEAR);
+const th230k = refined(1000)[1], ra226k = refined(1000)[2];
+
+/** ⑤ 186 keV 이중선 — 존재비는 CIAAW 대표 동위원소 조성(U-234 0.0054 · U-235 0.7204 · U-238 99.2742 원자%). */
+const X = { "U-234": 0.0054, "U-235": 0.7204, "U-238": 99.2742 };
+const actRatio = (k: "U-234" | "U-235") => (X[k] / X["U-238"]) * (N["U-238"].t_half_s / N[k].t_half_s);
+const l186 = (k: string) => N[k].lines.find(([e]) => Math.abs(e - 186) < 1)!;
+const u5 = l186("U-235"), ra = l186("Ra-226");
+const u5Share = (u5[1] * actRatio("U-235")) / (u5[1] * actRatio("U-235") + ra[1]);
+const u5Other = N["U-235"].lines.filter(([e, i]) => e > 100 && e < 300 && i > 4 && Math.abs(e - 186) > 1)
+  .sort((a, b) => b[1] - a[1]).map(([e]) => e.toFixed(1));
+const u238Top = [...N["U-238"].lines].filter(([e]) => e >= 20).sort((a, b) => b[1] - a[1])[0];
+const pb210Line = N["Pb-210"].lines.find(([e]) => e > 40)!;
+
+/** ⑥ 규제 문턱을 질량으로 — CIAAW 표준 원자량 U 238.02891 · K 39.0983 · Cl 35.453, K-40 존재비 0.0117 원자%. */
+const AR = { U: 238.02891, K: 39.0983, Cl: 35.453 };
+const u238PerGU = N["U-238"].sa_bq_g * (X["U-238"] / 100) * (N["U-238"].m_u / AR.U);   // Bq U-238 / g U
+const mgUperKg = 1e6 / u238PerGU;                                                   // 1 Bq/g 에 해당
+const mgThPerKg = 1e6 / N["Th-232"].sa_bq_g;
+const k40PerGK = N["K-40"].sa_bq_g * (0.0117 / 100) * (N["K-40"].m_u / AR.K);         // Bq K-40 / g K
+const kFracFor10 = 10 / k40PerGK;
+const kInKCl = AR.K / (AR.K + AR.Cl);
+const k40Line = N["K-40"].lines.find(([e]) => e > 1000)!;
+---
+<Base title="Natural decay series and what a measurement sees"
+      description="The uranium, thorium and actinium series as a measurement meets them: where secular equilibrium holds and where radon and chemistry break it, why the 186 keV peak belongs partly to U-235, how separated thorium dims and recovers, and what 1 Bq/g means in grams. Computed from the nuclide data."
+      schema="TechArticle">
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
+    Natural decay series and what a measurement sees
+  </h1>
+
+  <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <p>
+      Uranium and thorium are never alone. Each heads a chain of decays that ends at a stable isotope
+      of lead, and in an undisturbed mineral every member of the chain is present at the same activity
+      as its head. Almost every practical difficulty with natural radioactivity comes from the
+      disturbances: a gas that escapes, an element that dissolves where its parent does not, a process
+      that keeps one element and discards another. This note works through those disturbances with
+      figures computed from the nuclide table, and it is explicit about the chain members that table
+      does not carry.
+    </p>
+
+    <h2>Three chains</h2>
+    <p>
+      The principal path of each chain is listed below, with the members that have a page on this
+      site linked. Several members branch — Bi-212 decays both by alpha and by beta, and Ac-227 and
+      Bi-211 split in the same way — and only the main path is shown. Of the {totalMembers} members
+      listed, {totalCarried} are carried in the table this site works from; the others are mostly
+      short-lived, and their absence matters in specific places that are pointed out below.
+    </p>
+    <ul class="my-3 space-y-3">
+      {SERIES.map((s) => (
+        <li>
+          <strong>{s.name}</strong> ({s.carried} of {s.chain.length} carried):
+          {" "}{s.chain.map((k, i) => (
+            <>{i > 0 ? " → " : ""}{has(k) ? <a href={link(k)} class="underline">{k}</a> : <span>{k}</span>}</>
+          ))}{" "}→ {s.end} (stable)
+        </li>
+      ))}
+    </ul>
+    <p>
+      K-40 is the fourth natural radionuclide that matters in practice, and it is not a chain: it
+      decays in one step, mostly to calcium and partly to argon, and its {k40Line[0].toFixed(0)} keV
+      photon, emitted in {k40Line[1].toFixed(1)}% of decays, is present in almost every gamma spectrum
+      ever taken of a natural material.
+    </p>
+
+    <h2>Secular equilibrium and how it breaks</h2>
+    <p>
+      When a parent lives far longer than its daughters, each daughter's activity rises until it equals
+      the parent's, and from then on the whole chain decays at the parent's pace. This is secular
+      equilibrium, and the time to reach it is set by the daughter, not the parent: after about
+      {" "}{Math.log2(10).toFixed(2)} of its own half-lives a daughter has reached nine-tenths of the
+      parent's activity. In a rock that has sat undisturbed for a million years, every member of the
+      uranium chain is in equilibrium with U-238, and a measurement of any one of them is a measurement
+      of all.
+    </p>
+    <p>
+      Three things break it. Radon is a noble gas, and a fraction of the radon atoms formed in a mineral
+      grain escapes into pore space and from there into the air; everything below radon is then
+      deficient in the solid and in excess wherever the radon went. Chemistry separates elements that
+      physics had kept together — uranium dissolves readily in oxidising water, thorium hardly at all,
+      and radium follows barium and calcium into sulphate and carbonate precipitates. And processing
+      separates them deliberately: a uranium mill keeps the uranium and sends thorium-230 and radium to
+      the tailings; a refinery producing thorium compounds removes the radium.
+    </p>
+
+    <h3>The two long-lived breaks in the uranium chain</h3>
+    <p>
+      Two members of the uranium chain live long enough to hold the chain apart for a human
+      timescale. Th-230 ({halfLifeText(N["Th-230"])}) means that refined uranium remains, for practical
+      purposes, without radium: a thousand years after refining, Th-230 has grown to {pct(th230k, 2)} of
+      the U-234 activity and Ra-226 to {pct(ra226k, 3)}. Pb-210 ({halfLifeText(N["Pb-210"])}) divides
+      the chain a second time. Where radon escaped and later decayed — on the inside of gas processing
+      equipment, in atmospheric deposition, in sediments — Pb-210 is found without the radium that
+      would normally support it; where radon is newly trapped, Pb-210 takes {pb210To90.toFixed(0)} years
+      to reach nine-tenths of equilibrium.
+    </p>
+    <p>
+      Below Pb-210 the chain closes again quickly. In a freshly separated Pb-210 source, Po-210 — an
+      alpha emitter with no photon line in this table — reaches {pct(poOverPb(1), 0)} of the Pb-210
+      activity after one year and {pct(poOverPb(2), 0)} after two, and Bi-210 between them is back in
+      equilibrium within weeks. A Pb-210 source more than a couple of years old is therefore three
+      emitters at nearly equal activity, and its total activity is close to three times the Pb-210
+      figure alone. A measurement of Pb-210 by its {pb210Line[0].toFixed(1)} keV photon, emitted in
+      {" "}{pb210Line[1].toFixed(2)}% of decays, says nothing directly about how much Po-210 is there.
+    </p>
+
+    <h2>Uranium measured through other nuclides</h2>
+    <p>
+      U-238 is difficult to see directly by gamma spectrometry. Its strongest recorded photon above
+      20 keV is at {u238Top[0].toFixed(1)} keV and is emitted in only {u238Top[1].toFixed(3)}% of
+      decays. The usual route is through its first two daughters, Th-234 and Pa-234m, which return to
+      equilibrium with U-238 within a year of any chemical separation and whose photons are far more
+      plentiful. Neither is carried in this table, so their energies and yields are not quoted here; a
+      measurement laboratory takes them from an evaluated decay data source and states which.
+    </p>
+
+    <h3>The 186 keV doublet</h3>
+    <p>
+      The most-used peak in natural-uranium spectrometry is not one peak. U-235 emits a photon at
+      {" "}{u5[0].toFixed(1)} keV in {u5[1].toFixed(1)}% of its decays; Ra-226 emits one at
+      {" "}{ra[0].toFixed(1)} keV in {ra[1].toFixed(2)}% of its decays. The two energies are
+      {" "}{(ra[0] - u5[0]).toFixed(1)} keV apart, which a germanium detector does not resolve cleanly at
+      that energy, so the peak area is the sum of both.
+    </p>
+    <p>
+      How the sum divides depends on the isotopic composition. Natural uranium is
+      {" "}{X["U-235"]}% U-235 by atoms (CIAAW representative composition); with the half-lives in
+      this table that makes the U-235 activity {pct(actRatio("U-235"), 1)} of the U-238 activity. In a
+      sample where Ra-226 is in equilibrium with U-238, U-235 therefore supplies {pct(u5Share, 0)} of
+      the counts in the peak and Ra-226 the remaining {pct(1 - u5Share, 0)}. The split holds only at
+      equilibrium. A sample depleted in radium, or enriched in it, gives the same peak a different
+      meaning, and the peak alone cannot say which. The usual remedies are to obtain U-235 from its
+      other lines — at {u5Other.join(", ")} keV in this table — or to measure Ra-226 through its
+      short-lived progeny after the sample has been sealed for several weeks so that the radon it
+      produces is retained and comes back into equilibrium.
+    </p>
+    <p>
+      The same composition data give a check on the equilibrium of uranium itself. Natural uranium is
+      {" "}{X["U-234"]}% U-234 by atoms, and with the half-lives in this table that makes the U-234
+      activity {actRatio("U-234").toFixed(2)} of the U-238 activity — equilibrium, as it should be for
+      a member that is chemically the same element as its ancestor. Groundwater is the well-known
+      exception, where U-234 is often found in excess: the alpha decay of U-238 recoils the daughter
+      atom out of its lattice site, and the U-234 it becomes is more easily leached than the U-238
+      left behind.
+    </p>
+
+    <h2>Separated thorium dims, then recovers</h2>
+    <p>
+      Thorium chemicals behave unexpectedly over time. When thorium is purified, Th-232 and Th-228 come
+      through together — both are thorium — but Ra-228 and Ra-224 are removed. Th-228 then decays with
+      its own half-life of {halfLifeText(N["Th-228"])} while its supply, Ra-228, has to grow back from
+      zero with a half-life of {halfLifeText(N["Ra-228"])}. Solving the chain with the half-lives in this
+      table, and treating Ac-228, whose half-life is a matter of hours, as passing straight through:
+    </p>
+    <ul class="my-3 space-y-1">
+      <li>Th-228 activity falls to a minimum of {pct(dip.a, 0)} of its starting value
+        {" "}{dip.y.toFixed(1)} years after separation;</li>
+      <li>it is back to {pct(th228(10), 0)} after ten years and {pct(th228(20), 0)} after twenty;</li>
+      <li>it reaches {pct(th228(30), 0)} only after thirty.</li>
+    </ul>
+    <p>
+      Everything below Th-228 in the chain has a half-life of days or less, so the rest of the chain
+      follows Th-228's curve within weeks. Ac-228, above Th-228, follows Ra-228 instead, and its
+      activity rises from zero over the same years. The lower part of the chain includes Tl-208, which emits the most penetrating photon
+      in any of the natural chains. The dose rate from a stock of thorium compound — thoriated welding
+      electrodes, thorium nitrate, older optical glass — therefore depends on when the thorium was
+      purified, and a measurement made a few years after manufacture can be a little under half of what
+      the same material gives a few decades later.
+    </p>
+
+    <h2>Activity concentration in grams</h2>
+    <p>
+      The IAEA's General Safety Requirements Part 3 use 1 Bq/g for any member of the uranium or thorium
+      chains, and 10 Bq/g for K-40, as the activity concentrations above which an industrial activity
+      involving natural material is brought under the requirements for planned exposure situations.
+      Translating those figures into composition shows what kind of material they catch.
+    </p>
+    <ul class="my-3 space-y-1">
+      <li>1 Bq/g of U-238 in natural uranium corresponds to {mgUperKg.toFixed(0)} mg of uranium per
+        kilogram of material.</li>
+      <li>1 Bq/g of Th-232 corresponds to {mgThPerKg.toFixed(0)} mg of thorium per kilogram.</li>
+      <li>Natural potassium carries {k40PerGK.toFixed(1)} Bq of K-40 per gram, so 10 Bq/g of K-40
+        requires {pct(kFracFor10, 0)} potassium by mass. Potassium chloride is {pct(kInKCl, 0)}
+        potassium and is over that line; ordinary soils and rocks are far below it.</li>
+    </ul>
+    <p class="mt-2 text-[13px]">
+      Computed from the specific activities in this table with CIAAW standard atomic weights and
+      isotopic abundances (K-40 at 0.0117% of potassium atoms).
+    </p>
+    <p>
+      The materials that do exceed the uranium and thorium figures are a familiar list: scale and
+      sludge from oil and gas production, in which radium co-precipitates with barium sulphate;
+      phosphate rock and some of the gypsum produced from it; zircon and monazite sands; filter media
+      from water treatment that removes uranium or radium; and some residues from metal smelting and
+      coal combustion. In each the concentration was raised by a process, which is also why the chain
+      in those materials is rarely in equilibrium.
+    </p>
+
+    <h2>What the calculators here do with a chain</h2>
+    <p>
+      Every calculator on this site works on one nuclide at a time. The page for Ra-226 gives the air
+      kerma rate constant for Ra-226's own photons, and those are weak; the photon field of an aged,
+      sealed radium source comes mostly from Pb-214 and Bi-214, which are not in the table. That page
+      says so, and the full list of such cases is on the
+      {" "}<a href={u("/dataset-limits/")} class="underline">limits of this dataset</a> page. The
+      <a href={u("/decay/")} class="underline"> decay calculator</a> also takes one nuclide at a
+      time. The curves in this note were computed with the Bateman solution in the same engine, at
+      build time, for members whose half-lives are in the table and along one branch; the form itself
+      does not build chains.
+    </p>
+
+    <h2>Where to go next</h2>
+    <ul class="my-3 space-y-1">
+      <li><a href={u("/decay/")} class="underline">Decay calculator</a> — one nuclide forward or back
+        in time, or a half-life from two measurements.</li>
+      <li><a href={u("/specific-activity/")} class="underline">Specific activity</a> — the conversion
+        between grams and becquerels used above.</li>
+      <li><a href={u("/check-sources/")} class="underline">Nuclides for check and calibration
+        sources</a> — the same daughter question for sources made on purpose.</li>
+      <li><a href={u("/dataset-limits/")} class="underline">Limits of this dataset</a> — the chain
+        members and emissions not carried here.</li>
+    </ul>
+  </section>
+</Base>

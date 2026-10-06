@@ -1,0 +1,259 @@
+---
+import Base from "../layouts/Base.astro";
+import { NUCLIDES, nuclidePage, halfLifeText, decayWord, slugOf } from "../lib/nuclides";
+import { u } from "../lib/site";
+
+/** ★★ 측정 곤란 핵종과 척도인자 — 2026-10-06 소유주 지시 「각 lab 에 전문가 글 3~5편」의 셋째 편.
+ *  **숫자를 글자로 적지 않는다** — 반감기·비정·비의 표류·원자 수는 전부 자료에서 파생시킨다.
+ *  ★ 바깥 출처는 이름만 든다: ISO 21238(척도인자법), IAEA 보고서 「Determination and Use of
+ *    Scaling Factors for Waste Characterization in Nuclear Power Plants」. **판 연도는 적지 않는다.**
+ *  ★ 측정법(LSC·ICP-MS·AMS·알파분광)은 **정성적으로만** 적는다 — 효율·검출한계 숫자는 실험실마다
+ *    다르고 우리 자료에 없다. */
+const YEAR = 31557600;
+const N = NUCLIDES;
+const pct = (x: number, d = 1) => `${(x * 100).toFixed(d)}%`;
+const mm = (cm: number) => (Number.isFinite(cm) ? (cm * 10).toPrecision(2) : "—");
+const link = (k: string) => u(`/nuclides/${slugOf(k)}/`);
+const acr = (k: string) => nuclidePage(k).betaRanges.find((r) => r.material === "acrylic")?.cm ?? NaN;
+const lam = (k: string) => Math.LN2 / N[k].t_half_s;
+const left = (k: string, y: number) => Math.pow(2, -y * YEAR / N[k].t_half_s);
+
+/** 표 — 붕괴 전후로 바깥에 무엇이 나오는가. 20 keV 위 광자선이 기록돼 있는지는 자료가 말한다. */
+const HTM = ["H-3", "C-14", "Cl-36", "Ca-41", "Fe-55", "Ni-59", "Ni-63", "Sr-90", "Tc-99", "I-129", "Pu-241"]
+  .filter((k) => N[k])
+  .map((k) => ({ k, t: halfLifeText(N[k]), mode: decayWord(N[k].decay), g: N[k].gamma_const,
+                 e: N[k].beta_max_keV ?? null, r: acr(k) }));
+const noPhoton = HTM.filter((r) => r.g === 0).length;
+
+/** 열쇠 대 측정 곤란 — 비가 몇 해 뒤 몇 배가 되는가. */
+const drift = (d: string, key: string, y: number) => Math.exp(-(lam(d) - lam(key)) * y * YEAR);
+const PAIRS: [string, string][] = [["Ni-63", "Co-60"], ["C-14", "Co-60"], ["H-3", "Co-60"], ["Fe-55", "Co-60"],
+                                   ["Sr-90", "Cs-137"], ["Tc-99", "Cs-137"], ["Pu-241", "Cs-137"]];
+const DRIFT = PAIRS.map(([d, k]) => ({ d, k, y5: drift(d, k, 5), y10: drift(d, k, 10), y20: drift(d, k, 20) }));
+const D = (d: string) => DRIFT.find((x) => x.d === d)!;
+
+/** 원자 수 — 1 Bq 를 내려면 몇 개의 원자가 있어야 하는가(T½/ln 2). */
+const atoms = (k: string) => N[k].t_half_s / Math.LN2;
+const i129VsH3 = atoms("I-129") / atoms("H-3");
+const sa = (k: string) => N[k].sa_bq_g;
+/** 과학 표기를 가수·지수로 — 화면은 `10<sup>n</sup>` 로 그린다(`e+6` 이나 `^` 를 내보내지 않는다). */
+const sci = (x: number, d = 2) => { const [m, e] = x.toExponential(d - 1).split("e"); return { m, e: String(Number(e)) }; };
+const ratioSci = sci(i129VsH3), saI = sci(sa("I-129"), 3), saH = sci(sa("H-3"), 3);
+/** 예외 — 20 keV 위 광자를 내는 것(Cl-36 의 소멸광자). 붕괴 100회당 몇 개인가. */
+const withPhoton = HTM.filter((r) => r.g > 0).map((r) => ({ k: r.k, per100: N[r.k].lines.filter(([e]) => e >= 20).reduce((s, [, i]) => s + i, 0) }));
+const srMove = Math.ceil(Math.abs(1 - D("Sr-90").y20) * 100);
+---
+<Base title="Hard-to-measure nuclides in decommissioning waste"
+      description="Why H-3, C-14, Fe-55, Ni-63, Sr-90, Tc-99 and I-129 cannot be measured from outside a waste drum, how scaling factors tie them to Co-60 and Cs-137, and why those ratios drift by an order of magnitude over a decommissioning project. Computed from the nuclide data."
+      schema="TechArticle">
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
+    Hard-to-measure nuclides in decommissioning waste
+  </h1>
+
+  <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <p>
+      A waste package leaving a nuclear facility has to be declared nuclide by nuclide, and the
+      declaration has to include nuclides that nothing outside the package can detect. They emit no
+      photon that survives the container, or none at all, and their electrons are stopped within
+      millimetres. The usual name for them is hard-to-measure nuclides, and the usual way of declaring
+      them without opening every drum is the scaling factor: a ratio, established by laboratory analysis
+      of samples, between each of them and a gamma emitter that can be measured from outside. This note
+      sets out what makes them hard, what the ratio assumes, and how fast the ratio changes with time,
+      with the figures computed from the nuclide table.
+    </p>
+
+    <h2>Nuclides invisible from outside a drum</h2>
+    <p>
+      The table lists the hard-to-measure nuclides most often named in waste declarations from power
+      reactors. Of these {HTM.length}, {noPhoton} have no photon line above 20 keV in this table
+      {withPhoton.length > 0 && (<>, and the exception, {withPhoton.map((w) => w.k).join(", ")}, emits
+      annihilation photons in {withPhoton[0].per100.toPrecision(2)} of every hundred decays</>)}. The
+      electrons of the beta emitters are stopped by a few millimetres of plastic at most — far less than
+      a steel drum wall. I-129 does emit low-energy photons that this table does not carry; the
+      container and the waste itself absorb most of them.
+    </p>
+    <div class="pin-first mt-3" tabindex="0">
+    <table class="lg:min-w-[40rem]">
+      <thead>
+        <tr><th>Nuclide</th><th>Half-life</th><th class="hidden lg:table-cell">Decay</th>
+            <th>Beta endpoint (MeV)</th><th>Stopped by acrylic (mm)</th></tr>
+      </thead>
+      <tbody>
+        {HTM.map((r) => (
+          <tr>
+            <td><a href={link(r.k)} class="underline">{r.k}</a></td>
+            <td>{r.t}</td>
+            <td class="hidden lg:table-cell">{r.mode}</td>
+            <td>{r.e ? (r.e / 1000).toFixed(3) : "—"}</td>
+            <td>{r.e ? mm(r.r) : "—"}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    </div>
+    <p class="mt-2 text-[13px]">
+      Ranges are Katz–Penfold fits to the endpoint. A dash means the nuclide emits no beta recorded
+      here: Ca-41, Fe-55 and Ni-59 decay by electron capture and give off only X-rays and Auger
+      electrons of a few keV.
+    </p>
+    <p>
+      The electron-capture nuclides are the hardest case. Fe-55, Ni-59 and Ca-41 emit characteristic
+      X-rays of the daughter element and Auger electrons, at energies low enough that a fraction of a
+      millimetre of water, and much less of steel, absorbs most of them. They are detectable only after the element has been separated
+      chemically and presented to a detector in a thin, uniform form.
+    </p>
+
+    <h2>Where they come from</h2>
+    <p>
+      Two families of origin decide which gamma emitter a nuclide can be tied to. The activation
+      products are made by neutron capture in the structure of the reactor and its surroundings:
+      Fe-55 from iron-54 and Ni-63 and Ni-59 from nickel-62 and nickel-58 in steel, Co-60 from cobalt-59
+      present as an impurity in the same steel, C-14 from nitrogen-14 and oxygen-17, Cl-36 from
+      chlorine-35, Ca-41 from calcium-40 in concrete, and H-3 from lithium-6, boron-10 and deuterium.
+      In activated concrete the companion gamma emitters are typically Co-60, Eu-152 and Eu-154, the
+      europium coming from trace europium in the aggregate and cement.
+    </p>
+    <p>
+      The second family comes from fuel: fission products such as Sr-90, Tc-99, I-129 and Cs-137, and
+      actinides such as plutonium, americium and curium. These reach waste through fuel cladding defects
+      and the contamination that follows, so they travel together with Cs-137 in a way activation products
+      do not. A scaling factor ties a hard-to-measure nuclide to a key nuclide of the same family — Co-60
+      for activation products, Cs-137 for fission products — because only within a family do the two
+      share a production mechanism and a route into the waste.
+    </p>
+
+    <h2>Scaling factors</h2>
+    <p>
+      The method is set out in ISO 21238 and in the IAEA report <em>Determination and Use of Scaling
+      Factors for Waste Characterization in Nuclear Power Plants</em>. Samples representative of a waste
+      stream are analysed destructively for both the hard-to-measure nuclide and the key nuclide. The
+      ratios are examined for correlation — a scaling factor is only defensible where the two activities
+      rise and fall together across the samples — and a single factor is derived for the stream, usually
+      as the geometric mean of the sample ratios, because ratios between nuclides of different origin
+      spread over orders of magnitude and are closer to log-normal than to normal. In operation, each
+      package's key nuclide is measured by gamma spectrometry from outside and the hard-to-measure
+      activities are inferred by multiplication.
+    </p>
+    <p>
+      Where no usable correlation exists, the alternative is a mean activity concentration for the
+      stream, applied to every package regardless of its gamma reading. Both approaches rest on the same
+      premise: that the samples represent the stream, and that the stream does not change in a way the
+      samples did not see.
+    </p>
+
+    <h2>Ratios that drift with time</h2>
+    <p>
+      A scaling factor is a ratio of two activities that decay at different rates, so it is only true at
+      a stated reference date. Multiplying by e<sup>−(λ<sub>D</sub>−λ<sub>K</sub>)t</sup>, where the
+      subscripts are the hard-to-measure and key nuclides, carries it to another date. The factors by
+      which common ratios change are below.
+    </p>
+    <div class="pin-first mt-3" tabindex="0">
+    <table class="lg:min-w-[36rem]">
+      <thead>
+        <tr><th>Ratio</th><th>After 5 years</th><th>After 10 years</th><th>After 20 years</th></tr>
+      </thead>
+      <tbody>
+        {DRIFT.map((r) => (
+          <tr>
+            <td><a href={link(r.d)} class="underline">{r.d}</a> / <a href={link(r.k)} class="underline">{r.k}</a></td>
+            <td>× {r.y5.toPrecision(3)}</td>
+            <td>× {r.y10.toPrecision(3)}</td>
+            <td>× {r.y20.toPrecision(3)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    </div>
+    <p class="mt-2 text-[13px]">
+      From the recorded half-lives only. A factor above one means the hard-to-measure nuclide becomes
+      relatively more important.
+    </p>
+    <p>
+      The activation products show the problem plainly. Co-60 has a half-life of
+      {" "}{halfLifeText(N["Co-60"])}; Ni-63 has one of {halfLifeText(N["Ni-63"])}. A Ni-63/Co-60 ratio
+      measured at shutdown is {D("Ni-63").y10.toFixed(1)} times larger ten years later and
+      {" "}{D("Ni-63").y20.toFixed(0)} times larger after twenty, and the C-14 ratio grows faster still.
+      Fe-55 moves the other way, falling to {pct(D("Fe-55").y20, 0)} of its starting ratio over twenty
+      years. In the fission family the picture is calmer: Sr-90 and Cs-137 have nearly the same half-life,
+      and their ratio moves by less than {srMove}% in twenty years.
+    </p>
+    <p>
+      The same arithmetic undermines the key nuclide itself on a long project. Twenty years after
+      shutdown Co-60 retains {pct(left("Co-60", 20), 1)} of its activity and Ni-63 retains
+      {" "}{pct(left("Ni-63", 20), 0)}. A drum of activated steel whose activity was mostly Co-60 at
+      shutdown can be mostly Ni-63 two decades later, and the Co-60 reading on which the declaration
+      hangs has by then become small enough that its own uncertainty dominates the inferred values. A scaling
+      factor derived during operation and applied without decay correction late in decommissioning is
+      therefore wrong in a known direction, and wrong by a large factor.
+    </p>
+
+    <h2>Counting atoms instead of decays</h2>
+    <p>
+      For the longest-lived nuclides a decay counter is the wrong instrument. One becquerel of a nuclide
+      requires T½/ln 2 atoms, so the number of atoms behind each becquerel rises in proportion to the
+      half-life. A becquerel of I-129 is {ratioSci.m} × 10<sup>{ratioSci.e}</sup> times as many atoms as
+      a becquerel of H-3; the specific activity of I-129 is {saI.m} × 10<sup>{saI.e}</sup> Bq/g against
+      {" "}{saH.m} × 10<sup>{saH.e}</sup> Bq/g for H-3. For I-129, Tc-99, Cl-36
+      and Ca-41 it is often easier to count the atoms than to wait for them to decay, which is why
+      inductively coupled plasma mass spectrometry and accelerator mass spectrometry appear alongside
+      liquid scintillation counting in the methods used for them. The
+      <a href={u("/specific-activity/")} class="underline"> specific activity calculator</a> converts
+      between the two views.
+    </p>
+
+    <h2>Laboratory methods in outline</h2>
+    <ul class="my-3 space-y-1">
+      <li><strong>H-3 and C-14</strong> — released from the sample by combustion or digestion, trapped
+        as water and carbon dioxide, and counted by liquid scintillation.</li>
+      <li><strong>Fe-55, Ni-63 and Ni-59</strong> — iron and nickel separated chemically; Fe-55 and
+        Ni-63 counted by liquid scintillation, Ni-59 by low-energy X-ray spectrometry or mass
+        spectrometry.</li>
+      <li><strong>Sr-90</strong> — strontium separated, then counted directly or through its daughter
+        Y-90 once that has grown back.</li>
+      <li><strong>Tc-99, I-129 and Cl-36</strong> — separated as anions and measured by liquid
+        scintillation or mass spectrometry.</li>
+      <li><strong>Plutonium, americium and curium</strong> — separated and measured by alpha
+        spectrometry, except Pu-241, which is a beta emitter with an endpoint of
+        {" "}{((N["Pu-241"].beta_max_keV ?? 0)).toFixed(1)} keV and is counted by liquid
+        scintillation.</li>
+    </ul>
+    <p>
+      Every one of these involves chemical separation, which is why the analyses are slow and expensive
+      and why scaling factors exist. The quality of a declaration therefore rests on the quality of a
+      modest number of radiochemical results.
+    </p>
+
+    <h2>Relevance to disposal</h2>
+    <p>
+      Several of these nuclides combine a long half-life with chemistry that keeps them mobile. C-14,
+      Cl-36 and I-129 tend to be present as anions or as gases, and so does Tc-99 under oxidising
+      conditions; most minerals adsorb anions weakly, so in disposal safety assessments these nuclides
+      are often among those that dominate the calculated long-term dose. Acceptance criteria for disposal facilities limit their inventories for that
+      reason, and an inventory inferred from a drifting scaling factor feeds directly into those limits.
+      How sorption is represented in transport calculations is the subject of the
+      {" "}<a href="/disposal/" class="underline">disposal science lab</a> on this platform (in
+      Korean).
+    </p>
+
+    <h2>Limits of this note</h2>
+    <p>
+      The figures above use half-lives only. They do not say what a scaling factor should be for any
+      plant, which depends on its materials, its operating history and its fuel performance, and is
+      established by measurement. Branching and ingrowth — Pu-241 decaying to Am-241, for instance — add
+      terms that a two-nuclide ratio does not carry.
+    </p>
+
+    <h2>Where to go next</h2>
+    <ul class="my-3 space-y-1">
+      <li><a href={u("/decay/")} class="underline">Decay calculator</a> — the correction from a
+        scaling factor's reference date to the date of declaration.</li>
+      <li><a href={u("/specific-activity/")} class="underline">Specific activity</a> — atoms, grams and
+        becquerels for the long-lived nuclides.</li>
+      <li><a href={u("/mda/")} class="underline">Minimum detectable activity</a> — what limits the
+        gamma measurement of the key nuclide.</li>
+      <li><a href={u("/natural-series/")} class="underline">Natural decay series</a> — the other place
+        where what is measured is not what is declared.</li>
+    </ul>
+  </section>
+</Base>

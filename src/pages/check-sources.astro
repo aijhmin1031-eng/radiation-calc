@@ -1,0 +1,300 @@
+---
+import Base from "../layouts/Base.astro";
+import { NUCLIDES, nuclidePage, halfLifeText, fmtTime, slugOf } from "../lib/nuclides";
+import { u } from "../lib/site";
+
+/** ★★ 점검·교정 선원 핵종 — 2026-10-06 애드센스 「가치가 별로 없는 콘텐츠」 판정 뒤 소유주 지시
+ *  「각 lab 에 전문가 글 3~5편」의 첫 편. **숫자를 글자로 적지 않는다** — 반감기·감쇠율·선·
+ *  반가층·비정은 전부 자료와 엔진에서 파생시킨다(이 lab 의 읽을 글 규칙, `beta-shield-materials`
+ *  머리말과 같다). 글자로 적은 숫자는 자료가 바뀌어도 따라오지 않아 조용히 낡는다.
+ *  ★ 바깥 사실(ISO 8769·ISO 4037-1 의 존재)은 **판 연도 없이** 이름만 든다 — 기억으로 판을 적지 않는다. */
+const YEAR = 31557600;
+const MONTH = YEAR / 12;
+const frac = (k: string, s: number) => Math.pow(2, -s / NUCLIDES[k].t_half_s);
+const pct = (x: number, d = 1) => `${(x * 100).toFixed(d)}%`;
+const mm = (cm: number) => (Number.isFinite(cm) ? (cm * 10).toPrecision(3) : "—");
+const link = (k: string) => u(`/nuclides/${slugOf(k)}/`);
+
+/** 수명 표 — 반감기 짧은 것부터. */
+const LIFE = ["Y-88", "Co-57", "Mn-54", "Cd-109", "Na-22", "Co-60", "Ba-133", "Eu-152", "Sr-90", "Cs-137", "Am-241"]
+  .filter((k) => NUCLIDES[k])
+  .map((k) => ({ k, t: halfLifeText(NUCLIDES[k]), year: 1 - frac(k, YEAR), five: frac(k, 5 * YEAR),
+                 month: 1 - frac(k, MONTH) }))
+  .sort((a, b) => NUCLIDES[a.k].t_half_s - NUCLIDES[b.k].t_half_s);
+const L = Object.fromEntries(LIFE.map((r) => [r.k, r]));
+
+/** 광자 표 — 주선의 에너지 순. */
+const PHOTON = ["Cd-109", "Am-241", "Co-57", "Ba-133", "Cs-137", "Mn-54", "Na-22", "Co-60", "Eu-152", "Y-88"]
+  .filter((k) => NUCLIDES[k] && NUCLIDES[k].gamma_const > 0)
+  .map((k) => {
+    const p = nuclidePage(k);
+    const top = [...p.shares].sort((a, b) => b.share - a.share)[0];
+    const pb = p.shields.find((s) => s.material === "lead");
+    return { k, e: top.eKeV, share: top.share, n90: p.linesFor90, g: NUCLIDES[k].gamma_const, pbHvl: pb?.hvlCm ?? NaN };
+  })
+  .sort((a, b) => a.e - b.e);
+const P = Object.fromEntries(PHOTON.map((r) => [r.k, r]));
+const line = (k: string, near: number) => NUCLIDES[k].lines.find(([e]) => Math.abs(e - near) < 2);
+
+/** Cs-137 의 662 keV 는 Ba-137m 의 것이다 — 두 기록의 비가 곧 Ba-137m 을 거치는 가지다. */
+const csLine = line("Cs-137", 662)!, baLine = line("Ba-137m", 662)!;
+const viaBa = csLine[1] / baLine[1];
+const baTen = fmtTime(10 * NUCLIDES["Ba-137m"].t_half_s);
+
+/** 베타 — 종점과 아크릴 비정. */
+const acr = (k: string) => nuclidePage(k).betaRanges.find((r) => r.material === "acrylic")?.cm ?? NaN;
+const BETA = ["Ni-63", "C-14", "Tc-99", "Sr-90", "Cl-36", "Tl-204", "Y-90"]
+  .filter((k) => NUCLIDES[k]?.beta_max_keV)
+  .map((k) => ({ k, e: NUCLIDES[k].beta_max_keV as number, r: acr(k) }))
+  .sort((a, b) => a.e - b.e);
+const yTen = fmtTime(10 * NUCLIDES["Y-90"].t_half_s);
+const gaTen = fmtTime(10 * NUCLIDES["Ga-68"].t_half_s);
+
+/** 알파 — 주 알파의 에너지와, 20 keV 위 광자의 붕괴당 합.
+ *  ★ 「광자 선이 없다」를 근거로 쓰지 않는다 — Th-230 은 이 표에 선이 없지만 실제로는 약한 감마를 낸다
+ *    (첫 초안이 「알파 채널만 시험한다」고 썼다가 지웠다). 비교는 **기록된 선의 크기**로만 한다. */
+const topAlpha = (k: string) => [...(NUCLIDES[k].alpha ?? [])].sort((a, b) => b[1] - a[1])[0];
+const above = (k: string) => NUCLIDES[k].lines.filter(([e]) => e >= 20).reduce((s, [, i]) => s + i, 0);
+const ALPHA = ["Pu-239", "Am-241"].filter((k) => NUCLIDES[k]?.alpha?.length)
+  .map((k) => ({ k, e: topAlpha(k)[0] / 1000, photonPct: above(k) }));
+const am = ALPHA.find((a) => a.k === "Am-241")!, pu = ALPHA.find((a) => a.k === "Pu-239")!;
+
+/** 벤치의 감쇠 보정 예 — 인증일로부터 몇 해 뒤. */
+const csTen = frac("Cs-137", 10 * YEAR), naThree = frac("Na-22", 3 * YEAR);
+const coGamma = P["Co-60"].g / P["Cs-137"].g;
+const eu = nuclidePage("Eu-152");
+const euSpan = NUCLIDES["Eu-152"].lines.filter(([, i]) => i > 1).map(([e]) => e).filter((e) => e > 20);
+const i131 = line("I-131", 364)!, ba356 = line("Ba-133", 356)!, cd88 = line("Cd-109", 88)!;
+---
+<Base title="Nuclides for check and calibration sources"
+      description="Why Cs-137, Co-57, Ba-133, Eu-152, Am-241 and Sr-90 are the usual check and calibration sources: half-life against replacement interval, photon energy against what is being tested, and the daughters a certificate quietly depends on. Every figure is computed from the nuclide data."
+      schema="TechArticle">
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
+    Nuclides for check and calibration sources
+  </h1>
+
+  <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <p>
+      A laboratory that measures radiation keeps two kinds of source. One kind tells it whether an
+      instrument still reads what it read yesterday. The other, fewer and more carefully kept, tells
+      it what the instrument should read in the first place. The nuclide chosen for either job is
+      decided almost entirely by three properties: the half-life, the energies emitted, and what the
+      nuclide decays into. All three are in the table this site calculates from, so the reasons
+      behind the conventional choices can be checked here rather than inherited.
+    </p>
+
+    <h2>Check sources and reference sources</h2>
+    <p>
+      A check source confirms constancy. Its activity does not need to be known well; what matters is
+      that it changes only by decay and that it can be placed in the same position every time. The
+      record that goes with it is the instrument's own reading on the day the source was put into
+      service, and later readings are compared with that figure after correcting for decay.
+    </p>
+    <p>
+      A reference source carries a certificate. The certificate states an activity, or an emission
+      rate, at a reference date, with an uncertainty and a statement of how the value is traceable to
+      a national standard. Contamination monitors are the case where the distinction matters most:
+      the certified quantity is usually the surface emission rate — particles leaving the active face
+      per second — because backscatter from the backing and absorption in the deposit separate it from
+      the activity by an amount that depends on the source's construction. ISO 8769 describes
+      reference sources of this kind. The same nuclide often serves both purposes; the difference is
+      the certificate and the care taken over handling, not the physics.
+    </p>
+
+    <h2>Half-life and the working life of a source</h2>
+    <p>
+      The half-life sets two things at once: how long a source stays useful, and how much a mistake in
+      the reference date costs. The table gives both, shortest-lived first.
+    </p>
+    <div class="pin-first mt-3" tabindex="0">
+    <table class="lg:min-w-[40rem]">
+      <thead>
+        <tr><th>Nuclide</th><th>Half-life</th><th>Lost per year</th>
+            <th class="hidden lg:table-cell">Left after five years</th>
+            <th>Lost in one month</th></tr>
+      </thead>
+      <tbody>
+        {LIFE.map((r) => (
+          <tr>
+            <td><a href={link(r.k)} class="underline">{r.k}</a></td>
+            <td>{r.t}</td>
+            <td>{pct(r.year)}</td>
+            <td class="hidden lg:table-cell">{pct(r.five)}</td>
+            <td>{pct(r.month, 2)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    </div>
+    <p class="mt-2 text-[13px]">
+      Computed from the recorded half-life alone: the fraction lost is 1 − 2<sup>−t/T½</sup>.
+    </p>
+    <p>
+      The last column is the one that is easy to overlook. A reference date read wrongly by one month
+      costs {pct(L["Cs-137"].month, 2)} for Cs-137, which disappears inside any realistic uncertainty,
+      and {pct(L["Co-57"].month, 2)} for Co-57, which does not. Co-57 keeps only {pct(L["Co-57"].five)}
+      of its activity after five years, so sources of it are replaced on a schedule measured in months
+      rather than years. Cs-137 loses {pct(L["Cs-137"].year, 2)} a year and is the usual long-term
+      constancy source for that reason: a decay correction is still required, but a careless one does
+      little damage. Am-241 loses {pct(L["Am-241"].year, 2)} a year, which over the life of an
+      instrument is close to no change at all.
+    </p>
+    <p>
+      Short half-lives are not a defect in themselves. Na-22 and Y-88 are chosen for their photon
+      energies, and the price is a source that loses {pct(L["Na-22"].year)} and {pct(L["Y-88"].year)}
+      of its activity a year. A laboratory using them has to apply the decay correction every time, and
+      has to budget for replacement.
+    </p>
+
+    <h2>Photon energy and what it tests</h2>
+    <p>
+      A detector's response depends on photon energy, and a source tests the response only at the
+      energies it emits. The table lists the line that carries the largest share of each nuclide's air
+      kerma rate, the number of lines needed to account for nine-tenths of that kerma, the air kerma
+      rate constant itself, and the half-value layer in lead for the whole spectrum.
+    </p>
+    <div class="pin-first mt-3" tabindex="0">
+    <table class="lg:min-w-[44rem]">
+      <thead>
+        <tr><th>Nuclide</th><th>Main line (keV)</th>
+            <th class="hidden lg:table-cell">Its kerma share</th>
+            <th>Lines for 90%</th>
+            <th class="hidden lg:table-cell">Γ (mGy·m²/(GBq·h))</th>
+            <th class="hidden lg:table-cell">Lead HVL (mm)</th></tr>
+      </thead>
+      <tbody>
+        {PHOTON.map((r) => (
+          <tr>
+            <td><a href={link(r.k)} class="underline">{r.k}</a></td>
+            <td>{r.e.toFixed(1)}</td>
+            <td class="hidden lg:table-cell">{pct(r.share, 0)}</td>
+            <td>{r.n90}</td>
+            <td class="hidden lg:table-cell">{r.g.toPrecision(3)}</td>
+            <td class="hidden lg:table-cell">{mm(r.pbHvl)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    </div>
+    <p class="mt-2 text-[13px]">
+      Kerma shares and constants are summed over recorded lines above 20 keV. Lines below that cutoff,
+      such as the neptunium L X-rays from Am-241, are emitted but not counted here.
+    </p>
+    <p>
+      Read down the table and the conventional uses follow. Cs-137 puts {pct(P["Cs-137"].share, 0)} of
+      its kerma into a single line, which is why it serves as a reference radiation for dose-rate
+      meters; ISO 4037-1 lists it, with Co-60, among the gamma reference radiations. Co-60 gives a
+      constant {coGamma.toFixed(1)} times larger from two lines of almost equal yield at the high end
+      of the range. Am-241 and Cd-109 test the low end, where many detectors respond very differently
+      from how they respond at Cs-137; the kerma from Cd-109 is carried by silver K X-rays rather than
+      by its {cd88[0].toFixed(0)} keV gamma, which is emitted in only {cd88[1].toFixed(1)}% of decays.
+    </p>
+    <p>
+      Two choices are made because a long-lived nuclide imitates a short-lived one. Co-57's
+      {" "}{P["Co-57"].e.toFixed(0)} keV line sits close to the photon energy of Tc-99m, so it stands in
+      for Tc-99m in activity-meter checks and in the flood sources used to test gamma-camera
+      uniformity. Ba-133's {ba356[0].toFixed(0)}
+      {" "}keV line sits close to I-131's {i131[0].toFixed(0)} keV, and Ba-133 is used as a long-lived
+      substitute for I-131 in the same way. In both cases the substitute is not a perfect match — the
+      other lines in its spectrum differ — and an instrument calibrated with the substitute alone
+      carries a small correction that should be stated rather than assumed away.
+    </p>
+    <p>
+      Eu-152 sits at the other extreme: it needs {P["Eu-152"].n90} lines to account for nine-tenths of
+      its kerma, and its recorded lines above the cutoff run from {Math.min(...euSpan).toFixed(0)} keV
+      to {Math.max(...euSpan).toFixed(0)} keV. That spread is a nuisance for dose-rate work and is
+      exactly what a germanium spectrometer's efficiency calibration needs — many points across the
+      energy range from one source with one certificate. Y-88 extends such a calibration above Co-60,
+      at the cost of the short half-life noted above.
+    </p>
+
+    <h2>Daughters a certificate depends on</h2>
+    <p>
+      Several common sources are, in the radiation they actually deliver, sources of their daughter.
+      Cs-137 is the clearest case. The {csLine[0].toFixed(0)} keV photon is emitted when Ba-137m
+      de-excites, not by Cs-137 itself. The decay data record it against Cs-137 at
+      {" "}{csLine[1].toFixed(1)}% per decay, and against Ba-137m at {baLine[1].toFixed(1)}% per decay;
+      the ratio of the two, {pct(viaBa)}, is the share of Cs-137 decays that pass through Ba-137m. The
+      Cs-137 figure therefore assumes the daughter is present in equilibrium. Ten half-lives of
+      Ba-137m are {baTen}, so in any sealed source the assumption holds; in a freshly separated
+      solution it does not, and that solution's photon output rises over its first half hour.
+    </p>
+    <p>
+      Sr-90 beta sources follow the same pattern with a larger consequence. Sr-90's own betas reach
+      {" "}{(BETA.find((b) => b.k === "Sr-90")!.e / 1000).toFixed(2)} MeV; those of its daughter Y-90
+      reach {(BETA.find((b) => b.k === "Y-90")!.e / 1000).toFixed(2)} MeV, and Y-90 is back in
+      equilibrium within {yTen}. What a Sr-90 check source tests — the penetration through a detector
+      window, the response to energetic electrons — is set by Y-90. Ge-68 sources, used for PET
+      calibration, have no photon line of their own in this table at all; the field is the
+      annihilation radiation from their daughter Ga-68, which is back in equilibrium within {gaTen}.
+    </p>
+
+    <h2>Beta and alpha sources</h2>
+    <p>
+      For beta sources the endpoint energy decides what is being tested. A low endpoint tests the
+      detector window, because only a thin window lets those electrons through; a high one tests
+      response to electrons that reach the sensitive volume easily. The range in acrylic gives a
+      sense of the spread.
+    </p>
+    <ul class="my-3 space-y-1">
+      {BETA.map((b) => (
+        <li><a href={link(b.k)} class="underline">{b.k}</a> — endpoint {(b.e / 1000).toFixed(3)} MeV,
+          stopped by {mm(b.r)} mm of acrylic</li>
+      ))}
+    </ul>
+    <p>
+      The low end of that list is where efficiency falls fastest and where a source's own construction
+      matters most: an electron that can be stopped by a fraction of a millimetre of plastic can be
+      stopped by the cover of the source. This is the practical reason contamination monitor
+      calibrations are expressed as surface emission rate.
+    </p>
+    <p>
+      Alpha sources raise a different question: how many photons come with the alphas. Pu-239's
+      recorded photon lines above 20 keV add up to {pu.photonPct.toPrecision(2)} photons per hundred
+      decays, against {pu.e.toFixed(2)} MeV alphas in every decay. Am-241's
+      {" "}{P["Am-241"].e.toFixed(1)} keV line alone is emitted in {line("Am-241", 59.5)![1].toFixed(1)}
+      of every hundred decays, alongside its {am.e.toFixed(2)} MeV alpha. On an instrument with separate
+      alpha and beta–gamma channels an Am-241 source therefore registers on both, and the spill between
+      channels has to be measured with the source in place rather than assumed from the alpha
+      emission alone.
+    </p>
+
+    <h2>Decay correction at the bench</h2>
+    <p>
+      The correction itself is one line: the activity now is the certified activity multiplied by
+      2<sup>−t/T½</sup>, where t is the time since the reference date. Ten years after its reference
+      date a Cs-137 source has {pct(csTen)} of its certified activity; three years after its reference
+      date a Na-22 source has {pct(naThree)}. Leaving the correction out is an error of exactly the
+      complement of those figures. The <a href={u("/decay/")} class="underline">decay calculator</a> does the arithmetic and shows
+      the intermediate values; the reference date and time zone on the certificate are the inputs worth
+      checking twice.
+    </p>
+    <p>
+      Over long intervals the half-life's own uncertainty enters the corrected value, in proportion to
+      the number of half-lives elapsed. For a source a fraction of a half-life from its reference date
+      the effect is negligible; for a short-lived source used across several half-lives, the evaluated
+      uncertainty of the half-life belongs in the uncertainty budget.
+    </p>
+
+    <h2>Limits of this note</h2>
+    <p>
+      Everything above is computed from the nuclide alone. A real source adds things the table cannot
+      know: radionuclidic impurities, which certificates list and which matter most in multi-line
+      sources; absorption of low-energy X-rays in the encapsulation, which can remove the very lines
+      that made the nuclide attractive; and scatter from the source holder. None of this note replaces
+      the certificate or the manufacturer's statement of construction.
+    </p>
+
+    <h2>Where to go next</h2>
+    <ul class="my-3 space-y-1">
+      <li><a href={u("/decay/")} class="underline">Decay calculator</a> — the correction from a
+        certificate date to today.</li>
+      <li><a href={u("/daughter-shielding/")} class="underline">When the thing to shield is the
+        daughter</a> — the same parent–daughter question, asked for shielding.</li>
+      <li><a href={u("/mda/")} class="underline">Minimum detectable activity</a> — what an efficiency
+        measured with these sources is then used for.</li>
+      <li><a href={u("/nuclides/")} class="underline">Nuclide data</a> — the full table, one page per
+        nuclide.</li>
+    </ul>
+  </section>
+</Base>

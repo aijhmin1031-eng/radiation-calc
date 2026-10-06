@@ -1,6 +1,7 @@
 ---
 import ToolPage from "../components/ToolPage.astro";
 import Decay from "../components/calc/Decay.tsx";
+import { u } from "../lib/site";
 ---
 <ToolPage slug="decay">
   <Decay slot="tool" client:only="react" />
@@ -54,13 +55,15 @@ import Decay from "../components/calc/Decay.tsx";
       is a Y-90 beta source in practice.
     </p>
     <p>
-      The chain calculation here assumes a simple series with no branching. Real chains in the
-      uranium and thorium series branch, and a branching ratio has to be carried through each step.
+      This calculator follows one nuclide; it does not build chains. The Bateman solution is applied
+      along a single branch in the note on
+      {" "}<a href={u("/natural-series/")} class="underline">natural decay series</a>. Real chains in
+      the uranium and thorium series branch, and a branching ratio has to be carried through each step.
     </p>
 
     <h2>What the answer assumes</h2>
     <p>
-      A single nuclide, no ingrowth from a parent unless you build the chain explicitly, no losses
+      A single nuclide, no ingrowth from a parent, no losses
       other than decay, and a half-life taken from the evaluated nuclear data. Half-life values
       themselves carry uncertainty, and for a few nuclides different evaluations differ by enough to
       matter — Sr-90 is quoted between about 28.8 and 28.9 years depending on the compilation, which
