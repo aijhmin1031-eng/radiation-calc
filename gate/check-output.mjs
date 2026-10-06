@@ -46,15 +46,22 @@ console.log("\n② base 경로 — 내부 링크가 /calc/ 밖을 가리키지 �
  *  빌드는 통과하며 집계만 조용히 죽는다** — 그래서 base 밖을 가리키는 것이 **맞다.**
  *  ★ 「있을 법한 주소」를 적어 두지 않는다는 위 규칙을 지킨다: 이 파일은 우산 저장소의
  *    `public/track.js` 로 **실재한다**(정본과 경위는 그 레포 README). */
-const EXACT_OK = ["/", "/robots.txt", "/track.js", "/privacy", "/terms", "/contact"];
-const PREFIX_OK = ["/radimeter/", "/disposal"];
+/** ★★ **플랫폼 막대의 분야 칸 셋**(2026-10-06 — 네 곳이 같은 상단 메뉴를 든다). `/calc/` · `/radimeter/` ·
+ *  `/disposal/` 은 **오리진 루트 경로 그대로** 쓰는 것이 맞다(base 를 붙이면 `/calc/radimeter/` 라는 없는 주소).
+ *  셋 다 우산 루트에서 이미 살아 있는 주소다(라이브 200 — 2026-10-06 `curl` 실측). `/calc/` 는 base 아래라 위 검사가 먼저 통과시키지만
+ *  정본 표를 한 모양으로 둔다.
+ *  ★ 그전에는 `PREFIX_OK = ["/radimeter/", "/disposal"]` 로 **접두 일치**였다 — `/radimeter/` 밑의 아무 주소나,
+ *    `/disposalXYZ` 까지 통과했다. 그 접두를 쓰던 링크(옛 법무 링크 `/radimeter/privacy/` 등)는 2026-09-28 에
+ *    우산 루트로 옮겨 사라졌고, 남은 것은 분야 칸 셋과 본문의 `/disposal/` 하나다. 그래서 **완전 일치**로 좁힌다
+ *    (역테스트: `/radimeter/foo` 를 심으면 걸린다). */
+const PLATFORM_FIELDS = ["/calc/", "/radimeter/", "/disposal/"];
+const EXACT_OK = ["/", "/robots.txt", "/track.js", "/privacy", "/terms", "/contact", ...PLATFORM_FIELDS];
 let stray = 0;
 for (const p of pages) {
   for (const m of p.s.matchAll(/(?:href|src)="(\/[^"#?]*)"/g)) {
     const h = m[1];
     if (h.startsWith(BASE_PATH)) continue;
     if (EXACT_OK.includes(h)) continue;
-    if (PREFIX_OK.some((x) => h.startsWith(x))) continue;
     fail.push(`${p.path}: base 밖을 가리킨다 — ${h}`); stray++;
   }
 }

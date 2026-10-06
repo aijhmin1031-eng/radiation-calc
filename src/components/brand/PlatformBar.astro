@@ -1,0 +1,130 @@
+---
+/**
+ * 플랫폼 막대 — **네 곳(우산 · RadiMeter · RadCalc · 처분 lab)이 글자·순서·주소·치수까지 같다**(2026-10-06).
+ *
+ * ★★ 계기(2026-10-06 소유주 지시, 「진행 (Recommended)」에 대한 답):
+ *   「우산·RadiMeter·RadCalc(·처분 lab)이 같은 상단 메뉴를 쓰고, 칸 이름을 용도로 바꾼다.
+ *    각 lab 의 세부 메뉴는 페이지 안으로 내린다.」 같은 날 「사이트가 너무 복잡해서 애드센스 승인에
+ *   불리하다 … 구조를 핵심 중심으로 단순화」를 요구했고, 애드센스 도움말(10015918)의 기준은
+ *   메뉴가 정렬·가독·작동·정확할 것, 주제별로 묶을 것이다. 그전에는 우산 머리글이 **제품명**
+ *   (RadCalc · RadiMeter · M-Phreefiteq)을 들고 lab 머리글은 **자기 칸만** 들어, 오리진 안에서
+ *   쪽을 옮길 때마다 맨 위 줄이 다른 것이 됐다.
+ *
+ * ★★ **2026-09-14 결정 「다른 lab 으로 가는 칸을 두지 않는다」를 뒤집는다.** 그 결정의 이유는
+ *   ① 다른 두 lab 에는 없어 **불균형**이고 ② lab 이 늘 때마다 세 머리글을 다 고쳐야 하며
+ *   ③ 잠금장치와 같은 말을 두 번 한다는 것이었다. 이번에는 ① **네 곳이 똑같이** 들고
+ *   ② 칸 셋은 플랫폼 정본이라 네 레포의 `check-platform` 이 같은 숫자를 적어 함께 지키며
+ *   ③ 잠금장치(`Lockup`)를 걷었다 — 그 위 줄은 이 막대의 브랜드가, 아래 줄은 lab 막대의 이름이
+ *   이어받는다. 그래서 그 이유 셋이 다 해소된다.
+ *
+ * ★ 주소는 **오리진 루트 경로 그대로**다 — `u()` 를 걸지 않는다. 걸면 `/calc/radimeter/` 라는
+ *   없는 주소가 된다(이 lab 의 `/calc/` 는 `u()` 가 멱등이라 같은 값이지만, 정본을 한 모양으로 둔다).
+ *   셋 다 라이브 200 이고 `check-output` ② 가 **완전 일치**로만 통과시킨다.
+ *
+ * ★★ **「현재」 모양은 앰버가 아니다.** 앰버 알약은 lab 막대 칸의 활성 표시가 이미 쓴다 —
+ *   한 화면에 앰버 알약이 둘 서면 「지금 어디」가 두 군데로 읽힌다(규약: 앰버는 활성·포커스·
+ *   기준선 전용). 그래서 남은 축으로 낸다 — 명도(ink) · 무게(600) · 괘선(1px line-strong).
+ *
+ * ★ 넓은/좁은 판은 **한 `<a>` 안의 두 `<span>`** 이다(하나는 `display:none`) — 링크는 칸마다
+ *   하나라 탭 순서·링크 수가 화면 폭에 따라 바뀌지 않는다. `title` 이 넓은 판 이름을 들어
+ *   좁은 화면에서도 전체 이름을 알 수 있다.
+ */
+interface Props {
+  /** 지금 lab 의 칸(오리진 루트 경로). 우산 루트 쪽·`/account/` 에서는 비운다 — 현재 칸 0개. */
+  current?: "/calc/" | "/radimeter/" | "/disposal/";
+}
+const { current } = Astro.props;
+
+/* ★ 순서·주소·글자 고정 — **네 레포가 같은 표를 적는다**(각자 빌드하므로 공유 모듈을 둘 수 없다).
+   고치면 네 곳을 함께 고치고, 어긋나면 각 레포의 `check-platform` 이 잡는다. */
+const FIELDS = [
+  { href: "/calc/", wide: "Dose & shielding", narrow: "Shielding" },
+  { href: "/radimeter/", wide: "Instrument testing", narrow: "Instrument tests" },
+  { href: "/disposal/", wide: "Disposal & transport", narrow: "Disposal" },
+] as const;
+---
+<div data-platform-bar class="pbar">
+  <div class="pbar-in mx-auto max-w-content px-5 sm:px-8">
+    {/* ★★ 마크는 우산 `public/favicon.svg` 와 **같은 좌표**다(팔각 궤도 R=25.8 + 흑연 구 r=15).
+        좌표를 고치면 네 곳을 함께 고친다 — 어긋나면 `check-lockup` 이 잡는다.
+        색은 **토큰으로** 칠한다. 고정색으로 두면 어두운 테마에서 통째로 묻힌다. */}
+    <a class="pbar-brand" href="/" aria-label="Radiation Lab — platform home">
+      <svg class="pbar-mark" viewBox="0 0 64 64" aria-hidden="true">
+        <polygon points="32.00,6.20 50.24,13.76 57.80,32.00 50.24,50.24 32.00,57.80 13.76,50.24 6.20,32.00 13.76,13.76"
+                 fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="miter" />
+        <circle cx="32" cy="32" r="15" fill="currentColor" opacity="0.82" />
+      </svg>
+      <span class="pbar-name">Radiation Lab</span>
+    </a>
+    <nav aria-label="Fields" class="pbar-fields">
+      {FIELDS.map((f) => (
+        <a href={f.href} title={f.wide} aria-current={f.href === current ? "true" : undefined} class="pbar-tab">
+          <span class="pbar-wide">{f.wide}</span><span class="pbar-narrow">{f.narrow}</span>
+        </a>
+      ))}
+    </nav>
+    <div class="pbar-ctl"><slot /></div>
+  </div>
+</div>
+
+<style>
+  /* ── 막대 — 바탕·아래선은 지금 머리글과 같은 토큰(panel · line-strong) ── */
+  .pbar { background: rgb(var(--c-panel)); border-bottom: 1px solid rgb(var(--c-line-strong)); }
+  /* ★ 좁은 화면은 **두 줄** — 1줄 브랜드 + 컨트롤, 2줄 칸 셋(왼쪽 정렬, 전폭).
+     격자로 가른다(마크업 순서는 넓은 화면의 읽는 순서 그대로 — 브랜드 · 칸 · 컨트롤).
+     ★★ flex 줄바꿈으로 두면 **로그인한 사람에게 줄이 셋**이 된다 — 계정 표시가 이름을 들면
+       (최대 13ch) 브랜드 + 컨트롤이 320·360px 의 가용폭을 넘어 컨트롤이 제 줄로 떨어진다
+       (2026-10-06 실측: 이름 「Alexandra Johnson」에서 플랫폼 막대 84 → 112px). 격자의 둘째 칸을
+       `minmax(0, 1fr)` 로 두면 브랜드는 그대로이고 **계정 표시의 이름이 말줄임으로 줄어든다**
+       (전체 이름은 그 링크의 `title`·`aria-label` 이 든다). */
+  .pbar-in { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center;
+             column-gap: 8px; row-gap: 2px; padding-top: 4px; padding-bottom: 4px; }
+
+  .pbar-brand { display: inline-flex; align-items: center; gap: 8px; min-height: 26px;
+                color: rgb(var(--c-ink)); text-decoration: none; flex: none;
+                grid-column: 1; grid-row: 1; justify-self: start; }
+  .pbar-mark { width: 24px; height: 24px; flex: none; color: rgb(var(--c-ink)); }
+  .pbar-name { font-size: 16px; font-weight: 650; letter-spacing: -0.012em; color: rgb(var(--c-ink)); white-space: nowrap; }
+  .pbar-brand:hover .pbar-name { text-decoration: underline; }
+
+  .pbar-ctl { grid-column: 2; grid-row: 1; justify-self: end; min-width: 0; max-width: 100%;
+              display: flex; align-items: center; gap: 4px; }
+  /* 계정 표시는 자기 쪽에서 `shrink-0` 이다(다른 자리에서는 줄면 안 된다) — 이 막대 안에서만 줄게 둔다 */
+  .pbar-ctl :global([data-acct-chip]) { flex-shrink: 1; min-width: 0; }
+
+  /* ★ `flex-wrap: wrap` — 칸이 가용폭을 넘으면 **줄로 접혀 보이게** 한다. 접지 않으면(nowrap) 오른쪽 거터로
+     조용히 넘쳐 문서 넘침에도 안 걸린다(2026-10-06 역테스트에서 그렇게 나왔다 — 칸 끝 309px > 글줄 끝 300px). */
+  .pbar-fields { grid-column: 1 / -1; grid-row: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
+  /* ★ 비활성에도 **투명 테두리**를 준다 — 없으면 현재 칸만 1px 씩 커져 줄이 흔들린다. */
+  .pbar-tab { font-size: 13px; border-radius: 4px; padding: 8px 8px; border: 1px solid transparent;
+              color: rgb(var(--c-ink-muted)); white-space: nowrap; text-decoration: none;
+              transition: color 0.12s; }
+  .pbar-tab:hover { color: rgb(var(--c-ink)); }
+  .pbar-tab[aria-current="true"] { color: rgb(var(--c-ink)); font-weight: 600; border-color: rgb(var(--c-line-strong)); }
+  .pbar-brand:focus-visible, .pbar-tab:focus-visible { outline: 2px solid rgb(var(--c-accent)); outline-offset: 2px; }
+  .pbar-wide { display: none; }
+
+  /* ★★ 320px 에서 칸 셋이 **한 줄**이어야 한다(명세). 게이트가 도는 글꼴(DejaVu Sans — 이 컨테이너와
+     CI 의 `system-ui`)에서 정본 안여백 8px 로 재면 칸 셋이 **289px** 이고 거터 20px 를 뺀 가용폭은
+     **280px** 이라 9px 모자란다(2026-10-06 실측 — 360px 에서 칸 끝 309px, 시작 20px). 360px 이상은 정본
+     그대로 들어간다. 가로 안여백만 6px 로 줄인다(277px — 세로 8px 는 손가락 표적을 위해 그대로). */
+  @media (max-width: 359.98px) { .pbar-tab { padding-left: 6px; padding-right: 6px; } }
+
+  @media (min-width: 640px) {
+    .pbar-in { padding-top: 6px; padding-bottom: 6px; column-gap: 12px; }
+    .pbar-fields { gap: 4px; }
+    .pbar-tab { padding: 6px 12px; }
+    .pbar-wide { display: inline; }
+    .pbar-narrow { display: none; }
+  }
+  /* ★★ **한 줄 배치는 1024px 부터**다(명세는 640px). 넓은 판 칸 셋(464px)에 브랜드(154px)와
+     컨트롤(테마 + 계정 123px)을 간격 12px 둘과 한 줄에 두려면 가용폭이 **765px** 필요하다(DejaVu Sans 실측 —
+     계정 표시가 없는 빌드는 679px). 뷰포트로는 829px 이다 —
+     640~1023px 에서 한 줄로 두면 **컨트롤만 다음 줄로 홀로 떨어진다**(flex 줄바꿈).
+     그 사이는 좁은 화면과 같은 두 줄(브랜드 + 컨트롤 / 칸)에 넓은 판 이름·안여백을 쓴다. */
+  @media (min-width: 1024px) {
+    .pbar-in { display: flex; align-items: center; column-gap: 12px; }
+    .pbar-fields { margin-left: auto; }
+    .pbar-ctl { flex: none; }
+  }
+</style>
