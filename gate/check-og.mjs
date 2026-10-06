@@ -36,6 +36,14 @@ for (const f of readdirSync(DIST, { withFileTypes: true, recursive: true })
   const html = readFileSync(f, "utf8");
   if (!/property="og:image"/.test(html)) fail.push(`${relative(DIST, f)}: og:image 가 없다`);
 }
+/* ★★ **매니페스트에 없는 그림은 아무도 가리키지 않는 공개 파일이다**(2026-10-06 ④ 에 드러났다).
+   쪽의 그림은 매니페스트로만 찾아진다(`Base.astro` — 없으면 홈 카드). 그런데 `make-og` 는 그림을 **덮어쓰기만** 하고
+   지우지 않아서, 색인에서 뺀 핵종 77장(#63)의 그림이 `public/og/` 에 그대로 남아 배포되고 있었다 — 그 쪽들을 지우는
+   날까지 아무 게이트도 못 봤다. 위 검사는 「매니페스트 → 파일」 한 방향뿐이었다. **반대 방향**을 잰다. */
+const wanted = new Set(Object.values(manifest).map((e) => `${e.slug}.png`));
+const orphans = existsSync("public/og") ? readdirSync("public/og").filter((f) => !wanted.has(f)) : [];
+if (orphans.length)
+  fail.push(`public/og/ 에 매니페스트가 모르는 파일 ${orphans.length}개 — ${orphans.slice(0, 4).join(", ")}${orphans.length > 4 ? " …" : ""}. 지운 쪽의 그림이면 지울 것`);
 console.log(fail.length ? `❌ ${fail.length}건\n` + fail.map((x) => "   " + x).join("\n")
-  : `✅ 공유 이미지 — ${paths.length}쪽 대조(제목·파일·참조) · 전 쪽 og:image 있음`);
+  : `✅ 공유 이미지 — ${paths.length}쪽 대조(제목·파일·참조) · 전 쪽 og:image 있음 · 매니페스트 밖 그림 0개`);
 process.exit(fail.length ? 1 : 0);

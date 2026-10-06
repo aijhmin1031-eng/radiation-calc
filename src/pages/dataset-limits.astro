@@ -1,8 +1,9 @@
 ---
 import Base from "../layouts/Base.astro";
-import { NUCLIDES, nuclidePage, slugOf } from "../lib/nuclides";
+import NuclideRef from "../components/NuclideRef.astro";
+import { NUCLIDES, nuclidePage } from "../lib/nuclides";
 import { CHAIN_TRUNCATED, WITH_DOMINANT_PROGENY, daughterLabel } from "../lib/decay-chain";
-import { NOINDEX_SLUGS } from "../lib/nuclide-noindex";
+import { PAGE_KEYS, hasPage, MIN_HALF_LIFE_S } from "../lib/nuclide-pages";
 import { DATA_SOURCES } from "../lib/site";
 import { u } from "../lib/site";
 
@@ -17,6 +18,10 @@ const noBeta       = count((k) => !NUCLIDES[k].beta?.length);
 const noAlpha      = count((k) => !NUCLIDES[k].alpha?.length);
 const elements     = new Set(keys.map((k) => NUCLIDES[k].sym)).size;
 const truncated    = CHAIN_TRUNCATED;
+/** ★★ 참조 쪽은 자료의 일부에만 있다(2026-10-06 ④). 쪽 수·자료 수 둘 다 센다 — 「147」을 글자로 두면
+ *  목록을 고치는 날 이 쪽만 낡는다. 쪽이 없는 핵종 가운데 1초 미만 이성질체가 몇인지도 센다(옛 noindex 의 기준). */
+const pages        = PAGE_KEYS.length;
+const subSecond    = count((k) => !hasPage(k) && NUCLIDES[k].t_half_s < MIN_HALF_LIFE_S);   // 본문의 「under a second」가 이 하한이다
 const progeny      = WITH_DOMINANT_PROGENY;
 const CUTOFF_KEV   = 20;
 ---
@@ -48,11 +53,11 @@ const CUTOFF_KEV   = 20;
       <p>
         For {truncated.length} of them the next nuclide is not in the table at all:
         {" "}{truncated.map((k, i) => (
-          <>{i > 0 ? ", " : ""}<a href={u(`/nuclides/${slugOf(k)}/`)} class="underline">{k}</a>
+          <>{i > 0 ? ", " : ""}<NuclideRef k={k} />
           {" "}(decays to {daughterLabel(k) ?? "a nuclide not carried here"})</>
-        ))}. Those pages give the constant recorded for the nuclide itself and decline to draw a
-        conclusion from it, because for an aged source of any of them the progeny supply most of
-        the field and this table cannot say how much.
+        ))}. Their reference pages give the constant recorded for the nuclide itself and decline to
+        draw a conclusion from it, because for an aged source of any of them the progeny supply most
+        of the field and this table cannot say how much.
       </p>
     )}
 
@@ -78,7 +83,8 @@ const CUTOFF_KEV   = 20;
     <h2>Emissions the table does not describe</h2>
     <p>
       {noBeta} of the {keys.length} carry no beta spectrum and {noAlpha} carry no alpha lines, so
-      the corresponding sections are absent from those pages. Beyond that, some emissions are
+      those emissions are missing wherever the nuclides are used — in the calculators and on any
+      reference page. Beyond that, some emissions are
       outside the scope of every calculator here: neutrons from spontaneous fission or from (α,n)
       reactions in the surrounding material, internal conversion and Auger electrons, and
       characteristic X-rays following electron capture where they are not in the recorded line
@@ -86,13 +92,16 @@ const CUTOFF_KEV   = 20;
       figures on this site is not a complete shield.
     </p>
 
-    <h2>Pages not offered for indexing</h2>
+    <h2>Nuclides without a reference page</h2>
     <p>
-      {NOINDEX_SLUGS.length} nuclide pages are marked <code>noindex</code> and left out of the
-      sitemap. All of them have half-lives under a second, which is short enough that the question
-      a shielding calculator answers — how thick, of what — has no practical form. The pages remain
-      and remain linked, because a decay chain can arrive at them; they are simply not offered to
-      search engines as answers.
+      Reference pages are published for {pages} of the {keys.length} nuclides — those with a use of
+      their own in sealed sources and calibration, medicine, the fuel cycle, naturally occurring
+      material and decommissioning. The other {keys.length - pages} are in the dataset and the
+      calculators accept them wherever their emissions apply; they simply have no page of their own.
+      They are isomers, activation and fission products, and heavy nuclides met inside a decay chain
+      or only in a laboratory, and they include the {subSecond} isomers with half-lives under a second, for which
+      the question a shielding calculator answers — how thick, of what — has no practical form. Where
+      another page names one of them, the name is plain text rather than a link.
     </p>
 
     <h2>What the numbers themselves carry</h2>
@@ -116,7 +125,7 @@ const CUTOFF_KEV   = 20;
         sources and their terms.</li>
       <li><a href={u("/validation/")} class="underline">Validation</a> — how the results here are
         checked against independent figures.</li>
-      <li><a href={u("/nuclides/")} class="underline">Nuclide data</a> — the {keys.length} pages
+      <li><a href={u("/nuclides/")} class="underline">Nuclide data</a> — the {pages} reference pages
         themselves.</li>
     </ul>
   </section>

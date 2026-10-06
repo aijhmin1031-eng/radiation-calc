@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
-import { NUCLIDES, nuclidePage, halfLifeText, fmtTime, slugOf } from "../lib/nuclides";
+import NuclideRef from "../components/NuclideRef.astro";
+import { NUCLIDES, nuclidePage, halfLifeText, fmtTime } from "../lib/nuclides";
 import { u } from "../lib/site";
 
 /** ★★ 양전자 방출체와 511 keV — 2026-10-06 소유주 지시 「각 lab 에 전문가 글 3~5편」의 넷째 편.
@@ -11,7 +12,7 @@ import { u } from "../lib/site";
 const N = NUCLIDES;
 const pct = (x: number, d = 1) => `${(x * 100).toFixed(d)}%`;
 const mm = (cm: number, d = 3) => (Number.isFinite(cm) ? (cm * 10).toPrecision(d) : "—");
-const link = (k: string) => u(`/nuclides/${slugOf(k)}/`);
+/* ★ 핵종 이름은 `NuclideRef` 로만 그린다 — 쪽이 있으면 링크, 없으면 이름만(2026-10-06 ④, 지운 77장으로 가는 죽은 링크를 막는다). */
 const after = (k: string, s: number) => Math.pow(2, -s / N[k].t_half_s);
 const H = 3600, DAY = 86400, YEAR = 31557600;
 
@@ -96,7 +97,7 @@ const naOther = na.other ? na.other[0] : NaN;
       <tbody>
         {ANNIH.map((r) => (
           <tr>
-            <td><a href={link(r.k)} class="underline">{r.k}</a></td>
+            <td><NuclideRef k={r.k} /></td>
             <td>{r.t}</td>
             <td>{r.i511.toPrecision(3)}</td>
             <td>{r.beta.toPrecision(3)}</td>
@@ -213,8 +214,8 @@ const naOther = na.other ? na.other[0] : NaN;
         inverse square law for a handling task.</li>
       <li><a href={u("/check-sources/")} class="underline">Nuclides for check and calibration
         sources</a> — Na-22 and Ge-68 among the others.</li>
-      <li><a href={link("F-18")} class="underline">F-18</a>, <a href={link("Ga-68")} class="underline">Ga-68</a>
-        {" "}and <a href={link("Na-22")} class="underline">Na-22</a> — the full data pages.</li>
+      <li><NuclideRef k="F-18" />, <NuclideRef k="Ga-68" />
+        {" "}and <NuclideRef k="Na-22" /> — the full data pages.</li>
     </ul>
   </section>
 </Base>

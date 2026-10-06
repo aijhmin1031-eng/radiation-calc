@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
-import { NUCLIDES, nuclidePage, halfLifeText, fmtTime, slugOf } from "../lib/nuclides";
+import NuclideRef from "../components/NuclideRef.astro";
+import { NUCLIDES, nuclidePage, halfLifeText, fmtTime } from "../lib/nuclides";
 import { u } from "../lib/site";
 
 /** ★★ 점검·교정 선원 핵종 — 2026-10-06 애드센스 「가치가 별로 없는 콘텐츠」 판정 뒤 소유주 지시
@@ -13,7 +14,7 @@ const MONTH = YEAR / 12;
 const frac = (k: string, s: number) => Math.pow(2, -s / NUCLIDES[k].t_half_s);
 const pct = (x: number, d = 1) => `${(x * 100).toFixed(d)}%`;
 const mm = (cm: number) => (Number.isFinite(cm) ? (cm * 10).toPrecision(3) : "—");
-const link = (k: string) => u(`/nuclides/${slugOf(k)}/`);
+/* ★ 핵종 이름은 `NuclideRef` 로만 그린다 — 쪽이 있으면 링크, 없으면 이름만(2026-10-06 ④, 지운 77장으로 가는 죽은 링크를 막는다). */
 
 /** 수명 표 — 반감기 짧은 것부터. */
 const LIFE = ["Y-88", "Co-57", "Mn-54", "Cd-109", "Na-22", "Co-60", "Ba-133", "Eu-152", "Sr-90", "Cs-137", "Am-241"]
@@ -116,7 +117,7 @@ const i131 = line("I-131", 364)!, ba356 = line("Ba-133", 356)!, cd88 = line("Cd-
       <tbody>
         {LIFE.map((r) => (
           <tr>
-            <td><a href={link(r.k)} class="underline">{r.k}</a></td>
+            <td><NuclideRef k={r.k} /></td>
             <td>{r.t}</td>
             <td>{pct(r.year)}</td>
             <td class="hidden lg:table-cell">{pct(r.five)}</td>
@@ -165,7 +166,7 @@ const i131 = line("I-131", 364)!, ba356 = line("Ba-133", 356)!, cd88 = line("Cd-
       <tbody>
         {PHOTON.map((r) => (
           <tr>
-            <td><a href={link(r.k)} class="underline">{r.k}</a></td>
+            <td><NuclideRef k={r.k} /></td>
             <td>{r.e.toFixed(1)}</td>
             <td class="hidden lg:table-cell">{pct(r.share, 0)}</td>
             <td>{r.n90}</td>
@@ -238,7 +239,7 @@ const i131 = line("I-131", 364)!, ba356 = line("Ba-133", 356)!, cd88 = line("Cd-
     </p>
     <ul class="my-3 space-y-1">
       {BETA.map((b) => (
-        <li><a href={link(b.k)} class="underline">{b.k}</a> — endpoint {(b.e / 1000).toFixed(3)} MeV,
+        <li><NuclideRef k={b.k} /> — endpoint {(b.e / 1000).toFixed(3)} MeV,
           stopped by {mm(b.r)} mm of acrylic</li>
       ))}
     </ul>
@@ -293,8 +294,8 @@ const i131 = line("I-131", 364)!, ba356 = line("Ba-133", 356)!, cd88 = line("Cd-
         daughter</a> — the same parent–daughter question, asked for shielding.</li>
       <li><a href={u("/mda/")} class="underline">Minimum detectable activity</a> — what an efficiency
         measured with these sources is then used for.</li>
-      <li><a href={u("/nuclides/")} class="underline">Nuclide data</a> — the full table, one page per
-        nuclide.</li>
+      <li><a href={u("/nuclides/")} class="underline">Nuclide data</a> — a reference page for each
+        nuclide in practical use, every nuclide listed above among them.</li>
     </ul>
   </section>
 </Base>

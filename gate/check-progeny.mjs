@@ -26,6 +26,18 @@ const DIST = join(ROOT, "dist/calc/nuclides");
 
 const { WITH_DOMINANT_PROGENY, CHAIN_TRUNCATED } = await import("../src/lib/decay-chain.ts");
 const { NUCLIDES } = await import("../src/lib/nuclides.ts");
+/** ★★ 2026-10-06 ④ — 낱장은 **쪽 목록의 핵종에만** 선다(검색 제외 77장을 지웠다). 목록에 든 핵종 가운데 쪽이 없는
+ *  것은 「산출물이 없다」가 결함이 아니라 **설계**다 — 그래서 건너뛰고 몇 장을 건너뛰었는지 찍는다.
+ *  ★ 쪽이 **있어야 하는데 없는** 것은 여전히 결함이다(`hasPage` 가 참인데 파일이 없다). 빠져나갈 길을 열지 않는다.
+ *  ★ 쪽 없는 핵종의 연쇄 문장은 산문 생성기(`nuclide-prose.ts`)에 그대로 남아 있다 — 되살리면 그 쪽이 다시 여기서 재진다.
+ *    목록 밖의 이야기는 `/daughter-shielding/` 한 쪽이 든다(그 쪽은 자료에서 그려진다). */
+const { hasPage } = await import("../src/lib/nuclide-pages.ts");
+const skipped = new Set();
+/** 쪽이 없는 핵종이면 `undefined`(건너뜀), 쪽이 있어야 하는데 파일이 없으면 `null`(결함). */
+const bodyOf = (key) => {
+  if (!hasPage(key)) { skipped.add(key); return undefined; }
+  return body(key.toLowerCase());
+};
 
 const flat = (x) => x.replace(/<[^>]+>/g, " ").replace(/&[a-z#0-9]+;/gu, " ").replace(/\s+/g, " ");
 const main = (slug) => {
@@ -53,7 +65,8 @@ const fail = [];
 const listed = new Map(WITH_DOMINANT_PROGENY);
 
 for (const [key, prog] of WITH_DOMINANT_PROGENY) {
-  const t = body(key.toLowerCase());
+  const t = bodyOf(key);
+  if (t === undefined) continue;
   if (t === null) { fail.push(`${key}: 산출물이 없다`); continue; }
   if (!t.includes(prog.key)) {
     fail.push(`${key}: 딸핵종 ${prog.key} 를 본문에서 한 번도 부르지 않는다 — 차폐 결론이 모핵종의 것이다`);
@@ -78,7 +91,8 @@ for (const [key, prog] of WITH_DOMINANT_PROGENY) {
 const VERDICTS = ["constant is small", "barely arises", "with nothing in the way",
                   "near the bottom of the photon emitters", "of the photon emitters in this dataset"];
 for (const key of CHAIN_TRUNCATED) {
-  const t = body(key.toLowerCase());
+  const t = bodyOf(key);
+  if (t === undefined) continue;
   if (t === null) { fail.push(`${key}: 산출물이 없다`); continue; }
   const said = VERDICTS.filter((v) => t.includes(v));
   if (said.length) fail.push(`${key}: 연쇄가 잘렸는데 광자 숫자로 결론을 낸다 — ${said.join(" · ")}`);
@@ -104,8 +118,9 @@ for (const key of Object.keys(NUCLIDES)) {
  *  안 되는 이유가 정확히 이것**이라, 값이 낮게 나가면 결론이 뒤집힌다. */
 for (const [key, prog] of WITH_DOMINANT_PROGENY) {
   if (!(prog.presence === "present" && prog.betaHotter)) continue;
-  const t = body(key.toLowerCase());
-  if (!t) continue;
+  const t = bodyOf(key);
+  if (t === undefined) continue;
+  if (t === null) { fail.push(`${key}: 산출물이 없다`); continue; }
   if (t.includes("Of the beta energy"))
     fail.push(`${key}: 제동복사가 누구 것인지 밝히지 않는다 — 딸(${prog.key})이 더 센데 모핵종 값이다`);
   if (t.includes("beta energy") && !t.includes("and so is the bremsstrahlung"))
@@ -126,11 +141,14 @@ if (fail.length) {
   process.exit(1);
 }
 const present = WITH_DOMINANT_PROGENY.filter(([, g]) => g.presence === "present").length;
+const withPage = (list) => list.filter((k) => hasPage(k)).length;
+const progKeys = WITH_DOMINANT_PROGENY.map(([k]) => k);
 console.log(
-  `check-progeny   ✅ 붕괴 연쇄 점검 통과 — 결론을 딸이 정하는 쪽 ${WITH_DOMINANT_PROGENY.length}장` +
-  `(평형 ${present} · 자라는 중 ${WITH_DOMINANT_PROGENY.length - present}) · 전부 딸을 부르고 수치까지 적는다` +
+  `check-progeny   ✅ 붕괴 연쇄 점검 통과 — 결론을 딸이 정하는 핵종 ${WITH_DOMINANT_PROGENY.length}종` +
+  `(평형 ${present} · 자라는 중 ${WITH_DOMINANT_PROGENY.length - present}) 중 쪽이 있는 ${withPage(progKeys)}장 — 전부 딸을 부르고 수치까지 적는다` +
   ` · 목록 밖에서 새어 나온 연쇄 문장 ${strays}건` +
-  ` · 연쇄가 이 자료에서 끊기는 쪽 ${CHAIN_TRUNCATED.length}장 — 전부 단서를 들고 결론을 내지 않는다` +
+  ` · 연쇄가 이 자료에서 끊기는 핵종 ${CHAIN_TRUNCATED.length}종 중 쪽이 있는 ${withPage(CHAIN_TRUNCATED)}장 — 전부 단서를 들고 결론을 내지 않는다` +
+  ` · 쪽이 없어 건너뛴 핵종 ${skipped.size}종(${[...skipped].join(", ") || "없음"})` +
   ` · 광자장 있는 알파 쪽이 「섭취뿐」이라 말하는 것 0건 · 제동복사가 누구 것인지 밝히지 않는 쪽 0건` +
   `\n                ※ 못 보는 것: 문장이 맞는지 · **하한값이 맞는지**(그것은 decay-chain.ts 의 정의다) · 여러 걸음 연쇄`,
 );

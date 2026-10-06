@@ -1,6 +1,6 @@
 /** 산출물 점검 — 빌드는 통과하는데 조용히 틀린 것들을 본다.
  *  ★ 이 레포들이 실제로 밟은 자리만 검사한다. 「있을 법한 것」을 늘리면 늘 빨개져 아무도 안 본다. */
-import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { BASE_PATH, SITE_URL_DEFAULT, SITE_NAME } from "../brand.ts";
 
@@ -136,6 +136,38 @@ console.log("\n⑧ 404 쪽이 산출 루트에 있는가");
     if (ways < 8) fail.push(`404 쪽의 길이 ${ways}개뿐이다 — 막다른 쪽`);
     note(`루트 사본 있음 · 원본과 같음 · noindex · 길 ${ways}개`);
   }
+}
+
+/* ── ⑨ 내부 링크가 실재하는 파일에 닿는가 ─────────────────────────────
+ *  ★★ 계기(2026-10-06 ④). 소유주 결정으로 핵종 낱장 77장을 지웠다(「불필요한 것들은 과감하게 잘라내자」).
+ *    그 쪽들로 가는 링크가 **살아남은 쪽에 177개** 있었다(목록 77 · 같은 원소의 이웃 82 · 긴 글 18). 그런데 이 lab 에는
+ *    **죽은 내부 링크를 재는 게이트가 하나도 없었다** — ② 는 base 밖으로 나가는지만 보고, `check-render` 는 쪽을 열 뿐
+ *    링크를 따라가지 않는다. 그래서 링크는 `NuclideRef` 한 자리에서만 그리게 했고(쪽이 없으면 이름만), 여기서 **결과**를 잰다.
+ *  ★ 재는 것: base 아래를 가리키는 `href`·`src` 전부(질의·앵커는 뗀다)가 `dist/calc/` 의 파일이나 `…/index.html` 에 닿는가.
+ *    base 밖(우산 루트의 법무·집계)은 ② 가 정확 일치로 본다 — 여기서 다시 보지 않는다.
+ *  ★ 못 보는 것: 앵커(`#hvl`)가 그 쪽에 실제로 있는지 · 바깥 링크가 살아 있는지 · 자바스크립트가 만드는 주소. */
+console.log("\n⑨ 내부 링크가 실재하는 파일에 닿는가");
+{
+  const ROOT_PREFIX = BASE_PATH.replace(/\/$/, "");
+  const exists = (u) => {
+    const rel = u.slice(ROOT_PREFIX.length).replace(/^\//, "");
+    const f = join(DIST, rel);
+    if (rel === "" || rel.endsWith("/")) return existsSync(join(f, "index.html"));
+    return (existsSync(f) && statSync(f).isFile()) || existsSync(join(f, "index.html"));
+  };
+  let seen = 0; const dead = new Map();
+  for (const p of pages) {
+    for (const m of p.s.matchAll(/(?:href|src)="([^"]*)"/g)) {
+      const u = m[1].replace(/&amp;/g, "&").split(/[?#]/)[0];
+      if (u !== ROOT_PREFIX && !u.startsWith(ROOT_PREFIX + "/")) continue;
+      seen++;
+      if (!exists(u)) dead.set(u, [...(dead.get(u) ?? []), p.path]);
+    }
+  }
+  for (const [u, from] of [...dead].slice(0, 12))
+    fail.push(`죽은 내부 링크 ${u} — ${from.length}쪽에서 (${[...new Set(from)].slice(0, 3).join(", ")})`);
+  if (dead.size > 12) fail.push(`… 죽은 내부 주소가 ${dead.size}개다(위는 열둘)`);
+  note(`내부 링크·자원 ${seen}개 · 죽은 주소 ${dead.size}개`);
 }
 
 console.log(fail.length ? `\n❌ ${fail.length}건\n` + fail.map((x) => "   " + x).join("\n")

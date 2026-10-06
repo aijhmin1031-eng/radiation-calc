@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
-import { NUCLIDES, halfLifeText, slugOf } from "../lib/nuclides";
+import NuclideRef from "../components/NuclideRef.astro";
+import { NUCLIDES, halfLifeText } from "../lib/nuclides";
 import { batemanChain } from "../engine/decay";
 import { u } from "../lib/site";
 
@@ -15,7 +16,7 @@ const N = NUCLIDES;
 const has = (k: string) => Boolean(N[k]);
 const lam = (k: string) => Math.LN2 / N[k].t_half_s;
 const pct = (x: number, d = 1) => `${(x * 100).toFixed(d)}%`;
-const link = (k: string) => u(`/nuclides/${slugOf(k)}/`);
+/* ★ 핵종 이름은 `NuclideRef` 로만 그린다 — 쪽이 있으면 링크, 없으면 이름만(2026-10-06 ④, 지운 77장으로 가는 죽은 링크를 막는다). */
 
 /** 계열 — 주 경로만(가지는 본문이 밝힌다). 구성원 이름은 물리 사실이고, 반감기는 자료가 든다. */
 const SERIES = [
@@ -105,7 +106,7 @@ const k40Line = N["K-40"].lines.find(([e]) => e > 1000)!;
         <li>
           <strong>{s.name}</strong> ({s.carried} of {s.chain.length} carried):
           {" "}{s.chain.map((k, i) => (
-            <>{i > 0 ? " → " : ""}{has(k) ? <a href={link(k)} class="underline">{k}</a> : <span>{k}</span>}</>
+            <>{i > 0 ? " → " : ""}<NuclideRef k={k} /></>
           ))}{" "}→ {s.end} (stable)
         </li>
       ))}

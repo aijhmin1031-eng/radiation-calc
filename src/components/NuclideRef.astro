@@ -1,0 +1,12 @@
+---
+import { u } from "../lib/site";
+import { nuclidePath } from "../lib/nuclide-pages";
+interface Props { k: string; class?: string }
+const { k, class: cls = "underline" } = Astro.props;
+/* ★★ 핵종 이름을 쪽에 그리는 **유일한 자리**(2026-10-06 ④, 검색 제외 77장을 지운 날).
+   쪽이 있으면 링크, 없으면 **이름만** 낸다 — 죽은 링크가 나갈 길을 구조로 막는다.
+   그전에는 쪽 주소를 쪽마다 손으로 조립했다(`u()` + `slugOf()`) — 긴 글 넷·목록·낱장·자료 한계 쪽이 제각각.
+   ★ 쪽이 없는 핵종도 자료와 계산기에는 그대로 있다 — 이름을 지우지 않는 이유다. */
+const href = nuclidePath(k);
+---
+{href ? <a href={u(href)} class={cls}>{k}</a> : k}
