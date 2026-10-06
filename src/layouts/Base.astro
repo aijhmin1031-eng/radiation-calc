@@ -2,7 +2,6 @@
 import "../styles/global.css";
 import { SITE_NAME, SITE_TAGLINE, UMBRELLA_NAME, DATA_SOURCES, SITE_URL, u, canonical, canonicalPath } from "../lib/site";
 import { TOOLS } from "../lib/tools";
-import { SAVE_ENABLED } from "../lib/features";
 import ogManifest from "../data/og-manifest.json";
 import Lockup from "../components/brand/Lockup.astro";
 import ThemeToggle from "../components/ThemeToggle.astro";
@@ -30,7 +29,10 @@ const NAVI = [
   /* ★ 핵종 낱장 147장으로 가는 문. 도구는 「무엇을 계산하는가」로 찾고, 여기는
      「어느 핵종인가」로 찾는다 — 찾아오는 이유가 다르므로 칸을 따로 준다. */
   { href: "/nuclides/", label: "Nuclides" },
-  ...(SAVE_ENABLED ? [{ href: "/saved/", label: "Saved" }] : []),
+  /* ★ `Saved` 칸을 걷었다(2026-10-06, 소유주 지시 「핵심 중심으로 구조를 단순화」).
+     로그인해야 무엇이든 보이는 쪽이라 처음 온 사람·심사자에게는 빈 화면으로 가는 칸이었다.
+     저장한 결과로 가는 길은 그대로 남는다 — 도구 쪽 우측 레일의 「Saved results」(`ToolPage`)와
+     저장 직후의 「View saved results」(`SaveBar`). `check-save` 는 어느 자리든 링크를 세므로 그대로 통과한다. */
   { href: "/methods/", label: "Methods" },
 ];
 const navOn = (href: string) => (href === "/" ? here === u("/") : here.startsWith(u(href)));
