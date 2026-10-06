@@ -24,7 +24,7 @@
 | 자리 | 전 | 후 |
 |---|---|---|
 | 머리글 | 플랫폼 막대 + lab 막대(두 줄) | **한 줄** `components/brand/SiteHeader.astro` — 브랜드 `Radiation Lab`(→ https://radiation-lab.com/) · **Tools ▾** · Nuclide data · Methods · Validation · 테마 · 계정(→ `/calc/saved/`). 치수는 우산 홈 `.hd`/`.tm` 와 같은 값 |
-| Tools 메뉴 | 없음 | `<details>` — 두 묶음(선량·차폐 셋 / 방사능·계측 넷) · Lucide 아이콘 · 한 줄 설명 · 맨 아래 「More from Radiation Lab」(Instrument testing ↗ · Disposal & transport ↗). Esc(초점은 Tools 로) · 바깥 누르기로 닫힌다. JS 없이도 열린다 |
+| Tools 메뉴 | 없음 | `<details>` — 두 묶음(선량·차폐 셋 / 방사능·계측 넷) · Lucide 아이콘 · 한 줄 설명 · 맨 아래 「More from Radiation Lab」(Instrument testing ↗ · Disposal & transport ↗ · Everyday tools ↗ — 셋째는 ⑦ 소유주 결정, tools.radiation-lab.com). Esc(초점은 Tools 로) · 바깥 누르기로 닫힌다. JS 없이도 열린다 |
 | 도구 쪽 왼쪽 목록 | 일곱 줄 한 덩어리, 손그림 표식 | **같은 두 묶음 · 같은 순서 · 같은 Lucide 아이콘**(16px), 지금 도구는 accent-soft |
 | 도구 정본 `lib/tools.ts` | 순서 = 만든 순서 | 명세 순서(감마·베타·ALARA / 환산·붕괴·질량·MDA) + `group` · `icon` · `line` 칸, `TOOL_GROUPS`·`toolsIn`·`menuName` |
 | 보이는 이름 | RadCalc | **Radiation Lab** — 제목 `<쪽> · Radiation Lab` · 공유 그림 95장 다시 구움(눈썹 「RADIATION LAB」, 밑줄 radiation-lab.com) · JSON-LD WebSite 는 apex 노드(`#site`). `RadCalc` 은 **DOI 인용(`CITATION_NAME`)** · 저장소 · 문서에만 |

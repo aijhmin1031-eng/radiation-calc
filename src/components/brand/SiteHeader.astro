@@ -34,6 +34,8 @@ const PAGES = [
 const MORE = [
   { href: "https://radimeter.radiation-lab.com/", label: "Instrument testing", icon: "gauge" },
   { href: "https://disposal.radiation-lab.com/", label: "Disposal & transport", icon: "layers" },
+  /* ★ 2026-10-06 ⑦ 소유주 결정 — 셋째 자매 사이트(일상 도구 모음, 다른 세션이 세운 tools.radiation-lab.com). */
+  { href: "https://tools.radiation-lab.com/", label: "Everyday tools", icon: "wrench" },
 ] as const;
 const onPage = (href: string) => here.startsWith(href);
 const toolOn = (slug: string) => here === u(`/${slug}/`);
