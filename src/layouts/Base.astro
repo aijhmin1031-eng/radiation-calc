@@ -1,9 +1,9 @@
 ---
 import "../styles/global.css";
-import { SITE_NAME, SITE_TAGLINE, UMBRELLA_NAME, DATA_SOURCES, SITE_URL, u, canonical, canonicalPath } from "../lib/site";
-import { TOOLS } from "../lib/tools";
+import { SITE_NAME, UMBRELLA_NAME, DATA_SOURCES, SITE_URL, u, canonical, canonicalPath } from "../lib/site";
+import { TOOLS, menuName } from "../lib/tools";
 import ogManifest from "../data/og-manifest.json";
-import PlatformBar from "../components/brand/PlatformBar.astro";
+import SiteHeader from "../components/brand/SiteHeader.astro";
 import ThemeToggle from "../components/ThemeToggle.astro";
 import AccountChip from "../components/AccountChip.astro";
 import ShareRow from "../components/ShareRow.astro";
@@ -20,44 +20,31 @@ interface Props {
 }
 const { title, description, noindex, share = true, schema = "WebApplication" } = Astro.props;
 const here = Astro.url.pathname;
-/** ★★ **머리글과 압축 고정 바가 같은 목록을 읽는다**(2026-09-16). 그전에는 링크 세 줄이
- *  두 곳에 복사돼 있었고, 그 바람에 **`Saved`·`Methods` 에는 활성 표시가 아예 없었다** —
- *  `/methods/` 에서 켜지는 칸이 0개라 「지금 어디」가 사라졌다. 목록을 한 곳에 두면
- *  칸을 늘릴 때 한쪽만 고쳐지는 사고가 구조적으로 없다. */
+/** ★★ 압축 고정 바의 칸 — **머리글과 같은 글자·순서**다(명세 §1, 2026-10-06 ⑥).
+ *  ★ 바에는 메뉴 판을 다시 싣지 않는다 — 같은 일곱 링크가 쪽마다 두 벌 서면 쪽 사이 겹침만 는다.
+ *    바의 `Tools` 는 홈의 도구 묶음(`/#tools`)으로 간다. */
 const NAVI = [
-  { href: "/", label: "Calculators" },
-  /* ★ 핵종 낱장으로 가는 문(쪽 목록은 `lib/nuclide-pages.ts`). 도구는 「무엇을 계산하는가」로 찾고, 여기는
-     「어느 핵종인가」로 찾는다 — 찾아오는 이유가 다르므로 칸을 따로 준다. */
-  { href: "/nuclides/", label: "Nuclides" },
-  /* ★ `Saved` 칸을 걷었다(2026-10-06, 소유주 지시 「핵심 중심으로 구조를 단순화」).
-     로그인해야 무엇이든 보이는 쪽이라 처음 온 사람·심사자에게는 빈 화면으로 가는 칸이었다.
-     저장한 결과로 가는 길은 그대로 남는다 — 도구 쪽 우측 레일의 「Saved results」(`ToolPage`)와
-     저장 직후의 「View saved results」(`SaveBar`). `check-save` 는 어느 자리든 링크를 세므로 그대로 통과한다. */
-  { href: "/methods/", label: "Methods" },
+  { href: "/#tools", label: "Tools", short: "Tools", on: false },
+  { href: "/calc/nuclides/", label: "Nuclide data", short: "Nuclides", on: here.startsWith("/calc/nuclides/") },
+  { href: "/calc/methods/", label: "Methods", short: "Methods", on: here.startsWith("/calc/methods/") },
+  { href: "/calc/validation/", label: "Validation", short: "Validation", on: here.startsWith("/calc/validation/") },
 ];
-const navOn = (href: string) => (href === "/" ? here === u("/") : here.startsWith(u(href)));
-/** ★ 칸 모양은 **플랫폼 셋이 같다**(2026-09-16 소유주 지시 「상단메뉴는 동일한 배경,
- *  폰트, 크기를 사용하면 좋겠어」) — 13px · 흐린 글자 · 활성은 앰버 알약.
- *  ★ 비활성에도 **투명 테두리**를 준다. 없으면 활성 칸만 1px 씩 커져 줄이 흔들린다. */
-const navCls = (href: string) =>
+const navCls = (on: boolean) =>
   [
-    /* ★ 모서리 4px · 안여백 6/12px 은 **RadiMeter 의 칸과 같은 치수**다(실측으로 맞췄다).
-       `rounded-lg` 는 이 lab 에서 8px, RadiMeter 의 디자인 체계에서는 4px 이라
-       **같은 클래스 이름이 두 배 다른 값**으로 풀린다 — 이름이 아니라 값을 맞춘다. */
-    "rounded border px-3 py-1.5 transition-colors whitespace-nowrap",
-    navOn(href)
-      ? "bg-accent-soft text-accent font-semibold border-accent/25"
-      : "border-transparent text-ink-muted hover:bg-surface hover:text-ink",
+    "rounded border px-2 py-1.5 transition-colors whitespace-nowrap sm:px-3",
+    on ? "border-line-strong bg-surface text-ink font-semibold"
+       : "border-transparent text-ink-muted hover:bg-surface hover:text-ink",
   ].join(" ");
 const full = `${title} · ${SITE_NAME}`;
-/* 압축 바가 드는 「지금 어디」 — 쪽마다 적게 하지 않는다(쪽 제목에서 파생한다).
-   ★ 허브에서는 비운다 — 칸 「Calculators」 가 이미 켜져 있어 같은 말이 두 번 나온다. */
-const barLabel = here === u("/") ? "" : title;
+/* 압축 바가 드는 「지금 어디」 — 쪽마다 적게 하지 않는다(쪽 제목에서 파생한다). */
+const barLabel = title;
 /* ★★ 공유 그림 — **커밋된 산출물**이고 `scripts/make-og.mjs` 가 굽는다.
    ★ 조회는 반드시 `canonicalPath()`(base 없음)로 한다 — base 가 붙은 pathname 으로 찾으면
      매니페스트와 안 맞아 **전 쪽이 조용히 폴백으로 떨어진다**(이웃 lab 이 밟은 함정).
    ★ 사이트맵에 없는 쪽(noindex 인 `/saved/`)은 그림이 없으므로 홈 카드로 받는다. */
-const ogSlug = (ogManifest as Record<string, { slug: string }>)[canonicalPath(here)]?.slug ?? "home";
+const OG = ogManifest as Record<string, { slug: string }>;
+/* ★ 2026-10-06 ⑥ — 사이트맵 밖 쪽의 대체 카드는 매니페스트 `"*"` 칸이다(`/` 허브가 걷혔다). */
+const ogSlug = OG[canonicalPath(here)]?.slug ?? OG["*"]?.slug ?? "home";
 const ogImage = new URL(u(`/og/${ogSlug}.png`), SITE_URL).href;
 /* 세션 표식을 그리기 전에 세우려면 부팅 스크립트가 저장소 칸 이름을 알아야 한다.
    ★ 이름을 글자로 박지 않고 **환경변수에서 뽑는다** — 프로젝트가 바뀌면 저절로 따라온다. */
@@ -141,11 +128,11 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
     "@graph": [
       {
         "@type": "WebSite",
-        "@id": `${new URL(u("/"), SITE_URL).href}#website`,
+        /* ★ 2026-10-06 ⑥ — `/calc/` 허브가 걷혀 사이트는 apex 하나다. 우산 홈의 WebSite 노드와 같은 @id 다. */
+        "@id": `${new URL("/", SITE_URL).href}#site`,
         name: SITE_NAME,
-        url: new URL(u("/"), SITE_URL).href,
+        url: new URL("/", SITE_URL).href,
         inLanguage: "en",
-        isPartOf: { "@type": "WebSite", name: UMBRELLA_NAME, url: new URL(SITE_URL).origin },
       },
       schema === "WebApplication"
         ? {
@@ -177,44 +164,13 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
   <body class="min-h-screen antialiased">
     <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-surface focus:px-3 focus:py-2">Skip to content</a>
 
-    {/* ★★ **머리글은 두 막대다**(2026-10-06 — 플랫폼 상단 메뉴 통일, 정본 `components/brand/PlatformBar.astro`).
-        ① **플랫폼 막대**(panel · line-strong) — 브랜드 `Radiation Lab`(→ `/`) · 분야 칸 셋 · 테마·계정.
-           네 곳(우산 · 세 lab)이 글자·순서·주소·치수까지 같다. 이 lab 의 모든 쪽에서 현재 칸은
-           `Dose & shielding`(404 · `/saved/` 포함 — 전부 이 lab 의 쪽이다).
-        ② **lab 막대**(paper · line) — lab 이름 `RadCalc`(→ 이 lab 홈) · 이 lab 의 칸 셋(활성은 앰버 알약).
-           바탕이 쪽 바탕과 같아 **쪽의 일부로** 읽힌다 — 「세부 메뉴는 페이지 안으로」(소유주 지시).
-        ★ 그전의 잠금장치(`Lockup` — 위 줄 Radiation Lab · 아래 줄 lab 이름)는 걷었다. 위 줄은 ①의
-          브랜드가, 아래 줄은 ②의 이름이 이어받는다.
-        ★★ 2026-09-14 결정 「다른 lab 으로 가는 칸을 두지 않는다 — lab 을 고르는 자리는 우산이다」를
-          **뒤집었다.** 그 이유(다른 두 lab 에는 없어 불균형 · lab 이 늘 때마다 세 머리글을 고친다 ·
-          잠금장치와 같은 말을 두 번 한다)가 이번에는 다 해소된다 — 네 곳이 **똑같이** 들고,
-          칸은 네 레포의 `check-platform` 이 같은 숫자로 지키며, 잠금장치가 없다.
-        ★ `<header>` 자신은 칠하지 않는다 — 두 막대가 각자 바탕과 아래선을 든다. */}
-    <header>
-      <PlatformBar current="https://radiation-lab.com/calc/">
-        {/* ★ 전환 손잡이와 계정 표시는 **플랫폼 막대의 맨 오른쪽**이다(2026-09-15 소유주 지시
-            「이것처럼 로그인 상태창과 라이트·다크 전환 버튼 함께 만들어 놓자. 동일하게」 — 그전에는
-            이 lab 만 둘 다 없었다). 컴포넌트는 그대로이고 자리만 플랫폼 막대로 옮겼다. */}
-        <ThemeToggle compactOnMobile />
-        <AccountChip />
-      </PlatformBar>
-      <div data-lab-bar class="lbar">
-        <div class="lbar-in mx-auto max-w-content px-5 sm:px-8">
-          <a href={u("/")} class="lbar-name">{SITE_NAME}</a>
-          {/* ★ **도구 목록으로 돌아가는 칸이 없었다**(2026-09-14 소유주 지적
-              「radcalc 상단 메뉴에 다시 첫 계산도구 선택하는 화면으로 못 돌아가잖아」).
-              도구를 고르는 것은 이 lab 에서 가장 자주 하는 이동이므로 첫 칸을 준다.
-              ★ 좁은 화면(<640px)에서는 칸이 **lab 이름 아래 제 줄**을 쓴다 — 이름(63px) + 간격 12px + 칸 셋(275px)
-                = 350px 이 320·360px 의 가용폭(280·320px)을 넘는다(2026-10-06 실측, DejaVu Sans). 이름은 좁은
-                화면에서도 보여야 한다(명세 — 브랜드가 사라지면 안 된다). */}
-          <nav aria-label="Primary" class="lbar-nav text-[13px]">
-            {NAVI.map((n) => (
-              <a href={u(n.href)} aria-current={navOn(n.href) ? "page" : undefined} class={navCls(n.href)}>{n.label}</a>
-            ))}
-          </nav>
-        </div>
-      </div>
-    </header>
+    {/* ★★ **머리글은 한 줄이다**(2026-10-06 ⑥ — 소유주 「상단에 놓아두는 2가지 영역이 다르네… 하나의 계산기 안에
+        다양한 도구가 들어있는 형태로」, 정본 `components/brand/SiteHeader.astro` · 명세 `HEADER-SPEC.md`).
+        그전의 두 막대(분야 칸 셋 + lab 막대)는 걷었다. 전환 손잡이와 계정 표시는 맨 오른쪽 그대로다. */}
+    <SiteHeader here={here}>
+      <ThemeToggle compactOnMobile />
+      <AccountChip />
+    </SiteHeader>
 
     {/* ★★ **압축 고정 바** — 진짜 머리글은 흘려보내고, **지나친 뒤에만** 45px 바가 뜬다.
         머리글 전체를 고정하면 세로 공간을 영구히 뺏는다 — 2026-10-06 두 막대가 된 뒤로는 더하다
@@ -231,7 +187,7 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
 
     <div id="topbar" data-on="false" class="topbar border-b border-line-strong bg-panel">
       <div class="topbar-in mx-auto flex max-w-content items-center gap-3 px-5 sm:px-8">
-        <a href="/" class="topbar-mark" aria-label="Radiation Lab — platform home">
+        <a href="https://radiation-lab.com/" class="topbar-mark" aria-label="Radiation Lab — home">
           <svg viewBox="0 0 64 64" aria-hidden="true">
             <polygon points="32.00,6.20 50.24,13.76 57.80,32.00 50.24,50.24 32.00,57.80 13.76,50.24 6.20,32.00 13.76,13.76"
                      fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="miter" />
@@ -248,9 +204,9 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
           : <span class="flex-1"></span>}
         {/* 손가락 표적 24px(WCAG 2.5.8) — 13px 글자는 줄 높이가 18px 뿐이라
             세로 여백으로만 넓힌다(바 높이 45px 예산은 그대로다). */}
-        <nav aria-label="Primary (compact)" class="ml-auto flex items-center gap-1 text-[13px]">
+        <nav aria-label="Primary (compact)" class="ml-auto flex shrink-0 items-center gap-0.5 text-[13px] sm:gap-1">
           {NAVI.map((n) => (
-            <a href={u(n.href)} aria-current={navOn(n.href) ? "page" : undefined} class={navCls(n.href)}>{n.label}</a>
+            <a href={n.href} title={n.label} aria-current={n.on ? "page" : undefined} class={navCls(n.on)}><span class="hidden sm:inline">{n.label}</span><span class="sm:hidden">{n.short}</span></a>
           ))}
         </nav>
       </div>
@@ -279,7 +235,7 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
     <footer class="mt-16 border-t border-line-strong bg-panel">
       <div class="mx-auto max-w-content space-y-5 px-5 py-8 text-[13px] sm:px-8">
         <nav aria-label="Site" class="flex flex-wrap gap-x-4 gap-y-1.5">
-          {TOOLS.map((t) => <a href={u(`/${t.slug}/`)} class="text-ink-muted hover:text-ink">{t.name}</a>)}
+          {TOOLS.map((t) => <a href={u(`/${t.slug}/`)} class="text-ink-muted hover:text-ink">{menuName(t)}</a>)}
         </nav>
         <div>
           <p class="label">Data sources</p>
@@ -290,7 +246,7 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
           </ul>
         </div>
         <p class="text-ink-faint leading-relaxed">
-          {SITE_NAME} is part of {UMBRELLA_NAME}. These calculators are for orientation and
+          {UMBRELLA_NAME}'s calculators are for orientation and
           cross-checking. They <strong>do not replace</strong> an accredited calibration, a shielding
           design, a dose assessment, or a radiation survey by a qualified person.
         </p>
@@ -336,16 +292,5 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
   .topbar-mark svg { width: 20px; height: 20px; }
   .topbar-mark:focus-visible { outline: 2px solid rgb(var(--c-accent)); outline-offset: 2px; }
 
-  /* ── lab 막대(2026-10-06) — 바탕은 **쪽 바탕(paper)**, 아래선은 **옅은 선(line)** 이다.
-     플랫폼 막대(panel · line-strong)와 면으로 갈려 「쪽의 일부」로 읽힌다. ── */
-  .lbar { background: rgb(var(--c-paper)); border-bottom: 1px solid rgb(var(--c-line)); }
-  .lbar-in { display: flex; flex-wrap: wrap; align-items: center; column-gap: 12px; padding-top: 4px; padding-bottom: 4px; }
-  /* 이름은 손가락 표적 24px 을 넘게 둔다(세로 여백으로만 — 글자 크기는 14px 그대로). */
-  .lbar-name { display: inline-flex; align-items: center; min-height: 24px; font-size: 14px; font-weight: 650;
-               color: rgb(var(--c-ink)); text-decoration: none; white-space: nowrap; }
-  .lbar-name:hover { text-decoration: underline; }
-  .lbar-name:focus-visible { outline: 2px solid rgb(var(--c-accent)); outline-offset: 2px; }
-  .lbar-nav { width: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
-  @media (min-width: 640px) { .lbar-nav { width: auto; gap: 4px; } }
   @media (prefers-reduced-motion: reduce) { .topbar { transition: none; } }
 </style>

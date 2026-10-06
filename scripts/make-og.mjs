@@ -71,10 +71,10 @@ const card = ({ heading, art }) => `<!doctype html><meta charset="utf-8">
   .r img { width:340px; height:340px; }
 </style>
 <div class="l">
-  <p class="eyebrow">Radiation Lab · RadCalc</p>
+  <p class="eyebrow">Radiation Lab</p>
   <div class="rule"></div>
   <h1>${heading.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</h1>
-  <p class="foot">radiation-lab.com/calc</p>
+  <p class="foot">radiation-lab.com</p>
 </div>
 ${art ? `<div class="r"><img src="${art}"></div>` : ""}`;
 
@@ -88,6 +88,15 @@ for (const p of paths) {
   await page.screenshot({ path: join(OUT, `${slug}.png`), type: "png" });
   manifest[p] = { slug, title };
   console.log(`   ${p.padEnd(22)} → og/${slug}.png   ${heading}`);
+}
+/* ★★ 2026-10-06 ⑥ — `/calc/` 허브가 걷혀 사이트맵에 `/` 가 없다. 사이트맵 밖 쪽(404 · `/saved/`)이 받는 대체 카드를
+   따로 굽고 매니페스트의 `"*"` 칸에 적는다 — `Base.astro` 가 그것을 읽고, `check-og` 의 「매니페스트 밖 그림」 검사가
+   그 그림을 고아로 보지 않는다. */
+if (!manifest["/"]) {
+  await page.setContent(card({ heading: "Radiation calculators that show their work", art: "" }), { waitUntil: "load" });
+  await page.screenshot({ path: join(OUT, "home.png"), type: "png" });
+  manifest["*"] = { slug: "home", title: "" };
+  console.log("   *                      → og/home.png   (사이트맵 밖 쪽의 대체 카드)");
 }
 await browser.close();
 writeFileSync(MANIFEST, JSON.stringify(manifest, null, 2) + "\n");

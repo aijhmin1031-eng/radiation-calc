@@ -10,6 +10,46 @@
 
 우산 정본은 `aijhmin1031-eng/radiation-lab`, 절차는 `radiation-meter-tester/docs/umbrella-setup.md`.
 
+## ★★★ 계산기 하나, 도구 일곱 — 머리글 한 줄 · 허브는 apex 홈 · 이름은 「Radiation Lab」 (2026-10-06 ⑥)
+
+소유주: 「여기 상단에 놓아두는 2가지 영역이 다르네… **하나의 계산기 안에 다양한 도구가 들어있는 형태로** 구성해보자.
+구조를 다시 잘 잡아봐」 → 시안(머리글 한 줄 · Tools 메뉴 · 홈의 도구 묶음 · 도구 쪽 왼쪽 목록) 승인 「고」.
+정본 명세는 `C:\dev\rl\HEADER-SPEC.md`(네 레포 공통). 우산 쪽 짝은 `radiation-lab` ab49970.
+
+★ **무엇이 문제였나** — 머리글이 두 막대였다. 위는 분야 칸 셋(Dose & shielding · Instrument testing · Disposal & transport)이
+  **세 사이트**를, 아래는 `RadCalc` + Calculators · Nuclides · Methods 가 **한 사이트 안의 쪽**을 가리켰다. 같은 모양의 칸이 다른
+  층을 말했고, 화면에 이름이 둘(Radiation Lab · RadCalc) 섰다. apex 가 RadCalc 하나가 된 뒤(⑤)로는 위 막대의 첫 칸과 아래
+  막대가 같은 곳을 두 번 말하고 있었다.
+
+| 자리 | 전 | 후 |
+|---|---|---|
+| 머리글 | 플랫폼 막대 + lab 막대(두 줄) | **한 줄** `components/brand/SiteHeader.astro` — 브랜드 `Radiation Lab`(→ https://radiation-lab.com/) · **Tools ▾** · Nuclide data · Methods · Validation · 테마 · 계정(→ `/calc/saved/`). 치수는 우산 홈 `.hd`/`.tm` 와 같은 값 |
+| Tools 메뉴 | 없음 | `<details>` — 두 묶음(선량·차폐 셋 / 방사능·계측 넷) · Lucide 아이콘 · 한 줄 설명 · 맨 아래 「More from Radiation Lab」(Instrument testing ↗ · Disposal & transport ↗). Esc(초점은 Tools 로) · 바깥 누르기로 닫힌다. JS 없이도 열린다 |
+| 도구 쪽 왼쪽 목록 | 일곱 줄 한 덩어리, 손그림 표식 | **같은 두 묶음 · 같은 순서 · 같은 Lucide 아이콘**(16px), 지금 도구는 accent-soft |
+| 도구 정본 `lib/tools.ts` | 순서 = 만든 순서 | 명세 순서(감마·베타·ALARA / 환산·붕괴·질량·MDA) + `group` · `icon` · `line` 칸, `TOOL_GROUPS`·`toolsIn`·`menuName` |
+| 보이는 이름 | RadCalc | **Radiation Lab** — 제목 `<쪽> · Radiation Lab` · 공유 그림 95장 다시 구움(눈썹 「RADIATION LAB」, 밑줄 radiation-lab.com) · JSON-LD WebSite 는 apex 노드(`#site`). `RadCalc` 은 **DOI 인용(`CITATION_NAME`)** · 저장소 · 문서에만 |
+| `/calc/` 허브 | 도구 카드 일곱 + 읽을 글 + 해설 | **없음** — `deploy/_redirects` `/calc/ → / 301`(배포가 `dist/` 로 복사, 스모크가 301 을 잰다). 내용은 apex 홈이 든다(#tools · #notes · #method). 도구 주소는 그대로 |
+| 읽을 글 일곱 | 허브에서 클릭 1회 | **`/calc/methods/#notes`** 에서 클릭 1회(이 lab 안의 허브) — `check-notes` 의 HUB 를 옮겼다 |
+| 빵부스러기 | Calculators / … | 도구 쪽 `Tools / <묶음> / <이름>`(Tools → `/#tools`), 그 밖 `Home / …` |
+| 압축 고정 바 | lab 칸 셋 | 머리글과 같은 글자 넷(Tools → `/#tools` · Nuclide data · Methods · Validation, 좁은 화면 짧은 글자). 메뉴 판은 다시 싣지 않는다(쪽마다 같은 일곱 링크가 두 벌이면 겹침만 는다) |
+
+- 걷은 것: `brand/PlatformBar.astro` · `ToolIcon.astro` · `lib/tool-icons.ts`(손그림 표식) · `pages/index.astro`(허브). 새것: `Icon.astro` · `lib/lucide.ts`(ISC, 마크업을 박았다 — 바깥 요청 0).
+- 공유 그림: 사이트맵에 `/` 가 없어 사이트맵 밖 쪽(404 · `/saved/`)의 대체 카드는 매니페스트 `"*"` 칸(`home.png`)이다 — `make-og` 가 굽고 `Base` 가 읽는다.
+- 쪽 수 98 → **97**(허브 1), 사이트맵 96 → **95**.
+
+### 게이트
+- `check-platform` — **우산 레포의 게이트를 그대로 옮겼다**(같은 `PBAR` 표 · 같은 측정 함수). 10폭 × 2테마 × 5쪽 + Tools 메뉴(묶음·도구·자매·패널 자리·Esc·바깥 누르기) 1280/390px.
+  역테스트 2종 — 게이트 표의 Methods 주소를 틀리게(100건) · 산출 `/methods/` 메뉴에서 Beta 를 빼기(4건) — 둘 다 빨개졌다.
+- `check-lockup` — 두 막대 → **막대 하나**(옛 `[data-platform-bar]`·`[data-lab-bar]` 0개) · 브랜드 → apex · 머리글에 「RadCalc」 글자 0 · 모바일 예산 110px(실측 97).
+- `check-notes` HUB → `/methods/` · `check-a11y` 다크 쪽에서 `/calc/` 를 뺐다.
+- 머리글은 흐름 안(`static`)에 둔다 — 처음에 `position: relative` 를 주었다가 `check-sticky` ⑥ 이 잡았다. 판의 쌓임은 판의 z-index 가 정한다.
+- 로컬(2026-10-06, Windows · Chromium 1243): output · render · lockup · inputs · save · sticky · header · platform · a11y · nuclides · notes · og · lastmod · adsense · progeny · validation 통과,
+  `npm test` 143/143 · tsc 0 · astro check 0 오류. `check-gates` 7건은 Windows 의 `gate\…` 경로 자기 제외 오탐(HEAD 와 같은 7건).
+
+### 우산이 함께 들어야 하는 것
+- 우산 `cf/_redirects` 의 `/calc  /calc/  301` 은 `/calc  /  301` 로 바꿀 것 — 그대로면 `/calc` → `/calc/` → `/` 로 두 번 돈다.
+- apex 홈의 `#tools` · `#notes` 가 이 레포의 빵부스러기·압축 바·저장 쪽 「Back to the tools」의 목적지다.
+
 ## ★★ Cloudflare Workers 로 옮겼다 — apex 의 주인공이 됐다 (2026-10-06)
 
 애드센스가 2026-10-06 00:48 에 radiation-lab.com 을 「가치가 별로 없는 콘텐츠」로 돌려보냈다. 소유주 결정:

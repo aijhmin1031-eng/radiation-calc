@@ -26,8 +26,8 @@ jobs:
           SITE_URL: https://radiation-lab.com
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
-      - name: Asset headers
-        run: cp deploy/_headers dist/_headers
+      - name: Asset headers and redirects
+        run: cp deploy/_headers deploy/_redirects dist/
       - name: Deploy
         run: npx --yes wrangler@4 deploy
         env:
@@ -38,7 +38,10 @@ jobs:
       - name: Smoke test
         run: |
           set -e
-          for p in /calc/ /calc/nuclides/ /calc/gamma-shielding/; do
+          for p in /calc/nuclides/ /calc/gamma-shielding/ /calc/methods/; do
             code=$(curl -s -o /dev/null -w '%{http_code}' "https://radiation-lab-calc.jhmin1031.workers.dev$p")
             echo "workers.dev $p -> $code"; test "$code" = 200
           done
+          # ★ 2026-10-06 ⑥ — /calc/ 허브는 apex 홈으로 301(deploy/_redirects). 대상은 같은 호스트의 / 다.
+          loc=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "https://radiation-lab-calc.jhmin1031.workers.dev/calc/")
+          echo "/calc/ -> $loc"; test "$loc" = "301 https://radiation-lab-calc.jhmin1031.workers.dev/"

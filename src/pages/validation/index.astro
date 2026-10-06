@@ -14,7 +14,7 @@ const unitsStats = (() => {
   for (const n of byQ.values()) pairs += n * (n - 1);
   return { units: UNIT_CASES.length, pairs };
 })();
-import ToolIcon from "../../components/ToolIcon.astro";
+import Icon from "../../components/Icon.astro";
 
 const published = REPORTS.filter((r) => r.status === "published").length;
 const rows = TOOLS.map((t) => ({ tool: t, report: reportFor(t.slug) }));
@@ -25,7 +25,7 @@ const description =
 ---
 <Base title={title} description={description} schema="CollectionPage">
   <nav class="tap-list mb-4 flex flex-wrap items-center gap-x-1.5 text-[12px] text-ink-faint">
-    <a href={u("/")} class="hover:text-ink">Calculators</a> <span aria-hidden>/</span> Validation
+    <a href="/" class="hover:text-ink">Home</a> <span aria-hidden>/</span> Validation
   </nav>
 
   <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">Validation</h1>
@@ -62,7 +62,7 @@ const description =
     {rows.map(({ tool, report }) => (
       <li class="card p-4">
         <div class="flex items-start gap-2.5">
-          <ToolIcon slug={tool.slug} class="mt-[3px]" />
+          <Icon name={tool.icon} size={16} class="mt-[3px]" />
           <div class="min-w-0 flex-1">
             <p class="text-[15px] font-semibold text-ink">{tool.name}</p>
             {report?.status === "published" ? (

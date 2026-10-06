@@ -1,0 +1,13 @@
+---
+import { LUCIDE } from "../lib/lucide";
+interface Props { name: string; size?: number; class?: string }
+const { name, size = 20, class: cls = "" } = Astro.props;
+const d = LUCIDE[name];
+---
+{/* ★ 색은 `currentColor` 를 물려받는다 — 테마·활성 표시를 저절로 따라온다.
+    ★ `aria-hidden` — 옆에 이름이 글자로 있다. 표식이 이름을 한 번 더 읽으면 소음이다. */}
+{d ? (
+  <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor"
+       stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+       aria-hidden="true" focusable="false" class={`shrink-0 ${cls}`} set:html={d} />
+) : null}

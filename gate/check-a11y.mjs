@@ -65,7 +65,7 @@ const PAGES = [...all.filter((p) => !nuclides.includes(p)), ...sample];
 if (!existsSync(join(DIST, "404.html"))) { console.error("❌ dist/404.html 이 없다 — `npm run build` 가 copy-404 까지 돌아야 한다"); process.exit(1); }
 PAGES.push("/404.html");
 /* 다크 테마는 쪽 셋 — 홈·도구 하나·읽을 글 하나(강조색·표·눈썹이 다 있는 자리) */
-const DARK_PAGES = ["/calc/", "/calc/beta/", "/calc/methods/"];
+const DARK_PAGES = ["/calc/gamma-shielding/", "/calc/beta/", "/calc/methods/"];  // 2026-10-06 ⑥ — /calc/ 허브는 걷혔다(301)
 
 const browser = await chromium.launch(LAUNCH);
 const bad = new Map();   // rule → { impact, help, nodes, pages:Set, example }

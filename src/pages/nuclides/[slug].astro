@@ -71,7 +71,7 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
 ---
 <Base schema="TechArticle" title={seo.title} description={seo.description}>
   <nav class="tap-list mb-4 flex flex-wrap items-center gap-x-1.5 text-[12px] text-ink-faint">
-    <a href={u("/")} class="hover:text-ink">Calculators</a> <span aria-hidden>/</span>
+    <a href="/" class="hover:text-ink">Home</a> <span aria-hidden>/</span>
     <a href={u("/nuclides/")} class="hover:text-ink">Nuclides</a> <span aria-hidden>/</span> {p.key}
   </nav>
 

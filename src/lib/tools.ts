@@ -15,6 +15,14 @@ export interface Tool {
   blurb: string;
   /** 「무엇을 답하는가」 — 사용자의 질문 형태로 적는다. 목록에서 고르는 근거가 된다. */
   question: string;
+  /** ★★ 2026-10-06 ⑥ 묶음 — 머리글 Tools 메뉴 · 도구 쪽 왼쪽 목록 · 우산 홈 타일이 **같은 두 묶음**을 든다
+   *  (소유주 「하나의 계산기 안에 다양한 도구가 들어있는 형태」, 명세 `HEADER-SPEC.md` §4). 묶음 순서와
+   *  묶음 안 순서는 **이 배열의 순서**다 — 그래서 배열을 명세 순서로 다시 놓았다. */
+  group: ToolGroup;
+  /** Lucide 아이콘 이름(`lib/lucide.ts`). */
+  icon: string;
+  /** 메뉴 한 줄 — 명세 §4 의 글자 그대로. `blurb` 보다 짧다(메뉴 칸 폭 안에 한두 줄). */
+  line: string;
   needs: ("nuclide" | "shielding" | "counting" | "none")[];
   /** 로그인이 필요한가 — 기본 도구는 전부 false 다(유입의 핵심). */
   login: false;
@@ -38,37 +46,20 @@ export interface Tool {
   checked: string;
 }
 
+export type ToolGroup = "dose" | "activity";
+/** 묶음 이름 — 메뉴·목록·홈이 같은 글자를 쓴다. */
+export const TOOL_GROUPS: { key: ToolGroup; label: string }[] = [
+  { key: "dose", label: "Dose & shielding" },
+  { key: "activity", label: "Activity & counting" },
+];
+/** 메뉴·목록에 그리는 이름 — `name` 의 「and」를 「&」로(명세 §4). h1 은 `name` 그대로다. */
+export const menuName = (t: Tool) => t.name.replace(/ and /, " & ");
+export const toolsIn = (g: ToolGroup) => TOOLS.filter((t) => t.group === g);
+
 export const TOOLS: Tool[] = [
-  { slug: "units", name: "Unit converter",
-    seoTitle: "Radiation unit converter — activity, dose, exposure", needs: ["none"], login: false,
-    question: "How many becquerels is 5 µCi? How many Bq/cm² is 6000 dpm/100 cm²?",
-    blurb: "Activity, dose, dose equivalent, exposure, surface contamination and concentration — converted within each quantity, never across.",
-    assumes: [
-      "Conversions stay inside one quantity, using the exact SI definitions rather than rounded factors.",
-      "Exposure to air kerma multiplies by W/e = 33.97 J/C, the average energy to make one ion pair in dry air.",
-      "Activity per litre and activity per kilogram are separate quantities. Crossing between them takes a density you supply, not a fixed factor.",
-    ],
-    excludes: [
-      "Gray to sievert. That step needs a radiation weighting factor that depends on the radiation type — there is no single factor.",
-      "Activity to dose. That depends on the nuclide, the geometry and the distance.",
-    ],
-    checked: "Factors are defined constants, not measurements — 1 Ci = 3.7×10¹⁰ Bq exactly.",
-  },
-  { slug: "decay", name: "Decay and half-life",
-    seoTitle: "Radioactive decay calculator — half-life and activity", needs: ["nuclide"], login: false,
-    question: "How much is left after 18 months? When does this source drop below the limit?",
-    blurb: "Activity after elapsed time, the time to reach a target, half-life from two measurements, and decay chains.",
-    assumes: [
-      "Pure exponential decay of one nuclide, with half-lives from the IAEA evaluated nuclear data.",
-      "Nothing but decay removes activity between the two times.",
-    ],
-    excludes: [
-      "Leakage, adsorption and detector drift. All three look exactly like a shorter half-life in a two-point fit.",
-      "Dilution or concentration of the sample between measurements.",
-    ],
-    checked: "One half-life returns 50.00% of the starting activity.",
-  },
+  /* ★ 2026-10-06 ⑥ — 명세 순서: 선량·차폐 셋(감마 · 베타 · ALARA), 방사능·계측 넷(환산 · 붕괴 · 질량 · MDA). */
   { slug: "gamma-shielding", name: "Gamma dose rate and shielding",
+    group: "dose", icon: "shield", line: "Dose rate from the emission spectrum; shield thickness solved backwards.",
     seoTitle: "Gamma dose rate calculator and shielding", needs: ["nuclide", "shielding"], login: false,
     question: "What is the dose rate at 2 m from 37 GBq of Ir-192, and how much lead brings it under 20 µSv/h?",
     blurb: "Point-source dose rate from the emission spectrum, with attenuation and buildup, and the shield thickness solved backwards.",
@@ -83,36 +74,8 @@ export const TOOLS: Tool[] = [
     ],
     checked: "Constants computed from the spectrum agree with published values to within about 2%; 1 Ci of Co-60 at 1 m gives 11.31 mGy/h.",
   },
-  { slug: "specific-activity", name: "Mass and activity",
-    seoTitle: "Specific activity calculator — mass and activity", needs: ["nuclide"], login: false,
-    question: "How many grams of Pu-239 is 1 GBq? What is the specific activity of Sr-90?",
-    blurb: "Grams to becquerels and back for 147 nuclides, from half-life and evaluated molar mass.",
-    assumes: [
-      "The pure isotope, using the evaluated atomic mass as the molar mass.",
-      "Specific activity derived from the half-life, not taken from a table.",
-    ],
-    excludes: [
-      "Isotopic mixtures. Weapons- or reactor-grade plutonium and enriched uranium hold more total mass than this, and the other isotopes add their own activity.",
-      "Chemical form. Compounds and alloys weigh more than the isotope they carry.",
-    ],
-    checked: "Molar masses are the AME2020 evaluated atomic masses, not mass numbers; the difference reaches 0.53%.",
-  },
-  { slug: "mda", name: "Detection limits (MDA / MDC)",
-    seoTitle: "MDA calculator — detection limits and scan MDC", needs: ["counting"], login: false,
-    question: "What can this counter actually detect in a 10-minute count? How slowly must I scan?",
-    blurb: "Critical level, detection limit and minimum detectable activity for fixed counting, plus scan MDC with observer efficiency.",
-    assumes: [
-      "Poisson counting statistics with a background measured for the same duration (the Currie formulation).",
-      "The efficiency you enter already accounts for geometry and, where used, the fraction leaving the surface.",
-      "Scan MDC follows MARSSIM, including the observer efficiency term.",
-    ],
-    excludes: [
-      "Spectral interference and self-absorption inside the sample.",
-      "Systematic error in the efficiency itself, which is often larger than the counting statistics.",
-    ],
-    checked: "The critical level L_C and the detection limit L_D are reported separately — reporting L_C alone understates what the instrument finds.",
-  },
   { slug: "beta", name: "Beta dose rate and shielding",
+    group: "dose", icon: "shield-half", line: "Range, transmission and bremsstrahlung by absorber.",
     seoTitle: "Beta dose rate calculator and shielding", needs: ["nuclide", "shielding"], login: false,
     question: "How thick must acrylic be to stop Y-90 beta, and how much bremsstrahlung does lead make instead?",
     blurb: "Infinite-medium dose rate, Katz–Penfold range, transmission through absorbers, and bremsstrahlung yield by atomic number.",
@@ -128,6 +91,7 @@ export const TOOLS: Tool[] = [
     checked: "Y-90 in acrylic gives a 9.2 mm range, matching the published value.",
   },
   { slug: "alara", name: "ALARA and job planning",
+    group: "dose", icon: "timer", line: "Stay time, dose budget and collective dose across tasks.",
     seoTitle: "ALARA calculator — stay time and collective dose", needs: ["none"], login: false,
     question: "How long can two workers stay? How far back must the barrier go?",
     blurb: "Inverse square, stay time against a dose budget, collective dose across tasks, and half- and tenth-value layers.",
@@ -141,6 +105,68 @@ export const TOOLS: Tool[] = [
       "Individual limits. Collective dose adds people together, so it rewards using fewer workers for longer.",
     ],
     checked: "Stay time answers \"unknown\" rather than \"unlimited\" when the dose rate is missing.",
+  },
+  { slug: "units", name: "Unit converter",
+    group: "activity", icon: "arrow-left-right", line: "Activity, dose, exposure and contamination units.",
+    seoTitle: "Radiation unit converter — activity, dose, exposure", needs: ["none"], login: false,
+    question: "How many becquerels is 5 µCi? How many Bq/cm² is 6000 dpm/100 cm²?",
+    blurb: "Activity, dose, dose equivalent, exposure, surface contamination and concentration — converted within each quantity, never across.",
+    assumes: [
+      "Conversions stay inside one quantity, using the exact SI definitions rather than rounded factors.",
+      "Exposure to air kerma multiplies by W/e = 33.97 J/C, the average energy to make one ion pair in dry air.",
+      "Activity per litre and activity per kilogram are separate quantities. Crossing between them takes a density you supply, not a fixed factor.",
+    ],
+    excludes: [
+      "Gray to sievert. That step needs a radiation weighting factor that depends on the radiation type — there is no single factor.",
+      "Activity to dose. That depends on the nuclide, the geometry and the distance.",
+    ],
+    checked: "Factors are defined constants, not measurements — 1 Ci = 3.7×10¹⁰ Bq exactly.",
+  },
+  { slug: "decay", name: "Decay and half-life",
+    group: "activity", icon: "hourglass", line: "Activity after time, time to target, decay chains.",
+    seoTitle: "Radioactive decay calculator — half-life and activity", needs: ["nuclide"], login: false,
+    question: "How much is left after 18 months? When does this source drop below the limit?",
+    blurb: "Activity after elapsed time, the time to reach a target, half-life from two measurements, and decay chains.",
+    assumes: [
+      "Pure exponential decay of one nuclide, with half-lives from the IAEA evaluated nuclear data.",
+      "Nothing but decay removes activity between the two times.",
+    ],
+    excludes: [
+      "Leakage, adsorption and detector drift. All three look exactly like a shorter half-life in a two-point fit.",
+      "Dilution or concentration of the sample between measurements.",
+    ],
+    checked: "One half-life returns 50.00% of the starting activity.",
+  },
+  { slug: "specific-activity", name: "Mass and activity",
+    group: "activity", icon: "atom", line: "Grams to becquerels and back for 147 nuclides.",
+    seoTitle: "Specific activity calculator — mass and activity", needs: ["nuclide"], login: false,
+    question: "How many grams of Pu-239 is 1 GBq? What is the specific activity of Sr-90?",
+    blurb: "Grams to becquerels and back for 147 nuclides, from half-life and evaluated molar mass.",
+    assumes: [
+      "The pure isotope, using the evaluated atomic mass as the molar mass.",
+      "Specific activity derived from the half-life, not taken from a table.",
+    ],
+    excludes: [
+      "Isotopic mixtures. Weapons- or reactor-grade plutonium and enriched uranium hold more total mass than this, and the other isotopes add their own activity.",
+      "Chemical form. Compounds and alloys weigh more than the isotope they carry.",
+    ],
+    checked: "Molar masses are the AME2020 evaluated atomic masses, not mass numbers; the difference reaches 0.53%.",
+  },
+  { slug: "mda", name: "Detection limits (MDA / MDC)",
+    group: "activity", icon: "scan-search", line: "Critical level, detection limit and scan MDC.",
+    seoTitle: "MDA calculator — detection limits and scan MDC", needs: ["counting"], login: false,
+    question: "What can this counter actually detect in a 10-minute count? How slowly must I scan?",
+    blurb: "Critical level, detection limit and minimum detectable activity for fixed counting, plus scan MDC with observer efficiency.",
+    assumes: [
+      "Poisson counting statistics with a background measured for the same duration (the Currie formulation).",
+      "The efficiency you enter already accounts for geometry and, where used, the fraction leaving the surface.",
+      "Scan MDC follows MARSSIM, including the observer efficiency term.",
+    ],
+    excludes: [
+      "Spectral interference and self-absorption inside the sample.",
+      "Systematic error in the efficiency itself, which is often larger than the counting statistics.",
+    ],
+    checked: "The critical level L_C and the detection limit L_D are reported separately — reporting L_C alone understates what the instrument finds.",
   },
 ];
 

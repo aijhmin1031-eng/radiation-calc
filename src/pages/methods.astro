@@ -1,8 +1,9 @@
 ---
 import Base from "../layouts/Base.astro";
-import { DATA_SOURCES, SOURCE_CITATIONS, SITE_NAME, UMBRELLA_NAME, DOI, DOI_URL, u } from "../lib/site";
+import { DATA_SOURCES, SOURCE_CITATIONS, CITATION_NAME, UMBRELLA_NAME, DOI, DOI_URL, u } from "../lib/site";
 import { REPORTS } from "../validation/registry";
 import { TOOLS } from "../lib/tools";
+import { NOTES } from "../lib/notes";
 
 /* ★ 보고서가 있는 도구 목록을 **글자로 들지 않는다** — 평가가 하나 늘 때마다 이 문장만
    낡고 게이트는 산문을 못 본다. 등록부에서 파생시키면 저절로 따라온다. */
@@ -94,7 +95,7 @@ const pending = REPORTS.filter((r) => r.status !== "published").length;
 
     <h3>This site</h3>
     <p class="my-3 rounded-md border border-line bg-surface px-3 py-2 text-[14px] leading-relaxed">
-      Min, J. <em>{SITE_NAME} — nuclide reference sheets and spectrum-solved shielding for radiation
+      Min, J. <em>{CITATION_NAME} — nuclide reference sheets and spectrum-solved shielding for radiation
       protection</em>. {UMBRELLA_NAME}. <a href={DOI_URL} rel="noopener" class="underline">{DOI}</a>
     </p>
     <p>
@@ -146,5 +147,26 @@ const pending = REPORTS.filter((r) => r.status !== "published").length;
       figures in the test suite exist because a check found an error during development. Contact
       details are on the <a href="/contact" class="underline">contact page</a>.
     </p>
+  </section>
+
+  {/* ★★ 읽을 글 — 2026-10-06 ⑥ 부터 이 쪽이 이 lab 안의 **허브**다. `/calc/` 허브가 걷혀 apex 홈으로 갔고(301),
+      그 홈도 같은 목록을 들지만 lab 안에서 한 번에 닿는 자리가 하나는 있어야 한다(`check-notes` 가 잰다).
+      정본은 `lib/notes.ts` — 글을 늘리면 거기에만 적는다. */}
+  <section id="notes" class="mt-14">
+    <h2 class="text-[18px] font-semibold text-ink">Longer notes</h2>
+    <p class="mt-1 max-w-2xl text-[14px] leading-relaxed text-ink-muted">
+      Questions the tools raise but cannot answer inside a form &mdash; where the reference sheets mislead,
+      what to build a shield out of, which nuclides make good check sources, and where the data runs out.
+    </p>
+    <ul class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {NOTES.map((n) => (
+        <li class="card p-4 transition-colors hover:border-accent/50">
+          <a href={u(n.path)} class="no-underline">
+            <h3 class="text-[15px] font-semibold leading-snug text-ink">{n.name}</h3>
+            <p class="mt-1 text-[13px] leading-snug text-ink-muted">{n.question}</p>
+          </a>
+        </li>
+      ))}
+    </ul>
   </section>
 </Base>

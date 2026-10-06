@@ -98,6 +98,8 @@ select.field { @apply pr-8; }
 .col-head {
   @apply mb-2 block border-b border-line-strong pb-1.5 text-[12px] font-semibold uppercase tracking-wide text-ink;
 }
+/* 도구 목록의 묶음 이름 — 머리글 Tools 메뉴의 묶음 이름과 같은 꼴(명세 §6, 2026-10-06 ⑥). */
+.tlist-h { margin: 10px 8px 4px; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .14em; color: rgb(var(--c-ink-faint)); }
 .card { @apply rounded-lg border border-line bg-surface; }
 .btn {
   @apply inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-surface;

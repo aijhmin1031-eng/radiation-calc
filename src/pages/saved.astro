@@ -8,7 +8,7 @@ import { SAVE_ENABLED } from "../lib/features";
       description="Look up calculations you saved to your account by reference number, name or nuclide, and reopen them with the original conditions restored."
       noindex>
   <nav class="mb-4 text-[12px] text-ink-faint">
-    <a href={u("/")} class="hover:text-ink">Calculators</a> <span aria-hidden>/</span> Saved results
+    <a href="/" class="hover:text-ink">Home</a> <span aria-hidden>/</span> Saved results
   </nav>
   <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">Saved results</h1>
   {SAVE_ENABLED ? (
@@ -32,7 +32,7 @@ import { SAVE_ENABLED } from "../lib/features";
         When saving is switched on, a calculation can be kept against a Google sign-in and reopened
         later by reference number, with its conditions restored.
       </p>
-      <a href={u("/")} class="btn mt-6 inline-block">Back to the calculators</a>
+      <a href="/#tools" class="btn mt-6 inline-block">Back to the tools</a>
     </div>
   )}
 </Base>

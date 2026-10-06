@@ -1,0 +1,4 @@
+# Copied to dist/_redirects by .github/workflows/deploy.yml (the asset root).
+# ★ 2026-10-06 ⑥ — the RadCalc hub is gone: the apex home (radiation-lab.com/) is the one place that lists the
+#   tools. Every tool URL stays. /calc (no slash) never reaches this Worker — the umbrella Worker answers it.
+/calc/  /  301

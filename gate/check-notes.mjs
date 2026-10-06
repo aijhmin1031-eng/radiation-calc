@@ -70,7 +70,9 @@ const server = createServer((req, res) => {
 });
 await new Promise((r) => server.listen(0, r));
 const ORIGIN = `http://127.0.0.1:${server.address().port}`;
-const HUB = `${ORIGIN}${BASE_PATH}/`;
+/* ★★ 2026-10-06 ⑥ — 이 lab 의 허브는 `/methods/` 다. `/calc/` 허브는 apex 홈으로 갔다(301, 명세 §8) — apex 홈은 다른
+   레포(우산)라 여기서 못 잰다. 그래서 lab 안에서 한 번에 닿는 자리는 methods 쪽의 「Longer notes」 구획이다. */
+const HUB = `${ORIGIN}${BASE_PATH}/methods/`;
 
 const issues = [];
 const notes = [];
