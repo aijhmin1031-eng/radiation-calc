@@ -15,7 +15,12 @@ import { extname, join } from "node:path";
 
 const DIST = "dist/calc";
 const SB_REF = "axcikygeoxqdjwobakmd";           // 빌드에 박힌 값과 같아야 한다(아래에서 확인한다)
-const BUDGET = { 1280: 80, 390: 110 };            // 머리글 높이 상한(px)
+/** 머리글 높이 상한(px). ★ 2026-10-06 플랫폼 상단 메뉴 통일로 머리글이 **두 막대**(플랫폼 + lab)가 되며
+ *  숫자를 새 실측으로 고쳤다 — 그전 80 / 110 은 한 막대(실측 72 / 106)의 예산이었다.
+ *  지금 실측 1280px **89px** · 390px **148px**(계정 표시 없는 빌드), 계정 표시가 있는 빌드는 89 / 150.5px(반올림해 151 로 찍힌다).
+ *  명세의 상한은 「그전 높이 + 44(데스크톱) / + 48(모바일)」 = 116 / 153.5px 이다. 데스크톱은 그보다 좁게
+ *  둔다 — 줄이 하나 늘면(+33px) 바로 걸리게. */
+const BUDGET = { 1280: 96, 390: 153 };
 const MIME = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript",
                ".svg": "image/svg+xml", ".webp": "image/webp", ".png": "image/png",
                ".json": "application/json", ".xml": "application/xml" };
@@ -110,8 +115,12 @@ for (const [w, h, tag] of [[1280, 900, "데스크톱"], [390, 844, "모바일"]]
             return A.length === 3 && B.length === 3 ? Math.abs(A[0]-B[0]) + Math.abs(A[1]-B[1]) + Math.abs(A[2]-B[2]) : -1; };
           const body = getComputedStyle(document.body).backgroundColor;
           const ft = document.querySelector("footer");
-          return { head: d(eff(hd), body), foot: d(eff(ft), body),
-                   headW: Math.round(hd.getBoundingClientRect().width),
+          /* ★ 2026-10-06 — 머리글이 두 막대가 됐다. 면으로 갈려야 하는 것은 **플랫폼 막대**(panel)다.
+             lab 막대는 일부러 **쪽 바탕(paper)** 이다(쪽의 일부로 읽히게 — 명세) — 그것을 재면 0 이 나와
+             늘 빨개진다. `<header>` 자신은 칠하지 않으므로 그것을 재도 본문 색이 나온다. */
+          const pb = hd.querySelector("[data-platform-bar]") || hd;
+          return { head: d(eff(pb), body), foot: d(eff(ft), body),
+                   headW: Math.round(pb.getBoundingClientRect().width),
                    footW: ft ? Math.round(ft.getBoundingClientRect().width) : 0,
                    docW: document.documentElement.clientWidth };
         })(),

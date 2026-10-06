@@ -3,7 +3,7 @@ import "../styles/global.css";
 import { SITE_NAME, SITE_TAGLINE, UMBRELLA_NAME, DATA_SOURCES, SITE_URL, u, canonical, canonicalPath } from "../lib/site";
 import { TOOLS } from "../lib/tools";
 import ogManifest from "../data/og-manifest.json";
-import Lockup from "../components/brand/Lockup.astro";
+import PlatformBar from "../components/brand/PlatformBar.astro";
 import ThemeToggle from "../components/ThemeToggle.astro";
 import AccountChip from "../components/AccountChip.astro";
 import ShareRow from "../components/ShareRow.astro";
@@ -177,45 +177,53 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
   <body class="min-h-screen antialiased">
     <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-surface focus:px-3 focus:py-2">Skip to content</a>
 
-    <header class="border-b border-line-strong bg-panel">
-      <div class="mx-auto flex max-w-content flex-wrap items-center gap-x-2 gap-y-2 px-5 py-2 sm:px-8 sm:py-3 sm:gap-x-4">
-        <Lockup labName={SITE_NAME} labHref={u("/")} />
-        {/* ★ 다른 lab 으로 가는 칸을 두지 않는다(2026-09-14 소유주 지적
-            「radcalc 페이지 메뉴에만 왜 radimeter 연결 탭이 있어?」).
-            **lab 을 고르는 자리는 우산이다** — 잠금장치가 그리로 보낸다.
-            여기에 두면 ① 다른 두 lab 에는 없어 불균형이고 ② lab 이 늘 때마다
-            세 머리글을 다 고쳐야 하며 ③ 잠금장치와 같은 말을 두 번 한다. */}
-        {/* ★ **도구 목록으로 돌아가는 칸이 없었다**(2026-09-14 소유주 지적
-            「radcalc 상단 메뉴에 다시 첫 계산도구 선택하는 화면으로 못 돌아가잖아」).
-            허브로 가는 길이 로고 글자와 빵부스러기 둘뿐이었는데 **둘 다 눈에 안 띄는 자리**다.
-            도구를 고르는 것은 이 lab 에서 가장 자주 하는 이동이므로 첫 칸을 준다. */}
-        {/* ★★ 좁은 화면에서는 **칸이 제 줄을 쓴다**(2026-09-15 실측으로 정했다). 그전에는
-            잠금장치·칸·컨트롤 셋이 한 줄에 다 못 들어가 **줄이 셋**이 됐고 360px 에서 머리글이
-            148px 이었다(잠금장치 144 + 칸 185 = 329 > 가용 328 — **1px 차이로** 접혔다).
-            위 줄에 잠금장치와 컨트롤(288px)을 두면 320px 에서도 두 줄이고, 브랜드 왼쪽 ·
-            컨트롤 오른쪽이라 우산·RadiMeter 와 같은 배치가 된다. */}
-        <nav aria-label="Primary" class="order-last w-full flex flex-wrap items-center gap-0.5 text-[13px] sm:order-none sm:ml-auto sm:w-auto sm:gap-1">
-          {NAVI.map((n) => (
-            <a href={u(n.href)} aria-current={navOn(n.href) ? "page" : undefined} class={navCls(n.href)}>{n.label}</a>
-          ))}
-        </nav>
-        {/* ★ 전환 손잡이와 계정 표시는 **세 lab 이 같은 자리에 같은 모양으로** 둔다
-            (2026-09-15 소유주 지시 「이것처럼 로그인 상태창과 라이트·다크 전환 버튼 함께
-            만들어 놓자. 동일하게」). 그전에는 이 lab 만 둘 다 없었다 — 테마는 저장된 값을
-            **읽기만** 했고(바꿀 손잡이가 없었다), 계정은 로그인 여부조차 알 수 없었다. */}
-        <div class="ml-auto flex shrink-0 items-center gap-1 sm:ml-0">
-          <ThemeToggle compactOnMobile />
-          <AccountChip />
+    {/* ★★ **머리글은 두 막대다**(2026-10-06 — 플랫폼 상단 메뉴 통일, 정본 `components/brand/PlatformBar.astro`).
+        ① **플랫폼 막대**(panel · line-strong) — 브랜드 `Radiation Lab`(→ `/`) · 분야 칸 셋 · 테마·계정.
+           네 곳(우산 · 세 lab)이 글자·순서·주소·치수까지 같다. 이 lab 의 모든 쪽에서 현재 칸은
+           `Dose & shielding`(404 · `/saved/` 포함 — 전부 이 lab 의 쪽이다).
+        ② **lab 막대**(paper · line) — lab 이름 `RadCalc`(→ 이 lab 홈) · 이 lab 의 칸 셋(활성은 앰버 알약).
+           바탕이 쪽 바탕과 같아 **쪽의 일부로** 읽힌다 — 「세부 메뉴는 페이지 안으로」(소유주 지시).
+        ★ 그전의 잠금장치(`Lockup` — 위 줄 Radiation Lab · 아래 줄 lab 이름)는 걷었다. 위 줄은 ①의
+          브랜드가, 아래 줄은 ②의 이름이 이어받는다.
+        ★★ 2026-09-14 결정 「다른 lab 으로 가는 칸을 두지 않는다 — lab 을 고르는 자리는 우산이다」를
+          **뒤집었다.** 그 이유(다른 두 lab 에는 없어 불균형 · lab 이 늘 때마다 세 머리글을 고친다 ·
+          잠금장치와 같은 말을 두 번 한다)가 이번에는 다 해소된다 — 네 곳이 **똑같이** 들고,
+          칸은 네 레포의 `check-platform` 이 같은 숫자로 지키며, 잠금장치가 없다.
+        ★ `<header>` 자신은 칠하지 않는다 — 두 막대가 각자 바탕과 아래선을 든다. */}
+    <header>
+      <PlatformBar current="/calc/">
+        {/* ★ 전환 손잡이와 계정 표시는 **플랫폼 막대의 맨 오른쪽**이다(2026-09-15 소유주 지시
+            「이것처럼 로그인 상태창과 라이트·다크 전환 버튼 함께 만들어 놓자. 동일하게」 — 그전에는
+            이 lab 만 둘 다 없었다). 컴포넌트는 그대로이고 자리만 플랫폼 막대로 옮겼다. */}
+        <ThemeToggle compactOnMobile />
+        <AccountChip />
+      </PlatformBar>
+      <div data-lab-bar class="lbar">
+        <div class="lbar-in mx-auto max-w-content px-5 sm:px-8">
+          <a href={u("/")} class="lbar-name">{SITE_NAME}</a>
+          {/* ★ **도구 목록으로 돌아가는 칸이 없었다**(2026-09-14 소유주 지적
+              「radcalc 상단 메뉴에 다시 첫 계산도구 선택하는 화면으로 못 돌아가잖아」).
+              도구를 고르는 것은 이 lab 에서 가장 자주 하는 이동이므로 첫 칸을 준다.
+              ★ 좁은 화면(<640px)에서는 칸이 **lab 이름 아래 제 줄**을 쓴다 — 이름(63px) + 간격 12px + 칸 셋(275px)
+                = 350px 이 320·360px 의 가용폭(280·320px)을 넘는다(2026-10-06 실측, DejaVu Sans). 이름은 좁은
+                화면에서도 보여야 한다(명세 — 브랜드가 사라지면 안 된다). */}
+          <nav aria-label="Primary" class="lbar-nav text-[13px]">
+            {NAVI.map((n) => (
+              <a href={u(n.href)} aria-current={navOn(n.href) ? "page" : undefined} class={navCls(n.href)}>{n.label}</a>
+            ))}
+          </nav>
         </div>
       </div>
     </header>
 
-    {/* ★★ **압축 고정 바** — 진짜 머리글(72px)은 흘려보내고, **지나친 뒤에만** 45px 바가 뜬다.
-        머리글 전체를 고정하면 세로 공간을 영구히 뺏는다(모바일 844px 의 8.5%).
+    {/* ★★ **압축 고정 바** — 진짜 머리글은 흘려보내고, **지나친 뒤에만** 45px 바가 뜬다.
+        머리글 전체를 고정하면 세로 공간을 영구히 뺏는다 — 2026-10-06 두 막대가 된 뒤로는 더하다
+        (실측 1280px 89px · 390px 148px = 모바일 844px 의 17.5%). 바는 그대로 **lab 칸**을 든다(명세 —
+        플랫폼 칸은 맨 위에 돌아가면 있다).
         · 센티넬 + IntersectionObserver 다 — `fixed` 는 흐름에서 자리를 안 먹으므로
           CSS 만으로는 「지나쳤는가」를 알 수 없다.
         · **JS 가 없으면 아무 일도 일어나지 않는다**(`visibility: hidden` 이 기본, 회귀 0).
-        · 마크가 가리키는 곳은 잠금장치와 **같다**(우산 `/`) — 같은 글리프가 자리마다
+        · 마크가 가리키는 곳은 플랫폼 막대의 브랜드와 **같다**(우산 `/`) — 같은 글리프가 자리마다
           다른 곳으로 가면 읽는 사람이 둘을 다른 것으로 배운다.
         · 바가 생기는 순간 **`scroll-padding-top` 이 필요하다**(global.css 72px).
           없으면 앵커를 눌렀을 때 제목이 바 높이만큼 정확히 가린다. */}
@@ -327,5 +335,17 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
   .topbar-mark { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; flex: none; color: rgb(var(--c-ink)); }
   .topbar-mark svg { width: 20px; height: 20px; }
   .topbar-mark:focus-visible { outline: 2px solid rgb(var(--c-accent)); outline-offset: 2px; }
+
+  /* ── lab 막대(2026-10-06) — 바탕은 **쪽 바탕(paper)**, 아래선은 **옅은 선(line)** 이다.
+     플랫폼 막대(panel · line-strong)와 면으로 갈려 「쪽의 일부」로 읽힌다. ── */
+  .lbar { background: rgb(var(--c-paper)); border-bottom: 1px solid rgb(var(--c-line)); }
+  .lbar-in { display: flex; flex-wrap: wrap; align-items: center; column-gap: 12px; padding-top: 4px; padding-bottom: 4px; }
+  /* 이름은 손가락 표적 24px 을 넘게 둔다(세로 여백으로만 — 글자 크기는 14px 그대로). */
+  .lbar-name { display: inline-flex; align-items: center; min-height: 24px; font-size: 14px; font-weight: 650;
+               color: rgb(var(--c-ink)); text-decoration: none; white-space: nowrap; }
+  .lbar-name:hover { text-decoration: underline; }
+  .lbar-name:focus-visible { outline: 2px solid rgb(var(--c-accent)); outline-offset: 2px; }
+  .lbar-nav { width: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
+  @media (min-width: 640px) { .lbar-nav { width: auto; gap: 4px; } }
   @media (prefers-reduced-motion: reduce) { .topbar { transition: none; } }
 </style>
