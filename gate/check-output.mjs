@@ -54,8 +54,10 @@ console.log("\n② base 경로 — 내부 링크가 /calc/ 밖을 가리키지 �
  *    `/disposalXYZ` 까지 통과했다. 그 접두를 쓰던 링크(옛 법무 링크 `/radimeter/privacy/` 등)는 2026-09-28 에
  *    우산 루트로 옮겨 사라졌고, 남은 것은 분야 칸 셋과 본문의 `/disposal/` 하나다. 그래서 **완전 일치**로 좁힌다
  *    (역테스트: `/radimeter/foo` 를 심으면 걸린다). */
-const PLATFORM_FIELDS = ["/calc/", "/radimeter/", "/disposal/"];
-const EXACT_OK = ["/", "/robots.txt", "/track.js", "/privacy", "/terms", "/contact", ...PLATFORM_FIELDS];
+/* ★★ 2026-10-06 ② — 분야 칸 셋은 이제 **절대 주소**다(RadiMeter·처분 lab 이 하위 도메인으로 나갔다). 루트 경로로
+ *  남은 것은 이 오리진 안의 것뿐이다. `/radimeter/`·`/disposal/` 이 다시 루트 경로로 나타나면 그것은 우산의
+ *  301 을 한 번 더 도는 낡은 링크다 — 그래서 허용 목록에서 뺐다. */
+const EXACT_OK = ["/", "/robots.txt", "/track.js", "/privacy", "/terms", "/contact", "/calc/"];
 let stray = 0;
 for (const p of pages) {
   for (const m of p.s.matchAll(/(?:href|src)="(\/[^"#?]*)"/g)) {

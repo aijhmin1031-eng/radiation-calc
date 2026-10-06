@@ -21,6 +21,8 @@ const DIST = process.env.LOCKUP_DIST || "dist/calc";
 const BASE = process.env.LOCKUP_BASE || "/calc";
 const PATHS = (process.env.LOCKUP_PATHS || "/,/gamma-shielding/,/methods/").split(",");
 const LAB = process.env.LOCKUP_LAB || "RadCalc";
+/** ★ 2026-10-06 ② — 플랫폼 막대의 브랜드는 **절대 주소**로 우산에 간다(lab 들이 하위 도메인으로 나가 오리진이 셋이 됐다). */
+const UMBRELLA = "https://radiation-lab.com/";
 /** 모바일(390px) 머리글 높이 상한. 그전 150 은 잠금장치 한 막대(실측 106)의 예산이었다.
  *  ★ 2026-10-06 두 막대(플랫폼 + lab)가 되며 실측 **148px**(계정 표시 없는 빌드 · 계정 표시가 있으면
  *    150.5px — 이 게이트는 반올림해 151 로 찍는다)이다. 명세의 상한은 「그전 높이 + 48」= 105.5 + 48 = **153.5px** 이고, 그 안에서 줄이 하나
@@ -64,7 +66,7 @@ for (const theme of ["light", "dark"]) {
           return [255, 255, 255]; };
         const texts = [...(pbar || head).querySelectorAll("a")];
         const umb = texts.find((a) => /^\s*Radiation Lab\s*$/i.test(a.textContent.replace(/\s+/g, " ").trim())
-                                   || /Radiation Lab/.test(a.textContent) && a.getAttribute("href") === "/");
+                                   || /Radiation Lab/.test(a.textContent) && a.getAttribute("href") === "https://radiation-lab.com/");
         const labA = [...(lbar || head).querySelectorAll("a")].find((a) => a.textContent.replace(/\s+/g, " ").trim() === lab);
         const svg = (umb || head).querySelector("svg polygon");
         const pts = svg?.getAttribute("points")?.trim().split(/\s+/).length ?? 0;
@@ -89,7 +91,7 @@ for (const theme of ["light", "dark"]) {
       }, LAB);
       const at = `${theme}/${tag} ${p}`;
       if (m.마크꼭짓점 !== 8) fail.push(`${at}: 마크 팔각형이 아니다 (꼭짓점 ${m.마크꼭짓점})`);
-      if (m.우산링크 !== "/") fail.push(`${at}: "Radiation Lab" 이 우산(/)으로 가지 않는다 — ${m.우산링크}`);
+      if (m.우산링크 !== UMBRELLA) fail.push(`${at}: "Radiation Lab" 이 우산(${UMBRELLA})으로 가지 않는다 — ${m.우산링크}`);
       if (!m.두막대) fail.push(`${at}: 머리글에 플랫폼 막대([data-platform-bar])·lab 막대([data-lab-bar]) 둘이 다 있지 않다`);
       if (!m.lab링크) fail.push(`${at}: lab 이름 "${LAB}" 이 lab 막대에 없다`);
       else if (m.lab링크 !== `${BASE}/`) fail.push(`${at}: lab 이름 "${LAB}" 이 lab 홈(${BASE}/)으로 가지 않는다 — ${m.lab링크}`);

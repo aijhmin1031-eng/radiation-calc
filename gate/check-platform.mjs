@@ -50,12 +50,12 @@ const GUTTER = 148;   // 1280px 에서 글줄이 시작하는 x (우산 1048/32 
 /** ★★ 플랫폼 막대 정본(2026-10-06) — 순서·주소·글자 고정. 주소는 **오리진 루트 경로 그대로**
  *  (base·basePath 를 붙이지 않는다). 넓은 화면 ≥640px · 좁은 화면 <640px. */
 const PLATFORM = {
-  brand: { text: "Radiation Lab", href: "/", label: "Radiation Lab — platform home",
+  brand: { text: "Radiation Lab", href: "https://radiation-lab.com/", label: "Radiation Lab — platform home",
            size: "16px", weight: "650", mark: 24 },
   fields: [
-    { href: "/calc/",      wide: "Dose & shielding",     narrow: "Shielding" },
-    { href: "/radimeter/", wide: "Instrument testing",   narrow: "Instrument tests" },
-    { href: "/disposal/",  wide: "Disposal & transport", narrow: "Disposal" },
+    { href: "https://radiation-lab.com/calc/", wide: "Dose & shielding",     narrow: "Shielding" },
+    { href: "https://radimeter.radiation-lab.com/", wide: "Instrument testing",   narrow: "Instrument tests" },
+    { href: "https://disposal.radiation-lab.com/", wide: "Disposal & transport", narrow: "Disposal" },
   ],
   tab: {
     wide:   { size: "13px", radius: "4px", padY: "6px", padX: "12px", gap: 4 },
@@ -78,7 +78,7 @@ const CONFIG = { DIST: "dist/calc", BASE: "/calc",
                  PATHS: ["/", "/methods/", "/decay/", "/saved/", "/404.html"],
                  HAS_TABS: true, LABEL: "RadCalc",
                  /* 이 lab 의 모든 쪽에서 현재 칸 — 우산·`/account/` 는 null(현재 칸 0개) */
-                 CURRENT: "/calc/" };
+                 CURRENT: "https://radiation-lab.com/calc/" };
 const { DIST, BASE, PATHS, HAS_TABS, LABEL, CURRENT } = CONFIG;
 const NARROW = [390, 360, 320];
 
@@ -111,7 +111,7 @@ const measurePlatform = () => {
   const bar = document.querySelector("[data-platform-bar]");
   if (!bar) return null;
   const vis = (el) => !!el && cs(el).display !== "none" && el.getBoundingClientRect().width > 0;
-  const brand = [...bar.querySelectorAll("a")].find((a) => a.getAttribute("href") === "/" && !a.closest("nav"));
+  const brand = [...bar.querySelectorAll("a")].find((a) => a.getAttribute("href") === "https://radiation-lab.com/" && !a.closest("nav"));
   const nameEl = brand && [...brand.querySelectorAll("span")].find(vis);
   const mark = brand?.querySelector("svg");
   const nav = bar.querySelector('nav[aria-label="Fields"]');
@@ -259,7 +259,7 @@ for (const theme of ["light", "dark"]) {
 
 function checkPlatform(P, tag, mode, S, w) {
   const B = PLATFORM.brand;
-  if (!P.brand) { fail.push(`${tag}: 플랫폼 브랜드(href="/")가 없다`); }
+  if (!P.brand) { fail.push(`${tag}: 플랫폼 브랜드(href="https://radiation-lab.com/")가 없다`); }
   else {
     eq(`${tag} 브랜드 글자`, P.brand.text, B.text);
     eq(`${tag} 브랜드 aria-label`, P.brand.label, B.label);

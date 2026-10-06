@@ -17,9 +17,10 @@
  *   ③ 잠금장치(`Lockup`)를 걷었다 — 그 위 줄은 이 막대의 브랜드가, 아래 줄은 lab 막대의 이름이
  *   이어받는다. 그래서 그 이유 셋이 다 해소된다.
  *
- * ★ 주소는 **오리진 루트 경로 그대로**다 — `u()` 를 걸지 않는다. 걸면 `/calc/radimeter/` 라는
- *   없는 주소가 된다(이 lab 의 `/calc/` 는 `u()` 가 멱등이라 같은 값이지만, 정본을 한 모양으로 둔다).
- *   셋 다 라이브 200 이고 `check-output` ② 가 **완전 일치**로만 통과시킨다.
+ * ★★ 주소는 **절대 주소**다(2026-10-06 ②). 같은 날 RadiMeter 는 `radimeter.radiation-lab.com`, 처분 lab 은
+ *   `disposal.radiation-lab.com` 으로 나갔다(애드센스 「가치가 별로 없는 콘텐츠」 뒤 소유주 결정 — apex 는 RadCalc 에
+ *   집중). 오리진이 셋이 됐으므로 루트 경로(`/radimeter/`)로는 남의 오리진에 못 닿는다. 네 곳이 **같은 표**를
+ *   들어야 한다는 원칙은 그대로라, 제 칸까지 전부 절대 주소로 적는다. `u()` 는 여전히 걸지 않는다.
  *
  * ★★ **「현재」 모양은 앰버가 아니다.** 앰버 알약은 lab 막대 칸의 활성 표시가 이미 쓴다 —
  *   한 화면에 앰버 알약이 둘 서면 「지금 어디」가 두 군데로 읽힌다(규약: 앰버는 활성·포커스·
@@ -31,16 +32,16 @@
  */
 interface Props {
   /** 지금 lab 의 칸(오리진 루트 경로). 우산 루트 쪽·`/account/` 에서는 비운다 — 현재 칸 0개. */
-  current?: "/calc/" | "/radimeter/" | "/disposal/";
+  current?: "https://radiation-lab.com/calc/" | "https://radimeter.radiation-lab.com/" | "https://disposal.radiation-lab.com/";
 }
 const { current } = Astro.props;
 
 /* ★ 순서·주소·글자 고정 — **네 레포가 같은 표를 적는다**(각자 빌드하므로 공유 모듈을 둘 수 없다).
    고치면 네 곳을 함께 고치고, 어긋나면 각 레포의 `check-platform` 이 잡는다. */
 const FIELDS = [
-  { href: "/calc/", wide: "Dose & shielding", narrow: "Shielding" },
-  { href: "/radimeter/", wide: "Instrument testing", narrow: "Instrument tests" },
-  { href: "/disposal/", wide: "Disposal & transport", narrow: "Disposal" },
+  { href: "https://radiation-lab.com/calc/", wide: "Dose & shielding", narrow: "Shielding" },
+  { href: "https://radimeter.radiation-lab.com/", wide: "Instrument testing", narrow: "Instrument tests" },
+  { href: "https://disposal.radiation-lab.com/", wide: "Disposal & transport", narrow: "Disposal" },
 ] as const;
 ---
 <div data-platform-bar class="pbar">
@@ -48,7 +49,7 @@ const FIELDS = [
     {/* ★★ 마크는 우산 `public/favicon.svg` 와 **같은 좌표**다(팔각 궤도 R=25.8 + 흑연 구 r=15).
         좌표를 고치면 네 곳을 함께 고친다 — 어긋나면 `check-lockup` 이 잡는다.
         색은 **토큰으로** 칠한다. 고정색으로 두면 어두운 테마에서 통째로 묻힌다. */}
-    <a class="pbar-brand" href="/" aria-label="Radiation Lab — platform home">
+    <a class="pbar-brand" href="https://radiation-lab.com/" aria-label="Radiation Lab — platform home">
       <svg class="pbar-mark" viewBox="0 0 64 64" aria-hidden="true">
         <polygon points="32.00,6.20 50.24,13.76 57.80,32.00 50.24,50.24 32.00,57.80 13.76,50.24 6.20,32.00 13.76,13.76"
                  fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="miter" />
