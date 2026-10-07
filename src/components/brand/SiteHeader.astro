@@ -175,6 +175,7 @@ const toolOn = (slug: string) => here === u(`/${slug}/`);
     .tmenu-panel { left: 20px; width: calc(100% - 40px); padding: 16px 14px 0; }
     .tmenu-more { margin-left: -14px; margin-right: -14px; padding-left: 14px; padding-right: 14px; }
   }
-  @media (max-width: 359.98px) { .shdr-tab { padding: 8px 6px; } .shdr-nav { margin-left: -6px; } }
+  /* ★ 2026-10-07 — CI(DejaVu Sans)에서 320px 칸 끝이 302~310px 로 글줄(300) 밖이었다. 12px · 가로 5px(RadiMeter 와 같은 처방). */
+@media (max-width: 359.98px) { .shdr-tab { font-size: 12px; padding: 8px 5px; } .shdr-nav { margin-left: -5px; } }
   @media (prefers-reduced-motion: reduce) { .tmenu-chev { transition: none; } }
 </style>

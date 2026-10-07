@@ -43,5 +43,9 @@ jobs:
             echo "workers.dev $p -> $code"; test "$code" = 200
           done
           # ★ 2026-10-06 ⑥ — /calc/ 허브는 apex 홈으로 301(deploy/_redirects). 대상은 같은 호스트의 / 다.
-          loc=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "https://radiation-lab-calc.jhmin1031.workers.dev/calc/")
-          echo "/calc/ -> $loc"; test "$loc" = "301 https://radiation-lab-calc.jhmin1031.workers.dev/"
+          # ★ 배포 직후 workers.dev 가장자리에는 몇 초간 옛 판이 남는다(2026-10-07 첫 실행: /calc/ 200) — 다시 묻는다.
+          for i in 1 2 3 4 5 6 7 8; do
+            loc=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "https://radiation-lab-calc.jhmin1031.workers.dev/calc/")
+            echo "/calc/ -> $loc (try $i)"; [ "$loc" = "301 https://radiation-lab-calc.jhmin1031.workers.dev/" ] && break; sleep 5
+          done
+          test "$loc" = "301 https://radiation-lab-calc.jhmin1031.workers.dev/"

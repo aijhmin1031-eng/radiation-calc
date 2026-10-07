@@ -56,7 +56,8 @@ const PBAR = {
   ],
   wide:   { size: "14px", radius: "6px", padY: "7px", padX: "12px", gap: 4 },
   narrow: { size: "13px", radius: "6px", padY: "8px", padX: "8px",  gap: 2 },
-  tinyPadX: "6px",      // 360px 미만에서만 가로 안여백 6px
+  tinyPadX: "5px",      // 360px 미만에서만 가로 안여백 5px · 글자 12px(2026-10-07 CI 의 DejaVu 에서 320px 칸 끝 302~310 > 300)
+  tinySize: "12px",
   edge: 640,            // 긴 글자가 시작하는 폭
   oneRow: 1024,         // 한 줄이 되는 폭 — 그 아래는 두 줄(1줄 브랜드+컨트롤 · 2줄 칸)
   current: { weight: "600" },
@@ -186,7 +187,7 @@ function checkBar(tag, b, w, theme) {
   if (CURRENT === null && cur.length) fail.push(`${tag} 현재 칸 ${cur.length}개 (우산 쪽은 0개)`);
   b.items.forEach((x, i) => {
     const at = `${tag} 칸 ${i + 1}`;
-    eq(`${at} 글자크기`, x.size, D.size); eq(`${at} 모서리`, x.radius, D.radius);
+    eq(`${at} 글자크기`, x.size, mode === "narrow" && w < 360 ? PBAR.tinySize : D.size); eq(`${at} 모서리`, x.radius, D.radius);
     eq(`${at} 세로여백`, x.padY, D.padY); eq(`${at} 가로여백`, x.padX, padX);
     if (x.h < 24 || x.w < 24) fail.push(`${at} 손가락 표적 ${x.w}×${x.h}px (24 이상)`);
     if (cur.includes(x)) return;
