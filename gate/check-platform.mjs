@@ -70,7 +70,7 @@ const PBAR = {
                                              ["/calc/specific-activity/", "Mass & activity"], ["/calc/mda/", "Detection limits (MDA / MDC)"]] },
     ],
     more: [["https://radimeter.radiation-lab.com/", "Instrument testing"], ["https://disposal.radiation-lab.com/", "Disposal & transport"],
-           ["https://tools.radiation-lab.com/", "Everyday tools"]],   // 2026-10-06 ⑦ 셋째 자매(소유주 결정)
+           ["https://tools.dotoriecon.com/", "Everyday tools"]],   // 2026-10-06 ⑦ 셋째 자매(소유주 결정)
   },
 };
 const SURFACE = { light: "rgb(252, 252, 250)", dark: "rgb(26, 30, 33)" };
