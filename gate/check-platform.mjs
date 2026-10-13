@@ -69,8 +69,8 @@ const PBAR = {
       { name: "Activity & counting", items: [["/calc/units/", "Unit converter"], ["/calc/decay/", "Decay & half-life"],
                                              ["/calc/specific-activity/", "Mass & activity"], ["/calc/mda/", "Detection limits (MDA / MDC)"]] },
     ],
-    more: [["https://radimeter.radiation-lab.com/", "Instrument testing"], ["https://disposal.radiation-lab.com/", "Disposal & transport"],
-           ["https://tools.dotoriecon.com/", "Everyday tools"]],   // 2026-10-06 ⑦ 셋째 자매(소유주 결정)
+    more: [["https://radimeter.radiation-lab.com/", "Instrument testing"], ["https://disposal.radiation-lab.com/", "Disposal & transport"]],
+    // 2026-10-13 소유주 결정: 셋째였던 「Everyday tools」(도토리툴)는 도토리콘 사이트로 완전히 분리해 뺐다.
   },
 };
 const SURFACE = { light: "rgb(252, 252, 250)", dark: "rgb(26, 30, 33)" };
