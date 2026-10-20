@@ -28,3 +28,12 @@ test("out-of-range kVp clamps, never NaN/empty", () => {
   assert.equal(KVP_MIN, 20);
   assert.equal(KVP_MAX, 300);
 });
+
+test("no interior zero bins below the endpoint (not a picket-fence comb)", () => {
+  // The continuous bremsstrahlung must carry fluence at EVERY integer keV between the
+  // low-energy onset and the endpoint. A zero at e.g. every odd keV renders as a comb.
+  const s = bremSpectrum(100);
+  const interior = s.filter((p) => p.energy >= 20 && p.energy <= 95);
+  const zeros = interior.filter((p) => p.fluence === 0).map((p) => p.energy);
+  assert.equal(zeros.length, 0, `interior zero bins at keV: ${zeros.join(", ")}`);
+});

@@ -26,8 +26,8 @@ test("고유번호 생김새", () => {
 });
 
 test("등록부가 온전하다", () => {
-  assert.equal(TOOLS.length, 7);
-  assert.equal(new Set(TOOLS.map((t) => t.slug)).size, 7, "슬러그 중복");
+  assert.equal(TOOLS.length, 8);
+  assert.equal(new Set(TOOLS.map((t) => t.slug)).size, 8, "슬러그 중복");
   for (const t of TOOLS) {
     assert.match(t.slug, /^[a-z0-9-]{2,40}$/, t.slug);   // DB 의 calc_tool_ok 와 같은 규칙
     assert.ok(t.name && t.blurb && t.question, t.slug);
