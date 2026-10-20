@@ -1,0 +1,26 @@
+---
+import ToolPage from "../components/ToolPage.astro";
+import XraySpectrum from "../components/calc/XraySpectrum.tsx";
+---
+<ToolPage slug="xray-spectrum">
+  <XraySpectrum slot="tool" client:only="react" />
+  <Fragment slot="prose">
+    <h2>The continuous spectrum</h2>
+    <p>
+      When fast electrons strike the tungsten anode, most lose energy gradually and radiate a
+      continuous band of X-rays — bremsstrahlung, or "braking radiation". The highest photon energy
+      equals the tube voltage: a 100&nbsp;kVp tube can make a 100&nbsp;keV photon and no more. Raise
+      the voltage and the whole curve extends to the right and grows; the mean energy climbs with it.
+    </p>
+    <p>
+      This first view shows the raw spectrum leaving the anode, before any filter. It is soft and
+      low-energy — in practice a filter removes the lowest energies first, which the next step adds.
+    </p>
+    <h3>What this view leaves out</h3>
+    <p>
+      Characteristic lines (the sharp spikes a tungsten tube adds above its K-edge) and filtration
+      are not shown yet; they come in the following steps. The source is treated as a point on the
+      central axis, so there is no heel effect here.
+    </p>
+  </Fragment>
+</ToolPage>

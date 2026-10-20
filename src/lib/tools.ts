@@ -46,11 +46,12 @@ export interface Tool {
   checked: string;
 }
 
-export type ToolGroup = "dose" | "activity";
+export type ToolGroup = "dose" | "activity" | "spectrum";
 /** 묶음 이름 — 메뉴·목록·홈이 같은 글자를 쓴다. */
 export const TOOL_GROUPS: { key: ToolGroup; label: string }[] = [
   { key: "dose", label: "Dose & shielding" },
   { key: "activity", label: "Activity & counting" },
+  { key: "spectrum", label: "X-ray spectra" },
 ];
 /** 메뉴·목록에 그리는 이름 — `name` 의 「and」를 「&」로(명세 §4). h1 은 `name` 그대로다. */
 export const menuName = (t: Tool) => t.name.replace(/ and /, " & ");
@@ -167,6 +168,23 @@ export const TOOLS: Tool[] = [
       "Systematic error in the efficiency itself, which is often larger than the counting statistics.",
     ],
     checked: "The critical level L_C and the detection limit L_D are reported separately — reporting L_C alone understates what the instrument finds.",
+  },
+  { slug: "xray-spectrum", name: "X-ray tube spectrum",
+    group: "spectrum", icon: "activity", line: "Bremsstrahlung spectrum from tube voltage; filtration and lines come next.",
+    seoTitle: "X-ray tube spectrum calculator — bremsstrahlung", needs: ["none"], login: false,
+    question: "What does a tungsten X-ray tube spectrum look like at 100 kVp before filtration?",
+    blurb: "The raw tungsten bremsstrahlung spectrum for a chosen tube voltage, drawn point-by-point from a precomputed physics model.",
+    assumes: [
+      "A tungsten reflection anode at a 20° take-off angle, treated as a point source.",
+      "Bremsstrahlung only — characteristic lines and added filtration are not yet included.",
+      "Spectra interpolated between a precomputed voltage grid (SpekPy, casim physics).",
+    ],
+    excludes: [
+      "Added filtration, half-value layer and air kerma — these arrive in the next steps.",
+      "Characteristic (line) emission, which appears above the tungsten K-edge.",
+      "Heel effect and finite focal-spot size — off-axis field variation is a later addition.",
+    ],
+    checked: "Mean energy of the raw bremsstrahlung matches SpekPy (MIT) within 1% from 30 to 250 kV, on and off the precompute grid.",
   },
 ];
 
