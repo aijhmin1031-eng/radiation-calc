@@ -25,8 +25,8 @@ const SPEC = "https://github.com/aijhmin1031-eng/radiation-field-pro/blob/master
       them. <a href={PRO} class="underline">Field Pro</a> is the workbench on this platform for that
       setting. It models the beam a calibration laboratory actually produces, compares it with the
       quality the standard describes, and carries the result through to operational dose and its
-      uncertainty. This note explains what each part computes, how close it comes to the standard, and
-      how to find your way around its interface, which is in Korean.
+      uncertainty. This note explains what each part computes, how accurate it is, and how to read its
+      Korean interface.
     </p>
 
     <h2>Why reference fields need a model</h2>
@@ -55,9 +55,8 @@ const SPEC = "https://github.com/aijhmin1031-eng/radiation-field-pro/blob/master
       From the filtered spectrum it reports the mean energy, the effective energy (the energy of a single
       line with the same first half-value layer), the first and second half-value layers in aluminium,
       copper or lead, the homogeneity coefficient h&nbsp;=&nbsp;HVL1/HVL2, and the relative air kerma. The
-      homogeneity coefficient is the quickest summary of how hard the beam is: a beam close to one line
-      has h near 1, and a raw, unfiltered beam has a much lower value because its soft end is removed by
-      the first layer and not the second. The raw spectrum without any of this filtration is what the
+      homogeneity coefficient summarises how hard the beam is: a beam close to one line has h near 1,
+      and an unfiltered beam much less, because the first layer strips its soft end. The raw spectrum without any of this filtration is what the
       <a href={u("/xray-spectrum/")} class="underline">X-ray tube spectrum</a> tool on this site draws;
       Field Pro starts where that tool stops.
     </p>
@@ -116,9 +115,8 @@ const SPEC = "https://github.com/aijhmin1031-eng/radiation-field-pro/blob/master
       uncertainties. They are combined as a root sum of squares, the effective degrees of freedom
       ν<sub>eff</sub> come from the Welch–Satterthwaite formula, and the expanded uncertainty is given
       with a coverage factor from the t-distribution for about 95% coverage, in a form that can go into a
-      calibration certificate. Doing this beside the beam model helps with one of the harder Type B
-      terms: running the model again with the filtration at the ends of its plausible range shows how
-      much the conversion coefficient can move, which is a better basis for that component than a guess.
+      calibration certificate. Rerunning the beam model with the filtration at the ends of its plausible
+      range shows how far the conversion coefficient can move, a sound basis for that Type B term.
     </p>
 
     <h2>How close it comes to the standard</h2>
