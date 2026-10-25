@@ -41,4 +41,15 @@ export const EX = {
     /** 액체섬광 H-3 — 배경 2.5 cpm, 효율 25%, 10 mL, 100 min: L_C·L_D 계수, 병 하나의 MDA Bq, MDA Bq/L, 그리고 400 min */
     lscLc: "36.8", lscLd: "76.3", lscMdaBq: "0.0508", lscMda: "5.08", lscMda400: "2.5",
   },
+  /* ── 2026-10-25 D4 ── */
+  beta: {
+    /** Y-90 비정 g/cm², 아크릴(1.19 g/cm³)로 멈추는 두께 mm, 아크릴 5 mm 투과 % */
+    y90RangeGcm2: "1.09", y90AcrylicMm: "9.2", y90T5mm: "1.91",
+    /** Y-90 제동복사로 바뀌는 비율 % — 아크릴(Z 6.5)·납, 그리고 납/아크릴 배수 */
+    brAcrPct: "0.52", brPbPct: "6.5", brRatio: "13",
+    /** Y-90 1 GBq/kg 무한매질 선량률 mGy/h, 평균수명 h, 다 붕괴할 때까지의 선량 Gy */
+    y90RateMGyH: "538", y90MeanLifeH: "92.4", y90GyPerGBqKg: "49.7",
+    /** 2 GBq 를 1.6 kg 엽에 — 처음 선량률 mGy/h, 총선량 Gy */
+    lobeRateMGyH: "672", lobeGy: "62.1",
+  },
 } as const;

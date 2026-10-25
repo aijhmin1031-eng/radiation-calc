@@ -101,4 +101,26 @@ export const TOOL_FAQ: Record<string, readonly FaqItem[]> = {
       a: "No. The MDA describes the measurement, not the sample, so a result below it is still a measured value with an uncertainty. ISO 11929 recommends reporting the measured value and its uncertainty together with the decision threshold and detection limit, which keeps averages and trends unbiased; replacing low results with zero or with the MDA distorts them.",
     },
   ],
+  beta: [
+    {
+      q: "How thick does a beta shield need to be?",
+      a: `At least the maximum range of the betas, which depends on the endpoint energy and is nearly the same in g/cm² for any light material. Divide by the density to get a thickness: Y-90 needs ${EX.beta.y90RangeGcm2} g/cm², or ${EX.beta.y90AcrylicMm} mm of acrylic. The range used here is the Katz–Penfold fit to aluminium absorption data.`,
+    },
+    {
+      q: "Why not use lead to shield beta emitters?",
+      a: `Lead stops betas in a very thin layer, but the fraction of their energy turned into bremsstrahlung X-rays rises with atomic number. For Y-90 it is about ${EX.beta.brPbPct}% in lead against ${EX.beta.brAcrPct}% in acrylic, and those photons are far more penetrating than the betas. Use a low-Z material first and add lead outside it only if the photon dose rate needs it.`,
+    },
+    {
+      q: "What is the difference between maximum and mean beta energy?",
+      a: "Beta decay shares its energy with a neutrino, so the electrons come out with a spectrum from zero up to the endpoint, Emax. The endpoint sets the range and therefore the shield thickness; the mean energy, typically between a third and two-fifths of Emax, sets the dose because it is the energy actually deposited per decay.",
+    },
+    {
+      q: "Can this calculator give skin dose from a contamination spot?",
+      a: "No. Skin dose depends on the source size, any air gap or covering, and the depth of the basal layer at 7 mg/cm², and a single number without those would be misleading. Use a code built for it, such as VARSKIN. The calculator gives only the exact infinite-medium dose rate and its half at a plane surface.",
+    },
+    {
+      q: "How do I get the total dose from a beta emitter that decays away?",
+      a: `Multiply the starting dose rate by the mean life, T½/ln 2, which is the integral of the decay curve. For Y-90 the mean life is ${EX.beta.y90MeanLifeH} hours, so 1 GBq spread uniformly through 1 kg of tissue delivers ${EX.beta.y90GyPerGBqKg} Gy in total.`,
+    },
+  ],
 };
