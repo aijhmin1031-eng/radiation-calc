@@ -114,3 +114,27 @@ test("반가층이 재료 순서대로 는다 (662 keV)", () => {
   assert.ok(hvl("concrete") < hvl("water"), "콘크리트 < 물");
   near(hvl("lead"), 5.5, 10, "납 반가층 ≈5.5 mm (좁은빔)");
 });
+
+/* ★ 도구 쪽 「Worked examples」·「FAQ」의 수치를 고정한다(2026-10-25 D3).
+ *   쪽은 `EX` 의 글자를 그대로 그린다 — 엔진이 같은 글자를 내지 않으면 여기서 깨진다. */
+test("Worked examples — 감마 차폐 쪽에 적힌 수치를 엔진이 그대로 낸다", async () => {
+  const { EX } = await import("../data/worked-examples.ts");
+  const { distanceForRate, hvlFromMu } = await import("./alara.ts");
+  const G = EX.gamma;
+  const sig = (x: number, n: number) => String(Number(x.toPrecision(n)));
+  const run = (nk: string, gbq: number, m: number, cm: number, mode: "none" | "attenuation") =>
+    shieldedDoseRate({ lines: N[nk].lines, air: A.air, shield: A.lead, material: "lead",
+                       activityGBq: gbq, distanceM: m, thicknessCm: cm, mode });
+  assert.equal(sig(run("Cs-137", 37, 1, 0, "none").doseRate, 3), G.cs1m);
+  assert.equal(sig(run("Cs-137", 37, 2, 0, "none").doseRate, 3), G.cs2m);
+  const lead = run("Cs-137", 37, 1, 5, "attenuation");
+  assert.equal(sig(lead.doseRate * 1000, 3), G.csLeadUGyH);
+  assert.equal(sig(lead.transmission * 100, 2), G.csLeadPct);
+  const ir = run("Ir-192", 1500, 20, 0, "none").doseRate * 1000;
+  assert.equal(sig(ir, 3), G.ir20mUGyH);
+  assert.equal(sig(distanceForRate(ir, 20, 20), 3), G.irBoundaryM);
+  assert.equal(sig(gammaConstant(N["Cs-137"], A.air), 3), G.csConst);
+  assert.equal(sig(gammaConstant(N["Ir-192"], A.air), 3), G.irConst);
+  assert.equal(sig(gammaConstant(N["Co-60"], A.air), 3), G.coConst);
+  assert.equal(sig(hvlFromMu(linearAttenuation(A.lead, 0.661657, "lead")), 2), G.leadHvlCs);
+});
