@@ -112,6 +112,6 @@ export const NOTES: Note[] = [
     question: "What does the Field Pro workbench compute for a calibration beam, and how accurate is it?",
     blurb:
       "Filtered tungsten spectra, half-value layers and matching to the 50 ISO qualities, operational " +
-      "dose conversion, air-density correction and uncertainty, with a guide to its Korean interface.",
+      "dose conversion, air-density correction and uncertainty, with a guide to its screen.",
   },
 ];

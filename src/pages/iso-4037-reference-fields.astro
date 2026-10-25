@@ -10,7 +10,7 @@ const PRO = "https://pro.radiation-lab.com/";
 const SPEC = "https://github.com/aijhmin1031-eng/radiation-field-pro/blob/master/docs/accuracy-spec.md";
 ---
 <Base title="ISO 4037 reference fields: what Field Pro computes"
-      description="What the Field Pro workbench computes for ISO 4037 reference X-ray and gamma fields: filtered tungsten spectra, half-value layers and homogeneity, matching to the 50 ISO qualities, operational dose conversion, air-density correction and measurement uncertainty, with its accuracy against the standard and a guide to its Korean interface."
+      description="What the Field Pro workbench computes for ISO 4037 reference X-ray and gamma fields: filtered tungsten spectra, half-value layers and homogeneity, matching to the 50 ISO qualities, operational dose conversion, air-density correction and measurement uncertainty, with its accuracy against the standard and a guide to its screen."
       schema="TechArticle">
   <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
     ISO 4037 reference fields: what Field Pro computes
@@ -25,8 +25,8 @@ const SPEC = "https://github.com/aijhmin1031-eng/radiation-field-pro/blob/master
       them. <a href={PRO} class="underline">Field Pro</a> is the workbench on this platform for that
       setting. It models the beam a calibration laboratory actually produces, compares it with the
       quality the standard describes, and carries the result through to operational dose and its
-      uncertainty. This note explains what each part computes, how accurate it is, and how to read its
-      Korean interface.
+      uncertainty. This note explains what each part computes, how accurate it is, and how its screen
+      is laid out.
     </p>
 
     <h2>Why reference fields need a model</h2>
@@ -146,30 +146,30 @@ const SPEC = "https://github.com/aijhmin1031-eng/radiation-field-pro/blob/master
       those.
     </p>
 
-    <h2>Finding your way around the Korean interface</h2>
+    <h2>Finding your way around the workbench</h2>
     <p>
-      Field Pro is written for laboratories in Korea, so its screen labels are in Korean, but the
-      quantities, symbols and units are the usual ones, and the layout is easy to follow by position.
-      The inputs sit in three numbered blocks in the left column and the results on the right. On a
-      phone, two tabs above the panels switch between inputs and results, and the bar fixed at the bottom of
-      the screen runs the calculation.
+      The screen is in English and uses the quantity names, symbols and units of ISO 4037 and ICRU, so
+      its labels read the same as the standard. The inputs sit
+      in four numbered panels in the left column and the results in lettered panels on the right. On a
+      phone, the Input and Results tabs switch between the two, and the bar fixed at the bottom of the
+      screen runs the calculation.
     </p>
     <ul class="my-3 space-y-1">
-      <li><b>Block 01, the source</b>: four choices across the top for an X-ray tube, Cs-137, Co-60, or an
-        imported measured spectrum. For a tube, the fields below take the ISO quality, the tube voltage
-        in kV, the air path in metres, and the inherent and added filtration, with a button under them
-        to add another filter layer.</li>
-      <li><b>Block 02, geometry and evaluation</b>: the angle of incidence α, the material for the
-        half-value layers (automatic, following the matched ISO quality, or Al, Cu or Pb), the ISO quality
-        to compare with, and the acceptance band in percent.</li>
-      <li><b>Block 03, reading correction</b>: temperature, pressure and relative humidity for
-        k<sub>ρ</sub>, the repeated readings for the Type A component, and the Type B components.</li>
-      <li><b>Results</b>: labelled with their symbols — Ē, E<sub>eff</sub>, HVL1, HVL2, h,
-        H*(10)/K<sub>a</sub>, k<sub>ρ</sub> and the air kerma rate for a nuclide — followed by the
-        uncertainty in report form and the change from the previous calculation.</li>
-      <li>The toolbar under the title starts with the calculate button and a checkbox for automatic
-        calculation; the four buttons after them save and load the whole configuration as a file, print
-        a report, and reset the form, in that order.</li>
+      <li><b>01 Source</b>: X-ray tube, Cs-137, Co-60 or Import (a measured spectrum). For a tube, the
+        fields below take the ISO beam quality (choosing one fills in its tube voltage and filtration,
+        and the menu reads <i>Custom (edited)</i> once you change them by hand), the tube voltage in kV, the air path in millimetres, and
+        the inherent and added filtration, with <i>+ Filter layer</i> to add another layer.</li>
+      <li><b>02 Geometry and evaluation</b>: the angle of incidence α, the HVL material (automatic,
+        following the matched ISO quality, or Al, Cu or Pb), the ISO comparison target and the
+        tolerance band in percent.</li>
+      <li><b>03 Readout correction</b> and <b>04 Repeatability uncertainty</b>: temperature, pressure
+        and relative humidity for k<sub>ρ</sub>, then the repeat readings for the Type A component and
+        the Type B components.</li>
+      <li><b>Results A to D</b>: beam-quality characteristics (Ē, E<sub>eff</sub>, HVL1, HVL2, h),
+        operational dose conversion coefficients, the ISO 4037-1 reference-field comparison and the
+        measurement uncertainty in report form, each with the change from the previous calculation.</li>
+      <li>The toolbar under the title holds <i>Calculate</i>, an <i>Auto-calculate</i> checkbox, and
+        <i>Save session</i>, <i>Load session</i>, <i>Print report</i> and <i>Reset</i>.</li>
     </ul>
     <p>
       Every calculation runs in the browser. Nothing you enter is sent to a server, and a saved session
