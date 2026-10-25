@@ -17,7 +17,7 @@ const doneList = done.join(", ");
 const publishedSlugs = new Set(REPORTS.filter((r) => r.status === "published").map((r) => r.tool));
 const without = TOOLS.filter((t) => !publishedSlugs.has(t.slug)).map((t) => t.name);
 ---
-<Base title="Methods and data"
+<Base schema="TechArticle" title="Methods and data"
       description="Where the nuclear and attenuation data come from, how the gamma constants are computed, how the results are validated, and the known limitations.">
   <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">Methods and data</h1>
   <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
