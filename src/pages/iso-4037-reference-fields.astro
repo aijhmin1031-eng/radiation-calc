@@ -1,0 +1,190 @@
+---
+import Base from "../layouts/Base.astro";
+import { u } from "../lib/site";
+
+/** ★★ 소개 글 — 자매 사이트 Field Pro(pro.radiation-lab.com)가 계산하는 것(2026-10-25 D6, 감독 지시 14 ⑧).
+ *  ★ 정확도 수치는 Field Pro 저장소의 `docs/accuracy-spec.md`(엔진에서 자동 생성, `accuracy-spec.test.ts` 가 봉투를
+ *    강제)에서 **편차 백분율만** 옮긴다. ISO 4037 표값(선질별 HVL·변환계수)은 저작권이 있으므로 옮기지 않는다.
+ *  ★ 화면 이름은 Field Pro 의 한글 표기를 그대로 적고 영어 뜻을 붙인다 — 한글 UI 를 처음 보는 독자가 찾게. */
+const PRO = "https://pro.radiation-lab.com/";
+const SPEC = "https://github.com/aijhmin1031-eng/radiation-field-pro/blob/master/docs/accuracy-spec.md";
+---
+<Base title="ISO 4037 reference fields: what Field Pro computes"
+      description="What the Field Pro workbench computes for ISO 4037 reference X-ray and gamma fields: filtered tungsten spectra, half-value layers and homogeneity, matching to the 50 ISO qualities, operational dose conversion, air-density correction and measurement uncertainty, with its accuracy against the standard and a guide to its Korean interface."
+      schema="TechArticle">
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
+    ISO 4037 reference fields: what Field Pro computes
+  </h1>
+
+  <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <p>
+      Dosimeters and survey meters are calibrated in reference radiation fields whose spectrum is known
+      well enough that the conversion from air kerma to the quantity the instrument displays can be
+      looked up rather than measured. The series of standards ISO 4037 defines those fields for photons:
+      filtered X-ray beams for the low and middle energies, and the gamma rays of Cs-137 and Co-60 above
+      them. <a href={PRO} class="underline">Field Pro</a> is the workbench on this platform for that
+      setting. It models the beam a calibration laboratory actually produces, compares it with the
+      quality the standard describes, and carries the result through to operational dose and its
+      uncertainty. This note explains what each part computes, how accurate it is, and how to read its
+      Korean interface.
+    </p>
+
+    <h2>Why reference fields need a model</h2>
+    <p>
+      An ISO radiation quality, such as N-60 or H-100, is specified by its tube voltage, its added
+      filtration and the half-value layers the beam should have. The conversion coefficients that turn
+      air kerma into personal dose equivalent Hp(10) or ambient dose equivalent H*(10) depend on the
+      spectrum, and the standard tabulates them for the nominal beam. A real tube is never quite the
+      nominal one. Its inherent filtration differs, its anode has aged, the air path to the reference
+      point is not exactly the one assumed, and laboratories build qualities that the standard does not
+      list. In each case the question is the same: how far is this beam from the one the coefficients
+      were computed for, and does the difference matter at the accuracy the calibration claims? A model
+      gives a first answer in seconds and shows which input moves the result most.
+    </p>
+
+    <h2>The X-ray spectrum</h2>
+    <p>
+      Field Pro computes the spectrum of a tungsten anode at a 20° angle for tube voltages from 10 to
+      400&nbsp;kV, then passes it through a stack of filters. The filter materials are beryllium,
+      aluminium, copper, tin, tantalum, tungsten and lead, entered as layers in any order and thickness,
+      together with the air path from the focal spot to the point of test. Inherent filtration (the tube
+      window and housing) and added filtration are separate entries, because one is fixed by the tube and
+      the other is what the laboratory changes to build a quality.
+    </p>
+    <p>
+      From the filtered spectrum it reports the mean energy, the effective energy (the energy of a single
+      line with the same first half-value layer), the first and second half-value layers in aluminium,
+      copper or lead, the homogeneity coefficient h&nbsp;=&nbsp;HVL1/HVL2, and the relative air kerma. The
+      homogeneity coefficient summarises how hard the beam is: a beam close to one line has h near 1,
+      and an unfiltered beam much less, because the first layer strips its soft end. The raw spectrum without any of this filtration is what the
+      <a href={u("/xray-spectrum/")} class="underline">X-ray tube spectrum</a> tool on this site draws;
+      Field Pro starts where that tool stops.
+    </p>
+
+    <h2>Matching a beam to an ISO quality</h2>
+    <p>
+      ISO 4037-1:2019 lists 50 qualities in four series. The narrow-spectrum series N, used for most
+      dosimeter calibrations, and the low air-kerma series L have heavy filtration and high homogeneity;
+      the wide series W gives more air kerma at the cost of a broader spectrum; and the high air-kerma
+      series H is lightly filtered. Field Pro compares the computed beam with every quality and names the
+      one whose first half-value layer, worked out in that quality's own material, is closest. If you
+      choose a quality as the target instead, it sets the beam beside it characteristic by
+      characteristic (HVL1, HVL2, homogeneity coefficient and mean energy) and flags each against an
+      acceptance band you set, which is the usual way to check that a new filter set reproduces the
+      intended beam.
+    </p>
+    <p>
+      The comparison is only as good as the inputs. The inherent filtration of a tube is often known
+      only roughly, and at low voltages it moves the half-value layer noticeably. Measuring HVL1 once on
+      the real beam and adjusting the inherent filtration until the model agrees pins it down.
+    </p>
+
+    <h2>Gamma fields from Cs-137 and Co-60</h2>
+    <p>
+      For the nuclide fields, Field Pro takes the source activity on its reference date, corrects it for
+      decay to the day of the measurement, and gives the air kerma rate at the chosen distance treating
+      the source as a point. The same calculation for any nuclide, with shielding, is in the
+      <a href={u("/gamma-shielding/")} class="underline">gamma shielding</a> tool, and the decay
+      correction alone is in the <a href={u("/decay/")} class="underline">decay</a> tool. What Field Pro
+      adds is the step from air kerma to the operational quantities with coefficients averaged over the
+      source spectrum.
+    </p>
+
+    <h2>Operational dose conversion</h2>
+    <p>
+      Calibrations are stated in air kerma and then converted to the quantity the instrument is meant to
+      show: Hp(10) for personal dosemeters worn on the body, H*(10) for area survey meters, and the
+      directional dose equivalent H′(0.07) for skin and extremity dose. Field Pro averages the
+      monoenergetic conversion coefficients over the computed spectrum, weighted by air kerma, and does
+      so for an angle of incidence α from 0° to 75°. The angle matters for personal dosemeters, which are
+      tested at several angles because their response falls away as the beam moves off the normal.
+    </p>
+
+    <h2>Correcting the reading</h2>
+    <p>
+      An open ionisation chamber responds to the mass of air in its volume, so its reading depends on
+      the air density at the time of measurement. Field Pro computes the correction factor k<sub>ρ</sub>
+      from temperature, pressure and humidity, following the reading corrections in ISO 4037-4.
+    </p>
+
+    <h2>Uncertainty</h2>
+    <p>
+      The workbench builds an uncertainty budget in the form of the Guide to the Expression of
+      Uncertainty in Measurement (GUM). The Type A component comes from repeated readings, corrected
+      first, as u&nbsp;=&nbsp;s/√n; Type B components are entered by name as relative standard
+      uncertainties. They are combined as a root sum of squares, the effective degrees of freedom
+      ν<sub>eff</sub> come from the Welch–Satterthwaite formula, and the expanded uncertainty is given
+      with a coverage factor from the t-distribution for about 95% coverage, in a form that can go into a
+      calibration certificate. Rerunning the beam model with the filtration at the ends of its plausible
+      range shows how far the conversion coefficient can move, a sound basis for that Type B term.
+    </p>
+
+    <h2>How close it comes to the standard</h2>
+    <p>
+      The accuracy of the engine is checked against the standard by an automated test, and a
+      <a href={SPEC} class="underline">published accuracy specification</a> is generated from the engine
+      itself, not typed in. For each of the 50 X-ray qualities, the reference beam (inherent and added
+      filtration plus 2.5&nbsp;m of air) is modelled and its first half-value layer compared with the
+      value in ISO 4037-1:
+    </p>
+    <ul class="my-3 space-y-1">
+      <li>Low energies, mean energy up to 40&nbsp;keV, 17 qualities: mean deviation 1.26%, largest 3.91%,
+        against a guaranteed envelope of 4%.</li>
+      <li>Middle energies, 40 to 150&nbsp;keV, 22 qualities: mean 0.67%, largest 1.45%, envelope 2%.</li>
+      <li>High energies, 150&nbsp;keV and above, 11 qualities: mean 1.02%, largest 1.69%, envelope 2%.</li>
+    </ul>
+    <p>
+      For the gamma fields,
+      the spectrum-averaged conversion coefficients for Hp(10), H*(10) and H′(0.07) at normal incidence
+      agree with the values recommended in ISO 4037-3 to within 1.03% for both Cs-137 and Co-60, against
+      an envelope of 2%. The specification lists the deviation for every quality but not the tabulated
+      values themselves, which belong to the standard.
+    </p>
+    <p>
+      These figures say how well the model reproduces the nominal fields. They do not replace the
+      measurements a laboratory makes to characterise its own beams, and a calibration should rest on
+      those.
+    </p>
+
+    <h2>Finding your way around the Korean interface</h2>
+    <p>
+      Field Pro is written for laboratories in Korea, so its screen labels are in Korean, but the
+      quantities, symbols and units are the usual ones, and the layout is easy to follow by position.
+      The inputs sit in three numbered blocks in the left column and the results on the right. On a
+      phone, two tabs above the panels switch between inputs and results, and the bar fixed at the bottom of
+      the screen runs the calculation.
+    </p>
+    <ul class="my-3 space-y-1">
+      <li><b>Block 01, the source</b>: four choices across the top for an X-ray tube, Cs-137, Co-60, or an
+        imported measured spectrum. For a tube, the fields below take the ISO quality, the tube voltage
+        in kV, the air path in metres, and the inherent and added filtration, with a button under them
+        to add another filter layer.</li>
+      <li><b>Block 02, geometry and evaluation</b>: the angle of incidence α, the material for the
+        half-value layers (automatic, following the matched ISO quality, or Al, Cu or Pb), the ISO quality
+        to compare with, and the acceptance band in percent.</li>
+      <li><b>Block 03, reading correction</b>: temperature, pressure and relative humidity for
+        k<sub>ρ</sub>, the repeated readings for the Type A component, and the Type B components.</li>
+      <li><b>Results</b>: labelled with their symbols — Ē, E<sub>eff</sub>, HVL1, HVL2, h,
+        H*(10)/K<sub>a</sub>, k<sub>ρ</sub> and the air kerma rate for a nuclide — followed by the
+        uncertainty in report form and the change from the previous calculation.</li>
+      <li>The toolbar under the title starts with the calculate button and a checkbox for automatic
+        calculation; the four buttons after them save and load the whole configuration as a file, print
+        a report, and reset the form, in that order.</li>
+    </ul>
+    <p>
+      Every calculation runs in the browser. Nothing you enter is sent to a server, and a saved session
+      is a file on your own computer. The source code is public under the MIT licence.
+    </p>
+
+    <h2>Where to go next</h2>
+    <ul class="my-3 space-y-1">
+      <li><a href={PRO} class="underline">Field Pro</a> — the workbench itself.</li>
+      <li><a href={u("/xray-spectrum/")} class="underline">X-ray tube spectrum</a> — the raw tungsten
+        spectrum before filtration, with its mean energy.</li>
+      <li><a href={u("/half-value-layers/")} class="underline">Half-value and tenth-value layers</a> — the
+        same idea for shielding gamma emitters, and why the second layer is thicker than the first.</li>
+      <li><a href={u("/gamma-shielding/")} class="underline">Gamma shielding</a> — point-source air kerma
+        rate for any nuclide, with attenuation and buildup.</li>
+    </ul>
+  </section>
+</Base>

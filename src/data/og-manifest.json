@@ -43,6 +43,10 @@
     "slug": "hard-to-measure",
     "title": "Hard-to-measure nuclides in decommissioning waste · Radiation Lab"
   },
+  "/iso-4037-reference-fields/": {
+    "slug": "iso-4037-reference-fields",
+    "title": "ISO 4037 reference fields: what Field Pro computes · Radiation Lab"
+  },
   "/mda/": {
     "slug": "mda",
     "title": "MDA calculator — detection limits and scan MDC · Radiation Lab"
