@@ -42,7 +42,8 @@ const GUTTER = 148;   // 1280px 에서 글줄이 시작하는 x (우산 1048/32 
 /* ───────── 머리글 정본 (2026-10-06 ④ — 한 줄 머리글, C:\dev\rl\HEADER-SPEC.md) ─────────
  *  소유주 「여기 상단에 놓아두는 2가지 영역이 다르네… 하나의 계산기 안에 다양한 도구가 들어있는 형태로 구성해보자」 → 「고」.
  *  플랫폼 막대(분야 칸 셋) + lab 막대(RadCalc 칸 셋) 두 줄을 **한 줄**로 합쳤다: 브랜드 · Tools ▾ · Nuclide data · Methods ·
- *  Validation · 테마 · 계정. Tools 는 `<details>` 메뉴이고 도구 일곱(두 묶음)과 자매 사이트 둘을 든다.
+ *  Validation · 테마 · 계정. Tools 는 `<details>` 메뉴이고 도구 여덟(세 묶음)과 자매 사이트 둘을 든다.
+ *  ★ 2026-10-25 — 셋째 묶음 「X-ray spectra」(X-ray tube spectrum)를 더했다. 우산 레포 정본도 같은 날 같은 값으로 고친다.
  *  ★ apex 의 쪽(우산 여섯 쪽 + RadCalc)이 같은 표를 든다. 하위 도메인 둘은 브랜드 뒤에 「/ RadiMeter」 등을 붙이고 자기 칸을 든다.
  *  ★ 「현재」는 앰버가 아니다 — 글자 ink · 600 · 1px line-strong · 바탕 surface. 우산 쪽에는 현재 칸이 없어 달아 보고 잰다. */
 const PBAR = {
@@ -68,6 +69,7 @@ const PBAR = {
                                           ["/calc/alara/", "ALARA & job planning"]] },
       { name: "Activity & counting", items: [["/calc/units/", "Unit converter"], ["/calc/decay/", "Decay & half-life"],
                                              ["/calc/specific-activity/", "Mass & activity"], ["/calc/mda/", "Detection limits (MDA / MDC)"]] },
+      { name: "X-ray spectra", items: [["/calc/xray-spectrum/", "X-ray tube spectrum"]] },
     ],
     more: [["https://radimeter.radiation-lab.com/", "Instrument testing"], ["https://disposal.radiation-lab.com/", "Disposal & transport"]],
     // 2026-10-13 소유주 결정: 셋째였던 「Everyday tools」(도토리툴)는 도토리콘 사이트로 완전히 분리해 뺐다.
@@ -227,7 +229,7 @@ function checkBar(tag, b, w, theme) {
          ` · 칸 줄 ${rows} · 칸 끝 ${Math.round(right)}/${Math.round(b.contentRight)}px`);
 }
 
-/** Tools 메뉴 — 연다(요약을 누른다) → 도구 일곱·자매 사이트 둘·패널 자리를 잰다 → Esc 로 닫히고 포커스가 요약으로 돌아오는가. */
+/** Tools 메뉴 — 연다(요약을 누른다) → 도구 여덟·자매 사이트 둘·패널 자리를 잰다 → Esc 로 닫히고 포커스가 요약으로 돌아오는가. */
 async function checkMenu(page, tag, w) {
   const sum = page.locator('header nav[aria-label="Main"] > details > summary');
   if (!(await sum.count())) { fail.push(`${tag} Tools 메뉴(details > summary)가 없다`); return; }
@@ -348,4 +350,4 @@ for (const theme of ["light", "dark"]) {
 await browser.close(); srv.close();
 
 if (fail.length) { console.log(`\n❌ ${LABEL} — 머리글 정본에서 벗어난 값 ${fail.length}건`); fail.forEach((f) => console.log("   " + f)); process.exit(1); }
-console.log(`\n✅ ${LABEL} — 머리글 정본과 일치(본문·머리글·아래선·칸 좌측 · 한 줄 머리글: 브랜드·칸 넷 글자·순서·주소·치수·배치·글줄 안 ${WIDTHS.join("/")}px · 「현재」 모양(앰버 아님) · Tools 메뉴: 묶음 둘·도구 일곱·자매 둘·패널 자리·Esc·바깥 클릭 1280/390px) × 2테마 × ${PATHS.length}쪽`);
+console.log(`\n✅ ${LABEL} — 머리글 정본과 일치(본문·머리글·아래선·칸 좌측 · 한 줄 머리글: 브랜드·칸 넷 글자·순서·주소·치수·배치·글줄 안 ${WIDTHS.join("/")}px · 「현재」 모양(앰버 아님) · Tools 메뉴: 묶음 셋·도구 여덟·자매 둘·패널 자리·Esc·바깥 클릭 1280/390px) × 2테마 × ${PATHS.length}쪽`);
