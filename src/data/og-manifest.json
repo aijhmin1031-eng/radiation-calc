@@ -379,6 +379,10 @@
     "slug": "validation-units",
     "title": "Unit converter validation — hand calculations against the tool · Radiation Lab"
   },
+  "/xray-spectrum/": {
+    "slug": "xray-spectrum",
+    "title": "X-ray tube spectrum calculator — bremsstrahlung · Radiation Lab"
+  },
   "*": {
     "slug": "home",
     "title": ""
