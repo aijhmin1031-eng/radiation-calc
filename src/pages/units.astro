@@ -100,7 +100,9 @@ const U = EX.units;
       For a beta or gamma emitter the wipe is one tenth of the limit and the package passes. For an
       alpha emitter outside the low-toxicity group the same reading sits exactly on the limit, and a
       reading on the limit is not a pass. The unit conversion is the easy part; knowing which emitter
-      is on the wipe decides the answer.
+      is on the wipe decides the answer. Check also that both figures describe the same thing: the
+      limit applies to removable contamination averaged over 300&nbsp;cm² of any part of the surface,
+      so one small spot can pass on average and still deserve a second wipe.
     </p>
 
     <h3>Reading an old survey meter in milliroentgen</h3>
@@ -114,7 +116,7 @@ const U = EX.units;
           <tr><th>Step</th><th class="text-right">Result</th></tr>
         </thead>
         <tbody>
-          <tr><td>2.5&nbsp;mR/h as exposure rate</td><td class="num text-right">{U.mrCkg7}&nbsp;×&nbsp;10⁻⁷&nbsp;C/kg per hour</td></tr>
+          <tr><td>2.5&nbsp;mR/h as exposure rate</td><td class="num text-right">{U.mrCkg7}&nbsp;×&nbsp;10⁻⁷&nbsp;C/(kg·h)</td></tr>
           <tr><td>Air kerma rate (× 33.97&nbsp;J/C)</td><td class="num text-right">{U.mrUGyH}&nbsp;µGy/h</td></tr>
         </tbody>
       </table>
@@ -123,7 +125,8 @@ const U = EX.units;
       The first step is exact; the second uses the energy needed to make one ion pair in dry air.
       The result is air kerma, not a dose equivalent. If the action level is written in µSv/h, the
       conversion needs a coefficient for the photon energy, which this tool deliberately does not
-      supply.
+      supply. The conversion is also only as good as the meter: an instrument calibrated with Cs-137
+      can over-read or under-read at low photon energies, whatever unit its scale is printed in.
     </p>
 
     <Faq slug="units" />

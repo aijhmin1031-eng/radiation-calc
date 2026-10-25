@@ -96,6 +96,9 @@ const D = EX.decay;
       activity by early afternoon. The same calculation run backwards gives the activity to order:
       a dose needed at 13:00 must be drawn as about twice that amount at 07:00. The vial is still
       measured in the dose calibrator before injection; the calculation tells you what to expect.
+      Write the clock time of each draw on the syringe label as well as the activity. Without it the
+      activity at injection cannot be reconstructed afterwards, which is the first thing asked when a
+      scan looks wrong.
     </p>
 
     <h3>Identifying a vial from two measurements</h3>
@@ -121,7 +124,9 @@ const D = EX.decay;
       fifth, so a one-percent error in either count rate moves the half-life by about
       {D.hlSensPct}%, which is wider than the gap between the two candidates. A gamma spectrum
       settles the question: Mo-99 shows its 740&nbsp;keV line and the 140&nbsp;keV line of its
-      Tc-99m daughter, Au-198 a single line at 412&nbsp;keV.
+      Tc-99m daughter, Au-198 a single line at 412&nbsp;keV. Counting the vial again a few days
+      later helps as well: the longer the interval, the less a counting error moves the half-life, as
+      the section on choosing the interval explains.
     </p>
 
     <Faq slug="decay" />

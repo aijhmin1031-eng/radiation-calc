@@ -42,7 +42,7 @@ export const TOOL_FAQ: Record<string, readonly FaqItem[]> = {
     },
     {
       q: "What is the difference between half-life and mean life?",
-      a: "The half-life T½ is the time for half of the atoms to decay; the mean life τ = 1/λ = T½/ln 2 is the average time an atom survives, about 1.443 half-lives. After one mean life the activity has fallen to 1/e, about 37% of the start.",
+      a: "The half-life T½ is the time for half of the atoms to decay; the mean life τ = 1/λ = T½/ln 2 is the average time an atom survives, about 1.443 half-lives. After one mean life the activity has fallen to 1/e, about 37% of the start. Neither should be confused with the effective half-life used in nuclear medicine, which also counts biological removal: 1/T_eff = 1/T_phys + 1/T_bio.",
     },
     {
       q: "Why does my half-life from two measurements come out wrong?",
@@ -73,6 +73,10 @@ export const TOOL_FAQ: Record<string, readonly FaqItem[]> = {
     {
       q: "Is Bq/L the same as Bq/kg for water?",
       a: "Numerically yes, because a litre of water has a mass of one kilogram to within a fraction of a percent at room temperature. For any other liquid, divide the volume concentration by the density in kg/L to get Bq/kg. Soils and solids are reported per mass, so a volume figure there needs the bulk density.",
+    },
+    {
+      q: "Is a gray the same as a sievert?",
+      a: "Both units equal one joule per kilogram, but they measure different quantities. The gray is used for absorbed dose and kerma; the sievert is used for equivalent and effective dose, which apply the radiation and tissue weighting factors of ICRP Publication 103. For photons the radiation weighting factor is one, yet converting air kerma to a sievert quantity still needs an energy-dependent coefficient.",
     },
   ],
   mda: [
