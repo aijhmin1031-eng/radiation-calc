@@ -90,4 +90,12 @@ export const NOTES: Note[] = [
       "What a 511 keV intensity near 200% means, lead and tungsten against Tc-99m, decay through " +
       "a working day, and why a 511 keV peak is not an identification.",
   },
+  {
+    path: "/half-value-layers/",
+    name: "Half-value and tenth-value layers",
+    question: "How much lead, iron or concrete halves the dose rate from a common source?",
+    blurb:
+      "Layers for six gamma emitters in three materials from the full spectrum, attenuation only, " +
+      "why the first layer is thinner than the next, and what buildup adds in a real shield.",
+  },
 ];

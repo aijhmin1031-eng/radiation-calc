@@ -1,0 +1,218 @@
+---
+import Base from "../layouts/Base.astro";
+import NuclideRef from "../components/NuclideRef.astro";
+import { NUCLIDES, halfLifeText } from "../lib/nuclides";
+import { DENSITY_G_CM3 } from "../engine";
+import { layerTable, HVL_MATERIALS, mm3, cm3 } from "../lib/guide-tables";
+import { u } from "../lib/site";
+
+/** ★★ 가이드 글 — 흔한 감마 방출체의 반가층·십가층(2026-10-25 D5-2, 감독 지시 12 ①).
+ *  **숫자를 글자로 적지 않는다** — 표와 산문의 두께는 전부 `lib/guide-tables.ts` 의 `layerTable()` 에서 나오고,
+ *  같은 함수를 `guide-tables.test.ts` 가 고정한다. 차폐는 **감쇠만**(좁은 빔, 축적 없음)이며 글이 그것을 밝힌다.
+ *  ★ 바깥 출처는 이름만 든다: NIST 광자 감쇠 계수, IAEA Livechart(ENSDF) 선 자료, 축적계수는 ANSI/ANS-6.4.3.
+ *    넓은 빔 값은 숫자로 옮기지 않는다 — 우리 자료에서 나온 값이 아니다. */
+const T = layerTable();
+const R = (k: string) => T.find((r) => r.k === k)!;
+const c = (k: string, m: string) => R(k).cells[m];
+const MAT_NAME: Record<string, string> = { lead: "Lead", iron: "Iron (steel)", concrete: "Ordinary concrete" };
+/* 콘크리트는 cm, 나머지는 mm — 같은 표 안에서 자릿수가 지나치게 갈리지 않게. */
+const unit = (m: string) => (m === "concrete" ? "cm" : "mm");
+const fmt = (m: string, cm: number) => (m === "concrete" ? cm3(cm) : mm3(cm));
+const SINGLE = Math.log(10) / Math.log(2);
+const ratio = (k: string, m: string) => c(k, m).tvlCm / c(k, m).hvlCm;
+const csPb = c("Cs-137", "lead"), coPb = c("Co-60", "lead"), irPb = c("Ir-192", "lead");
+const amPb = c("Am-241", "lead"), tcPb = c("Tc-99m", "lead"), iPb = c("I-131", "lead");
+const coC = c("Co-60", "concrete"), csC = c("Cs-137", "concrete");
+/* 「목표까지 몇 겹」 예 — Ir-192 를 1/1000 로: 첫 십가층 + 둘째 십가층 두 번이 근사다. */
+const ir1000 = irPb.tvlCm + 2 * irPb.tvl2Cm;
+const ir1000naive = 3 * irPb.tvlCm;
+---
+<Base title="Half-value and tenth-value layers for common gamma emitters"
+      description="Half-value and tenth-value layers of lead, iron and concrete for Cs-137, Co-60, Ir-192, I-131, Tc-99m and Am-241, computed from the full photon spectrum with attenuation only. Why the first layer is thinner than the next, how far narrow-beam values sit from broad-beam ones, and how to use them safely."
+      schema="TechArticle">
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
+    Half-value and tenth-value layers for common gamma emitters
+  </h1>
+
+  <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <p>
+      The half-value layer (HVL) is the thickness of a material that halves the dose rate from a
+      source, and the tenth-value layer (TVL) the thickness that reduces it to a tenth. They are the
+      quickest way to size a shield in your head: ten half-value layers take a dose rate down by a
+      factor of about a thousand, and each tenth-value layer adds a factor of ten. This note gives the
+      two layers in lead, iron and ordinary concrete for six nuclides that account for most practical
+      gamma shielding work, explains why the values here differ from the single number found in many
+      tables, and sets out what they leave out.
+    </p>
+
+    <h2>How these values were computed</h2>
+    <p>
+      Most published tables give one half-value layer per nuclide, taken from the attenuation
+      coefficient at a single representative energy. That is exact for a nuclide with one photon line
+      and an approximation for everything else. The values below are solved instead for the nuclide's
+      whole photon spectrum. Every line in the evaluated decay data above 20&nbsp;keV is attenuated by
+      its own coefficient, weighted by the air kerma it contributes, and the thickness that brings the
+      sum to one half or one tenth is found by bisection. The line data are the IAEA Livechart
+      evaluation of the nuclear structure and decay data files, and the attenuation coefficients are the
+      NIST tables, with densities of {DENSITY_G_CM3.lead}&nbsp;g/cm³ for lead,
+      {" "}{DENSITY_G_CM3.iron}&nbsp;g/cm³ for iron and {DENSITY_G_CM3.concrete}&nbsp;g/cm³ for concrete.
+      This is the same calculation the <a href={u("/gamma-shielding/")} class="underline">gamma shielding
+      calculator</a> and the nuclide sheets use, and a test in the repository fixes every value in the
+      tables to it.
+    </p>
+    <p>
+      The figures are for <strong>attenuation only</strong>. A photon that interacts in the shield is
+      counted as removed, which is the narrow-beam condition. No buildup factor is applied. The section
+      on broad beams below explains what that means for a real shield.
+    </p>
+
+    <h2>The tables</h2>
+    <p>
+      Each table gives the first half-value layer, the first tenth-value layer, and the second
+      tenth-value layer, which is the extra thickness needed to go from one tenth to one hundredth. When
+      the second tenth-value layer is larger than the first, the spectrum is hardening as it passes
+      through the material.
+    </p>
+    {HVL_MATERIALS.map((m) => (
+      <>
+        <h3>{MAT_NAME[m]}</h3>
+        <div class="pin-first mt-3" tabindex="0">
+          <table>
+            <thead>
+              <tr><th>Nuclide</th><th>HVL ({unit(m)})</th><th>TVL ({unit(m)})</th><th>2nd TVL ({unit(m)})</th></tr>
+            </thead>
+            <tbody>
+              {T.map((r) => (
+                <tr>
+                  <td><NuclideRef k={r.k} /></td>
+                  <td>{fmt(m, r.cells[m].hvlCm)}</td>
+                  <td>{fmt(m, r.cells[m].tvlCm)}</td>
+                  <td>{fmt(m, r.cells[m].tvl2Cm)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>
+    ))}
+    <p class="mt-2 text-[13px]">
+      Narrow beam, attenuation only, air kerma from all lines above 20&nbsp;keV. Half-lives:
+      {" "}{T.map((r, i) => `${r.k} ${halfLifeText(NUCLIDES[r.k])}${i === T.length - 1 ? "." : ", "}`)}
+    </p>
+
+    <h2>Why the first layer is thinner than the next</h2>
+    <p>
+      For a single photon energy, the tenth-value layer is exactly {SINGLE.toFixed(2)} half-value layers,
+      because attenuation is a pure exponential. The ratio in the tables departs from that wherever the
+      spectrum contains photons of very different energies. Low-energy lines are absorbed in the first
+      millimetres, so the first layer removes them as well as half of the main line, and the beam that
+      leaves it is harder than the one that entered.
+    </p>
+    <p>
+      Cs-137 shows the effect at its smallest. Besides its 662&nbsp;keV line it emits barium K X-rays near
+      32&nbsp;keV, which carry little dose but are stopped almost at once. The first half-value layer in
+      lead is therefore {mm3(csPb.hvlCm)}&nbsp;mm, a little thinner than the {mm3(csPb.tvl2Cm / SINGLE)}&nbsp;mm
+      that the second tenth-value layer implies for the 662&nbsp;keV line alone. Ir-192 shows it at its
+      largest among these six: its first half-value layer in lead is {mm3(irPb.hvlCm)}&nbsp;mm, its first
+      tenth-value layer {mm3(irPb.tvlCm)}&nbsp;mm — {ratio("Ir-192", "lead").toFixed(1)} half-value layers
+      rather than {SINGLE.toFixed(1)} — and its second tenth-value layer {mm3(irPb.tvl2Cm)}&nbsp;mm. The
+      lines between 296 and 317&nbsp;keV carry most of the dose in front of the shield; behind a
+      centimetre of lead the 468 and 604&nbsp;keV lines carry most of what is left. I-131 behaves the same way, with a second tenth-value
+      layer in lead of {mm3(iPb.tvl2Cm)}&nbsp;mm against a first of {mm3(iPb.tvlCm)}&nbsp;mm.
+    </p>
+    <p>
+      The practical point is that half-value layers are not additive when the spectrum hardens. To take
+      an Ir-192 source down by a factor of a thousand, three first tenth-value layers suggest
+      {" "}{mm3(ir1000naive)}&nbsp;mm of lead; the first tenth-value layer followed by two second ones gives
+      {" "}{mm3(ir1000)}&nbsp;mm. For a thick shield, use the later layers, or better, let the calculator
+      solve the thickness for the whole spectrum.
+    </p>
+
+    <h2>Notes on each nuclide</h2>
+    <p>
+      <strong>Co-60.</strong> Two lines of almost equal intensity at 1173 and 1332&nbsp;keV make it the
+      hardest spectrum here. The lead half-value layer is {mm3(coPb.hvlCm)}&nbsp;mm and the ratio is close
+      to the single-line value, so one half-value layer serves well at any depth. In concrete the
+      half-value layer is {cm3(coC.hvlCm)}&nbsp;cm, which is why rooms for high-activity Co-60 sources
+      have concrete walls a metre or more thick.
+    </p>
+    <p>
+      <strong>Cs-137.</strong> The usual reference source for survey meter checks and calibration. Its
+      concrete half-value layer of {cm3(csC.hvlCm)}&nbsp;cm and lead tenth-value layer of
+      {" "}{mm3(csPb.tvlCm)}&nbsp;mm are useful benchmarks: if a shielding estimate for a nuclide of similar
+      energy differs greatly from these, check the input.
+    </p>
+    <p>
+      <strong>Ir-192.</strong> The common source for industrial radiography and high-dose-rate
+      brachytherapy. Its hardening means that a collimator or a shielded container sized from the first
+      half-value layer will be too thin.
+    </p>
+    <p>
+      <strong>I-131.</strong> Its main line is at 364&nbsp;keV, and its layers in iron and concrete are close
+      to those of Ir-192. In therapy wards the patient is the source, and the body attenuates and scatters
+      the photons before any shield does; the point-source figures here are an upper bound for that
+      situation.
+    </p>
+    <p>
+      <strong>Tc-99m.</strong> Its 140&nbsp;keV line is easy to shield with lead: the half-value layer is
+      {" "}{mm3(tcPb.hvlCm)}&nbsp;mm and the tenth-value layer {mm3(tcPb.tvlCm)}&nbsp;mm, so a few
+      millimetres of lead in a syringe shield or a vial pot reduce the dose rate by orders of magnitude.
+      Iron and concrete are far less effective per centimetre at this energy, as the tables show.
+    </p>
+    <p>
+      <strong>Am-241.</strong> Its 59.5&nbsp;keV gamma ray and the neptunium L X-rays near 17&nbsp;keV are
+      stopped by a fraction of a millimetre of lead — the first half-value layer is
+      {" "}{mm3(amPb.hvlCm)}&nbsp;mm. The low-energy photons do not count in these tables below
+      20&nbsp;keV, and in practice they are absorbed by any source capsule. Because Am-241 is mainly an alpha
+      emitter, contamination control matters more than its photon shielding.
+    </p>
+
+    <h2>Narrow beam against broad beam</h2>
+    <p>
+      In a real shield, photons that Compton-scatter do not all disappear. Some change direction, keep
+      most of their energy and still reach the point being protected. The dose rate behind the shield is
+      the attenuated dose rate multiplied by a buildup factor B, which is 1 at the surface and grows with
+      thickness — slowly in lead, quickly in light materials such as concrete and water, and more at
+      lower energy. Broad-beam half-value layers, measured with the scattered photons included, are
+      therefore thicker than the narrow-beam values here; for Cs-137 in lead the commonly quoted
+      broad-beam figure is about 6.5&nbsp;mm.
+    </p>
+    <p>
+      The buildup factor most often used for point sources is the geometric-progression fit published
+      in the standard ANSI/ANS-6.4.3, whose coefficients are copyright and are not reproduced on this
+      site. The gamma calculator accepts buildup coefficients in the two-parameter Berger form,
+      B&nbsp;=&nbsp;1&nbsp;+&nbsp;a·µx·e<sup>b·µx</sup>, from whatever reference you are working to, and
+      shows the difference they make. For rooms in medical facilities, broad-beam transmission data for
+      the specific radiation and material are published in shielding reports such as AAPM Task Group 108
+      for PET, and a design should use those.
+    </p>
+
+    <h2>Using the numbers safely</h2>
+    <ul class="my-3 space-y-1">
+      <li>Treat a thickness worked out from these tables as a lower bound. With buildup the real shield
+        transmits more, so add margin or calculate with buildup.</li>
+      <li>Do not chain first half-value layers for a thick shield of a hardening spectrum. Use the second
+        tenth-value layer, as in the Ir-192 example above.</li>
+      <li>Check the density. Concrete varies with its aggregate, and a lighter mix needs a proportionally
+        thicker wall. Steel is close to the iron figure; cast iron is a little lighter.</li>
+      <li>Look for gaps. Joints, cable penetrations and doors transmit more than the wall, and scatter
+        travels around a shield as well as through it.</li>
+      <li>Confirm with a measurement. A survey of the finished shield with a calibrated instrument is the
+        check that counts.</li>
+    </ul>
+
+    <h2>Where to go next</h2>
+    <ul class="my-3 space-y-1">
+      <li><a href={u("/gamma-shielding/")} class="underline">Gamma shielding</a> — dose rate behind any
+        thickness, the thickness for a target dose rate, and buildup.</li>
+      <li><a href={u("/alara/")} class="underline">Time, distance, shielding</a> — stay time once the
+        shield is in place.</li>
+      <li><a href={u("/daughter-shielding/")} class="underline">When the thing to shield is the
+        daughter</a> — why Cs-137's shield is really Ba-137m's.</li>
+      <li><a href={u("/positron-emitters/")} class="underline">Positron emitters and 511 keV</a> — the same
+        layers for annihilation radiation.</li>
+      <li>{T.map((r, i) => (<><NuclideRef k={r.k} />{i < T.length - 1 ? ", " : ""}</>))} — the full data
+        pages, with all seven shield materials.</li>
+    </ul>
+  </section>
+</Base>
