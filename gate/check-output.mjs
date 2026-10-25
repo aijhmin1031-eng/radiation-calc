@@ -73,8 +73,11 @@ note(stray === 0 ? "샌 링크 0" : `샌 링크 ${stray}`);
 
 /* ── canonical ── */
 console.log("\n③ canonical");
+/* ★ 2026-10-25 (D5) — 404 쪽은 거꾸로 canonical 이 **없어야** 한다. 없는 주소 어디에나 나가는 쪽이라
+   정본 주소가 없다. 그전에는 `/calc/404/` 를 정본이라 말하고 있었다. */
 for (const p of pages) {
   const c = (p.s.match(/rel="canonical" href="([^"]+)"/) || [])[1];
+  if (p.path === "/404.html") { if (c) fail.push(`${p.path}: 404 쪽에 canonical 이 있다 — ${c}`); continue; }
   if (!c) { fail.push(`${p.path}: canonical 이 없다`); continue; }
   if (!c.startsWith(SITE_URL_DEFAULT + BASE_PATH)) fail.push(`${p.path}: canonical 이 이상하다 — ${c}`);
   if (!c.endsWith("/")) fail.push(`${p.path}: canonical 끝 슬래시가 없다 — 사이트맵과 어긋난다`);
