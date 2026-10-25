@@ -101,4 +101,92 @@ export const TOOL_FAQ: Record<string, readonly FaqItem[]> = {
       a: "No. The MDA describes the measurement, not the sample, so a result below it is still a measured value with an uncertainty. ISO 11929 recommends reporting the measured value and its uncertainty together with the decision threshold and detection limit, which keeps averages and trends unbiased; replacing low results with zero or with the MDA distorts them.",
     },
   ],
+  beta: [
+    {
+      q: "How thick does a beta shield need to be?",
+      a: `At least the maximum range of the betas, which depends on the endpoint energy and is nearly the same in g/cm² for any light material. Divide by the density to get a thickness: Y-90 needs ${EX.beta.y90RangeGcm2} g/cm², or ${EX.beta.y90AcrylicMm} mm of acrylic. The range used here is the Katz–Penfold fit to aluminium absorption data.`,
+    },
+    {
+      q: "Why not use lead to shield beta emitters?",
+      a: `Lead stops betas in a very thin layer, but the fraction of their energy turned into bremsstrahlung X-rays rises with atomic number. For Y-90 it is about ${EX.beta.brPbPct}% in lead against ${EX.beta.brAcrPct}% in acrylic, and those photons are far more penetrating than the betas. Use a low-Z material first and add lead outside it only if the photon dose rate needs it.`,
+    },
+    {
+      q: "What is the difference between maximum and mean beta energy?",
+      a: "Beta decay shares its energy with a neutrino, so the electrons come out with a spectrum from zero up to the endpoint, Emax. The endpoint sets the range and therefore the shield thickness; the mean energy, typically between a third and two-fifths of Emax, sets the dose because it is the energy actually deposited per decay.",
+    },
+    {
+      q: "Can this calculator give skin dose from a contamination spot?",
+      a: "No. Skin dose depends on the source size, any air gap or covering, and the depth of the basal layer at 7 mg/cm², and a single number without those would be misleading. Use a code built for it, such as VARSKIN. The calculator gives only the exact infinite-medium dose rate and its half at a plane surface.",
+    },
+    {
+      q: "How do I get the total dose from a beta emitter that decays away?",
+      a: `Multiply the starting dose rate by the mean life, T½/ln 2, which is the integral of the decay curve. For Y-90 the mean life is ${EX.beta.y90MeanLifeH} hours, so 1 GBq spread uniformly through 1 kg of tissue delivers ${EX.beta.y90GyPerGBqKg} Gy in total.`,
+    },
+  ],
+  alara: [
+    {
+      q: "How do I calculate the stay time in a radiation area?",
+      a: `Divide the dose you are prepared to accept by the dose rate where the work is done: t = D / Ḋ. With a 0.5 mSv budget at 1.8 mSv/h that is ${EX.alara.stay1m} minutes. Use a measured dose rate at the actual working position, and leave a margin for the time spent getting in and out.`,
+    },
+    {
+      q: "Does doubling the distance really cut the dose rate to a quarter?",
+      a: "For a source that is small compared with the distance, yes: the inverse square law gives Ḋ₂ = Ḋ₁ × (d₁/d₂)². Close to an extended source such as a pipe, a tank or a contaminated floor the rate falls more slowly, so measure at the new position instead of relying on the law.",
+    },
+    {
+      q: "What is collective dose and what is it used for?",
+      a: "Collective dose is the sum of individual doses for a group, in person·mSv, here worked out as workers × hours × dose rate for each task. It is a planning tool for comparing ways of doing the same job. ICRP Publication 103 advises against using it to estimate health effects from very small doses spread over many people.",
+    },
+    {
+      q: "Which of time, distance and shielding should I try first?",
+      a: "Usually distance and time, because they cost the least: long-handled tools, rehearsing the job away from the source and moving people out of the area between steps. Shielding takes time and dose to put in place, so it pays off mainly for long jobs or high dose rates. The job-dose mode shows which task carries most of the collective dose, which is where any of the three matters most.",
+    },
+    {
+      q: "Is a dose under the legal limit automatically ALARA?",
+      a: "No. Dose limits are a ceiling, not a target. ALARA asks whether the dose could reasonably be lower, taking cost and practicality into account, and many organisations set lower dose constraints or investigation levels for that reason.",
+    },
+  ],
+  "specific-activity": [
+    {
+      q: "How is specific activity calculated?",
+      a: "Specific activity is the activity per gram of the pure nuclide: SA = λ·N_A / M = ln 2 · N_A / (T½ · M), with T½ in seconds, N_A Avogadro's number and M the molar mass in g/mol. This calculator uses the AME2020 atomic mass rather than the mass number, which changes the result by up to a few tenths of a percent.",
+    },
+    {
+      q: "How many grams are in one curie of a radionuclide?",
+      a: `One curie is 3.7 × 10¹⁰ Bq, so the mass is 3.7 × 10¹⁰ divided by the specific activity in Bq/g. For Cs-137 that is ${EX.specificActivity.cs1CiMg} mg; for radium-226 it is very close to 1 g, because the curie was originally defined from radium.`,
+    },
+    {
+      q: "Why does the source I bought weigh far more than the calculated mass?",
+      a: "The calculation is for the pure nuclide. Real sources contain the nuclide in a chemical compound, mixed with stable isotopes of the same element, a carrier and the capsule itself. The calculated mass is a lower limit on the material, and the nuclide's specific activity is an upper limit on what the source can reach.",
+    },
+    {
+      q: "Why is plutonium so much more active than uranium per gram?",
+      a: `Specific activity is inversely proportional to half-life. Pu-239 has a half-life of about 24 100 years against 4.47 billion years for U-238, so a gram of it is about ${EX.specificActivity.puURatio} times more active: ${EX.specificActivity.pu239GBq} GBq against ${EX.specificActivity.u238KBq} kBq.`,
+    },
+    {
+      q: "Does the specific activity of natural uranium match U-238?",
+      a: "No. Natural uranium also contains U-234 in radioactive equilibrium with U-238 and about 0.72% U-235, so its specific activity is roughly twice that of U-238 alone, before counting any decay products. For a mixture, add the activity of each nuclide in proportion to its mass fraction.",
+    },
+  ],
+  "xray-spectrum": [
+    {
+      q: "What is the difference between kVp and keV?",
+      a: "kVp is the peak voltage across the X-ray tube; keV is the energy of a single photon. An electron accelerated through 100 kV arrives with 100 keV, so the highest photon energy in the beam, in keV, equals the tube voltage in kV. Most photons have far less than that.",
+    },
+    {
+      q: "What is the mean energy of an X-ray beam?",
+      a: `For the unfiltered tungsten spectrum shown here it stays close to 30% of the tube voltage: ${EX.xray.m60} keV at 60 kVp and ${EX.xray.m120} keV at 120 kVp. Filtration removes the soft end of the spectrum and raises the mean, so a clinical beam has a higher mean energy than the raw figure.`,
+    },
+    {
+      q: "Where does the spectrum come from?",
+      a: "It is a precomputed SpekPy table for a tungsten anode at a 20° angle, tabulated in 1 keV steps at tube voltages from 20 to 300 kVp in 10 kV steps. Voltages between the grid points are interpolated linearly, and the curve is scaled so its tallest point is 1.",
+    },
+    {
+      q: "Why are the tungsten K lines missing?",
+      a: "The table contains the continuous bremsstrahlung spectrum only. The tungsten K lines at about 58 to 69 keV appear once the tube voltage passes the K-edge at 69.5 kV; when they matter, for example for detector response near those energies, use a full spectrum model such as SpekPy.",
+    },
+    {
+      q: "Can this calculator give the half-value layer or air kerma of a beam?",
+      a: "No. Both depend on the filtration, which this view does not include, and air kerma also needs the tube output. Model the filtered beam in SpekPy, or measure the half-value layer directly with aluminium filters and a calibrated dosemeter.",
+    },
+  ],
 };

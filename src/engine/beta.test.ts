@@ -63,3 +63,28 @@ test("제동복사 일률", () => {
   near(r.photonPowerMeVPerS, 3.7e10 * 0.9323 * r.yieldFrac, 1e-9, "일률");
   near(r.meanPhotonMeV, 2.2785 / 3, 1e-9, "평균 광자에너지 어림");
 });
+
+/* ★ 도구 쪽 「Worked examples」·「FAQ」의 수치를 고정한다(2026-10-25 D4). */
+test("Worked examples — 베타 쪽에 적힌 수치를 엔진이 그대로 낸다", async () => {
+  const { EX } = await import("../data/worked-examples.ts");
+  const { default: nuc } = await import("../data/nuclides.json", { with: { type: "json" } });
+  const D = EX.beta;
+  const y = (nuc as unknown as Record<string, { beta_max_keV: number; beta_mean_keV: number; t_half_s: number }>)["Y-90"];
+  const e = y.beta_max_keV / 1000;
+  const sig = (x: number, n: number) => String(Number(x.toPrecision(n)));
+  assert.equal(sig(betaRange(e), 3), D.y90RangeGcm2);
+  assert.equal((betaRange(e) / 1.19 * 10).toFixed(1), D.y90AcrylicMm);
+  assert.equal(sig(betaTransmission(e, 0.5 * 1.19) * 100, 3), D.y90T5mm);
+  assert.equal(betaTransmission(e, 1.0 * 1.19), 0);
+  assert.equal(sig(bremsstrahlungYield(6.5, e) * 100, 2), D.brAcrPct);
+  assert.equal(sig(bremsstrahlungYield(82, e) * 100, 2), D.brPbPct);
+  assert.equal(sig(bremsstrahlungYield(82, e) / bremsstrahlungYield(6.5, e), 2), D.brRatio);
+  const meanLifeH = y.t_half_s / 3600 / Math.LN2;
+  const r1 = infiniteMediumDoseRate(y.beta_mean_keV, 1e9);
+  assert.equal(sig(r1 * 1000, 3), D.y90RateMGyH);
+  assert.equal(sig(meanLifeH, 3), D.y90MeanLifeH);
+  assert.equal(sig(r1 * meanLifeH, 3), D.y90GyPerGBqKg);
+  const r2 = infiniteMediumDoseRate(y.beta_mean_keV, 2e9 / 1.6);
+  assert.equal(sig(r2 * 1000, 3), D.lobeRateMGyH);
+  assert.equal(sig(r2 * meanLifeH, 3), D.lobeGy);
+});

@@ -128,3 +128,24 @@ test("케이스 id 가 겹치지 않고, 세우지 못한 것이 목록으로 �
   assert.ok(UNVERIFIED.length >= 5, `세우지 못한 것 ${UNVERIFIED.length}건`);
   for (const u of UNVERIFIED) assert.ok(u.why.length > 40, `${u.id}: 이유가 너무 짧다`);
 });
+
+/* ★ 도구 쪽 「Worked examples」·「FAQ」의 수치를 고정한다(2026-10-25 D4). */
+test("Worked examples — ALARA 쪽에 적힌 수치를 엔진이 그대로 낸다", async () => {
+  const { EX } = await import("../data/worked-examples.ts");
+  const D = EX.alara;
+  const sig = (x: number, n: number) => String(Number(x.toPrecision(n)));
+  assert.equal(sig(stayTime(0.5, 1.8) * 60, 4), D.stay1m);
+  assert.equal(sig(stayTime(0.5, inverseSquare(1.8, 1, 2)) * 60, 4), D.stay2m);
+  assert.equal(sig(distanceForRate(1.8, 1, 0.5), 2), D.oneHourM);
+  const job = [{ workers: 2, hours: 0.5, rate: 0.08 }, { workers: 3, hours: 2, rate: 0.25 }, { workers: 2, hours: 1, rate: 0.04 }];
+  const at2 = job.map((t, i) => (i === 1 ? { ...t, rate: inverseSquare(0.25, 1, 2) } : t));
+  const total = collectiveDose(job), moved = collectiveDose(at2);
+  assert.equal(sig(total, 3), D.jobTotal);
+  assert.equal(sig(collectiveDose([job[1]]), 3), D.jobMain);
+  assert.equal(sig(moved, 3), D.jobAt2m);
+  assert.equal(sig((1 - moved / total) * 100, 2), D.jobCutPct);
+  assert.equal(sig(collectiveDose(job.map((t) => ({ ...t, rate: t.rate / 2 }))), 3), D.jobHalf);
+  assert.equal(sig(2 * 0.25, 3), D.mainPerWorker);
+  assert.equal(sig(2 * inverseSquare(0.25, 1, 2), 3), D.mainPerWorker2m);
+  assert.equal(inverseSquare(0.25e3, 1, 2), 62.5);
+});

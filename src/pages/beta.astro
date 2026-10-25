@@ -2,6 +2,9 @@
 import ToolPage from "../components/ToolPage.astro";
 import Beta from "../components/calc/Beta.tsx";
 import { u } from "../lib/site";
+import Faq from "../components/Faq.astro";
+import { EX } from "../data/worked-examples";
+const D = EX.beta;
 ---
 <ToolPage slug="beta">
   <Beta slot="tool" client:only="react" />
@@ -83,5 +86,64 @@ import { u } from "../lib/site";
       single number presented without those inputs would be confidently wrong. Codes such as VARSKIN
       exist for this and should be used for it.
     </p>
+
+    <h2>Worked examples</h2>
+    <h3>A shield for a yttrium-90 syringe</h3>
+    <p>
+      A syringe of Y-90 is drawn up behind a shield, and the question is how thick the acrylic sleeve
+      must be. Choose Y-90, the “Shielding” mode and acrylic, then try 5&nbsp;mm and 10&nbsp;mm.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Result</th><th class="text-right">Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Range, g/cm²</td><td class="num text-right">{D.y90RangeGcm2}</td></tr>
+          <tr><td>Acrylic to stop it, mm</td><td class="num text-right">{D.y90AcrylicMm}</td></tr>
+          <tr><td>Transmission at 5 mm</td><td class="num text-right">{D.y90T5mm}%</td></tr>
+          <tr><td>Transmission at 10 mm</td><td class="num text-right">0</td></tr>
+          <tr><td>To bremsstrahlung, acrylic</td><td class="num text-right">{D.brAcrPct}%</td></tr>
+          <tr><td>To bremsstrahlung, lead</td><td class="num text-right">{D.brPbPct}%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The range is a mass thickness, so it is divided by the density of acrylic, 1.19&nbsp;g/cm³, to
+      give {D.y90AcrylicMm}&nbsp;mm. A 10&nbsp;mm sleeve stops every beta; a 5&nbsp;mm sleeve lets
+      about one in fifty through, which at the fingertips of someone handling gigabecquerels is not a
+      small dose. Lead would stop the betas in under a millimetre, but it converts about {D.brRatio}
+      times more of their energy into bremsstrahlung than acrylic does. That is why the sleeve is
+      acrylic first, with a thin lead or tungsten layer outside it only if the photon dose rate measured
+      at the surface still calls for it.
+    </p>
+
+    <h3>Absorbed dose from yttrium-90 spread through tissue</h3>
+    <p>
+      Y-90 microspheres deposit their energy within a few millimetres of where they lodge, so a lobe of
+      liver that holds them uniformly is close to the infinite-medium case. Choose Y-90 and the
+      “Dose rate” mode, and enter first 1&nbsp;GBq in 1&nbsp;kg, then 2&nbsp;GBq in 1.6&nbsp;kg.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Case</th><th class="text-right">Start, mGy/h</th><th class="text-right">Total, Gy</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1 GBq in 1 kg</td><td class="num text-right">{D.y90RateMGyH}</td><td class="num text-right">{D.y90GyPerGBqKg}</td></tr>
+          <tr><td>2 GBq in 1.6 kg</td><td class="num text-right">{D.lobeRateMGyH}</td><td class="num text-right">{D.lobeGy}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The calculator gives the starting dose rate. Because the activity decays away completely, the
+      total dose is that rate multiplied by the mean life, T½/ln&nbsp;2, which for Y-90 is
+      {D.y90MeanLifeH}&nbsp;hours. The first row gives {D.y90GyPerGBqKg}&nbsp;Gy for each GBq per kg,
+      which is the factor of about 50 used in microsphere treatment planning. The plan itself also
+      corrects for activity shunted to the lungs and for uneven uptake, neither of which this
+      calculation knows about.
+    </p>
+
+    <Faq slug="beta" />
   </Fragment>
 </ToolPage>

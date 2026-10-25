@@ -1,6 +1,9 @@
 ---
 import ToolPage from "../components/ToolPage.astro";
 import Alara from "../components/calc/Alara.tsx";
+import Faq from "../components/Faq.astro";
+import { EX } from "../data/worked-examples";
+const D = EX.alara;
 ---
 <ToolPage slug="alara">
   <Alara slot="tool" client:only="react" />
@@ -69,5 +72,66 @@ import Alara from "../components/calc/Alara.tsx";
       values computed from attenuation coefficients alone are thinner and will underestimate the
       shielding a real installation needs.
     </p>
+
+    <h2>Worked examples</h2>
+    <h3>How long a repair can take near a source</h3>
+    <p>
+      A valve has to be repaired 1&nbsp;m from a pipe where the survey meter reads 1.8&nbsp;mSv/h, and
+      the job has a dose budget of 0.5&nbsp;mSv per person. There is no single ALARA formula; the
+      calculator chains two simple ones. The stay time is the budget divided by the dose rate,
+      t&nbsp;=&nbsp;D&nbsp;/&nbsp;Ḋ, and the dose rate at another distance follows the inverse square
+      law, Ḋ₂&nbsp;=&nbsp;Ḋ₁&nbsp;×&nbsp;(d₁/d₂)². Enter the rate in the “Stay time” mode, then use the
+      “Distance” mode to ask where the rate falls to 0.5&nbsp;mSv/h.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Working position</th><th class="text-right">Stay time</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>At 1 m, 1.8 mSv/h</td><td class="num text-right">{D.stay1m}&nbsp;min</td></tr>
+          <tr><td>At 2 m, 0.45 mSv/h</td><td class="num text-right">{D.stay2m}&nbsp;min</td></tr>
+          <tr><td>Distance for a full hour, m</td><td class="num text-right">{D.oneHourM}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Stepping back from 1&nbsp;m to 2&nbsp;m quarters the dose rate and so quadruples the time
+      available. Long-handled tools that keep the hands and body {D.oneHourM}&nbsp;m away would allow a
+      whole hour on the same budget. The inverse square law holds only once the distance is several
+      times the size of the source; for a long pipe, measure the rate again at the new position rather
+      than trusting the calculation.
+    </p>
+
+    <h3>Collective dose for a three-stage job</h3>
+    <p>
+      The “Job dose” mode opens with a typical job: setup by 2 people for 0.5&nbsp;h at 80&nbsp;µSv/h,
+      the main work by 3 people for 2&nbsp;h at 250&nbsp;µSv/h, and cleanup by 2 people for 1&nbsp;h at
+      40&nbsp;µSv/h. Collective dose is the sum over tasks of workers × hours × dose rate, in
+      person·mSv.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Plan</th><th class="text-right">person·mSv</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>As planned</td><td class="num text-right">{D.jobTotal}</td></tr>
+          <tr><td>Main work alone</td><td class="num text-right">{D.jobMain}</td></tr>
+          <tr><td>Main work done from 2 m</td><td class="num text-right">{D.jobAt2m}</td></tr>
+          <tr><td>Every dose rate halved</td><td class="num text-right">{D.jobHalf}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The main work carries almost all of the dose, so that is where the planning effort belongs.
+      Doing it from 2&nbsp;m instead of 1&nbsp;m (enter 62.5&nbsp;µSv/h for that task) cuts the job total by {D.jobCutPct}%, more than halving
+      every rate on the job would, and lowers each main worker's dose from {D.mainPerWorker} to
+      {D.mainPerWorker2m}&nbsp;mSv. Shielding the setup and cleanup would hardly change the total.
+      Check the individual doses as well as the sum: a low collective dose can still come from one
+      person receiving most of it.
+    </p>
+
+    <Faq slug="alara" />
   </Fragment>
 </ToolPage>
