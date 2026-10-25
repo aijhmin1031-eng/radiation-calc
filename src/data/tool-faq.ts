@@ -167,4 +167,26 @@ export const TOOL_FAQ: Record<string, readonly FaqItem[]> = {
       a: "No. Natural uranium also contains U-234 in radioactive equilibrium with U-238 and about 0.72% U-235, so its specific activity is roughly twice that of U-238 alone, before counting any decay products. For a mixture, add the activity of each nuclide in proportion to its mass fraction.",
     },
   ],
+  "xray-spectrum": [
+    {
+      q: "What is the difference between kVp and keV?",
+      a: "kVp is the peak voltage across the X-ray tube; keV is the energy of a single photon. An electron accelerated through 100 kV arrives with 100 keV, so the highest photon energy in the beam, in keV, equals the tube voltage in kV. Most photons have far less than that.",
+    },
+    {
+      q: "What is the mean energy of an X-ray beam?",
+      a: `For the unfiltered tungsten spectrum shown here it stays close to 30% of the tube voltage: ${EX.xray.m60} keV at 60 kVp and ${EX.xray.m120} keV at 120 kVp. Filtration removes the soft end of the spectrum and raises the mean, so a clinical beam has a higher mean energy than the raw figure.`,
+    },
+    {
+      q: "Where does the spectrum come from?",
+      a: "It is a precomputed SpekPy table for a tungsten anode at a 20° angle, tabulated in 1 keV steps at tube voltages from 20 to 300 kVp in 10 kV steps. Voltages between the grid points are interpolated linearly, and the curve is scaled so its tallest point is 1.",
+    },
+    {
+      q: "Why are the tungsten K lines missing?",
+      a: "The table contains the continuous bremsstrahlung spectrum only. The tungsten K lines at about 58 to 69 keV appear once the tube voltage passes the K-edge at 69.5 kV; when they matter, for example for detector response near those energies, use a full spectrum model such as SpekPy.",
+    },
+    {
+      q: "Can this calculator give the half-value layer or air kerma of a beam?",
+      a: "No. Both depend on the filtration, which this view does not include, and air kerma also needs the tube output. Model the filtered beam in SpekPy, or measure the half-value layer directly with aluminium filters and a calibrated dosemeter.",
+    },
+  ],
 };

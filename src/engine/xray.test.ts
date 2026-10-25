@@ -37,3 +37,21 @@ test("no interior zero bins below the endpoint (not a picket-fence comb)", () =>
   const zeros = interior.filter((p) => p.fluence === 0).map((p) => p.energy);
   assert.equal(zeros.length, 0, `interior zero bins at keV: ${zeros.join(", ")}`);
 });
+
+/* ★ 도구 쪽 「Worked examples」·「FAQ」의 수치를 고정한다(2026-10-25 D4). */
+test("Worked examples — X선 스펙트럼 쪽에 적힌 수치를 엔진이 그대로 낸다", async () => {
+  const { EX } = await import("../data/worked-examples.ts");
+  const D = EX.xray;
+  const mean = (kv: number) => meanEnergy(bremSpectrum(kv)).toFixed(1);
+  const pct = (kv: number, lo: number, hi = Infinity, d = 0) => {
+    const s = bremSpectrum(kv), all = s.reduce((a, p) => a + p.fluence, 0);
+    return (s.filter((p) => p.energy >= lo && p.energy < hi).reduce((a, p) => a + p.fluence, 0) / all * 100).toFixed(d);
+  };
+  const peak = (kv: number) => String(bremSpectrum(kv).reduce((a, p) => (p.fluence > a.fluence ? p : a)).energy);
+  assert.equal(mean(70), D.m70); assert.equal(mean(90), D.m90);
+  assert.equal(pct(70, 0, 20), D.below20at70); assert.equal(pct(90, 0, 20), D.below20at90);
+  assert.equal(pct(70, 50, Infinity, 1), D.above50at70); assert.equal(pct(90, 50, Infinity, 1), D.above50at90);
+  assert.equal(mean(60), D.m60); assert.equal(mean(120), D.m120);
+  assert.equal(pct(60, 40, Infinity, 1), D.above40at60); assert.equal(pct(120, 40, Infinity, 1), D.above40at120);
+  assert.equal(peak(60), D.peakKeV); assert.equal(peak(120), D.peakKeV);
+});

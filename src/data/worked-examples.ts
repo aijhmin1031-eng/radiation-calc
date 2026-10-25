@@ -68,4 +68,10 @@ export const EX = {
     /** 연기감지기 Am-241 37 kBq 의 질량 µg */
     am37kBqUg: "0.292",
   },
+  xray: {
+    /** 70·90 kVp — 평균에너지 keV, 20 keV 아래 광자 %, 50 keV 이상 광자 % */
+    m70: "21.5", m90: "27.2", below20at70: "53", below20at90: "41", above50at70: "5.7", above50at90: "13.8",
+    /** 60·120 kVp — 평균에너지 keV, 40 keV 이상 광자 %, 그리고 가장 많은 광자의 에너지 keV */
+    m60: "18.5", m120: "35.5", above40at60: "8.2", above40at120: "36.2", peakKeV: "9",
+  },
 } as const;

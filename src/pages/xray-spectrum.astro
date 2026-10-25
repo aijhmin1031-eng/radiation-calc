@@ -1,6 +1,9 @@
 ---
 import ToolPage from "../components/ToolPage.astro";
 import XraySpectrum from "../components/calc/XraySpectrum.tsx";
+import Faq from "../components/Faq.astro";
+import { EX } from "../data/worked-examples";
+const D = EX.xray;
 ---
 <ToolPage slug="xray-spectrum">
   <XraySpectrum slot="tool" client:only="react" />
@@ -88,5 +91,61 @@ import XraySpectrum from "../components/calc/XraySpectrum.tsx";
       filtered beam, use a full spectrum model such as SpekPy, which this calculator's table is
       drawn from.
     </p>
+
+    <h2>Worked examples</h2>
+    <h3>Raising the tube voltage from 70 to 90 kVp</h3>
+    <p>
+      A radiographer raises an exposure from 70&nbsp;kVp to 90&nbsp;kVp to get through a thicker
+      patient. Set the slider to each value and read the mean energy under the chart. The two
+      fractions in the table are summed from the same spectrum the chart draws.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Quantity</th><th class="text-right">70 kVp</th><th class="text-right">90 kVp</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Mean energy, keV</td><td class="num text-right">{D.m70}</td><td class="num text-right">{D.m90}</td></tr>
+          <tr><td>Photons below 20 keV</td><td class="num text-right">{D.below20at70}%</td><td class="num text-right">{D.below20at90}%</td></tr>
+          <tr><td>Photons at 50 keV or more</td><td class="num text-right">{D.above50at70}%</td><td class="num text-right">{D.above50at90}%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The mean energy rises by about a quarter, but the share of photons at 50&nbsp;keV or more more
+      than doubles, and those are the photons that reach the image receptor through tissue. The
+      low-energy share falls too, yet it remains large in the raw beam. In a real tube most of it is
+      removed by the inherent and added filtration before it reaches the patient, which is exactly the
+      part this view does not model, so read the table as a comparison of shapes rather than of patient
+      dose.
+    </p>
+
+    <h3>A dental unit next to a CT scanner</h3>
+    <p>
+      The same calculator can show why survey work around different X-ray units needs different
+      care. Compare 60&nbsp;kVp, typical of an intraoral dental unit, with 120&nbsp;kVp, typical of CT.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Quantity</th><th class="text-right">60 kVp</th><th class="text-right">120 kVp</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Mean energy, keV</td><td class="num text-right">{D.m60}</td><td class="num text-right">{D.m120}</td></tr>
+          <tr><td>Photons at 40 keV or more</td><td class="num text-right">{D.above40at60}%</td><td class="num text-right">{D.above40at120}%</td></tr>
+          <tr><td>Most common energy, keV</td><td class="num text-right">{D.peakKeV}</td><td class="num text-right">{D.peakKeV}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Doubling the voltage nearly doubles the mean energy and multiplies the share above 40&nbsp;keV
+      by more than four, while the most common photon energy in the raw beam stays at the same place,
+      just below tungsten's L-shell edges. Scattered radiation around both units is softer still. A
+      survey meter calibrated with Cs-137 at 662&nbsp;keV can read well off at these energies, so check
+      its energy response for the range shown here, or use an ionisation chamber with a flat response
+      down to the energies that matter.
+    </p>
+
+    <Faq slug="xray-spectrum" />
   </Fragment>
 </ToolPage>
