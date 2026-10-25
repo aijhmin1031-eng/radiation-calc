@@ -2,6 +2,9 @@
 import ToolPage from "../components/ToolPage.astro";
 import Mda from "../components/calc/Mda.tsx";
 import { u } from "../lib/site";
+import Faq from "../components/Faq.astro";
+import { EX } from "../data/worked-examples";
+const M = EX.mda;
 ---
 <ToolPage slug="mda">
   <Mda slot="tool" client:only="react" />
@@ -86,5 +89,62 @@ import { u } from "../lib/site";
       efficiencies multiply, so a 20% detector efficiency and a 0.25 surface efficiency give a total
       of 5% and an MDC twenty times the naive figure.
     </p>
+
+    <h2>Worked examples</h2>
+    <h3>A leak test wipe on a gas-flow counter</h3>
+    <p>
+      A sealed-source leak test must show whether 185&nbsp;Bq (0.005&nbsp;µCi) has come off the
+      capsule, the threshold used in US NRC rules such as 10&nbsp;CFR&nbsp;31.5. The wipe is counted
+      for one minute on a counter with a 40&nbsp;cpm background and 30% efficiency for the nuclide.
+      Choose the “Fixed count” mode and enter those three values.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Quantity</th><th class="text-right">60&nbsp;s count</th><th class="text-right">600&nbsp;s count</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Critical level L<sub>C</sub></td><td class="num text-right">{M.wipeLc} counts</td><td class="num text-right">—</td></tr>
+          <tr><td>Detection limit L<sub>D</sub></td><td class="num text-right">{M.wipeLd} counts</td><td class="num text-right">—</td></tr>
+          <tr><td>MDA</td><td class="num text-right">{M.wipeMda}&nbsp;Bq</td><td class="num text-right">{M.wipeMda600}&nbsp;Bq</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      One minute already detects about a hundredth of the action level, so counting longer buys
+      nothing here: ten times the time lowers the MDA only by about √10. The figure that matters more
+      is the wipe itself. The calculator assumes the efficiency of the counter for the activity on the
+      paper, not for the activity on the source, and a wipe that picks up a tenth of the loose
+      contamination raises the true MDA tenfold.
+    </p>
+
+    <h3>Tritium in drinking water by liquid scintillation</h3>
+    <p>
+      A 10&nbsp;mL water sample is mixed with cocktail and counted for 100&nbsp;minutes. The blank
+      gives 2.5&nbsp;cpm and the tritium counting efficiency is 25%. The calculator returns the MDA
+      for the whole vial, {M.lscMdaBq}&nbsp;Bq; dividing by the 0.010&nbsp;L in the vial gives the
+      concentration.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Quantity</th><th class="text-right">100&nbsp;min count</th><th class="text-right">400&nbsp;min count</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Critical level L<sub>C</sub></td><td class="num text-right">{M.lscLc} counts</td><td class="num text-right">—</td></tr>
+          <tr><td>Detection limit L<sub>D</sub></td><td class="num text-right">{M.lscLd} counts</td><td class="num text-right">—</td></tr>
+          <tr><td>MDA</td><td class="num text-right">{M.lscMda}&nbsp;Bq/L</td><td class="num text-right">{M.lscMda400}&nbsp;Bq/L</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Both figures sit far below the WHO guidance level of 10&nbsp;000&nbsp;Bq/L for tritium in
+      drinking water, so a routine compliance check needs only the short count. A survey that looks for
+      environmental trends at a few becquerels per litre is a different job: four times the counting
+      time halves the MDA, and beyond that the usual next step is electrolytic enrichment of the sample
+      rather than an even longer count.
+    </p>
+
+    <Faq slug="mda" />
   </Fragment>
 </ToolPage>

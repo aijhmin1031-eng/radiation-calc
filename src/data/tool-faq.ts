@@ -75,4 +75,26 @@ export const TOOL_FAQ: Record<string, readonly FaqItem[]> = {
       a: "Numerically yes, because a litre of water has a mass of one kilogram to within a fraction of a percent at room temperature. For any other liquid, divide the volume concentration by the density in kg/L to get Bq/kg. Soils and solids are reported per mass, so a volume figure there needs the bulk density.",
     },
   ],
+  mda: [
+    {
+      q: "What is the formula for minimum detectable activity?",
+      a: "With paired background and sample counts of equal length and 5% false-positive and false-negative rates, Currie's detection limit is L_D = 2.71 + 4.65·√B counts, where B is the expected background count. Dividing by efficiency, count time, yield and sample size gives MDA = L_D/(ε·t·Y·q). The derivation is in L. A. Currie, Analytical Chemistry 40 (1968) 586.",
+    },
+    {
+      q: "What is the difference between the critical level and the MDA?",
+      a: "The critical level L_C = 1.645·√(2B) is the decision threshold: a net count above it is reported as detected. The detection limit L_D is the true signal that will exceed L_C 95% of the time, and the MDA is L_D expressed as activity. L_D is roughly twice L_C, so quoting L_C as the detection limit overstates the method by about a factor of two.",
+    },
+    {
+      q: "How can I lower the MDA?",
+      a: `When background dominates, the MDA falls with the square root of the counting time, so counting ten times as long lowers it about threefold; in the wipe example on this page it goes from ${EX.mda.wipeMda} to ${EX.mda.wipeMda600} Bq. Raising efficiency or sample size lowers it in direct proportion, which is usually the cheaper route. Lowering the background helps only through its square root.`,
+    },
+    {
+      q: "Is MDA the same as LLD?",
+      a: "Lower limit of detection (LLD) is the older name used in US NRC guidance, for example Regulatory Guide 4.16, for the same Currie detection limit expressed as activity or concentration. Both are a priori figures: they describe what the method can detect before a sample is counted, and they do not change with the sample result.",
+    },
+    {
+      q: "Should results below the MDA be reported as zero?",
+      a: "No. The MDA describes the measurement, not the sample, so a result below it is still a measured value with an uncertainty. ISO 11929 recommends reporting the measured value and its uncertainty together with the decision threshold and detection limit, which keeps averages and trends unbiased; replacing low results with zero or with the MDA distorts them.",
+    },
+  ],
 };

@@ -35,4 +35,10 @@ export const EX = {
     /** 10 mCi → MBq */
     mCi10: "370",
   },
+  mda: {
+    /** 스미어 계수 — 배경 40 cpm, 효율 30%, 60 s: L_C·L_D 계수, MDA Bq, 그리고 600 s 의 MDA Bq */
+    wipeLc: "14.7", wipeLd: "32.1", wipeMda: "1.79", wipeMda600: "0.532",
+    /** 액체섬광 H-3 — 배경 2.5 cpm, 효율 25%, 10 mL, 100 min: L_C·L_D 계수, 병 하나의 MDA Bq, MDA Bq/L, 그리고 400 min */
+    lscLc: "36.8", lscLd: "76.3", lscMdaBq: "0.0508", lscMda: "5.08", lscMda400: "2.5",
+  },
 } as const;
