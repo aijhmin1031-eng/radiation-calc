@@ -7,7 +7,7 @@
  *   그전에는 막대가 둘이었다 — 위는 분야 칸 셋(Dose & shielding · Instrument testing · Disposal & transport),
  *   아래는 lab 이름 `RadCalc` 과 칸 셋(Calculators · Nuclides · Methods). 위 칸은 **세 사이트**를, 아래 칸은
  *   **한 사이트 안의 쪽**을 가리켜 같은 모양의 칸이 다른 층을 말하고 있었다. 이제 apex 는 계산기 하나다 —
- *   도구 일곱은 `Tools` 메뉴 **안에** 있고, 다른 두 사이트는 메뉴 맨 아래 「More from Radiation Lab」 한 줄로 내렸다.
+ *   도구 일곱은 `Tools` 메뉴 **안에** 있고, 다른 사이트들은 메뉴 맨 아래 「More from Radiation Lab」 한 줄로 내렸다.
  * ★ 화면에 보이는 이름은 `Radiation Lab` 하나다(명세 §7). `RadCalc` 은 DOI 인용에만 남는다.
  * ★ 마크업 뼈대(`nav[aria-label="Main"] > details > summary` · 묶음 `ul[aria-labelledby]` · 이름 `b` · 한 줄 `em`)는 우산 홈과 같다 —
  *   두 레포의 `check-platform` 이 같은 함수로 잰다. 「Tools」 칸은 도구 쪽에서도 켜 두지 않는다(쪽이 아니라 메뉴다) — 지금 도구는
@@ -34,6 +34,8 @@ const PAGES = [
 const MORE = [
   { href: "https://radimeter.radiation-lab.com/", label: "Instrument testing", icon: "gauge" },
   { href: "https://disposal.radiation-lab.com/", label: "Disposal & transport", icon: "layers" },
+  /* 2026-10-25(애드센스 D6) 셋째 — Field Pro, ISO 4037 기준장 워크벤치. 우산 홈과 같은 순서·글자. */
+  { href: "https://pro.radiation-lab.com/", label: "Reference fields", icon: "crosshair" },
 ] as const;
 const onPage = (href: string) => here.startsWith(href);
 const toolOn = (slug: string) => here === u(`/${slug}/`);
