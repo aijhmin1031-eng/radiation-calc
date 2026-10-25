@@ -48,6 +48,27 @@ for (const k of PUBLISHED) {
     throw new Error(`nuclide-pages: 반감기 ${T[k].t_half_s} s 인 ${k} 는 쪽을 세우지 않는다(하한 ${MIN_HALF_LIFE_S} s)`);
 }
 
+/** ★★ **쪽은 두고 색인에서만 뺀다 — 13장**(2026-10-25, 애드센스 재신청 준비 D2).
+ *  기준: 쪽 본문(표 제외) 500어 미만인 18장 중 방문 상위 26종에 들지 않는 13장. 방문 상위 다섯(Po-210 · Cf-252 ·
+ *  C-14 · Ni-63 · H-3)은 빼지 않고 손글 단락을 하나씩 더했다(`data/nuclide-notes.ts`).
+ *  ★ `noindex,follow` 다 — 쪽·허브 목록·내부 링크는 그대로 두고, 링크는 따라가게 한다. robots.txt 로 막지 않는다
+ *    (막으면 크롤러가 noindex 를 읽지 못한다).
+ *  ★ 낱장의 robots meta(`pages/nuclides/[slug].astro`)와 사이트맵 거르기(`astro.config.mjs`)가 **이 한 목록**을 본다 —
+ *    둘이 갈라지면 「noindex 인데 사이트맵에 있다」가 된다(`check-output` ④ 가 잰다). */
+export const NOINDEX: ReadonlySet<string> = new Set([
+  "Ni-59", "Ra-228", "Th-230", "Np-237", "Tl-204", "U-233", "Ho-166", "Cs-135", "Fe-55", "Tc-99", "Am-243", "I-129", "Se-79",
+]);
+
+/* 쪽이 없는 핵종을 noindex 목록에 적으면 아무 일도 안 일어난다 — 오타를 빌드에서 막는다. */
+for (const k of NOINDEX)
+  if (!PUBLISHED.has(k)) throw new Error(`nuclide-pages: 쪽이 없는 핵종이 NOINDEX 에 있다 — ${k}`);
+
+/** 쪽은 있으나 색인하지 않는 핵종인가. */
+export const isNoindex = (key: string) => NOINDEX.has(key);
+
+/** 사이트맵에서 뺄 핵종 쪽 슬러그(`astro.config.mjs` 가 읽는다). */
+export const NOINDEX_SLUGS: readonly string[] = [...NOINDEX].map((k) => k.toLowerCase());
+
 /** 그 핵종에 참조 쪽이 있는가. */
 export const hasPage = (key: string) => PUBLISHED.has(key);
 

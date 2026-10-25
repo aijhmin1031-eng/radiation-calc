@@ -5,6 +5,7 @@ import sitemap from "@astrojs/sitemap";
 import { lastmodFor, HAS_GIT } from "./src/lib/lastmod.mjs";
 import tailwind from "@astrojs/tailwind";
 import { SITE_URL_DEFAULT, BASE_PATH } from "./brand.ts";
+import { NOINDEX_SLUGS } from "./src/lib/nuclide-pages.ts";
 
 const site = process.env.SITE_URL || SITE_URL_DEFAULT;
 
@@ -31,8 +32,10 @@ export default defineConfig({
     //   새 noindex 쪽을 만들면 여기서도 빼야 한다(`check-output` ④ 가 잰다).
     // ★ 2026-10-06 ④ — 핵종 낱장 77장을 noindex 로 두던 거르개(`NOINDEX_SLUGS`)를 걷었다. 그 쪽들을
     //   지웠으므로 걸러 낼 것이 없다. 어느 핵종에 쪽이 있는지는 src/lib/nuclide-pages.ts 한 곳이 정한다.
+    // ★ 2026-10-25 D2 — 쪽은 두고 색인에서만 뺀 핵종 13장(`noindex,follow`)도 뺀다. 목록은 nuclide-pages.ts 의 `NOINDEX`.
     sitemap({
-      filter: (page) => !/\/saved\/$/.test(page),
+      filter: (page) => !/\/saved\/$/.test(page)
+        && !NOINDEX_SLUGS.some((s) => page.endsWith(`/nuclides/${s}/`)),
       /** `lastmod` — **쪽마다 그 내용이 마지막으로 바뀐 커밋 날짜**. 정본·판단은
        *  `src/lib/lastmod.mjs` 가 든다(빌드 시각을 박지 않는 이유, 얕은 클론을 가려내는 법).
        *  ★ 날짜를 모르는 주소는 `lastmod` **없이** 나간다 — 지어내지 않는다. */
