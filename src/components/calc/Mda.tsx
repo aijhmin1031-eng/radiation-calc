@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { minimumDetectableActivity, scanMdc } from "../../engine/mda";
+import { minimumDetectableActivity } from "../../engine/mda";
+import { scanMdcDisplay } from "../../lib/scan-mdc-display";
 import { convert } from "../../engine/units";
 import { Field, NumberInput, Select, RadioRow, Check } from "../ui/Field";
 import { SaveBar } from "../ui/SaveBar";
@@ -46,11 +47,12 @@ export default function Mda() {
     sampleQty: c.useSurface ? c.areaCm2 / 100 : 1, k: kk,
   }), [c.bgCpm, c.timeS, totalEff, c.areaCm2, c.useSurface, kk]);
 
-  const scan = useMemo(() => scanMdc({
+  const scanView = useMemo(() => scanMdcDisplay({
     bgCps: c.bgCpm / 60, scanSpeedCmPerS: c.speed, detectorWidthCm: c.width,
     efficiency: c.eff / 100, surfaceEfficiency: c.surfEff / 100,
     probeAreaCm2: c.areaCm2, observerEff: c.obsEff / 100, dPrime: c.dPrime,
   }), [c.bgCpm, c.speed, c.width, c.eff, c.surfEff, c.areaCm2, c.obsEff, c.dPrime]);
+  const scan = scanView.result;
 
   const asUnit = (bqOrBqCm2: number) => {
     if (c.unit === "Bq") return bqOrBqCm2;
@@ -145,14 +147,15 @@ export default function Mda() {
         </>
       ) : (
         <>
-          <Headline stale={dirty} label="Scan MDC" value={scan.scanMdc} unit="Bq/cm²"
+          {/* ★ 엔진의 scanMdc 는 dpm/100 cm² — 숫자·단위는 scanMdcDisplay 한 곳에서 만든다. */}
+          <Headline stale={dirty} label="Scan MDC" value={scanView.headline.value} unit={scanView.headline.unit}
             note={`At ${fmt(c.speed)} cm/s the probe sees any one spot for ${fmt(scan.observationIntervalS, 3)} s.`} />
           <Rows rows={[
             { k: "Observation interval", v: `${fmt(scan.observationIntervalS, 4)} s`, hint: `${fmt(c.width)} cm ÷ ${fmt(c.speed)} cm/s` },
             { k: "Ideal MDCR", v: `${fmt(scan.mdcr, 4)} cpm`, hint: "what a perfect observer would notice" },
             { k: "MDCR with observer efficiency", v: `${fmt(scan.mdcrSurveyor, 4)} cpm`, hint: `divided by √${fmt(c.obsEff / 100, 2)}` },
-            { k: "In dpm/100 cm²", v: fmt(scan.scanMdc * 60 * 100, 4) },
-            { k: "Halving the scan speed", v: `${fmt(scanMdc({ bgCps: c.bgCpm / 60, scanSpeedCmPerS: c.speed / 2, detectorWidthCm: c.width, efficiency: c.eff / 100, surfaceEfficiency: c.surfEff / 100, probeAreaCm2: c.areaCm2, observerEff: c.obsEff / 100, dPrime: c.dPrime }).scanMdc, 4)} Bq/cm²`,
+            { k: "In Bq/cm²", v: scanView.inBqCm2, hint: "1 Bq/cm² = 6000 dpm/100 cm²" },
+            { k: "Halving the scan speed", v: scanView.halvedSpeed,
               hint: "scanning slower is the cheapest way to lower the MDC" },
           ]} />
           <Warn>
