@@ -20,16 +20,23 @@ import XraySpectrum from "../components/calc/XraySpectrum.tsx";
 
     <h2>Reading the chart</h2>
     <p>
-      The horizontal axis is photon energy in keV, fixed from zero to the highest tube voltage on
-      offer, so curves at different voltages can be compared by eye. The vertical axis is relative
-      photon fluence per keV, scaled so that the tallest point of the current spectrum sits at the
-      top. The chart therefore compares <em>shapes</em>, not output: it does not say how many more
+      The horizontal axis is photon energy in keV, from zero to the chosen tube voltage, so the
+      right-hand edge of the chart is always the endpoint. The vertical axis is relative photon
+      fluence per keV, scaled so that the tallest point of the current spectrum is 1. The chart therefore compares <em>shapes</em>, not output: it does not say how many more
       photons a higher voltage produces, only where along the energy axis they fall.
     </p>
     <p>
       The log-scale option spreads the vertical axis over several decades. Use it to see the
       high-energy tail near the endpoint, which on a linear axis is squeezed against the baseline,
       and to check that the curve reaches zero exactly at the tube voltage.
+    </p>
+    <p>
+      The narrow peak just below 10&nbsp;keV, and the sharp fall after it, are part of the model, not
+      a drawing error. Photons made inside the anode must cross some tungsten to escape, and tungsten
+      absorbs much more strongly just above its L-shell edges at about 10.2, 11.5 and 12.1&nbsp;keV.
+      The smaller step near 2&ndash;3&nbsp;keV comes from the M-shell edges in the same way. The glass or
+      metal envelope of a diagnostic tube, and any added filter, absorb almost all of this region,
+      which is why measured spectra from such tubes do not show it.
     </p>
 
     <h2>Why the raw spectrum is soft</h2>
