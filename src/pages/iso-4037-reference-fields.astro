@@ -53,8 +53,8 @@ const SPEC = "https://github.com/aijhmin1031-eng/radiation-field-pro/blob/master
     </p>
     <p>
       From the filtered spectrum it reports the mean energy, the effective energy (the energy of a single
-      line with the same first half-value layer), the first and second half-value layers in aluminium or
-      copper, the homogeneity coefficient h&nbsp;=&nbsp;HVL1/HVL2, and the relative air kerma. The
+      line with the same first half-value layer), the first and second half-value layers in aluminium,
+      copper or lead, the homogeneity coefficient h&nbsp;=&nbsp;HVL1/HVL2, and the relative air kerma. The
       homogeneity coefficient is the quickest summary of how hard the beam is: a beam close to one line
       has h near 1, and a raw, unfiltered beam has a much lower value because its soft end is removed by
       the first layer and not the second. The raw spectrum without any of this filtration is what the
@@ -150,26 +150,28 @@ const SPEC = "https://github.com/aijhmin1031-eng/radiation-field-pro/blob/master
 
     <h2>Finding your way around the Korean interface</h2>
     <p>
-      Field Pro is written for laboratories in Korea, and its screen labels are in Korean while the
-      quantities and units use the usual symbols. The left column holds the inputs in three numbered
-      blocks, and the results appear on the right; on a phone, two tabs, 입력 (input) and 결과 (results),
-      switch between them, and the 계산하기 (calculate) bar at the bottom runs the calculation.
+      Field Pro is written for laboratories in Korea, so its screen labels are in Korean, but the
+      quantities, symbols and units are the usual ones, and the layout is easy to follow by position.
+      The inputs sit in three numbered blocks in the left column and the results on the right. On a
+      phone, two tabs above the panels switch between inputs and results, and the bar fixed at the bottom of
+      the screen runs the calculation.
     </p>
     <ul class="my-3 space-y-1">
-      <li><b>01 선원</b> (source): choose X선관 (X-ray tube), Cs-137, Co-60, or 불러오기 (import) for a
-        measured spectrum. For a tube, ISO 선질 picks a quality, 관전압 is the tube voltage, 공기 경로 the
-        air path, 고유 여과 and 부가 여과 the inherent and added filtration, and + 여과층 adds a filter
-        layer.</li>
-      <li><b>02 기하·평가 조건</b> (geometry and evaluation): 입사각 α is the angle of incidence, HVL 재질
-        the half-value layer material, ISO 비교 대상 the quality to compare with, and 허용 밴드 the
-        acceptance band.</li>
-      <li><b>03 판독값 보정</b> (reading correction): temperature, pressure and humidity for k<sub>ρ</sub>
-        under ISO 4037-4.</li>
-      <li><b>Results</b>: 평균 에너지 Ē (mean energy), 유효 에너지 E<sub>eff</sub> (effective energy),
-        HVL1, HVL2, 균질도 h (homogeneity), H*(10)/K<sub>a</sub>, 공기커마율 (air kerma rate, point source),
-        보고 형식 (report format) and 직전 계산 대비 (change from the previous calculation).</li>
-      <li>Along the top, 세션 저장 and 세션 불러오기 save and load the whole configuration as a file,
-        리포트 인쇄 prints a report, and 초기화 resets the form.</li>
+      <li><b>Block 01, the source</b>: four choices across the top for an X-ray tube, Cs-137, Co-60, or an
+        imported measured spectrum. For a tube, the fields below take the ISO quality, the tube voltage
+        in kV, the air path in metres, and the inherent and added filtration, with a button under them
+        to add another filter layer.</li>
+      <li><b>Block 02, geometry and evaluation</b>: the angle of incidence α, the material for the
+        half-value layers (automatic, following the matched ISO quality, or Al, Cu or Pb), the ISO quality
+        to compare with, and the acceptance band in percent.</li>
+      <li><b>Block 03, reading correction</b>: temperature, pressure and relative humidity for
+        k<sub>ρ</sub>, the repeated readings for the Type A component, and the Type B components.</li>
+      <li><b>Results</b>: labelled with their symbols — Ē, E<sub>eff</sub>, HVL1, HVL2, h,
+        H*(10)/K<sub>a</sub>, k<sub>ρ</sub> and the air kerma rate for a nuclide — followed by the
+        uncertainty in report form and the change from the previous calculation.</li>
+      <li>The toolbar under the title starts with the calculate button and a checkbox for automatic
+        calculation; the four buttons after them save and load the whole configuration as a file, print
+        a report, and reset the form, in that order.</li>
     </ul>
     <p>
       Every calculation runs in the browser. Nothing you enter is sent to a server, and a saved session
