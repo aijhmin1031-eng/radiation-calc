@@ -35,6 +35,10 @@
     "slug": "gamma-shielding",
     "title": "Gamma dose rate calculator and shielding · Radiation Lab"
   },
+  "/half-value-layers/": {
+    "slug": "half-value-layers",
+    "title": "Half-value and tenth-value layers for common gamma emitters · Radiation Lab"
+  },
   "/hard-to-measure/": {
     "slug": "hard-to-measure",
     "title": "Hard-to-measure nuclides in decommissioning waste · Radiation Lab"
@@ -338,6 +342,10 @@
   "/positron-emitters/": {
     "slug": "positron-emitters",
     "title": "Positron emitters and 511 keV shielding · Radiation Lab"
+  },
+  "/radiopharmaceutical-decay/": {
+    "slug": "radiopharmaceutical-decay",
+    "title": "Decay correction for radiopharmaceuticals: Tc-99m and F-18 dosing time tables · Radiation Lab"
   },
   "/specific-activity/": {
     "slug": "specific-activity",

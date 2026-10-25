@@ -3,6 +3,7 @@ import ToolPage from "../components/ToolPage.astro";
 import GammaShielding from "../components/calc/GammaShielding.tsx";
 import Faq from "../components/Faq.astro";
 import { EX } from "../data/worked-examples";
+import { u } from "../lib/site";
 const G = EX.gamma;
 ---
 <ToolPage slug="gamma-shielding">
@@ -41,7 +42,9 @@ const G = EX.gamma;
       and a substantial fraction still emerge toward the receptor. Ignoring them can underestimate
       the dose rate behind a thick shield by a factor of several. The half-value layers this tool
       reports are therefore narrow-beam values, noticeably thinner than the broad-beam figures in
-      shielding handbooks — 5.5 mm rather than about 6.5 mm of lead at 662 keV.
+      shielding handbooks — 5.5 mm rather than about 6.5 mm of lead at 662 keV. The note on
+      {" "}<a href={u("/half-value-layers/")} class="underline">half-value and tenth-value layers</a>
+      {" "}tabulates these layers for six common emitters in lead, iron and concrete.
     </p>
 
     <h3>Buildup factors</h3>

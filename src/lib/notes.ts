@@ -90,4 +90,20 @@ export const NOTES: Note[] = [
       "What a 511 keV intensity near 200% means, lead and tungsten against Tc-99m, decay through " +
       "a working day, and why a 511 keV peak is not an identification.",
   },
+  {
+    path: "/half-value-layers/",
+    name: "Half-value and tenth-value layers",
+    question: "How much lead, iron or concrete halves the dose rate from a common source?",
+    blurb:
+      "Layers for six gamma emitters in three materials from the full spectrum, attenuation only, " +
+      "why the first layer is thinner than the next, and what buildup adds in a real shield.",
+  },
+  {
+    path: "/radiopharmaceutical-decay/",
+    name: "Decay correction for Tc-99m and F-18",
+    question: "When can a dose still be given, and how much must be drawn ahead?",
+    blurb:
+      "Remaining-fraction tables at 15-minute steps, two worked examples of the dosing window, and " +
+      "the reference-time and unit mistakes that put an administered activity out of range.",
+  },
 ];
