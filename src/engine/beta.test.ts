@@ -69,7 +69,7 @@ test("Worked examples — 베타 쪽에 적힌 수치를 엔진이 그대로 낸
   const { EX } = await import("../data/worked-examples.ts");
   const { default: nuc } = await import("../data/nuclides.json", { with: { type: "json" } });
   const D = EX.beta;
-  const y = (nuc as Record<string, { beta_max_keV: number; beta_mean_keV: number; t_half_s: number }>)["Y-90"];
+  const y = (nuc as unknown as Record<string, { beta_max_keV: number; beta_mean_keV: number; t_half_s: number }>)["Y-90"];
   const e = y.beta_max_keV / 1000;
   const sig = (x: number, n: number) => String(Number(x.toPrecision(n)));
   assert.equal(sig(betaRange(e), 3), D.y90RangeGcm2);
