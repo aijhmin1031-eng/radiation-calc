@@ -115,7 +115,10 @@ const groupLabel = TOOL_GROUPS.find((g) => g.key === tool.group)!.label;
         <div class="border-t border-line pt-4">
           <p class="label">What it does not answer</p>
           <ul class="mt-1.5 space-y-1.5 text-ink-muted">
-            {tool.excludes.map((x) => <li class="leading-snug">{x}</li>)}
+            {tool.excludes.map((x) => typeof x === "string"
+              ? <li class="leading-snug">{x}</li>
+              : <li class="leading-snug">{x.text.replace(/\.$/, "")} — see <a href={x.see.href} target="_blank"
+                  rel="noopener" class="underline">{x.see.label}</a>.</li>)}
           </ul>
         </div>
 
