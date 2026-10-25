@@ -2,6 +2,9 @@
 import ToolPage from "../components/ToolPage.astro";
 import Decay from "../components/calc/Decay.tsx";
 import { u } from "../lib/site";
+import Faq from "../components/Faq.astro";
+import { EX } from "../data/worked-examples";
+const D = EX.decay;
 ---
 <ToolPage slug="decay">
   <Decay slot="tool" client:only="react" />
@@ -69,5 +72,58 @@ import { u } from "../lib/site";
       matter — Sr-90 is quoted between about 28.8 and 28.9 years depending on the compilation, which
       shifts a thirty-year projection by roughly half a percent.
     </p>
+
+    <h2>Worked examples</h2>
+    <h3>A technetium-99m dose drawn later in the morning</h3>
+    <p>
+      A vial is calibrated at 800&nbsp;MBq of Tc-99m at 07:00. The first patient is booked for
+      10:30 and another for 13:00. How much activity is left in the vial at each time?
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Time</th><th class="text-right">Elapsed</th><th class="text-right">Activity</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>07:00 (calibration)</td><td class="num text-right">0&nbsp;h</td><td class="num text-right">800&nbsp;MBq</td></tr>
+          <tr><td>10:30</td><td class="num text-right">3.5&nbsp;h</td><td class="num text-right">{D.tc1030}&nbsp;MBq</td></tr>
+          <tr><td>13:00</td><td class="num text-right">6&nbsp;h</td><td class="num text-right">{D.tc1300}&nbsp;MBq</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Six hours is almost exactly one half-life of Tc-99m, so the vial holds half its calibrated
+      activity by early afternoon. The same calculation run backwards gives the activity to order:
+      a dose needed at 13:00 must be drawn as about twice that amount at 07:00. The vial is still
+      measured in the dose calibrator before injection; the calculation tells you what to expect.
+    </p>
+
+    <h3>Identifying a vial from two measurements</h3>
+    <p>
+      An unlabelled vial is found in a hot lab. In the same counting position its net count rate is
+      1520&nbsp;s⁻¹, and 24&nbsp;hours later 1181&nbsp;s⁻¹. Enter both rates and the interval in
+      the half-life mode.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Result</th><th class="text-right">Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Half-life</td><td class="num text-right">{D.hlH}&nbsp;h ({D.hlD}&nbsp;d)</td></tr>
+          <tr><td>Mo-99, evaluated</td><td class="num text-right">{D.mo99D}&nbsp;d</td></tr>
+          <tr><td>Au-198, evaluated</td><td class="num text-right">{D.au198D}&nbsp;d</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The result matches Mo-99, but Au-198 is close by. Over one day the rate only falls by about a
+      fifth, so a one-percent error in either count rate moves the half-life by about
+      {D.hlSensPct}%, which is wider than the gap between the two candidates. A gamma spectrum
+      settles the question: Mo-99 shows its 740&nbsp;keV line and the 140&nbsp;keV line of its
+      Tc-99m daughter, Au-198 a single line at 412&nbsp;keV.
+    </p>
+
+    <Faq slug="decay" />
   </Fragment>
 </ToolPage>
