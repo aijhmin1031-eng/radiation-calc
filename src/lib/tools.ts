@@ -1,5 +1,12 @@
 /** ★ 도구 등록부 — 정본이다. 내비·허브·사이트맵·구조화 데이터가 전부 여기서 파생된다.
  *  도구를 늘릴 때 쪽마다 적지 않는다. */
+/** 범위 밖 항목 가운데 **답하는 곳이 따로 있는** 것 — 문장 끝에 「— see …」 링크를 단다.
+ *  ★ 2026-10-26 xray 쪽: 여과·HVL·공기커마는 자매 사이트 Field Pro 가 답한다(감독 지시 20). */
+export interface ToolExclude { text: string; see: { href: string; label: string } }
+
+/** 자매 사이트 Field Pro — 머리글 MORE(SiteHeader.astro)와 같은 주소. */
+export const FIELD_PRO = "https://pro.radiation-lab.com/";
+
 export interface Tool {
   slug: string;
   /** 내비·카드에 그리는 **짧은** 이름. 화면에서 줄이 바뀌면 안 되므로 길게 쓰지 않는다. */
@@ -41,7 +48,7 @@ export interface Tool {
   /** 이 계산이 서 있는 전제. */
   assumes: string[];
   /** 이 도구가 답하지 않는 것 — 범위 밖에서 쓰이는 것을 막는다. */
-  excludes: string[];
+  excludes: (string | ToolExclude)[];
   /** 맞는지 어떻게 보았나 — 한 줄. */
   checked: string;
 }
@@ -180,7 +187,8 @@ export const TOOLS: Tool[] = [
       "Spectra interpolated between a precomputed voltage grid (SpekPy, casim physics).",
     ],
     excludes: [
-      "Added filtration, half-value layer and air kerma — the curve is the beam before any filter, so it does not give beam-quality or dose figures.",
+      { text: "Added filtration, half-value layer and air kerma — the curve is the beam before any filter, so it does not give beam-quality or dose figures.",
+        see: { href: FIELD_PRO, label: "Radiation Field Pro" } },
       "Characteristic (line) emission, which appears above the tungsten K-edge.",
       "Heel effect and finite focal-spot size — the spectrum applies on the central axis only.",
     ],
