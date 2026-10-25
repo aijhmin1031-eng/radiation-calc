@@ -1,0 +1,220 @@
+---
+import Base from "../layouts/Base.astro";
+import NuclideRef from "../components/NuclideRef.astro";
+import { NUCLIDES, halfLifeText } from "../lib/nuclides";
+import { BQ_PER_CI } from "../engine";
+import { decayGrid, dosingExamples, fractionAfter, minutesTo, pct1, hMin } from "../lib/guide-tables";
+import { u } from "../lib/site";
+
+/** ★★ 가이드 글 — 방사성의약품의 붕괴 보정, Tc-99m·F-18 투여 시각표(2026-10-25 D5-2, 감독 지시 12 ②).
+ *  **숫자를 글자로 적지 않는다** — 표·예제·산문의 비율과 시각은 `lib/guide-tables.ts` 에서 나오고,
+ *  같은 함수를 `guide-tables.test.ts` 가 고정한다. 반감기는 자료(IAEA Livechart)의 값이다.
+ *  ★ 투여 허용 범위(±10%)는 **예제의 가정**으로만 쓴다 — 규정값이라고 말하지 않는다(기관·국가마다 다르다). */
+const TC = decayGrid("Tc-99m", 12);
+const F = decayGrid("F-18", 6);
+const X = dosingExamples();
+const tcT = halfLifeText(NUCLIDES["Tc-99m"]);
+const fT = halfLifeText(NUCLIDES["F-18"]);
+const fMin = NUCLIDES["F-18"].t_half_s / 60;
+const MBQ_PER_MCI = BQ_PER_CI / 1e9 / 1000;
+/* 흔한 실수의 크기 — 분과 시간을 섞으면, 그리고 방향을 거꾸로 하면. */
+const tc90 = fractionAfter("Tc-99m", 90);
+const f90 = fractionAfter("F-18", 90);
+const tcPerMin = 1 - fractionAfter("Tc-99m", 1);
+const fPerMin = 1 - fractionAfter("F-18", 1);
+const f10 = fractionAfter("F-18", 10);
+const tcTenth = minutesTo("Tc-99m", 0.1);
+const winRatio = NUCLIDES["Tc-99m"].t_half_s / NUCLIDES["F-18"].t_half_s;
+const COLS = [":00", ":15", ":30", ":45"];
+---
+<Base title="Decay correction for radiopharmaceuticals: Tc-99m and F-18 dosing time tables"
+      description="Remaining-activity tables at 15-minute steps for Tc-99m (0 to 12 hours) and F-18 (0 to 6 hours), two worked examples of working back to the injection time, and the reference-time and unit mistakes that most often put a dose out of range. Computed from the evaluated half-lives."
+      schema="TechArticle">
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
+    Decay correction for radiopharmaceuticals: Tc-99m and F-18 dosing time tables
+  </h1>
+
+  <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <p>
+      A radiopharmaceutical dose is prescribed as an activity at the time of administration, but it is
+      measured, labelled and shipped at some other time. Between the two the activity falls, and with
+      half-lives of {tcT} for Tc-99m and {fT} for F-18 the change is large enough to matter within a
+      morning. This note gives the remaining fraction at 15-minute steps for both nuclides, works two
+      examples of finding when a dose can be given, and lists the mistakes that most often put an
+      administered activity outside its range. The dose calibrator reading before administration is
+      always the measurement that counts; these tables tell you what that reading should be.
+    </p>
+
+    <h2>The correction</h2>
+    <p>
+      Activity decays as A&nbsp;=&nbsp;A₀·2<sup>−t/T½</sup>, where A₀ is the activity at the reference
+      time, t the time since then and T½ the half-life. The factor 2<sup>−t/T½</sup> is the remaining
+      fraction, and it is all the tables below contain. Two rules cover every use of them:
+    </p>
+    <ul class="my-3 space-y-1">
+      <li><strong>Forward in time, multiply.</strong> The activity at a later time is the reference
+        activity multiplied by the fraction for the elapsed time.</li>
+      <li><strong>Back in time, divide.</strong> The activity that must be drawn now for a dose needed
+        later is the prescribed activity divided by the fraction for the delay.</li>
+    </ul>
+    <p>
+      To find the time at which a given fraction is reached, invert the law:
+      t&nbsp;=&nbsp;T½·log₂(A₀/A). The half-lives used here are the evaluated values in the IAEA Livechart
+      decay data: {tcT} for Tc-99m and {fMin.toFixed(2)} minutes for F-18. The
+      <a href={u("/decay/")} class="underline"> decay calculator</a> uses the same values and gives the
+      factor for any interval to more figures than the tables.
+    </p>
+
+    <h2>Tc-99m remaining fraction, 0 to 12 hours</h2>
+    <p>
+      Read the row for the whole hours elapsed and the column for the extra minutes. The figure is the
+      percentage of the reference activity that remains.
+    </p>
+    <div class="pin-first mt-3" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Elapsed</th>{COLS.map((c) => <th>{c}</th>)}</tr>
+        </thead>
+        <tbody>
+          {TC.map((r) => (
+            <tr><td>{r.h} h</td>{COLS.map((_, i) => <td>{r.f[i] === undefined ? "" : pct1(r.f[i])}</td>)}</tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-2 text-[13px]">
+      Remaining activity in percent of the reference activity, Tc-99m, T½ = {tcT}.
+    </p>
+    <p>
+      Tc-99m loses about {pct1(tcPerMin)}% of its activity per minute, so a quarter of an hour either
+      way changes a dose by a few percent, and after six hours half remains. A generator eluate or a kit
+      prepared at the start of the day is down to {pct1(TC[12].f[0])}% by the end of a twelve-hour shift,
+      and falls to a tenth after {hMin(tcTenth)}.
+    </p>
+
+    <h2>F-18 remaining fraction, 0 to 6 hours</h2>
+    <div class="pin-first mt-3" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Elapsed</th>{COLS.map((c) => <th>{c}</th>)}</tr>
+        </thead>
+        <tbody>
+          {F.map((r) => (
+            <tr><td>{r.h} h</td>{COLS.map((_, i) => <td>{r.f[i] === undefined ? "" : pct1(r.f[i])}</td>)}</tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-2 text-[13px]">
+      Remaining activity in percent of the reference activity, F-18, T½ = {fMin.toFixed(2)} min.
+    </p>
+    <p>
+      F-18 loses about {pct1(fPerMin)}% per minute. Ten minutes leave {pct1(f10)}%, and an hour
+      {" "}{pct1(F[1].f[0])}%. Because the loss is so fast, F-18 doses are usually ordered from the
+      supplier with a calibration time and an activity at that time, and the site works out the activity
+      at injection from that pair, not from the time the dose arrives.
+    </p>
+
+    <h2>Worked example: the latest time a Tc-99m dose can be given</h2>
+    <p>
+      A syringe is dispensed at 07:45 holding 925&nbsp;MBq of Tc-99m for a study prescribed at
+      740&nbsp;MBq. The patient is late. What is the latest time the syringe still holds the prescribed
+      activity?
+    </p>
+    <p>
+      The required fraction is 740/925&nbsp;=&nbsp;{(740 / 925).toFixed(3)}, that is
+      {" "}{pct1(740 / 925)}%. In the Tc-99m table, 1&nbsp;h&nbsp;45 leaves {pct1(TC[1].f[3])}% and
+      2&nbsp;h leaves {pct1(TC[2].f[0])}%, so the answer lies between the two. The exact elapsed time is
+      t&nbsp;=&nbsp;T½·log₂(925/740)&nbsp;=&nbsp;{hMin(X.tc.minutes)}, and the latest time is
+      {" "}<strong>{X.tc.latest}</strong>. At 09:30 the syringe holds {X.tc.at0930.toFixed(0)}&nbsp;MBq; at
+      10:00 it holds {X.tc.at1000.toFixed(0)}&nbsp;MBq, below the prescription.
+    </p>
+    <p>
+      Note the direction of rounding. A latest time is rounded down to the whole minute, because at the
+      next minute the activity is already below the target. An earliest time, as in the next example, is
+      rounded up.
+    </p>
+
+    <h2>Worked example: the window for an F-18 dose</h2>
+    <p>
+      An F-18 dose is calibrated at 370&nbsp;MBq at 09:00. Suppose the department accepts an administered
+      activity within ±10% of the prescribed 370&nbsp;MBq, that is between 333 and 407&nbsp;MBq — the
+      tolerance itself is set locally and varies. Between which clock times can the dose be given as it
+      stands?
+    </p>
+    <p>
+      Before 09:00 the activity is higher than 370&nbsp;MBq. It reaches 407&nbsp;MBq, the upper limit,
+      at t&nbsp;=&nbsp;−T½·log₂(407/370), about a quarter of an hour before the calibration time, so the
+      earliest whole minute inside the window is <strong>{X.f18.earliest}</strong>. After 09:00 it reaches
+      the lower limit of 333&nbsp;MBq at t&nbsp;=&nbsp;T½·log₂(370/333), and the latest whole minute is
+      {" "}<strong>{X.f18.latest}</strong>. The window is {X.f18.width} minutes wide. A delay of 45 minutes
+      past the calibration time leaves {X.f18.late45.toFixed(0)}&nbsp;MBq, {pct1(X.f18.late45 / 370)}% of
+      the prescription — the F-18 table gives the same {pct1(F[0].f[3])}% at 0&nbsp;h&nbsp;:45. To give
+      370&nbsp;MBq at 09:45 the dose would have had to be calibrated at {X.f18.drawFor0945.toFixed(0)}&nbsp;MBq
+      for 09:00.
+    </p>
+    <p>
+      The same tolerance around a Tc-99m dose gives a window {winRatio.toFixed(1)} times wider — the ratio of
+      the two half-lives — which is why a late-running schedule is a much greater concern for PET than for
+      conventional nuclear medicine.
+    </p>
+
+    <h2>Common mistakes</h2>
+    <h3>Using the wrong reference time</h3>
+    <p>
+      A dose label carries an activity and the time it applies to. That reference time is not
+      necessarily the time of dispensing, of delivery or of measurement, and suppliers state the
+      calibration time separately for exactly this reason. Correcting from the delivery time instead of
+      the calibration time shifts every later figure by the delay between the two. Write the clock time
+      next to every measured activity, on the label and in the record, and correct from that pair.
+    </p>
+    <h3>Mixing minutes and hours</h3>
+    <p>
+      The elapsed time and the half-life must be in the same unit. Entering 90 for an elapsed time of
+      90 minutes with the Tc-99m half-life in hours treats it as 90 hours. The correct fraction after
+      90 minutes is {pct1(tc90)}% for Tc-99m and {pct1(f90)}% for F-18. A result that is almost zero,
+      or a fraction above one, is the sign of this mistake.
+    </p>
+    <h3>Correcting in the wrong direction</h3>
+    <p>
+      Multiplying when you should divide gives a dose that is low by the square of the factor. For an
+      F-18 dose drawn an hour ahead, the right activity is the prescription divided by
+      {" "}{(F[1].f[0]).toFixed(3)}; multiplying instead leaves the patient with {pct1(F[1].f[0] ** 2)}% of
+      the prescribed activity. A quick check is that the activity drawn ahead must always be larger than
+      the prescription.
+    </p>
+    <h3>Mixing activity units</h3>
+    <p>
+      Many prescriptions and older records are in millicuries, and dose calibrators can display either
+      unit. One millicurie is exactly {MBQ_PER_MCI.toFixed(0)}&nbsp;MBq; a 20&nbsp;mCi dose is
+      {" "}{(20 * MBQ_PER_MCI).toFixed(0)}&nbsp;MBq. Confirm the unit on the display before reading it.
+      The <a href={u("/units/")} class="underline">unit converter</a> gives the exact factor.
+    </p>
+    <h3>Clock and time-zone errors</h3>
+    <p>
+      A dose shipped from a supplier may be labelled with a clock that differs from the department's,
+      and the change to and from summer time moves the clock by an hour without moving the decay. Use
+      one clock for the whole calculation, and use the 24-hour clock so that 01:00 and 13:00 are not
+      confused.
+    </p>
+    <h3>Forgetting what stays in the syringe</h3>
+    <p>
+      The activity administered is the activity in the syringe before injection minus what remains in
+      it afterwards. The residual is measured in the dose calibrator after injection where the procedure
+      requires it; decay correction cannot account for it.
+    </p>
+
+    <h2>Where to go next</h2>
+    <ul class="my-3 space-y-1">
+      <li><a href={u("/decay/")} class="underline">Decay</a> — the activity after any interval, the time
+        to reach a target, and a half-life from two measurements.</li>
+      <li><a href={u("/units/")} class="underline">Unit converter</a> — becquerels and curies with the
+        exact factor.</li>
+      <li><a href={u("/positron-emitters/")} class="underline">Positron emitters and 511 keV</a> — shielding
+        F-18 and its decay through a working day.</li>
+      <li><a href={u("/half-value-layers/")} class="underline">Half-value and tenth-value layers</a> —
+        how much lead a Tc-99m syringe needs.</li>
+      <li><NuclideRef k="Tc-99m" /> and <NuclideRef k="F-18" /> — the full data pages.</li>
+    </ul>
+  </section>
+</Base>

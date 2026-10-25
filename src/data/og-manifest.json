@@ -343,6 +343,10 @@
     "slug": "positron-emitters",
     "title": "Positron emitters and 511 keV shielding · Radiation Lab"
   },
+  "/radiopharmaceutical-decay/": {
+    "slug": "radiopharmaceutical-decay",
+    "title": "Decay correction for radiopharmaceuticals: Tc-99m and F-18 dosing time tables · Radiation Lab"
+  },
   "/specific-activity/": {
     "slug": "specific-activity",
     "title": "Specific activity calculator — mass and activity · Radiation Lab"
