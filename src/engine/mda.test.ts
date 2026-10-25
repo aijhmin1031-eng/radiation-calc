@@ -48,3 +48,22 @@ test("★ 느리게 훑으면 낮아진다 — 스캔 속도가 MDC 를 정한�
   assert.ok(slow < fast, `느린 쪽 ${slow.toPrecision(4)} < 빠른 쪽 ${fast.toPrecision(4)}`);
   near(fast / slow, 2, 1e-6, "속도 4배 = MDC 2배");
 });
+
+/* ★ 도구 쪽 「Worked examples」·「FAQ」의 수치를 고정한다(2026-10-25 D3). */
+test("Worked examples — MDA 쪽에 적힌 수치를 엔진이 그대로 낸다", async () => {
+  const { EX } = await import("../data/worked-examples.ts");
+  const M = EX.mda;
+  const sig = (x: number, n: number) => String(Number(x.toPrecision(n)));
+  const wipe = minimumDetectableActivity({ bgCps: 40 / 60, countTimeS: 60, efficiency: 0.3 });
+  assert.equal(sig(wipe.lc, 3), M.wipeLc);
+  assert.equal(sig(wipe.ld, 3), M.wipeLd);
+  assert.equal(sig(wipe.mda, 3), M.wipeMda);
+  assert.equal(sig(minimumDetectableActivity({ bgCps: 40 / 60, countTimeS: 600, efficiency: 0.3 }).mda, 3), M.wipeMda600);
+  const lsc = minimumDetectableActivity({ bgCps: 2.5 / 60, countTimeS: 6000, efficiency: 0.25, sampleQty: 0.010 });
+  assert.equal(sig(lsc.lc, 3), M.lscLc);
+  assert.equal(sig(lsc.ld, 3), M.lscLd);
+  assert.equal(sig(lsc.mda, 3), M.lscMda);
+  // 화면 계산기에는 시료량 칸이 없다 — 병 하나의 Bq 를 낸 뒤 0.010 L 로 나눈다
+  assert.equal(sig(minimumDetectableActivity({ bgCps: 2.5 / 60, countTimeS: 6000, efficiency: 0.25 }).mda, 3), M.lscMdaBq);
+  assert.equal(sig(minimumDetectableActivity({ bgCps: 2.5 / 60, countTimeS: 24000, efficiency: 0.25, sampleQty: 0.010 }).mda, 3), M.lscMda400);
+});

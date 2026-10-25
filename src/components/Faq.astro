@@ -1,0 +1,19 @@
+---
+import { TOOL_FAQ } from "../data/tool-faq";
+interface Props { slug: string }
+const { slug } = Astro.props;
+/** ★ 이 배열이 그대로 `Base` 의 `FAQPage` 구조화 데이터가 된다(`ToolPage` 가 넘긴다).
+ *  화면의 문답과 구조화 데이터의 문답이 한 곳에서 나오므로 서로 어긋날 수 없다. */
+const faq = TOOL_FAQ[slug] ?? [];
+---
+{faq.length > 0 && (
+  <>
+    <h2 id="faq">FAQ</h2>
+    {faq.map((f) => (
+      <>
+        <h3>{f.q}</h3>
+        <p>{f.a}</p>
+      </>
+    ))}
+  </>
+)}

@@ -369,9 +369,11 @@ const pickUnit = async (unit) => {
   await page.selectOption("main select", unit, { timeout: 4000 });
   await page.waitForTimeout(120);
 };
-/** 환산표의 모든 줄을 읽는다 — 고른 줄 하나가 아니라 표 전체다. */
+/** 환산표의 모든 줄을 읽는다 — 고른 줄 하나가 아니라 표 전체다.
+ *  ★ 계산기 카드(`section.card`) 안의 표만 읽는다 — 2026-10-25 D3 에서 해설 본문에 「Worked examples」
+ *    표가 생겼다. 그 표는 환산표가 아니므로 읽으면 「모르는 줄」로 걸린다. 줄 수·값 대조는 그대로다. */
 const readTable = () => page.evaluate(() =>
-  [...document.querySelectorAll("main table tbody tr")].map((tr) => ({
+  [...document.querySelectorAll("main section.card table tbody tr")].map((tr) => ({
     unit: tr.children[0].textContent.trim(),
     shown: tr.children[1].textContent.trim(),
   })));

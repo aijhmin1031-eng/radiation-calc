@@ -1,6 +1,9 @@
 ---
 import ToolPage from "../components/ToolPage.astro";
 import Units from "../components/calc/Units.tsx";
+import Faq from "../components/Faq.astro";
+import { EX } from "../data/worked-examples";
+const U = EX.units;
 ---
 <ToolPage slug="units">
   <Units slot="tool" client:only="react" />
@@ -73,5 +76,59 @@ import Units from "../components/calc/Units.tsx";
       such as H*(10), which needs a conversion coefficient that depends on photon energy. Both of
       those are answered by published coefficient sets, not by a fixed factor.
     </p>
+
+    <h2>Worked examples</h2>
+    <h3>Checking a wipe result against a transport limit</h3>
+    <p>
+      A wipe from the outside of a package reads 2400&nbsp;dpm/100&nbsp;cm² after correction for
+      counter efficiency and wipe area. The transport regulations of the IAEA (SSR-6) limit non-fixed
+      contamination on a package surface to 4&nbsp;Bq/cm² for beta and gamma emitters and low-toxicity
+      alpha emitters, and to 0.4&nbsp;Bq/cm² for all other alpha emitters. Does the package pass?
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Conversion</th><th class="text-right">Result</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Measured 2400&nbsp;dpm/100&nbsp;cm²</td><td class="num text-right">{U.wipeBqCm2}&nbsp;Bq/cm²</td></tr>
+          <tr><td>Limit 4&nbsp;Bq/cm²</td><td class="num text-right">{Number(U.limitDpm).toLocaleString("en-US")}&nbsp;dpm/100&nbsp;cm²</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      For a beta or gamma emitter the wipe is one tenth of the limit and the package passes. For an
+      alpha emitter outside the low-toxicity group the same reading sits exactly on the limit, and a
+      reading on the limit is not a pass. The unit conversion is the easy part; knowing which emitter
+      is on the wipe decides the answer. Check also that both figures describe the same thing: the
+      limit applies to removable contamination averaged over 300&nbsp;cm² of any part of the surface,
+      so one small spot can pass on average and still deserve a second wipe.
+    </p>
+
+    <h3>Reading an old survey meter in milliroentgen</h3>
+    <p>
+      An older ionisation chamber meter, still calibrated in exposure rate, reads 2.5&nbsp;mR/h near a
+      shielded container. A current procedure states its action level in µGy/h of air kerma.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Step</th><th class="text-right">Result</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>2.5&nbsp;mR/h as exposure rate</td><td class="num text-right">{U.mrCkg7}&nbsp;×&nbsp;10⁻⁷&nbsp;C/(kg·h)</td></tr>
+          <tr><td>Air kerma rate (× 33.97&nbsp;J/C)</td><td class="num text-right">{U.mrUGyH}&nbsp;µGy/h</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The first step is exact; the second uses the energy needed to make one ion pair in dry air.
+      The result is air kerma, not a dose equivalent. If the action level is written in µSv/h, the
+      conversion needs a coefficient for the photon energy, which this tool deliberately does not
+      supply. The conversion is also only as good as the meter: an instrument calibrated with Cs-137
+      can over-read or under-read at low photon energies, whatever unit its scale is printed in.
+    </p>
+
+    <Faq slug="units" />
   </Fragment>
 </ToolPage>

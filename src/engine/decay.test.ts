@@ -66,3 +66,21 @@ test("★ 같은 반감기가 섞여도 NaN 이 나지 않는다 (Bateman 분모
   const out = batemanChain(1000, [lambda(T), lambda(T), lambda(T)], 300);
   assert.ok(out.every(Number.isFinite), `유한해야 한다: ${out}`);
 });
+
+/* ★ 도구 쪽 「Worked examples」·「FAQ」의 수치를 고정한다(2026-10-25 D3). */
+test("Worked examples — 붕괴 쪽에 적힌 수치를 엔진이 그대로 낸다", async () => {
+  const { EX } = await import("../data/worked-examples.ts");
+  const D = EX.decay;
+  const sig = (x: number, n: number) => String(Number(x.toPrecision(n)));
+  const DAY = 86400;
+  const tc = N["Tc-99m"].t_half_s;
+  assert.equal(sig(decayActivity(800, tc, 3.5 * 3600), 3), D.tc1030);
+  assert.equal(sig(decayActivity(800, tc, 6 * 3600), 3), D.tc1300);
+  const t = halfLifeFromTwoPoints(1520, 1181, DAY);
+  assert.equal(sig(t / 3600, 3), D.hlH);
+  assert.equal(sig(t / DAY, 3), D.hlD);
+  assert.equal(sig((halfLifeFromTwoPoints(1520, 1181 * 1.01, DAY) / t - 1) * 100, 1), D.hlSensPct);
+  assert.equal(sig(N["Mo-99"].t_half_s / DAY, 3), D.mo99D);
+  assert.equal(sig(N["Au-198"].t_half_s / DAY, 3), D.au198D);
+  assert.equal((elapsedFromRatio(1e-3, N["I-131"].t_half_s) / DAY).toFixed(1), D.i131ThousandthD);
+});

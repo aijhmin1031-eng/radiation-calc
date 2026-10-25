@@ -5,6 +5,7 @@ import { TOOL_GROUPS, toolsIn, toolBySlug, menuName } from "../lib/tools";
 import { reportFor } from "../validation/registry";
 import { SAVE_ENABLED } from "../lib/features";
 import Icon from "./Icon.astro";
+import { TOOL_FAQ } from "../data/tool-faq";
 interface Props { slug: string }
 const { slug } = Astro.props;
 const tool = toolBySlug(slug)!;
@@ -29,7 +30,7 @@ const groupLabel = TOOL_GROUPS.find((g) => g.key === tool.group)!.label;
       (1024px 에서 세 칸으로 가르면 가운데가 496px 이라 입력 두 칸이 212px 로 눌린다).
     ★ 좁은 화면에서 도구 목록을 잃지 않는다 — 머리글의 `Calculators` 칸과 빵부스러기,
       그리고 아래쪽 「Other calculators」가 그 자리를 맡는다. */}
-<Base title={tool.seoTitle} description={tool.blurb}>
+<Base title={tool.seoTitle} description={tool.blurb} faq={TOOL_FAQ[slug]}>
   <div class="xl:grid xl:grid-cols-[13rem_minmax(0,1fr)_16rem] xl:items-start xl:gap-8">
 
     {/* ── 좌: 도구 목록. 이 lab 에서 가장 자주 하는 이동이다 ── */}

@@ -1,6 +1,9 @@
 ---
 import ToolPage from "../components/ToolPage.astro";
 import GammaShielding from "../components/calc/GammaShielding.tsx";
+import Faq from "../components/Faq.astro";
+import { EX } from "../data/worked-examples";
+const G = EX.gamma;
 ---
 <ToolPage slug="gamma-shielding">
   <GammaShielding slot="tool" client:only="react" />
@@ -63,5 +66,60 @@ import GammaShielding from "../components/calc/GammaShielding.tsx";
       to an extended source the inverse-square falloff does not hold — near a large plane the dose
       rate barely falls with distance at all.
     </p>
+
+    <h2>Worked examples</h2>
+    <h3>A caesium-137 source on an open bench</h3>
+    <p>
+      A 37&nbsp;GBq (1&nbsp;Ci) Cs-137 calibration source is lifted out of its storage pot for a
+      check and stands on a bench. How high is the air kerma rate where people stand, and what would
+      a 5&nbsp;cm lead block in front of it change?
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Input</th><th class="text-right">Air kerma rate</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Cs-137, 37&nbsp;GBq, 1&nbsp;m, no shield</td><td class="num text-right">{G.cs1m}&nbsp;mGy/h</td></tr>
+          <tr><td>Same source at 2&nbsp;m</td><td class="num text-right">{G.cs2m}&nbsp;mGy/h</td></tr>
+          <tr><td>1&nbsp;m behind 5&nbsp;cm lead, attenuation only</td><td class="num text-right">{G.csLeadUGyH}&nbsp;µGy/h</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Doubling the distance divides the rate by four, as the inverse-square law says it must for a
+      point source. The lead lets through {G.csLeadPct}% of the photons that travel straight through
+      it, but that figure leaves out the photons scattered inside the block. Before the number is used
+      to plan work, switch to “With buildup” and enter coefficients for lead at 662&nbsp;keV; the
+      shielded rate rises, and the honest answer is the higher one. The block also has to be wide
+      enough to cover the whole line of sight from the source to the people it protects; placed close
+      to the source, a small block does that job.
+    </p>
+
+    <h3>Where to rope off an iridium-192 exposure</h3>
+    <p>
+      Site radiography uses a 1.5&nbsp;TBq Ir-192 source in a panoramic exposure with no collimator.
+      Local rules put the barrier where the air kerma rate falls to 20&nbsp;µGy/h. Enter 1500&nbsp;GBq
+      and 20&nbsp;m with no shield.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Quantity</th><th class="text-right">Result</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Air kerma rate at 20&nbsp;m</td><td class="num text-right">{G.ir20mUGyH}&nbsp;µGy/h</td></tr>
+          <tr><td>Distance for 20&nbsp;µGy/h</td><td class="num text-right">{G.irBoundaryM}&nbsp;m</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The second line is one inverse-square step from the first: d = 20&nbsp;m × √({G.ir20mUGyH}/20). A barrier
+      ninety metres out is rarely practical, which is why the usual answer is a collimator, not more
+      rope. The calculation also leaves out scatter from the ground and the object being radiographed,
+      so the boundary is confirmed with a survey meter during the first exposure.
+    </p>
+
+    <Faq slug="gamma-shielding" />
   </Fragment>
 </ToolPage>
