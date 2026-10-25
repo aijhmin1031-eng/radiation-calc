@@ -123,4 +123,26 @@ export const TOOL_FAQ: Record<string, readonly FaqItem[]> = {
       a: `Multiply the starting dose rate by the mean life, T½/ln 2, which is the integral of the decay curve. For Y-90 the mean life is ${EX.beta.y90MeanLifeH} hours, so 1 GBq spread uniformly through 1 kg of tissue delivers ${EX.beta.y90GyPerGBqKg} Gy in total.`,
     },
   ],
+  alara: [
+    {
+      q: "How do I calculate the stay time in a radiation area?",
+      a: `Divide the dose you are prepared to accept by the dose rate where the work is done: t = D / Ḋ. With a 0.5 mSv budget at 1.8 mSv/h that is ${EX.alara.stay1m} minutes. Use a measured dose rate at the actual working position, and leave a margin for the time spent getting in and out.`,
+    },
+    {
+      q: "Does doubling the distance really cut the dose rate to a quarter?",
+      a: "For a source that is small compared with the distance, yes: the inverse square law gives Ḋ₂ = Ḋ₁ × (d₁/d₂)². Close to an extended source such as a pipe, a tank or a contaminated floor the rate falls more slowly, so measure at the new position instead of relying on the law.",
+    },
+    {
+      q: "What is collective dose and what is it used for?",
+      a: "Collective dose is the sum of individual doses for a group, in person·mSv, here worked out as workers × hours × dose rate for each task. It is a planning tool for comparing ways of doing the same job. ICRP Publication 103 advises against using it to estimate health effects from very small doses spread over many people.",
+    },
+    {
+      q: "Which of time, distance and shielding should I try first?",
+      a: "Usually distance and time, because they cost the least: long-handled tools, rehearsing the job away from the source and moving people out of the area between steps. Shielding takes time and dose to put in place, so it pays off mainly for long jobs or high dose rates. The job-dose mode shows which task carries most of the collective dose, which is where any of the three matters most.",
+    },
+    {
+      q: "Is a dose under the legal limit automatically ALARA?",
+      a: "No. Dose limits are a ceiling, not a target. ALARA asks whether the dose could reasonably be lower, taking cost and practicality into account, and many organisations set lower dose constraints or investigation levels for that reason.",
+    },
+  ],
 };

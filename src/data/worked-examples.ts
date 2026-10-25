@@ -52,4 +52,12 @@ export const EX = {
     /** 2 GBq 를 1.6 kg 엽에 — 처음 선량률 mGy/h, 총선량 Gy */
     lobeRateMGyH: "672", lobeGy: "62.1",
   },
+  alara: {
+    /** 1 m 에서 1.8 mSv/h, 예산 0.5 mSv — 머물 수 있는 분(1 m, 2 m), 그리고 1 시간을 버티는 거리 m */
+    stay1m: "16.67", stay2m: "66.67", oneHourM: "1.9",
+    /** 기본 작업 세 단계의 집단선량 person·mSv, 주 작업 몫, 주 작업을 2 m 에서 할 때, 줄어든 %, 모든 선량률 절반 */
+    jobTotal: "1.66", jobMain: "1.5", jobAt2m: "0.535", jobCutPct: "68", jobHalf: "0.83",
+    /** 주 작업자 한 사람의 선량 mSv — 1 m, 2 m */
+    mainPerWorker: "0.5", mainPerWorker2m: "0.125",
+  },
 } as const;
