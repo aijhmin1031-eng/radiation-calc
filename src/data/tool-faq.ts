@@ -145,4 +145,26 @@ export const TOOL_FAQ: Record<string, readonly FaqItem[]> = {
       a: "No. Dose limits are a ceiling, not a target. ALARA asks whether the dose could reasonably be lower, taking cost and practicality into account, and many organisations set lower dose constraints or investigation levels for that reason.",
     },
   ],
+  "specific-activity": [
+    {
+      q: "How is specific activity calculated?",
+      a: "Specific activity is the activity per gram of the pure nuclide: SA = λ·N_A / M = ln 2 · N_A / (T½ · M), with T½ in seconds, N_A Avogadro's number and M the molar mass in g/mol. This calculator uses the AME2020 atomic mass rather than the mass number, which changes the result by up to a few tenths of a percent.",
+    },
+    {
+      q: "How many grams are in one curie of a radionuclide?",
+      a: `One curie is 3.7 × 10¹⁰ Bq, so the mass is 3.7 × 10¹⁰ divided by the specific activity in Bq/g. For Cs-137 that is ${EX.specificActivity.cs1CiMg} mg; for radium-226 it is very close to 1 g, because the curie was originally defined from radium.`,
+    },
+    {
+      q: "Why does the source I bought weigh far more than the calculated mass?",
+      a: "The calculation is for the pure nuclide. Real sources contain the nuclide in a chemical compound, mixed with stable isotopes of the same element, a carrier and the capsule itself. The calculated mass is a lower limit on the material, and the nuclide's specific activity is an upper limit on what the source can reach.",
+    },
+    {
+      q: "Why is plutonium so much more active than uranium per gram?",
+      a: `Specific activity is inversely proportional to half-life. Pu-239 has a half-life of about 24 100 years against 4.47 billion years for U-238, so a gram of it is about ${EX.specificActivity.puURatio} times more active: ${EX.specificActivity.pu239GBq} GBq against ${EX.specificActivity.u238KBq} kBq.`,
+    },
+    {
+      q: "Does the specific activity of natural uranium match U-238?",
+      a: "No. Natural uranium also contains U-234 in radioactive equilibrium with U-238 and about 0.72% U-235, so its specific activity is roughly twice that of U-238 alone, before counting any decay products. For a mixture, add the activity of each nuclide in proportion to its mass fraction.",
+    },
+  ],
 };

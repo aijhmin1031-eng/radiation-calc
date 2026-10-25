@@ -1,6 +1,9 @@
 ---
 import ToolPage from "../components/ToolPage.astro";
 import SpecificActivity from "../components/calc/SpecificActivity.tsx";
+import Faq from "../components/Faq.astro";
+import { EX } from "../data/worked-examples";
+const D = EX.specificActivity;
 ---
 <ToolPage slug="specific-activity">
   <SpecificActivity slot="tool" client:only="react" />
@@ -61,5 +64,63 @@ import SpecificActivity from "../components/calc/SpecificActivity.tsx";
       about two nanograms of Tc-99m. Everything else in the vial is carrier, saline and the long-lived
       Tc-99 ground state that the metastable state decays into.
     </p>
+
+    <h2>Worked examples</h2>
+    <h3>Checking a caesium-137 source certificate</h3>
+    <p>
+      A certificate describes a Cs-137 source of 37&nbsp;GBq (1&nbsp;Ci). How much caesium-137 is
+      actually in it? Choose “Activity → mass” and Cs-137, enter 37&nbsp;GBq, and read the mass.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Result</th><th class="text-right">Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Mass of Cs-137, mg</td><td class="num text-right">{D.cs1CiMg}</td></tr>
+          <tr><td>Specific activity, Ci/g</td><td class="num text-right">{D.csCiPerG}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      About {D.cs1CiMg}&nbsp;mg of Cs-137 makes one curie, so no more than about 87&nbsp;Ci can be
+      packed into a gram of the pure nuclide. That gives a quick plausibility check in both directions.
+      A document claiming 1&nbsp;Ci in a speck of 1&nbsp;mg has a units error somewhere. A real source
+      capsule weighs far more than {D.cs1CiMg}&nbsp;mg because the caesium is a chloride or glass
+      compound that also contains stable caesium isotopes from the fission product, so the source's own
+      specific activity is lower than the nuclide's. The figure from this calculator is always the upper
+      limit for the pure nuclide.
+    </p>
+
+    <h3>Why a gram of plutonium is not like a gram of uranium</h3>
+    <p>
+      Choose “Mass → activity” and enter 1&nbsp;g, first for U-238 and then for Pu-239. Then switch to
+      “Activity → mass”, choose Am-241 and enter 37&nbsp;kBq, the typical activity in an ionisation
+      smoke detector.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Input</th><th class="text-right">Result</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1 g of U-238, kBq</td><td class="num text-right">{D.u238KBq}</td></tr>
+          <tr><td>1 g of Pu-239, GBq</td><td class="num text-right">{D.pu239GBq}</td></tr>
+          <tr><td>37 kBq of Am-241, µg</td><td class="num text-right">{D.am37kBqUg}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Gram for gram, Pu-239 is about {D.puURatio} times more active than U-238, because its half-life
+      is about 185&nbsp;000 times shorter and the molar masses are almost equal. Only {D.puSameUg}&nbsp;µg
+      of Pu-239 has the activity of a whole gram of U-238. The smoke-detector source is a third of a
+      microgram of americium. Masses this small are why alpha emitters are controlled by activity and
+      not by weight, and why a weighing balance tells you nothing useful about them. It works the other
+      way too: a kilogram of depleted uranium shielding holds only about 12&nbsp;MBq of U-238, which is
+      why its main hazard is chemical toxicity and the beta dose from its decay products at the surface,
+      not the alpha activity of the uranium itself.
+    </p>
+
+    <Faq slug="specific-activity" />
   </Fragment>
 </ToolPage>

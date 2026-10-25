@@ -84,3 +84,21 @@ test("Worked examples — 붕괴 쪽에 적힌 수치를 엔진이 그대로 낸
   assert.equal(sig(N["Au-198"].t_half_s / DAY, 3), D.au198D);
   assert.equal((elapsedFromRatio(1e-3, N["I-131"].t_half_s) / DAY).toFixed(1), D.i131ThousandthD);
 });
+
+/* ★ 비방사능 쪽 「Worked examples」·「FAQ」의 수치를 고정한다(2026-10-25 D4). */
+test("Worked examples — 비방사능 쪽에 적힌 수치를 엔진이 그대로 낸다", async () => {
+  const { EX } = await import("../data/worked-examples.ts");
+  const D = EX.specificActivity;
+  const sig = (x: number, n: number) => String(Number(x.toPrecision(n)));
+  const sa = (k: string) => N[k].sa_bq_g;
+  /* ★ 자료의 sa_bq_g 는 식 ln2·N_A/(T½·M) 과 같아야 한다 — 쪽 본문이 그 식을 적는다. */
+  assert.ok(Math.abs(specificActivity(N["Cs-137"].t_half_s, N["Cs-137"].m_u) / sa("Cs-137") - 1) < 1e-9);
+  assert.equal(sig(massFromActivity(37e9, sa("Cs-137")) * 1e3, 4), D.cs1CiMg);
+  assert.equal(sig(sa("Cs-137") / 3.7e10, 4), D.csCiPerG);
+  assert.equal(sig(activityFromMass(1, sa("U-238")) / 1e3, 4), D.u238KBq);
+  assert.equal(sig(activityFromMass(1, sa("Pu-239")) / 1e9, 4), D.pu239GBq);
+  assert.equal(sig(sa("Pu-239") / sa("U-238"), 3), D.puURatio);
+  assert.equal(sig(massFromActivity(activityFromMass(1, sa("U-238")), sa("Pu-239")) * 1e6, 3), D.puSameUg);
+  assert.equal(sig(massFromActivity(37e3, sa("Am-241")) * 1e6, 3), D.am37kBqUg);
+  assert.ok(Math.abs(massFromActivity(3.7e10, sa("Ra-226")) - 1) < 0.02);
+});

@@ -60,4 +60,12 @@ export const EX = {
     /** 주 작업자 한 사람의 선량 mSv — 1 m, 2 m */
     mainPerWorker: "0.5", mainPerWorker2m: "0.125",
   },
+  specificActivity: {
+    /** Cs-137 37 GBq(1 Ci)의 순수 질량 mg, 비방사능 Ci/g */
+    cs1CiMg: "11.52", csCiPerG: "86.81",
+    /** 1 g 의 방사능 — U-238 kBq, Pu-239 GBq, 그 배수, 그리고 U-238 1 g 과 같은 방사능의 Pu-239 µg */
+    u238KBq: "12.44", pu239GBq: "2.295", puURatio: "185000", puSameUg: "5.42",
+    /** 연기감지기 Am-241 37 kBq 의 질량 µg */
+    am37kBqUg: "0.292",
+  },
 } as const;
