@@ -57,7 +57,9 @@ console.log("\n② base 경로 — 내부 링크가 /calc/ 밖을 가리키지 �
 /* ★★ 2026-10-06 ② — 분야 칸 셋은 이제 **절대 주소**다(RadiMeter·처분 lab 이 하위 도메인으로 나갔다). 루트 경로로
  *  남은 것은 이 오리진 안의 것뿐이다. `/radimeter/`·`/disposal/` 이 다시 루트 경로로 나타나면 그것은 우산의
  *  301 을 한 번 더 도는 낡은 링크다 — 그래서 허용 목록에서 뺐다. */
-const EXACT_OK = ["/", "/robots.txt", "/track.js", "/privacy", "/terms", "/contact", "/calc/"];
+/* ★ 2026-10-25 — `/about`(운영 주체 소개)을 더했다. 법무 셋과 같은 우산 루트 문서이고, 라이브 200 ·
+ *  canonical 슬래시 없음을 `curl` 로 재서 확인했다(`/about/` 은 307 로 `/about` 에 보낸다). */
+const EXACT_OK = ["/", "/robots.txt", "/track.js", "/about", "/privacy", "/terms", "/contact", "/calc/"];
 let stray = 0;
 for (const p of pages) {
   for (const m of p.s.matchAll(/(?:href|src)="(\/[^"#?]*)"/g)) {

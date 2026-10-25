@@ -67,8 +67,9 @@ const DECLARED = [/\.supabase\.co$/, /^accounts\.google\.com$/];
  *  ★ 2026-09-28 에 `/radimeter/` 밑에서 루트로 옮겼다. 사이트의 79% 가 이 lab 인데
  *    하단의 Privacy 가 RadiMeter 의 측정 데이터 설명으로 가고 있었고, 애드센스가
  *    요구하는 광고 쿠키 고지는 **루트 문서에만** 있다.
- *  ★ 끝 슬래시 없음이 우산 쪽의 정본이다(꼬리말·사이트맵·canonical 일치). */
-const REQUIRED_LINKS = ["/calc/disclaimer/", "/privacy", "/terms", "/contact"];
+ *  ★ 끝 슬래시 없음이 우산 쪽의 정본이다(꼬리말·사이트맵·canonical 일치).
+ *  ★ 2026-10-25 에 `/about` 을 더했다 — 운영 주체 소개도 우산 루트에 산다. */
+const REQUIRED_LINKS = ["/calc/disclaimer/", "/about", "/privacy", "/terms", "/contact"];
 
 function walk(d, out = []) {
   for (const e of readdirSync(d)) {

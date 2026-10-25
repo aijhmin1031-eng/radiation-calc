@@ -1,0 +1,85 @@
+---
+import ToolPage from "../components/ToolPage.astro";
+import XraySpectrum from "../components/calc/XraySpectrum.tsx";
+---
+<ToolPage slug="xray-spectrum">
+  <XraySpectrum slot="tool" client:only="react" />
+  <Fragment slot="prose">
+    <h2>The continuous spectrum</h2>
+    <p>
+      When fast electrons strike the tungsten anode, most lose energy gradually and radiate a
+      continuous band of X-rays — bremsstrahlung, or "braking radiation". The highest photon energy
+      equals the tube voltage: a 100&nbsp;kVp tube can make a 100&nbsp;keV photon and no more. Raise
+      the voltage and the whole curve extends to the right and grows; the mean energy climbs with it.
+    </p>
+    <p>
+      This view shows the raw spectrum leaving the anode, before any filter. It is soft and
+      low-energy: in practice the tube housing and an added aluminium or copper filter remove the
+      lowest energies first, and those filters are outside what this calculator draws.
+    </p>
+
+    <h2>Reading the chart</h2>
+    <p>
+      The horizontal axis is photon energy in keV, fixed from zero to the highest tube voltage on
+      offer, so curves at different voltages can be compared by eye. The vertical axis is relative
+      photon fluence per keV, scaled so that the tallest point of the current spectrum sits at the
+      top. The chart therefore compares <em>shapes</em>, not output: it does not say how many more
+      photons a higher voltage produces, only where along the energy axis they fall.
+    </p>
+    <p>
+      The log-scale option spreads the vertical axis over several decades. Use it to see the
+      high-energy tail near the endpoint, which on a linear axis is squeezed against the baseline,
+      and to check that the curve reaches zero exactly at the tube voltage.
+    </p>
+
+    <h2>Why the raw spectrum is soft</h2>
+    <p>
+      In a thick target, the number of photons produced per keV rises steadily towards low
+      energies — the simple form of this is Kramers' rule. On their way out of the anode, however,
+      the lowest-energy photons are absorbed by the tungsten itself, so the curve turns over and
+      falls away below about 10&nbsp;keV instead of rising without limit. What remains is a broad
+      hump near the low end with a long, thinning tail out to the endpoint.
+    </p>
+    <p>The model behind this calculator gives these figures for the unfiltered tungsten beam:</p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Tube voltage</th>
+            <th class="text-right">Mean photon energy</th>
+            <th class="text-right">Photons below 20&nbsp;keV</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="num">50&nbsp;kVp</td><td class="num text-right">15.6&nbsp;keV</td><td class="num text-right">69%</td></tr>
+          <tr><td class="num">80&nbsp;kVp</td><td class="num text-right">24.4&nbsp;keV</td><td class="num text-right">47%</td></tr>
+          <tr><td class="num">100&nbsp;kVp</td><td class="num text-right">30.0&nbsp;keV</td><td class="num text-right">37%</td></tr>
+          <tr><td class="num">150&nbsp;kVp</td><td class="num text-right">43.2&nbsp;keV</td><td class="num text-right">22%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Across this range the mean energy of the raw beam stays close to 30% of the tube voltage. A
+      large share of the photons sit below 20&nbsp;keV; in a patient almost all of these are
+      absorbed in the first few centimetres of tissue, adding to skin dose without reaching the
+      image receptor. That is the reason every diagnostic tube carries filtration — general
+      radiography typically requires a total of at least 2.5&nbsp;mm of aluminium equivalent.
+    </p>
+
+    <h2>Using it</h2>
+    <p>
+      Move the voltage slider and watch the endpoint and the mean energy move together. Going from
+      60 to 120&nbsp;kVp roughly doubles the mean energy, while the low-energy hump hardly moves:
+      most of the change happens in the tail. This is a quick way to show why a higher voltage
+      penetrates further, and why the voltage alone does not fix beam quality once a filter is
+      added.
+    </p>
+
+    <h3>What this view leaves out</h3>
+    <p>
+      Characteristic lines (the sharp spikes near 58–69&nbsp;keV that appear once the tube voltage
+      passes tungsten's K-edge at 69.5&nbsp;kV) and filtration are not part of this calculator, so it gives no half-value layer or air kerma.
+      The source is treated as a point on the central axis, so there is no heel effect here. For a
+      filtered beam, use a full spectrum model such as SpekPy, which this calculator's table is
+      drawn from.
+    </p>
+  </Fragment>
+</ToolPage>
