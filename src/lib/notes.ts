@@ -106,4 +106,12 @@ export const NOTES: Note[] = [
       "Remaining-fraction tables at 15-minute steps, two worked examples of the dosing window, and " +
       "the reference-time and unit mistakes that put an administered activity out of range.",
   },
+  {
+    path: "/iso-4037-reference-fields/",
+    name: "ISO 4037 reference fields",
+    question: "What does the Field Pro workbench compute for a calibration beam, and how accurate is it?",
+    blurb:
+      "Filtered tungsten spectra, half-value layers and matching to the 50 ISO qualities, operational " +
+      "dose conversion, air-density correction and uncertainty, with a guide to its Korean interface.",
+  },
 ];
