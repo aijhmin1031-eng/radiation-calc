@@ -27,4 +27,12 @@ export const EX = {
     /** I-131 이 1/1000 이 되는 데 걸리는 날 */
     i131ThousandthD: "80.0",
   },
+  units: {
+    /** 2400 dpm/100 cm² → Bq/cm², 그리고 4 Bq/cm² → dpm/100 cm² */
+    wipeBqCm2: "0.4", limitDpm: "24000",
+    /** 2.5 mR/h → C/kg/h(×10⁻⁷) → µGy/h 공기커마, 그리고 1 R 의 공기커마 mGy */
+    mrCkg7: "6.45", mrUGyH: "21.9", rMGy: "8.76",
+    /** 10 mCi → MBq */
+    mCi10: "370",
+  },
 } as const;

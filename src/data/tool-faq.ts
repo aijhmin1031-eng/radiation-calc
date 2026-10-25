@@ -53,4 +53,26 @@ export const TOOL_FAQ: Record<string, readonly FaqItem[]> = {
       a: "Not measurably for alpha and beta emitters. For nuclides that decay by electron capture, such as Be-7, the chemical form changes the half-life by a fraction of a percent at most, because the decay depends on electron density at the nucleus. The evaluated half-life is the right value for any practical calculation.",
     },
   ],
+  units: [
+    {
+      q: "How many becquerels are in a curie?",
+      a: `One curie is 3.7 × 10¹⁰ Bq, or 37 GBq, by definition. Each prefix step down keeps the factor 37: one millicurie is 37 MBq and one microcurie is 37 kBq, so a 10 mCi source holds ${EX.units.mCi10} MBq.`,
+    },
+    {
+      q: "How do I convert dpm/100 cm² to Bq/cm²?",
+      a: "Divide by 6000. One becquerel is 60 disintegrations per minute, and the reading is spread over 100 square centimetres, so 60 × 100 = 6000. To go the other way, multiply by 6000.",
+    },
+    {
+      q: "How do I convert roentgen to gray?",
+      a: `Multiply the exposure in C/kg (one roentgen is 2.58 × 10⁻⁴ C/kg) by the mean energy needed to make an ion pair in dry air, 33.97 J/C in ICRU Report 90. One roentgen therefore corresponds to ${EX.units.rMGy} mGy of air kerma. Dose to tissue needs a further factor that depends on photon energy.`,
+    },
+    {
+      q: "How do I convert mrem to µSv?",
+      a: "One millirem is 10 µSv, because one rem is exactly 0.01 Sv. So 100 mrem is 1 mSv, the annual effective dose limit for members of the public recommended in ICRP Publication 103.",
+    },
+    {
+      q: "Is Bq/L the same as Bq/kg for water?",
+      a: "Numerically yes, because a litre of water has a mass of one kilogram to within a fraction of a percent at room temperature. For any other liquid, divide the volume concentration by the density in kg/L to get Bq/kg. Soils and solids are reported per mass, so a volume figure there needs the bulk density.",
+    },
+  ],
 };

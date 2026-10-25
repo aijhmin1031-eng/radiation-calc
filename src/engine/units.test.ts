@@ -115,3 +115,17 @@ test("반가층·십가층", () => {
   near(Math.exp(-mu * hvlFromMu(mu)), 0.5, 1e-9, "HVL 투과율 0.5");
   near(Math.exp(-mu * tvlFromMu(mu)), 0.1, 1e-9, "TVL 투과율 0.1");
 });
+
+/* ★ 도구 쪽 「Worked examples」·「FAQ」의 수치를 고정한다(2026-10-25 D3). */
+test("Worked examples — 단위 환산 쪽에 적힌 수치를 엔진이 그대로 낸다", async () => {
+  const { EX } = await import("../data/worked-examples.ts");
+  const U = EX.units;
+  const sig = (x: number, n: number) => String(Number(x.toPrecision(n)));
+  assert.equal(sig(convert(2400, "dpm/100cm²", "Bq/cm²", "surface"), 3), U.wipeBqCm2);
+  assert.equal(sig(convert(4, "Bq/cm²", "dpm/100cm²", "surface"), 3), U.limitDpm);
+  const ckg = convert(2.5, "mR", "C/kg", "exposure");
+  assert.equal(sig(ckg * 1e7, 3), U.mrCkg7);
+  assert.equal(sig(exposureToAirKerma(ckg) * 1e6, 3), U.mrUGyH);
+  assert.equal(sig(exposureToAirKerma(convert(1, "R", "C/kg", "exposure")) * 1e3, 3), U.rMGy);
+  assert.equal(sig(convert(10, "mCi", "MBq", "activity"), 3), U.mCi10);
+});
