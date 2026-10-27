@@ -4,7 +4,7 @@
  *  ★ 2026-10-26 xray 쪽: 여과·HVL·공기커마는 자매 사이트 Field Pro 가 답한다(감독 지시 20). */
 export interface ToolExclude { text: string; see: { href: string; label: string } }
 
-/** 자매 사이트 Field Pro — 머리글 MORE(SiteHeader.astro)와 같은 주소. */
+/** 워크벤치 Field Pro — 머리글 Pro workbenches 메뉴(SiteHeader.astro 의 PRO)와 같은 주소. */
 export const FIELD_PRO = "https://pro.radiation-lab.com/";
 
 export interface Tool {

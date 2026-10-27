@@ -37,8 +37,8 @@ const groupLabel = TOOL_GROUPS.find((g) => g.key === tool.group)!.label;
     {/* ★ 칸 제목은 `.col-head` 다 — 칸 **안**의 소제목(`.label`)과 층이 갈려야 한다. */}
     {/* ★★ 2026-10-06 ⑥ — 머리글 Tools 메뉴와 **같은 두 묶음 · 같은 순서 · 같은 아이콘**이다(명세 §6, 정본 `lib/tools.ts`).
         「하나의 계산기 안에 여러 도구」 — 어느 도구 쪽에서든 일곱이 한 묶음으로 보인다. */}
-    <nav aria-label="Tools" class="hidden xl:block xl:sticky xl:top-[calc(var(--bar-h)_+_12px)] xl:max-h-[calc(100vh_-_var(--bar-h)_-_24px)] xl:overflow-y-auto">
-      <p class="col-head">Tools</p>
+    <nav aria-label="Calculators" class="hidden xl:block xl:sticky xl:top-[calc(var(--bar-h)_+_12px)] xl:max-h-[calc(100vh_-_var(--bar-h)_-_24px)] xl:overflow-y-auto">
+      <p class="col-head">Calculators</p>
       {TOOL_GROUPS.map((g) => (
         <div class="mb-3">
           <p class="tlist-h">{g.label}</p>
@@ -65,7 +65,7 @@ const groupLabel = TOOL_GROUPS.find((g) => g.key === tool.group)!.label;
     {/* ── 가운데: 계산과 해설 ── */}
     <div class="min-w-0">
       <nav class="tap-list mb-4 flex flex-wrap items-center gap-x-1.5 text-[12px] text-ink-faint">
-        <a href="/#tools" class="hover:text-ink">Tools</a> <span aria-hidden>/</span> {groupLabel} <span aria-hidden>/</span> {tool.name}
+        <a href="/#tools" class="hover:text-ink">Calculators</a> <span aria-hidden>/</span> {groupLabel} <span aria-hidden>/</span> {tool.name}
       </nav>
 
       <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">{tool.name}</h1>

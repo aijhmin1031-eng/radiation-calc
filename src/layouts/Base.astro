@@ -28,9 +28,11 @@ const { title, description, noindex, share = true, schema = "WebApplication", fa
 const here = Astro.url.pathname;
 /** ★★ 압축 고정 바의 칸 — **머리글과 같은 글자·순서**다(명세 §1, 2026-10-06 ⑥).
  *  ★ 바에는 메뉴 판을 다시 싣지 않는다 — 같은 일곱 링크가 쪽마다 두 벌 서면 쪽 사이 겹침만 는다.
- *    바의 `Tools` 는 홈의 도구 묶음(`/#tools`)으로 간다. */
+ *    바의 `Calculators` 는 홈의 계산기 묶음(`/#tools`)으로, `Pro workbenches` 는 홈의 워크벤치 묶음(`/#workbenches`)으로 간다.
+ *  ★ 2026-10-27(감독 지시 31) — 머리글 메뉴가 둘(Calculators · Pro workbenches)이 되어 바의 칸도 다섯이다. 좁은 폭은 Calc · Pro. */
 const NAVI = [
-  { href: "/#tools", label: "Tools", short: "Tools", on: false },
+  { href: "/#tools", label: "Calculators", short: "Calc", on: false },
+  { href: "/#workbenches", label: "Pro workbenches", short: "Pro", on: false },
   { href: "/calc/nuclides/", label: "Nuclide data", short: "Nuclides", on: here.startsWith("/calc/nuclides/") },
   { href: "/calc/methods/", label: "Methods", short: "Methods", on: here.startsWith("/calc/methods/") },
   { href: "/calc/validation/", label: "Validation", short: "Validation", on: here.startsWith("/calc/validation/") },
