@@ -1,7 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import { u, DATA_SOURCES } from "../lib/site";
-import { TOOL_GROUPS, toolsIn, toolBySlug, menuName } from "../lib/tools";
+import { TOOL_GROUPS, toolsIn, toolBySlug, menuName, PRO_WORKBENCHES } from "../lib/tools";
 import { reportFor } from "../validation/registry";
 import { SAVE_ENABLED } from "../lib/features";
 import Icon from "./Icon.astro";
@@ -60,6 +60,21 @@ const groupLabel = TOOL_GROUPS.find((g) => g.key === tool.group)!.label;
           </ul>
         </div>
       ))}
+      {/* ★ 2026-10-27(감독 지시 32 ③) — 목록 맨 아래 워크벤치 셋. 입력칸 · 결과와 떨어진 내비게이션 자리이고, 바깥 사이트라 이름 뒤 화살표를 단다. */}
+      <div class="mb-3 mt-4 border-t border-line pt-3">
+        <p class="tlist-h">Pro workbenches</p>
+        <ul class="space-y-0.5">
+          {PRO_WORKBENCHES.map((p) => (
+            <li>
+              <a href={p.href}
+                 class="flex items-start gap-2 rounded-md border border-transparent px-2 py-1.5 text-[13px] leading-snug text-ink-muted no-underline transition-colors hover:border-line hover:text-ink">
+                <Icon name={p.icon} size={16} class="mt-[1px]" />
+                <span>{p.name}<Icon name="arrow-up-right" size={12} class="ml-1 inline align-[-1px] text-ink-faint" /></span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
     </nav>
 
     {/* ── 가운데: 계산과 해설 ── */}

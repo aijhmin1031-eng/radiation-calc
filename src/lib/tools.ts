@@ -4,8 +4,16 @@
  *  ★ 2026-10-26 xray 쪽: 여과·HVL·공기커마는 자매 사이트 Field Pro 가 답한다(감독 지시 20). */
 export interface ToolExclude { text: string; see: { href: string; label: string } }
 
-/** 워크벤치 Field Pro — 머리글 Pro workbenches 메뉴(SiteHeader.astro 의 PRO)와 같은 주소. */
+/** 워크벤치 Field Pro — 머리글 Pro workbenches 메뉴(아래 PRO_WORKBENCHES)와 같은 주소. */
 export const FIELD_PRO = "https://pro.radiation-lab.com/";
+
+/** ★ 워크벤치 셋 — 머리글 Pro workbenches 메뉴 · 도구 쪽 왼쪽 목록 맨 아래 묶음이 함께 쓰는 정본(2026-10-27, 감독 지시 32).
+ *  순서 · 이름 · 한 줄은 우산 홈 머리글과 같다(두 레포 check-platform 이 잰다). 각자 제 하위 도메인에서 열린다. */
+export const PRO_WORKBENCHES = [
+  { href: FIELD_PRO, name: "Field Pro", line: "ISO 4037 reference X-ray and gamma fields: HVL, Hp(10), uncertainty", icon: "crosshair" },
+  { href: "https://radimeter.radiation-lab.com/", name: "RadiMeter", line: "Survey-meter type testing to IEC 60846-1", icon: "gauge" },
+  { href: "https://disposal.radiation-lab.com/", name: "M-Phreefiteq", line: "Radionuclide speciation, sorption fitting (SCM) and transport", icon: "layers" },
+] as const;
 
 export interface Tool {
   slug: string;
