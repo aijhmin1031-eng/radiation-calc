@@ -181,9 +181,9 @@ const toolOn = (slug: string) => here === u(`/${slug}/`);
   @media (max-width: 1023.98px) {
     .shdr-in { flex-wrap: wrap; row-gap: 4px; padding-top: 8px; padding-bottom: 8px; }
     .shdr-ctl { flex: 1 1 0; justify-content: flex-end; }
-    .shdr-nav { order: 3; flex: 1 0 100%; margin-left: -8px; }
+    .shdr-nav { order: 3; flex: 1 0 100%; margin-left: -7px; }
     /* 두 줄 · 긴 이름(640–1023px)은 가로 8px — CI(DejaVu Sans)에서 칸 다섯이 640px 글줄을 19px 넘었다(2026-10-27). */
-    .shdr-tab { padding: 7px 8px; }
+    .shdr-tab { padding: 7px; }   /* 7px — Pro 칩(600)과 굵은 현재 칸이 함께면 CI 640px 에서 3px 넘었다(2026-10-27) */
   }
   /* ★ 2026-10-27 — 칸이 다섯(메뉴 둘 + 쪽 셋)이 되어 360px 에서 넘쳤다(CI DejaVu 13px). 안여백 8 → 4px, 꺾쇠 14 → 12px(우산과 같은 값). */
   @media (max-width: 639.98px) {

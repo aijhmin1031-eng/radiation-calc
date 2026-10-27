@@ -59,7 +59,8 @@ const PBAR = {
   ],
   wide:   { size: "14px", radius: "6px", padY: "7px", padX: "12px", gap: 4 },
   narrow: { size: "13px", radius: "6px", padY: "8px", padX: "4px",  gap: 2 },   // 2026-10-27 칸 다섯 — 8 → 4px(CI DejaVu 에서 360px 칸 끝 353 > 340)
-  midPadX: "8px",       // 2026-10-27 칸 다섯 — 640–1023px(두 줄 · 긴 이름)은 가로 8px(CI 에서 640px 칸 끝 627 > 608).
+  midPadX: "7px",       // 2026-10-27 지시 32 — 8 → 7px(Pro 칩 600 + 굵은 현재 칸이 CI 640px 에서 611 > 608).
+  /* 옛: midPadX "8px" */       // 2026-10-27 칸 다섯 — 640–1023px(두 줄 · 긴 이름)은 가로 8px(CI 에서 640px 칸 끝 627 > 608).
   tinyPadX: "2px",      // 2026-10-27 칸 다섯 — 5 → 2px(CI 에서 320px 칸 끝 311 > 300).      // 360px 미만에서만 가로 안여백 5px · 글자 12px(2026-10-07 CI 의 DejaVu 에서 320px 칸 끝 302~310 > 300)
   tinySize: "12px",
   edge: 640,            // 긴 글자가 시작하는 폭
