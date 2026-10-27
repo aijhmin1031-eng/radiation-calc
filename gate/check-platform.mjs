@@ -50,32 +50,38 @@ const PBAR = {
   brand: { text: "Radiation Lab", href: "https://radiation-lab.com/", label: "Radiation Lab — home",
            size: "16px", weight: "650", spacing: "-0.192px", mark: 24 },   // -0.012em × 16px
   items: [
-    { menu: true, long: "Tools", short: "Tools" },
+    { menu: true, long: "Calculators", short: "Calc" },
+    { menu: true, long: "Pro workbenches", short: "Pro" },
     { href: "/calc/nuclides/",   long: "Nuclide data", short: "Nuclides" },
     { href: "/calc/methods/",    long: "Methods",      short: "Methods" },
     { href: "/calc/validation/", long: "Validation",   short: "Validation" },
   ],
   wide:   { size: "14px", radius: "6px", padY: "7px", padX: "12px", gap: 4 },
-  narrow: { size: "13px", radius: "6px", padY: "8px", padX: "8px",  gap: 2 },
-  tinyPadX: "5px",      // 360px 미만에서만 가로 안여백 5px · 글자 12px(2026-10-07 CI 의 DejaVu 에서 320px 칸 끝 302~310 > 300)
+  narrow: { size: "13px", radius: "6px", padY: "8px", padX: "6px",  gap: 2 },   // 2026-10-27 칸 다섯 — 8 → 6px(360px 에서 13px 넘쳤다)
+  tinyPadX: "4px",      // 2026-10-27 칸 다섯 — 5 → 4px.      // 360px 미만에서만 가로 안여백 5px · 글자 12px(2026-10-07 CI 의 DejaVu 에서 320px 칸 끝 302~310 > 300)
   tinySize: "12px",
   edge: 640,            // 긴 글자가 시작하는 폭
   oneRow: 1024,         // 한 줄이 되는 폭 — 그 아래는 두 줄(1줄 브랜드+컨트롤 · 2줄 칸)
   current: { weight: "600" },
-  menu: {
-    maxWidth: 820,
-    groups: [
-      { name: "Dose & shielding", items: [["/calc/gamma-shielding/", "Gamma dose rate & shielding"], ["/calc/beta/", "Beta dose rate & shielding"],
-                                          ["/calc/alara/", "ALARA & job planning"]] },
-      { name: "Activity & counting", items: [["/calc/units/", "Unit converter"], ["/calc/decay/", "Decay & half-life"],
-                                             ["/calc/specific-activity/", "Mass & activity"], ["/calc/mda/", "Detection limits (MDA / MDC)"]] },
-      { name: "X-ray spectra", items: [["/calc/xray-spectrum/", "X-ray tube spectrum"]] },
-    ],
-    more: [["https://radimeter.radiation-lab.com/", "Instrument testing"], ["https://disposal.radiation-lab.com/", "Disposal & transport"],
-           ["https://pro.radiation-lab.com/", "Reference fields"]],
-    // 2026-10-25(애드센스 D6): 셋째 자매 Field Pro(ISO 4037 기준장 워크벤치)를 더했다 — 자매 둘 → 셋.
-    // 2026-10-13 소유주 결정: 셋째였던 「Everyday tools」(도토리툴)는 도토리콘 사이트로 완전히 분리해 뺐다.
-  },
+  /* ★★ 2026-10-27(소유주 승인 — 감독 지시 31) — 「Tools」 메뉴가 「Calculators」(도구 여덟 · 세 묶음 그대로)가 되고,
+   *  그 메뉴 맨 아래 「More from Radiation Lab」 줄에 있던 워크벤치 셋이 제 메뉴 「Pro workbenches」로 나왔다.
+   *  메뉴마다 묶음 · 도구(주소 · 이름) · 패널 최대 폭을 적는다. 두 레포가 같은 값을 든다. */
+  menus: [
+    { long: "Calculators", maxWidth: 820,
+      groups: [
+        { name: "Dose & shielding", items: [["/calc/gamma-shielding/", "Gamma dose rate & shielding"], ["/calc/beta/", "Beta dose rate & shielding"],
+                                            ["/calc/alara/", "ALARA & job planning"]] },
+        { name: "Activity & counting", items: [["/calc/units/", "Unit converter"], ["/calc/decay/", "Decay & half-life"],
+                                               ["/calc/specific-activity/", "Mass & activity"], ["/calc/mda/", "Detection limits (MDA / MDC)"]] },
+        { name: "X-ray spectra", items: [["/calc/xray-spectrum/", "X-ray tube spectrum"]] },
+      ],
+    },
+    { long: "Pro workbenches", maxWidth: 560,
+      groups: [
+        { name: "Pro workbenches", items: [["https://pro.radiation-lab.com/", "Field Pro"], ["https://radimeter.radiation-lab.com/", "RadiMeter"],
+                                           ["https://disposal.radiation-lab.com/", "M-Phreefiteq"]] },
+      ] },
+  ],
 };
 const SURFACE = { light: "rgb(252, 252, 250)", dark: "rgb(26, 30, 33)" };
 /** 재는 폭 — 세 경계(1024 줄 · 640 글자 · 360 안여백)의 양쪽과 대표 폭. 모든 쪽에서 잰다(CSS 사본이 쪽마다 있다). */
@@ -183,7 +189,7 @@ function checkBar(tag, b, w, theme) {
   PBAR.items.forEach((want, i) => {
     const got = b.items[i]; if (!got) return;
     const at = `${tag} 칸 ${i + 1}`;
-    if (!!want.menu !== got.menu) fail.push(`${at}: ${want.menu ? "Tools 메뉴(summary)여야 한다" : "링크여야 한다"}`);
+    if (!!want.menu !== got.menu) fail.push(`${at}: ${want.menu ? "메뉴(summary)여야 한다" : "링크여야 한다"}`);
     if (!want.menu) eq(`${at} 주소`, got.href, want.href);
     eq(`${at} 보이는 글자(${mode === "wide" ? "긴" : "짧은"} 판)`, got.shown, mode === "wide" ? want.long : want.short);
   });
@@ -202,7 +208,7 @@ function checkBar(tag, b, w, theme) {
     if (Math.abs(g - D.gap) > 0.5) fail.push(`${tag} 칸 사이 간격 ${i}–${i + 1}: ${g}px (정본 ${D.gap}px)`);
   }
   const rows = new Set(b.items.map((x) => x.top)).size;
-  if (rows !== 1) fail.push(`${tag} 칸 넷이 ${rows}줄이다 (정본 한 줄)`);
+  if (rows !== 1) fail.push(`${tag} 칸 다섯이 ${rows}줄이다 (정본 한 줄)`);
   const right = b.items.length ? Math.max(...b.items.map((x) => x.right)) : null;
   if (right !== null && b.contentRight !== null && right > b.contentRight + 0.5)
     fail.push(`${tag} 칸 줄이 글줄 밖으로 넘친다 (칸 끝 ${Math.round(right)}px > 글줄 끝 ${Math.round(b.contentRight)}px)`);
@@ -231,46 +237,65 @@ function checkBar(tag, b, w, theme) {
          ` · 칸 줄 ${rows} · 칸 끝 ${Math.round(right)}/${Math.round(b.contentRight)}px`);
 }
 
-/** Tools 메뉴 — 연다(요약을 누른다) → 도구 여덟·자매 사이트 셋·패널 자리를 잰다 → Esc 로 닫히고 포커스가 요약으로 돌아오는가. */
+/** 메뉴 둘(Calculators · Pro workbenches) — 연다(요약을 누른다) → 묶음 · 도구 · 패널 자리를 잰다 → 다른 메뉴를 열면 이 메뉴는 닫히는가 →
+ *  Esc 로 닫히고 포커스가 그 요약으로 돌아오는가 → 키보드(Enter)로 다시 열리는가 → 바깥을 누르면 닫히는가.
+ *  ★ 2026-10-27 — 메뉴가 하나에서 둘이 됐다. 아래 줄(「More from Radiation Lab」)은 없어야 한다. */
 async function checkMenu(page, tag, w) {
-  const sum = page.locator('header nav[aria-label="Main"] > details > summary');
-  if (!(await sum.count())) { fail.push(`${tag} Tools 메뉴(details > summary)가 없다`); return; }
-  await sum.click();
-  const m = await page.evaluate(() => {
-    const d = document.querySelector('header nav[aria-label="Main"] > details');
-    const panel = d.querySelector(":scope > div");
-    const inner = document.querySelector("header > div");
-    const r = panel.getBoundingClientRect(), ir = inner.getBoundingClientRect();
-    const groups = [...panel.querySelectorAll("ul")].map((ul) => ({
-      name: (document.getElementById(ul.getAttribute("aria-labelledby") || "")?.textContent || "").trim(),
-      items: [...ul.querySelectorAll("a")].map((a) => ({ href: a.getAttribute("href"), name: (a.querySelector("b")?.textContent || "").trim(),
-        icon: !!a.querySelector("svg"), h: Math.round(a.getBoundingClientRect().height), bg: getComputedStyle(a).backgroundColor })) }));
-    const more = [...panel.querySelectorAll(":scope > div:last-child a")].map((a) => ({ href: a.getAttribute("href"), name: a.textContent.trim(),
-      h: Math.round(a.getBoundingClientRect().height) }));
-    return { open: d.open, left: r.left, right: r.right, width: r.width, gutterL: ir.left + parseFloat(getComputedStyle(inner).paddingLeft),
-             gutterR: ir.right - parseFloat(getComputedStyle(inner).paddingRight), vw: innerWidth, groups, more };
-  });
-  if (!m.open) { fail.push(`${tag} Tools 를 눌렀는데 열리지 않는다`); return; }
-  if (Math.abs(m.left - m.gutterL) > 0.5) fail.push(`${tag} 메뉴 패널 왼쪽 ${Math.round(m.left)}px — 글줄 시작 ${Math.round(m.gutterL)}px 과 다르다`);
-  if (m.right > m.gutterR + 0.5) fail.push(`${tag} 메뉴 패널이 글줄 밖으로 넘친다 (${Math.round(m.right)} > ${Math.round(m.gutterR)})`);
-  if (m.width > PBAR.menu.maxWidth + 0.5) fail.push(`${tag} 메뉴 패널 폭 ${Math.round(m.width)}px (최대 ${PBAR.menu.maxWidth})`);
-  eq(`${tag} 메뉴 묶음`, m.groups.map((g) => g.name).join(" | "), PBAR.menu.groups.map((g) => g.name).join(" | "));
-  PBAR.menu.groups.forEach((g, i) => {
-    const got = m.groups[i]; if (!got) return;
-    eq(`${tag} 메뉴 「${g.name}」 도구`, got.items.map((x) => `${x.href} ${x.name}`).join(" · "), g.items.map(([h, n]) => `${h} ${n}`).join(" · "));
-    got.items.forEach((x) => { if (!x.icon) fail.push(`${tag} 메뉴 ${x.name}: 아이콘이 없다`); if (x.h < 24) fail.push(`${tag} 메뉴 ${x.name}: 표적 ${x.h}px`); });
-  });
-  eq(`${tag} 메뉴 아래 줄(자매 사이트)`, m.more.map((x) => `${x.href} ${x.name}`).join(" · "), PBAR.menu.more.map(([h, n]) => `${h} ${n}`).join(" · "));
-  m.more.forEach((x) => { if (x.h < 24) fail.push(`${tag} 메뉴 ${x.name}: 표적 ${x.h}px`); });
+  const dets = page.locator('header nav[aria-label="Main"] > details');
+  const n = await dets.count();
+  if (n !== PBAR.menus.length) { fail.push(`${tag} 메뉴(details)가 ${n}개 (정본 ${PBAR.menus.length})`); return; }
+  for (let i = 0; i < n; i++) {
+    const spec = PBAR.menus[i];
+    const at = `${tag} 「${spec.long}」`;
+    const sum = dets.nth(i).locator(":scope > summary");
+    await sum.click();
+    const m = await page.evaluate((i) => {
+      const d = document.querySelectorAll('header nav[aria-label="Main"] > details')[i];
+      const panel = d.querySelector(":scope > div");
+      const inner = document.querySelector("header > div");
+      const r = panel.getBoundingClientRect(), ir = inner.getBoundingClientRect();
+      const groups = [...panel.querySelectorAll("ul")].map((ul) => ({
+        name: (document.getElementById(ul.getAttribute("aria-labelledby") || "")?.textContent || "").trim(),
+        items: [...ul.querySelectorAll("a")].map((a) => ({ href: a.getAttribute("href"), name: (a.querySelector("b")?.textContent || "").trim(),
+          line: (a.querySelector("em")?.textContent || "").trim(),
+          icon: !!a.querySelector("svg"), h: Math.round(a.getBoundingClientRect().height), bg: getComputedStyle(a).backgroundColor })) }));
+      return { open: d.open, others: [...document.querySelectorAll('header nav[aria-label="Main"] > details')].filter((o) => o !== d && o.open).length,
+               left: r.left, right: r.right, width: r.width, gutterL: ir.left + parseFloat(getComputedStyle(inner).paddingLeft),
+               gutterR: ir.right - parseFloat(getComputedStyle(inner).paddingRight), vw: innerWidth, groups,
+               moreRow: /More from Radiation Lab/.test(panel.textContent) };
+    }, i);
+    if (!m.open) { fail.push(`${at} 를 눌렀는데 열리지 않는다`); continue; }
+    if (m.others) fail.push(`${at} 를 열었는데 다른 메뉴 ${m.others}개가 열려 있다(한 번에 하나)`);
+    if (Math.abs(m.left - m.gutterL) > 0.5) fail.push(`${at} 패널 왼쪽 ${Math.round(m.left)}px — 글줄 시작 ${Math.round(m.gutterL)}px 과 다르다`);
+    if (m.right > m.gutterR + 0.5) fail.push(`${at} 패널이 글줄 밖으로 넘친다 (${Math.round(m.right)} > ${Math.round(m.gutterR)})`);
+    if (m.width > spec.maxWidth + 0.5) fail.push(`${at} 패널 폭 ${Math.round(m.width)}px (최대 ${spec.maxWidth})`);
+    if (m.moreRow) fail.push(`${at} 패널에 「More from Radiation Lab」 줄이 남아 있다`);
+    eq(`${at} 묶음`, m.groups.map((g) => g.name).join(" | "), spec.groups.map((g) => g.name).join(" | "));
+    spec.groups.forEach((g, j) => {
+      const got = m.groups[j]; if (!got) return;
+      eq(`${at} 「${g.name}」 항목`, got.items.map((x) => `${x.href} ${x.name}`).join(" · "), g.items.map(([h, nm]) => `${h} ${nm}`).join(" · "));
+      got.items.forEach((x) => { if (!x.icon) fail.push(`${at} ${x.name}: 아이콘이 없다`); if (!x.line) fail.push(`${at} ${x.name}: 한 줄 설명이 없다`);
+                                 if (x.h < 24) fail.push(`${at} ${x.name}: 표적 ${x.h}px`); });
+    });
+    await page.keyboard.press("Escape");
+    const after = await page.evaluate((i) => { const d = document.querySelectorAll('header nav[aria-label="Main"] > details')[i];
+      return { open: d.open, back: document.activeElement === d.querySelector(":scope > summary") }; }, i);
+    if (after.open) fail.push(`${at} Esc 로 닫히지 않는다`);
+    if (!after.back) fail.push(`${at} Esc 뒤 포커스가 그 요약으로 돌아오지 않는다`);
+    await page.keyboard.press("Enter");
+    if (!(await page.evaluate((i) => document.querySelectorAll('header nav[aria-label="Main"] > details')[i].open, i)))
+      fail.push(`${at} 요약에 초점을 두고 Enter 를 눌러도 열리지 않는다`);
+    await page.mouse.click(5, (await page.evaluate(() => innerHeight)) - 5);
+    if (await page.evaluate((i) => document.querySelectorAll('header nav[aria-label="Main"] > details')[i].open, i)) fail.push(`${at} 바깥을 눌러도 닫히지 않는다`);
+    if (tag.startsWith("light/") && w === 1280 && tag.endsWith("/@1280"))
+      note(`${at.padEnd(40)} 패널 ${Math.round(m.left)}–${Math.round(m.right)}px · 묶음 ${m.groups.map((g) => `${g.name}(${g.items.length})`).join(" · ")}`);
+  }
+  /* 한 번에 하나 — 첫 메뉴를 연 채 둘째 요약을 누르면 첫 메뉴가 닫혀야 한다. */
+  await dets.nth(0).locator(":scope > summary").click();
+  await dets.nth(1).locator(":scope > summary").click();
+  const both = await page.evaluate(() => [...document.querySelectorAll('header nav[aria-label="Main"] > details')].map((d) => d.open));
+  if (both[0] || !both[1]) fail.push(`${tag} 둘째 메뉴를 열었는데 첫 메뉴가 닫히지 않았다 (${both.join(",")})`);
   await page.keyboard.press("Escape");
-  const after = await page.evaluate(() => ({ open: document.querySelector('header nav[aria-label="Main"] > details').open,
-    focus: document.activeElement?.tagName }));
-  if (after.open) fail.push(`${tag} Esc 로 메뉴가 닫히지 않는다`);
-  if (after.focus !== "SUMMARY") fail.push(`${tag} Esc 뒤 포커스가 Tools 로 돌아오지 않는다 (${after.focus})`);
-  await sum.click(); await page.mouse.click(5, (await page.evaluate(() => innerHeight)) - 5);
-  if (await page.evaluate(() => document.querySelector('header nav[aria-label="Main"] > details').open)) fail.push(`${tag} 바깥을 눌러도 메뉴가 닫히지 않는다`);
-  if (tag.startsWith("light/") && w === 1280 && tag.includes("// ") === false && tag.endsWith("/@1280"))
-    note(`${tag.padEnd(26)} 메뉴 — 패널 ${Math.round(m.left)}–${Math.round(m.right)}px · 묶음 ${m.groups.map((g) => `${g.name}(${g.items.length})`).join(" · ")} · 자매 ${m.more.length}`);
 }
 
 for (const theme of ["light", "dark"]) {
@@ -352,4 +377,4 @@ for (const theme of ["light", "dark"]) {
 await browser.close(); srv.close();
 
 if (fail.length) { console.log(`\n❌ ${LABEL} — 머리글 정본에서 벗어난 값 ${fail.length}건`); fail.forEach((f) => console.log("   " + f)); process.exit(1); }
-console.log(`\n✅ ${LABEL} — 머리글 정본과 일치(본문·머리글·아래선·칸 좌측 · 한 줄 머리글: 브랜드·칸 넷 글자·순서·주소·치수·배치·글줄 안 ${WIDTHS.join("/")}px · 「현재」 모양(앰버 아님) · Tools 메뉴: 묶음 셋·도구 여덟·자매 둘·패널 자리·Esc·바깥 클릭 1280/390px) × 2테마 × ${PATHS.length}쪽`);
+console.log(`\n✅ ${LABEL} — 머리글 정본과 일치(본문·머리글·아래선·칸 좌측 · 한 줄 머리글: 브랜드·칸 다섯 글자·순서·주소·치수·배치·글줄 안 ${WIDTHS.join("/")}px · 「현재」 모양(앰버 아님) · 메뉴 둘(Calculators: 묶음 셋·도구 여덟 · Pro workbenches: 워크벤치 셋)·패널 자리·한 번에 하나·Esc·Enter·바깥 클릭 1280/390px) × 2테마 × ${PATHS.length}쪽`);

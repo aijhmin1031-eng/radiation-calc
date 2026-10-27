@@ -8,6 +8,7 @@ import { nuclideSeo } from "../../lib/nuclide-seo";
 import { PAGE_KEYS, isNoindex } from "../../lib/nuclide-pages";
 import { NUCLIDE_NOTES } from "../../data/nuclide-notes";
 import NuclideRef from "../../components/NuclideRef.astro";
+import { FIELD_PRO } from "../../lib/tools";
 
 /** ★★★ 쪽은 **실무에서 만나는 핵종에만** 세운다(2026-10-06 ④ — 검색 제외 77장을 지웠다).
  *  자료·계산기는 147종을 그대로 든다. 목록과 그 까닭은 `lib/nuclide-pages.ts` 가 든다.
@@ -60,6 +61,9 @@ const plural = (k: number, one: string, many: string) => (k === 1 ? one : many);
 const prefill = (tool: string, inputs: Record<string, unknown>) =>
   `/${tool}/?s=${encodeURIComponent(Buffer.from(JSON.stringify(inputs), "utf8").toString("base64"))}`;
 
+/** ★ 2026-10-27(감독 지시 31 ③) — Cs-137 · Co-60 은 ISO 4037 의 방사성 핵종 감마 기준장(S-Cs · S-Co)이다. 그 장을 다루는 것은
+ *  워크벤치 Field Pro 라서, 이 두 낱장에만 도구 목록 아래 그쪽으로 가는 한 문장을 단다(계산기 목록 안에 섞지 않는다)(손글 단락이 이미 「calibration fields」를 말한다). 억지 연결은 없다. */
+const ISO_FIELD: Record<string, string> = { "Cs-137": "S-Cs", "Co-60": "S-Co" };
 const TOOLS_FOR: { href: string; label: string; when: boolean; prefill?: boolean }[] = [
   { prefill: true, href: prefill("gamma-shielding", { nuclide: p.key }),  label: "Gamma dose rate and shielding", when: p.gamma > 0 },
   { prefill: true, href: prefill("beta", { nuclide: p.key }),             label: "Beta dose rate and shielding",  when: Boolean(n.beta?.length) },
@@ -261,6 +265,13 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
         <li><a href={u(t.href)} data-prefill={t.prefill ? p.key : undefined} class="underline text-[15px]">{t.label}</a></li>
       ))}
     </ul>
+    {ISO_FIELD[key] && (
+      <p class="mt-3 text-[15px] text-ink-muted">
+        {key} is one of the two radionuclide gamma reference fields of ISO 4037 ({ISO_FIELD[key]}). The workbench
+        {" "}<a href={FIELD_PRO} class="underline">Radiation Field Pro</a> characterises that field, with the
+        conversion to Hp(10) and H*(10) and an uncertainty budget (opens on its own site).
+      </p>
+    )}
     {related.length > 0 && (
       <p class="mt-4 text-[14px] text-ink-muted">
         Other {elementName(n.sym)} nuclides:{" "}
