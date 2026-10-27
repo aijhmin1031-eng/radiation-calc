@@ -19,7 +19,7 @@
  * ★ 앰버를 막대에 쓰지 않는다(앰버는 활성·포커스·기준선 전용). 메뉴 안의 「지금 도구」만 accent-soft 바탕이다.
  */
 import Icon from "../Icon.astro";
-import { TOOL_GROUPS, toolsIn, menuName } from "../../lib/tools";
+import { TOOL_GROUPS, toolsIn, menuName, PRO_WORKBENCHES } from "../../lib/tools";
 import { u } from "../../lib/site";
 
 interface Props {
@@ -33,12 +33,6 @@ const PAGES = [
   { href: "/calc/nuclides/", wide: "Nuclide data", narrow: "Nuclides" },
   { href: "/calc/methods/", wide: "Methods", narrow: "Methods" },
   { href: "/calc/validation/", wide: "Validation", narrow: "Validation" },
-] as const;
-/** 워크벤치 셋 — 우산 홈 머리글과 같은 순서·글자(두 레포 check-platform 정본). 각자 제 하위 도메인에서 열린다. */
-const PRO = [
-  { href: "https://pro.radiation-lab.com/", name: "Field Pro", line: "ISO 4037 reference X-ray and gamma fields: HVL, Hp(10), uncertainty", icon: "crosshair" },
-  { href: "https://radimeter.radiation-lab.com/", name: "RadiMeter", line: "Survey-meter type testing to IEC 60846-1", icon: "gauge" },
-  { href: "https://disposal.radiation-lab.com/", name: "M-Phreefiteq", line: "Radionuclide speciation, sorption fitting (SCM) and transport", icon: "layers" },
 ] as const;
 const onPage = (href: string) => here.startsWith(href);
 const toolOn = (slug: string) => here === u(`/${slug}/`);
@@ -55,6 +49,26 @@ const toolOn = (slug: string) => here === u(`/${slug}/`);
       <span class="shdr-name">Radiation Lab</span>
     </a>
     <nav aria-label="Main" lang="en" class="shdr-nav">
+      {/* ★ 2026-10-27(감독 지시 32 보충) — 위계를 뒤집었다: 워크벤치가 대표라 Pro workbenches 가 앞, 가벼운 Calculators 가 뒤.
+          Pro 칸은 상시 칩(ink · 600 · line-strong 테두리 · 바탕 투명)이다 — 「현재」(바탕 surface)와 갈린다. */}
+      <details class="tmenu" data-tools-menu>
+        <summary class="shdr-tab shdr-chip">
+          <span class="shdr-wide">Pro workbenches</span><span class="shdr-narrow">Pro</span><Icon name="chevron-down" size={14} class="tmenu-chev" />
+        </summary>
+        <div class="tmenu-panel tmenu-pro">
+          <p class="tmenu-h" id="tm-pro">Pro workbenches</p>
+          <ul aria-labelledby="tm-pro">
+            {PRO_WORKBENCHES.map((p) => (
+              <li>
+                <a class="tmenu-item" href={p.href}>
+                  <Icon name={p.icon} size={20} class="tmenu-ic" />
+                  <span><b class="tmenu-n">{p.name}<Icon name="arrow-up-right" size={13} class="tmenu-ext" /></b><em class="tmenu-l">{p.line}</em></span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </details>
       <details class="tmenu" data-tools-menu>
         <summary class="shdr-tab">
           <span class="shdr-wide">Calculators</span><span class="shdr-narrow">Calc</span><Icon name="chevron-down" size={14} class="tmenu-chev" />
@@ -77,24 +91,6 @@ const toolOn = (slug: string) => here === u(`/${slug}/`);
               </div>
             ))}
           </div>
-        </div>
-      </details>
-      <details class="tmenu" data-tools-menu>
-        <summary class="shdr-tab">
-          <span class="shdr-wide">Pro workbenches</span><span class="shdr-narrow">Pro</span><Icon name="chevron-down" size={14} class="tmenu-chev" />
-        </summary>
-        <div class="tmenu-panel tmenu-pro">
-          <p class="tmenu-h" id="tm-pro">Pro workbenches</p>
-          <ul aria-labelledby="tm-pro">
-            {PRO.map((p) => (
-              <li>
-                <a class="tmenu-item" href={p.href}>
-                  <Icon name={p.icon} size={20} class="tmenu-ic" />
-                  <span><b class="tmenu-n">{p.name}<Icon name="arrow-up-right" size={13} class="tmenu-ext" /></b><em class="tmenu-l">{p.line}</em></span>
-                </a>
-              </li>
-            ))}
-          </ul>
         </div>
       </details>
       {PAGES.map((p) => (
@@ -149,6 +145,10 @@ const toolOn = (slug: string) => here === u(`/${slug}/`);
   .shdr-tab[aria-current="page"], .tmenu[open] > .shdr-tab {
     color: rgb(var(--c-ink)); border-color: rgb(var(--c-line-strong)); background: rgb(var(--c-surface)); }
   .shdr-tab[aria-current="page"] { font-weight: 600; }
+  /* Pro workbenches 칸의 상시 칩(2026-10-27, 소유주 「좋은 도구라 잘 보였으면」) — ink · 600 · line-strong 테두리, 바탕은 투명이라
+     「현재」(바탕 surface)와 갈린다. 앰버 없음. 우산 `.hd-chip` 과 같은 값. */
+  .shdr-tab.shdr-chip { color: rgb(var(--c-ink)); font-weight: 600; border-color: rgb(var(--c-line-strong)); }
+  .shdr-tab.shdr-chip:hover { background: rgb(var(--c-surface)); }
   .shdr-tab:focus-visible, .shdr-brand:focus-visible { outline: 2px solid rgb(var(--c-accent)); outline-offset: 2px; }
   .tmenu-chev { width: 14px; height: 14px; flex: none; transition: transform .2s ease; }
   .tmenu[open] .tmenu-chev { transform: rotate(180deg); }
@@ -181,9 +181,9 @@ const toolOn = (slug: string) => here === u(`/${slug}/`);
   @media (max-width: 1023.98px) {
     .shdr-in { flex-wrap: wrap; row-gap: 4px; padding-top: 8px; padding-bottom: 8px; }
     .shdr-ctl { flex: 1 1 0; justify-content: flex-end; }
-    .shdr-nav { order: 3; flex: 1 0 100%; margin-left: -8px; }
+    .shdr-nav { order: 3; flex: 1 0 100%; margin-left: -7px; }
     /* 두 줄 · 긴 이름(640–1023px)은 가로 8px — CI(DejaVu Sans)에서 칸 다섯이 640px 글줄을 19px 넘었다(2026-10-27). */
-    .shdr-tab { padding: 7px 8px; }
+    .shdr-tab { padding: 7px; }   /* 7px — Pro 칩(600)과 굵은 현재 칸이 함께면 CI 640px 에서 3px 넘었다(2026-10-27) */
   }
   /* ★ 2026-10-27 — 칸이 다섯(메뉴 둘 + 쪽 셋)이 되어 360px 에서 넘쳤다(CI DejaVu 13px). 안여백 8 → 4px, 꺾쇠 14 → 12px(우산과 같은 값). */
   @media (max-width: 639.98px) {

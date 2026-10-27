@@ -50,24 +50,33 @@ const PBAR = {
   brand: { text: "Radiation Lab", href: "https://radiation-lab.com/", label: "Radiation Lab — home",
            size: "16px", weight: "650", spacing: "-0.192px", mark: 24 },   // -0.012em × 16px
   items: [
+    /* ★ 2026-10-27(지시 32 보충, 소유주 「Calculator 는 가벼운 도구」) — 워크벤치가 대표라 첫 칸이고, 상시 칩(chip)을 쓴다. */
+    { menu: true, long: "Pro workbenches", short: "Pro", chip: true },
     { menu: true, long: "Calculators", short: "Calc" },
-    { menu: true, long: "Pro workbenches", short: "Pro" },
     { href: "/calc/nuclides/",   long: "Nuclide data", short: "Nuclides" },
     { href: "/calc/methods/",    long: "Methods",      short: "Methods" },
     { href: "/calc/validation/", long: "Validation",   short: "Validation" },
   ],
   wide:   { size: "14px", radius: "6px", padY: "7px", padX: "12px", gap: 4 },
   narrow: { size: "13px", radius: "6px", padY: "8px", padX: "4px",  gap: 2 },   // 2026-10-27 칸 다섯 — 8 → 4px(CI DejaVu 에서 360px 칸 끝 353 > 340)
-  midPadX: "8px",       // 2026-10-27 칸 다섯 — 640–1023px(두 줄 · 긴 이름)은 가로 8px(CI 에서 640px 칸 끝 627 > 608).
+  midPadX: "7px",       // 2026-10-27 지시 32 — 8 → 7px(Pro 칩 600 + 굵은 현재 칸이 CI 640px 에서 611 > 608).
+  /* 옛: midPadX "8px" */       // 2026-10-27 칸 다섯 — 640–1023px(두 줄 · 긴 이름)은 가로 8px(CI 에서 640px 칸 끝 627 > 608).
   tinyPadX: "2px",      // 2026-10-27 칸 다섯 — 5 → 2px(CI 에서 320px 칸 끝 311 > 300).      // 360px 미만에서만 가로 안여백 5px · 글자 12px(2026-10-07 CI 의 DejaVu 에서 320px 칸 끝 302~310 > 300)
   tinySize: "12px",
   edge: 640,            // 긴 글자가 시작하는 폭
   oneRow: 1024,         // 한 줄이 되는 폭 — 그 아래는 두 줄(1줄 브랜드+컨트롤 · 2줄 칸)
   current: { weight: "600" },
+  /* ★ 상시 칩(2026-10-27) — Pro workbenches 칸. 「현재」와 같은 글자색 · 굵기 · 테두리지만 바탕은 투명이라 갈린다. 앰버 없음. */
+  chip: { weight: "600" },
   /* ★★ 2026-10-27(소유주 승인 — 감독 지시 31) — 「Tools」 메뉴가 「Calculators」(도구 여덟 · 세 묶음 그대로)가 되고,
    *  그 메뉴 맨 아래 「More from Radiation Lab」 줄에 있던 워크벤치 셋이 제 메뉴 「Pro workbenches」로 나왔다.
    *  메뉴마다 묶음 · 도구(주소 · 이름) · 패널 최대 폭을 적는다. 두 레포가 같은 값을 든다. */
   menus: [
+    { long: "Pro workbenches", maxWidth: 560,
+      groups: [
+        { name: "Pro workbenches", items: [["https://pro.radiation-lab.com/", "Field Pro"], ["https://radimeter.radiation-lab.com/", "RadiMeter"],
+                                           ["https://disposal.radiation-lab.com/", "M-Phreefiteq"]] },
+      ] },
     { long: "Calculators", maxWidth: 820,
       groups: [
         { name: "Dose & shielding", items: [["/calc/gamma-shielding/", "Gamma dose rate & shielding"], ["/calc/beta/", "Beta dose rate & shielding"],
@@ -77,11 +86,6 @@ const PBAR = {
         { name: "X-ray spectra", items: [["/calc/xray-spectrum/", "X-ray tube spectrum"]] },
       ],
     },
-    { long: "Pro workbenches", maxWidth: 560,
-      groups: [
-        { name: "Pro workbenches", items: [["https://pro.radiation-lab.com/", "Field Pro"], ["https://radimeter.radiation-lab.com/", "RadiMeter"],
-                                           ["https://disposal.radiation-lab.com/", "M-Phreefiteq"]] },
-      ] },
   ],
 };
 const SURFACE = { light: "rgb(252, 252, 250)", dark: "rgb(26, 30, 33)" };
@@ -202,6 +206,13 @@ function checkBar(tag, b, w, theme) {
     eq(`${at} 세로여백`, x.padY, D.padY); eq(`${at} 가로여백`, x.padX, padX);
     if (x.h < 24 || x.w < 24) fail.push(`${at} 손가락 표적 ${x.w}×${x.h}px (24 이상)`);
     if (cur.includes(x)) return;
+    if (PBAR.items[i]?.chip) {
+      eq(`${at} 칩 글자색(ink)`, x.color, b.ink); eq(`${at} 칩 굵기`, x.weight, PBAR.chip.weight);
+      eq(`${at} 칩 테두리색(line-strong)`, x.border, S.line); eq(`${at} 칩 테두리 두께`, x.bw, "1px");
+      eq(`${at} 칩 바탕(투명)`, x.bg, TRANSPARENT);
+      if (x.bg === S.onBg || x.color === S.onInk) fail.push(`${at} 칩이 앰버로 칠해졌다`);
+      return;
+    }
     eq(`${at} 비활성 글자색(idle)`, x.color, S.idle); eq(`${at} 비활성 테두리(투명)`, x.border, TRANSPARENT);
   });
   for (let i = 1; i < b.items.length; i++) {
