@@ -57,8 +57,9 @@ const PBAR = {
     { href: "/calc/validation/", long: "Validation",   short: "Validation" },
   ],
   wide:   { size: "14px", radius: "6px", padY: "7px", padX: "12px", gap: 4 },
-  narrow: { size: "13px", radius: "6px", padY: "8px", padX: "6px",  gap: 2 },   // 2026-10-27 칸 다섯 — 8 → 6px(360px 에서 13px 넘쳤다)
-  tinyPadX: "4px",      // 2026-10-27 칸 다섯 — 5 → 4px.      // 360px 미만에서만 가로 안여백 5px · 글자 12px(2026-10-07 CI 의 DejaVu 에서 320px 칸 끝 302~310 > 300)
+  narrow: { size: "13px", radius: "6px", padY: "8px", padX: "4px",  gap: 2 },   // 2026-10-27 칸 다섯 — 8 → 4px(CI DejaVu 에서 360px 칸 끝 353 > 340)
+  midPadX: "8px",       // 2026-10-27 칸 다섯 — 640–1023px(두 줄 · 긴 이름)은 가로 8px(CI 에서 640px 칸 끝 627 > 608).
+  tinyPadX: "2px",      // 2026-10-27 칸 다섯 — 5 → 2px(CI 에서 320px 칸 끝 311 > 300).      // 360px 미만에서만 가로 안여백 5px · 글자 12px(2026-10-07 CI 의 DejaVu 에서 320px 칸 끝 302~310 > 300)
   tinySize: "12px",
   edge: 640,            // 긴 글자가 시작하는 폭
   oneRow: 1024,         // 한 줄이 되는 폭 — 그 아래는 두 줄(1줄 브랜드+컨트롤 · 2줄 칸)
@@ -170,7 +171,7 @@ async function readBar(page) {
 function checkBar(tag, b, w, theme) {
   const mode = w >= PBAR.edge ? "wide" : "narrow";
   const S = SPEC[theme], D = PBAR[mode];
-  const padX = mode === "narrow" && w < 360 ? PBAR.tinyPadX : D.padX;
+  const padX = mode === "narrow" && w < 360 ? PBAR.tinyPadX : mode === "wide" && w < 1024 ? PBAR.midPadX : D.padX;
   if (b.missing) { fail.push(`${tag} ${b.missing} 가 없다`); return; }
   if (!b.brand) fail.push(`${tag} 브랜드 링크가 없다`);
   else { eq(`${tag} 브랜드 주소`, b.brand.href, PBAR.brand.href); eq(`${tag} 브랜드 접근성 이름`, b.brand.label, PBAR.brand.label);

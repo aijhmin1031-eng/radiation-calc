@@ -181,19 +181,21 @@ const toolOn = (slug: string) => here === u(`/${slug}/`);
   @media (max-width: 1023.98px) {
     .shdr-in { flex-wrap: wrap; row-gap: 4px; padding-top: 8px; padding-bottom: 8px; }
     .shdr-ctl { flex: 1 1 0; justify-content: flex-end; }
-    .shdr-nav { order: 3; flex: 1 0 100%; margin-left: -12px; }
+    .shdr-nav { order: 3; flex: 1 0 100%; margin-left: -8px; }
+    /* 두 줄 · 긴 이름(640–1023px)은 가로 8px — CI(DejaVu Sans)에서 칸 다섯이 640px 글줄을 19px 넘었다(2026-10-27). */
+    .shdr-tab { padding: 7px 8px; }
   }
-  /* ★ 2026-10-27 — 칸이 다섯(메뉴 둘 + 쪽 셋)이 되어 360px 에서 13px 넘쳤다. 안여백 8 → 6px, 꺾쇠 14 → 12px(우산과 같은 값). */
+  /* ★ 2026-10-27 — 칸이 다섯(메뉴 둘 + 쪽 셋)이 되어 360px 에서 넘쳤다(CI DejaVu 13px). 안여백 8 → 4px, 꺾쇠 14 → 12px(우산과 같은 값). */
   @media (max-width: 639.98px) {
-    .shdr-nav { gap: 2px; margin-left: -6px; }
-    .shdr-tab { font-size: 13px; padding: 8px 6px; gap: 3px; }
+    .shdr-nav { gap: 2px; margin-left: -4px; }
+    .shdr-tab { font-size: 13px; padding: 8px 4px; gap: 3px; }
     .tmenu-chev { width: 12px; height: 12px; }
     .shdr-wide { display: none; } .shdr-narrow { display: inline; }
     .tmenu-cols { grid-template-columns: 1fr; }
     .tmenu-panel { left: 20px; width: calc(100% - 40px); padding: 16px 14px 10px; }
   }
   /* ★ 2026-10-07 — CI(DejaVu Sans)에서 320px 칸 끝이 302~310px 로 글줄(300) 밖이었다. 12px · 가로 5px(RadiMeter 와 같은 처방).
-     ★ 2026-10-27 — 칸 다섯: 가로 4px · 꺾쇠 10px. */
-@media (max-width: 359.98px) { .shdr-tab { font-size: 12px; padding: 8px 4px; gap: 2px; } .tmenu-chev { width: 10px; height: 10px; } .shdr-nav { margin-left: -4px; } }
+     ★ 2026-10-27 — 칸 다섯: 가로 2px · 꺾쇠 10px(CI 에서 320px 칸 끝 311 > 300 이었다). */
+@media (max-width: 359.98px) { .shdr-tab { font-size: 12px; padding: 8px 2px; gap: 2px; } .tmenu-chev { width: 10px; height: 10px; } .shdr-nav { margin-left: -2px; } }
   @media (prefers-reduced-motion: reduce) { .tmenu-chev { transition: none; } }
 </style>
