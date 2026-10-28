@@ -148,6 +148,20 @@ const without = TOOLS.filter((t) => !publishedSlugs.has(t.slug)).map((t) => t.na
       {" "}<a href={u("/dataset-limits/")} class="underline">limits of this dataset</a>.
     </p>
 
+    {/* ★ 2026-10-29(애드센스 재검토 준비 T10 F6 — 소유주 「추천대로」) — 무엇을 코드가 만들고 무엇을 AI 가 썼는지 밝힌다.
+        출처를 단 해설(1차 T7 · 2차 T10-②)은 AI 가 출처로 쓰고 다른 AI 검토가 두 번 대조했다. 출처 없는 옛 해설은 그 대조를 거치지 않았다.
+        사람이 쓰거나 검토했다고 적지 않는다(사실이 아니다) — 소유주 통독이 끝나면 그때 더한다. 핵종 쪽 출처 목록 아래 링크가 #writing 으로 온다. */}
+    <h2 id="writing">How the pages are written</h2>
+    <p>
+      The figures and tables on the calculator and nuclide pages, and the summary sentences at the top of
+      each nuclide page, are computed from the data described above rather than written by hand, so a
+      correction to the data carries through to every page that uses it. The prose around them, from the
+      tool guides to the notes on each nuclide page, is written with the help of AI models. A note that
+      ends with a list of sources was drafted from those sources; a separate AI review then checked it
+      against them, and a second pass re-checked every sentence the first one changed. Notes add context
+      and change no computed value.
+    </p>
+
     <h2>Corrections</h2>
     <p>
       If a value here disagrees with a source you trust, the disagreement is worth reporting — several
