@@ -23,11 +23,18 @@ export const NUCLIDES = nuclides as unknown as NuclideMap;
  *    적혀 쪽이 「electron capture with beta-plus」라고 말하면서, 같은 쪽의 손글은 「베타가 주 가지」라고 하고 있었다.
  *  · `Cl-36`: 같은 자료의 `beta` 가 b- 98.1% 를 든다. LNHB(DDEP) 표 「Cl-36 disintegrates by 98.1 % beta-minus
  *    decay to the ground state of Ar-36 ; 1.9 % electron capture and 0.0015 % beta-plus」.
- *  · `K-40`: 이 자료에는 베타 줄이 **아예 없다**(수확 공백). LNHB(DDEP) 표 「β− emission to the ground state of
- *    40Ca at 89.56 (7) %, by electron capture to the 1460-keV level of 40Ar at 10.34 (7) %」.
+ *  · `K-40`: 그때 이 자료에는 베타 줄이 **아예 없었다**(수확 공백 — 2026-10-29 `scripts/clean-dataset.mjs` 가 채웠다).
+ *    LNHB(DDEP) 표 「β− emission to the ground state of 40Ca at 89.56 (7) %, by electron capture to the 1460-keV
+ *    level of 40Ar at 10.34 (7) %」.
  *    ★ 그 표는 `http://www.lnhb.fr/nuclides/<핵종>_tables.pdf` 로 받아 읽었다(IAEA Livechart API 는 이 컨테이너에서
- *      Cloudflare 확인 쪽에 막혔다). 딸은 이 덮어쓰기를 따라 Ar-36·Ca-40 이 된다(`decay-chain` 이 같은 맵을 읽는다). */
-const DECAY_FIX: Record<string, string> = { "Pu-241": "B-", "Nb-95m": "IT", "Cl-36": "B-", "K-40": "B-" };
+ *      Cloudflare 확인 쪽에 막혔다). 딸은 이 덮어쓰기를 따라 Ar-36·Ca-40 이 된다(`decay-chain` 이 같은 맵을 읽는다).
+ *  ★★ 하나 더(2026-10-29, β− 가지를 채우며 붕괴 표기를 원천의 가지 비율과 전수 대조하다) —
+ *  · `Ir-192`: 「EC」로 적혀 쪽이 「electron capture」라고 말했으나 Live Chart 가지 비율은 β− 95.24% · EC 4.76%.
+ *    감마 응답의 첫 줄이 EC 가지(Os)의 줄이었다. 대조에서 어긋난 표기는 이것 하나다.
+ *  · `Eu-152`: 「EC+B+」(쪽: 「electron capture with beta-plus」)인데 β+ 는 흔적이고 β− 가 27.9% 다 — β− 가지를 채우자
+ *    같은 쪽에 β− 끝점 · 사정거리 표가 서는데 붕괴 표기는 그 가지를 말하지 않았다. 두 가지를 다 적는 「EC+B-」로 둔다
+ *    (`decay-chain` 은 첫머리 「EC」로 딸을 고르므로 딸은 그대로 Sm-152 다). */
+const DECAY_FIX: Record<string, string> = { "Pu-241": "B-", "Nb-95m": "IT", "Cl-36": "B-", "K-40": "B-", "Ir-192": "B-", "Eu-152": "EC+B-" };
 for (const [k, mode] of Object.entries(DECAY_FIX)) if (NUCLIDES[k]) NUCLIDES[k].decay = mode;
 export const ATTEN = attenuation as unknown as Record<Material, Row[]>;
 
@@ -62,7 +69,8 @@ export function longName(key: string): string {
 
 const DECAY_WORD: Record<string, string> = {
   "B-": "beta-minus decay", "B+": "beta-plus decay", "EC": "electron capture",
-  "EC+B+": "electron capture with beta-plus", "A": "alpha decay", "IT": "isomeric transition",
+  "EC+B+": "electron capture with beta-plus", "EC+B-": "electron capture and beta-minus decay",
+  "A": "alpha decay", "IT": "isomeric transition",
   "SF": "spontaneous fission", "B-+N": "beta-minus with delayed neutron",
 };
 export const decayWord = (d: string | null) => (d && DECAY_WORD[d]) || (d ?? "not recorded");
@@ -181,8 +189,12 @@ export function nuclidePage(key: string): NuclidePage {
    ★ 낱장 147장에서 되풀이되는 설명을 걷어내고 나면, 남아야 하는 것은 **그 핵종에서만
      나오는 숫자**다. 순위·배수·목표두께는 전부 데이터에서 나오고 핵종마다 다르다. */
 
+/* ★ 순위 · 배수는 **쪽에 찍히는 Γ 와 같은 값**(엔진 계산)으로 낸다(2026-10-29). 저장된 `gamma_const` 는 소수 여섯째
+ *   자리로 반올림돼 작은 Γ 에서 두 자리밖에 안 남는다 — U-234 가 쪽에는 0.0000166 을 찍고 배수는 1.7e-05 로 나눠
+ *   「4.5e+3× less than Cs-137」(맞는 값 4.6e+3)을 말하고 있었다. 저장 값은 「Γ 가 있는가」를 가를 때만 쓴다. */
 const GAMMA_KEYS = Object.keys(NUCLIDES).filter((k) => NUCLIDES[k].gamma_const > 0);
-const GAMMA_SORTED = [...GAMMA_KEYS].sort((a, b) => NUCLIDES[b].gamma_const - NUCLIDES[a].gamma_const);
+const GAMMA_OF: Record<string, number> = Object.fromEntries(GAMMA_KEYS.map((k) => [k, gammaConstant(NUCLIDES[k], ATTEN.air, DELTA_DEFAULT_KEV)]));
+const GAMMA_SORTED = [...GAMMA_KEYS].sort((a, b) => GAMMA_OF[b] - GAMMA_OF[a]);
 
 /** Γ 순위 — 「이 핵종은 센 편인가」. 공개 표에는 없는 값이다(표는 순서가 없다). */
 export const gammaRank = (key: string) =>
@@ -190,7 +202,7 @@ export const gammaRank = (key: string) =>
 
 /** 기준 핵종 대비 배수 — 실무자가 머리에 든 값(Co-60·Cs-137)에 걸어 준다. */
 export const gammaVs = (key: string, ref: "Co-60" | "Cs-137") =>
-  NUCLIDES[key].gamma_const / NUCLIDES[ref].gamma_const;
+  (GAMMA_OF[key] ?? 0) / GAMMA_OF[ref];
 
 /** 1 GBq 를 1 m 에서 목표 선량률까지 낮추는 납 두께 [cm] — 스펙트럼으로 푼다.
  *  ★ 목표가 이미 만족되면 NaN 이 아니라 0 을 돌려준다(「차폐가 필요 없다」는 답이다). */

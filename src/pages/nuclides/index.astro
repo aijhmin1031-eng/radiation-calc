@@ -18,8 +18,12 @@ const KIND_WORD: Record<string, string> = { gamma: "photon", xray: "X-ray only",
 const words = (ks: string[]) => (ks.length ? ks.map((k) => KIND_WORD[k]).join(", ") : "none recorded");
 const sig = (x: number, d = 3) => (Number.isFinite(x) && x > 0 ? x.toPrecision(d) : "—");
 /** 아래 「반가층이 더해지지 않을 때」 절의 예 — 그전에는 그 비를 글자로 적어 두었다(「eighty-four」). 자료에서 낸다.
- *  ★ Sn-113 은 쪽이 없다(2026-10-06 ④) — 그래서 「here」가 아니라 「in the dataset」이라고 말한다. */
-const sn113Ratio = (nuclidePage("Sn-113").shields.find((s) => s.material === "lead")?.ratio ?? NaN).toFixed(0);
+ *  ★ Sn-113 은 쪽이 없다(2026-10-06 ④) — 그래서 「here」가 아니라 「in the dataset」이라고 말한다.
+ *  ★★ 「the extreme case」의 **핵종도** 자료에서 고른다(2026-10-29). Kβ 이중 계산을 고치자 Sn-113 의 비가 84 → 29 로
+ *    내려가 Ba-133m · Xe-133m 아래가 됐다 — 비만 자료에서 내고 이름을 글자로 두면 문장이 거짓이 된다. */
+const leadRatio = (k: string) => nuclidePage(k).shields.find((s) => s.material === "lead")?.ratio ?? NaN;
+const extremeKey = ALL_KEYS.filter((k) => Number.isFinite(leadRatio(k))).sort((a, b) => leadRatio(b) - leadRatio(a))[0];
+const extremeRatio = leadRatio(extremeKey).toFixed(0);
 ---
 <Base schema="CollectionPage" title="Nuclide reference — half-lives, emission lines, dose rates and shielding"
       description={`Reference sheets for ${rows.length} nuclides: half-life, decay mode, specific activity, emission lines with their share of the dose rate, spectrum-solved half- and tenth-value layers, beta range and bremsstrahlung — computed from IAEA decay data and NIST attenuation coefficients.`}>
@@ -76,8 +80,8 @@ const sn113Ratio = (nuclidePage("Sn-113").shields.find((s) => s.material === "le
       For a single energy the tenth-value layer is always 3.32 times the half-value layer, and stacking
       three half-value layers leaves an eighth. Neither holds for a broad spectrum. The first layer
       removes the soft part cheaply and what comes through is harder than what went in, so the second
-      layer removes less than the first. Tin-113 is the extreme case in the dataset, with a tenth-value
-      layer {sn113Ratio} times its half-value layer. Every sheet prints the ratio so the reader can see when
+      layer removes less than the first. {longName(extremeKey)} is the extreme case in the dataset, with a tenth-value
+      layer {extremeRatio} times its half-value layer. Every sheet prints the ratio so the reader can see when
       the rule of thumb has stopped working.
     </p>
 

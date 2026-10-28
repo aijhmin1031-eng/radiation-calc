@@ -13,6 +13,7 @@
     "check-shell": "node gate/check-shell.mjs",
     "make-keywords": "node scripts/make-keywords.mjs",
     "make-dataset": "tsx scripts/make-dataset.mjs",
+    "clean-dataset": "tsx scripts/clean-dataset.mjs",
     "make-og": "node scripts/make-og.mjs",
     "check-og": "node gate/check-og.mjs",
     "check-validation": "tsx gate/check-validation.mjs",

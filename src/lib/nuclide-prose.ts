@@ -29,7 +29,10 @@ const ratioText = (r: number) => {
   const p = Math.pow(10, Math.max(0, 1 - Math.floor(Math.log10(r))));
   return `${(Math.round(r * p) / p).toLocaleString("en-US")}×`;
 };
-const times = (r: number) => (r >= 1 ? `${r.toPrecision(2)}×` : `${(1 / r).toPrecision(2)}× less than`);
+/* ★ 5% 안은 「about the same as」(2026-10-29) — Kβ 이중 계산을 고치자 In-111 의 Γ 가 Cs-137 의 0.996 배가 되어
+ *   「1.0× less than Cs-137」이라는, 말이 안 되는 문장이 섰다(그전에는 1.046 배라 「1.0× Cs-137」). */
+const times = (r: number) => (r < 1.05 && r > 1 / 1.05 ? "about the same as"
+  : r >= 1 ? `${r.toPrecision(2)}×` : `${(1 / r).toPrecision(2)}× less than`);
 /** ★ 질량은 자리수가 24자리를 넘나든다(Tc-99m 의 5 pg 대 Ca-41 의 0.3 g) — 고정 소수점으로
  *  쓰면 `0.0000239 g`, 단위 고르기를 잘못하면 `2.39e+4 ng` 가 된다. **눈금마다 위 경계를 준다.** */
 const mass = (g: number) => {
@@ -228,10 +231,16 @@ export function paragraphs(p: NuclidePage): string[] {
     /* ★★ 종점이 **희귀한 가지**에서 나오는 경우가 흔하다 — Co-60 의 1.49 MeV 는 세기 0.12% 이고
        실제로 나오는 것은 0.318 MeV(99.88%)다. 비정은 종점으로 잡는 것이 맞지만(가장 센 베타를
        막아야 한다) 그 에너지를 대표값처럼 읽게 두면 안 된다. */
-    const rare = end && dom && end.iPct < 5 && dom.maxKeV && dom.maxKeV < end.maxKeV;
+    /* ★ 기준 10%(2026-10-29) — 5% 로 두었더니 Cs-137 의 1.18 MeV(5.3% 가지)가 대표값처럼 서고 94.7% 가 내는 0.514 MeV
+       베타는 말해지지 않았다. */
+    const rare = end && dom && end.iPct < 10 && dom.maxKeV && dom.maxKeV < end.maxKeV;
+    /* ★ β− 가 붕괴의 일부뿐인 핵종(2026-10-29, β− 가지를 채우며) — Eu-152 는 27.9%, K-40 은 89%, Ir-192 는 95% 다.
+       「over 12 branches」만 쓰면 모든 붕괴가 베타를 내는 것처럼 읽힌다. 가지 세기의 합을 그대로 밝힌다. */
+    const part = (n.beta_yield_pct ?? 100) < 99
+      ? ((n.beta?.length ?? 0) > 1 ? `, which between them occur in ` : `, which occurs in `) + `${sig(n.beta_yield_pct!)}% of decays` : ``;
     out.push(
       `The beta endpoint is ${sig(p.betaMaxMeV)} MeV, mean ${sig((n.beta_mean_keV ?? 0) / 1000)} MeV over ` +
-      `${n.beta?.length} branch${(n.beta?.length ?? 0) > 1 ? "es" : ""}` +
+      `${n.beta?.length} branch${(n.beta?.length ?? 0) > 1 ? "es" : ""}` + part +
       (rare ? `; that endpoint comes from a branch of only ${end!.iPct}%, while ${dom!.iPct}% of decays take the ` +
               `${(dom!.maxKeV! / 1000).toPrecision(3)} MeV branch. Shielding is sized on the endpoint, dose on the mean` : ``) +
       `. That endpoint stops in ${mm(acrylic.cm)} of ` +

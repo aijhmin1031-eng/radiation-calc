@@ -16,6 +16,9 @@ const noLines      = count((k) => !NUCLIDES[k].lines?.length);
 const belowCut     = count((k) => (NUCLIDES[k].lines?.length ?? 0) > 0 && nuclidePage(k).shares.length === 0);
 const noBeta       = count((k) => !NUCLIDES[k].beta?.length);
 const noAlpha      = count((k) => !NUCLIDES[k].alpha?.length);
+/* ★ 2026-10-29 — β− 가지를 채우자 「가지 비율은 싣지 않는다」가 거짓이 됐다(Eu-152 27.9% · K-40 89% · Ir-192 95% 를 쪽이 말한다).
+ *   β 가 붕괴의 일부에서만 나오는 핵종 중 쪽이 있는 것 — 그 쪽들이 몫을 밝힌다(nuclide-prose 의 베타 문장). */
+const partBeta     = PAGE_KEYS.filter((k) => NUCLIDES[k].beta?.length && (NUCLIDES[k].beta_yield_pct ?? 100) < 99);
 const elements     = new Set(keys.map((k) => NUCLIDES[k].sym)).size;
 const truncated    = CHAIN_TRUNCATED;
 /** ★★ 참조 쪽은 자료의 일부에만 있다(2026-10-06 ④). 쪽 수·자료 수 둘 다 센다 — 「147」을 글자로 두면
@@ -26,7 +29,7 @@ const progeny      = WITH_DOMINANT_PROGENY;
 const CUTOFF_KEV   = 20;
 ---
 <Base title="Limits of this dataset"
-      description="What the nuclide data on this site does not carry: decay chains beyond one step, branching ratios, photon lines below the cutoff, and the nuclides that are not here at all. Each limit is counted from the data rather than asserted."
+      description="What the nuclide data on this site does not carry: decay chains beyond one step, a branching table between decay modes, photon lines below the cutoff, and the nuclides that are not here at all. Each limit is counted from the data rather than asserted."
       schema="TechArticle">
   <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
     Limits of this dataset
@@ -63,11 +66,13 @@ const CUTOFF_KEV   = 20;
 
     <h2>Branching ratios</h2>
     <p>
-      The table records which decay mode a nuclide takes, not how the decays divide between modes
-      when there is more than one. Nothing on this site therefore states what fraction of decays
-      goes down a particular branch, and the daughter identities used in the comparison above follow
-      from the decay mode and the atomic and mass numbers — arithmetic — rather than from a
-      branching table. Where a nuclide has a mode not recorded here, its products are simply absent.
+      The table records a decay mode for each nuclide, and the daughter identities used in the
+      comparison above follow from that mode and the atomic and mass numbers — arithmetic — rather
+      than from a branching table. What it does carry is the intensity of every beta and alpha branch
+      it lists, so where a nuclide emits a beta-minus particle in only part of its decays the reference page states
+      that share —{" "}{partBeta.map((k, i) => (<>{i > 0 ? (i === partBeta.length - 1 ? " and " : ", ") : ""}<NuclideRef k={k} /></>))}{" "}—
+      while the remainder, by {partBeta.some((k) => NUCLIDES[k].iso) ? "electron capture or isomeric transition" : "electron capture"}, is not itemised. Where a
+      nuclide has a mode not recorded here, its products are simply absent.
     </p>
 
     <h2>Photon lines below the cutoff</h2>
@@ -82,9 +87,12 @@ const CUTOFF_KEV   = 20;
 
     <h2>Emissions the table does not describe</h2>
     <p>
-      {noBeta} of the {keys.length} carry no beta spectrum and {noAlpha} carry no alpha lines, so
-      those emissions are missing wherever the nuclides are used — in the calculators and on any
-      reference page. Beyond that, some emissions are
+      {noBeta} of the {keys.length} carry no beta spectrum and {noAlpha} carry no alpha lines, most of
+      them because they emit none. Where the emission exists but is not carried — the positron
+      spectra of beta-plus emitters such as <NuclideRef k="F-18" />, <NuclideRef k="Ga-68" /> and
+      {" "}<NuclideRef k="Na-22" />, and the beta of Rh-106m, whose evaluated branch intensities add up
+      to more than one per decay — it is missing wherever the nuclide is used, in the calculators and
+      on any reference page. Beyond that, some emissions are
       outside the scope of every calculator here: neutrons from spontaneous fission or from (α,n)
       reactions in the surrounding material, internal conversion and Auger electrons, and
       characteristic X-rays following electron capture where they are not in the recorded line
