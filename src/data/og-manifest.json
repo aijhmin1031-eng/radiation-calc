@@ -398,5 +398,13 @@
   "*": {
     "slug": "home",
     "title": ""
+  },
+  "/nuclides/u-236/": {
+    "slug": "nuclides-u-236",
+    "title": "U-236 specific activity and alpha line energies · Radiation Lab"
+  },
+  "/nuclides/ra-224/": {
+    "slug": "nuclides-ra-224",
+    "title": "Ra-224 specific activity and alpha line energies · Radiation Lab"
   }
 }

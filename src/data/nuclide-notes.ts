@@ -18,39 +18,86 @@ export interface NuclideNote {
   /** 명사구. 핵종 이름을 들어도 되지만 게이트는 이름을 지우고 틀을 비교하므로 **역할 낱말**이 갈라야 한다. */
   heading: string;
   paragraphs: string[];
+  /** ★ 2026-10-28(T7) — 출처. 있으면 글 아래 「Sources」 목록으로 그리고, 구조화 데이터의 쪽 설명이 글의 첫 문장이 된다.
+   *  `href` 가 없는 것은 링크 없이 이름만 나간다(주소를 확인하지 못한 문서 — 지어낸 주소를 달지 않는다).
+   *  문서 번호의 숫자는 「글 속 숫자」가 아니다 — 목록은 `<p>` 가 아니라서 ④-3 이 글로 세지 않는다. */
+  sources?: { label: string; href?: string }[];
 }
+
+/** ★★ **Search Console 노출 상위 20종**(2026-10-28 실측, 3개월 9/9~10/25 — 핵종 쪽 노출 1,864 중 이 20장) — 소유주 「상위 20쪽
+ *  고유 해설을 하자」(T7). 이 20편은 300~600어 · 출처 둘 이상(링크) · 서로 같은 문장 0 이다(`check-nuclides` ④-4).
+ *  나머지 글은 그전 규칙(120어 이상) 그대로다. 노출 순서 그대로 둔다 — 보고서 · 게이트가 이 순서로 적는다. */
+export const GSC_TOP20: readonly string[] = ["Co-60", "U-236", "Sr-90", "Cs-137", "Ba-133", "Am-241", "Co-57", "Xe-133", "Ra-226", "Ra-228", "Ra-224", "Th-232", "I-131", "Pu-239", "Tc-99m", "F-18", "Na-22", "U-238", "Se-75", "Ni-63"];
+
+/** 글의 첫 문장 — 구조화 데이터(TechArticle)의 쪽 설명으로 쓴다(쪽에 실제로 보이는 문장). 마침표 뒤 공백 + 대문자에서 자른다. */
+export const noteFirstSentence = (n: NuclideNote): string => {
+  const p = n.paragraphs[0] ?? "";
+  const m = p.match(/^(.+?[.!?])\s+(?=[A-Z])/);
+  return m ? m[1] : p;
+};
 
 export const NUCLIDE_NOTES: Record<string, NuclideNote> = {
   "Am-241": {
     heading: "Am-241 in smoke detectors, gauges and neutron sources",
     paragraphs: [
-      "Am-241 is the alpha emitter inside ionisation-chamber smoke detectors, where a few tens of kilobecquerels ionise the air gap and a smoke particle changes the current. It is also the excitation source in portable X-ray fluorescence analysers, the gamma source in some density and thickness gauges, and, mixed with beryllium, the alpha emitter of AmBe neutron sources used in well logging and moisture gauges. In aged plutonium it grows in from the decay of Pu-241, which is why old plutonium is more radioactive at the surface than fresh material.",
-      "The external hazard is governed by one low-energy photon line that the table below shows carrying most of the dose rate, with the remainder from a still softer line. A line that soft is absorbed by the source capsule, by a few millimetres of steel and by the first layer of lead, so a shielded source can read almost nothing on a dose rate meter while the activity inside is substantial. The intake hazard is the opposite case: once inhaled or ingested, the alpha energy is delivered to bone surfaces and liver, and the dose coefficient per becquerel is among the highest of the common nuclides.",
-      "When reading this page, treat the half-value layer in lead as a statement about the photon, not about the source: a smoke-detector foil in its holder is already effectively shielded, whereas a bare AmBe source adds a neutron field that no photon figure here describes.",
+      "Am-241 is the alpha emitter inside ionisation-chamber smoke detectors, where a few tens of kilobecquerels ionise the air gap and a smoke particle changes the current. It has also served as the excitation source in some portable X-ray fluorescence analysers, most of which now use miniature X-ray tubes, and it is the gamma source in some density and thickness gauges, and, mixed with beryllium, the alpha emitter of AmBe neutron sources used in well logging and moisture gauges. In aged plutonium it grows in from the decay of Pu-241, which is why the surface dose rate of old plutonium is higher than that of fresh material.",
+      "The external hazard is governed by one low-energy photon line that the table below shows carrying most of the dose rate, with the remainder from a still softer line. A line that soft is largely removed by a few millimetres of steel and almost entirely by a millimetre or so of lead, so a shielded source can read almost nothing on a dose rate meter while the activity inside is substantial. The intake hazard is the opposite case: once inhaled or ingested, the alpha energy is delivered to bone surfaces and liver, and the dose coefficient per becquerel is among the highest of the common nuclides.",
+      "When reading this page, treat the half-value layer in lead as a statement about the photon, not about the source: a smoke-detector foil reads almost nothing because its activity is tiny, whereas a bare AmBe source adds a neutron field that no photon figure here describes.",
+      "That soft photon is also a measurement asset. Lung and wound counters fitted with thin scintillators or planar germanium detectors find Am-241 at amounts far below those at which plutonium could be seen directly, so in plutonium facilities the americium is what gets measured and the plutonium intake is inferred from the known isotopic make-up of the material handled. The chest-wall thickness or wound depth, which attenuate so soft a line strongly, is then the largest term in the uncertainty.",
+      "An AmBe source needs a neutron survey instrument as well as a photon meter, and its storage design starts from hydrogen-rich moderator rather than from lead.",
+    ],
+    sources: [
+      { label: "US EPA, Radionuclide Basics: Americium-241", href: "https://www.epa.gov/radiation/radionuclide-basics-americium-241" },
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
+      { label: "ICRP Publication 107, Nuclear Decay Data for Dosimetric Calculations", href: "https://www.icrp.org/publication.asp?id=ICRP%20Publication%20107" },
     ],
   },
   "Co-60": {
     heading: "Co-60 in irradiators, radiography and calibration fields",
     paragraphs: [
       "Co-60 is produced by neutron activation of natural cobalt and is the radionuclide behind industrial gamma irradiators for medical-device sterilisation and food treatment, behind gamma radiography of thick steel, and, in regions where it is still in service, behind cobalt teletherapy units. Secondary standard calibration fields for dose rate instruments are commonly realised with Co-60 alongside Cs-137 because its two high-energy photons give a well-defined, penetrating field.",
-      "The same activation route makes Co-60 the dominant external dose contributor during the first decades of reactor decommissioning: cobalt is a trace constituent of stainless steels and hard-facing alloys, and every component that saw a neutron flux carries it. Its half-life, visible in the decay table below, is short enough that storage for a few decades removes most of it, and long enough that irradiator sources need regular top-up to hold their throughput.",
+      "The same activation route makes Co-60 the dominant external dose contributor during the first decades of reactor decommissioning: cobalt is a trace impurity in stainless steels and the main constituent of the cobalt-based hard-facing alloys used on valve seats, and every component that saw a neutron flux carries it. Its half-life, visible in the decay table below, is short enough that storage for a few decades removes most of it.",
       "The two photon lines are close in energy and both penetrating, so the shielding table here is unusually representative: the half-value layer in lead or concrete applies to the whole spectrum rather than to one line. The figure to remember from the limits section is the dose rate at a metre from a gigabecquerel, because irradiator loadings are measured in petabecquerels.",
+      "Cobalt teletherapy made megavoltage radiotherapy widely available from the middle of the twentieth century, and the nuclide still loads the close to two hundred small sources of a Gamma Knife for stereotactic radiosurgery. Where linear accelerators have replaced the old units, the retired heads are among the most active disused sources a country has to manage, and the IAEA scheme for categorising sealed sources puts irradiator and teletherapy loadings in its most dangerous category, with security arrangements to match.",
+      "A source loses roughly an eighth of its activity each year, so an irradiator operator adds fresh pencils to the rack instead of replacing it, and a calibration laboratory decay-corrects its reference dose rates at every use. When a disused source slips out of control and is melted with scrap, the cobalt follows the iron into the product; contaminated steel from such events is why steelworks and scrap yards screen incoming loads with radiation portal monitors.",
+    ],
+    sources: [
+      { label: "US EPA, Radionuclide Basics: Cobalt-60", href: "https://www.epa.gov/radiation/radionuclide-basics-cobalt-60" },
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
+      { label: "IAEA GSR Part 3, Radiation Protection and Safety of Radiation Sources: International Basic Safety Standards", href: "https://www.iaea.org/publications/8930/radiation-protection-and-safety-of-radiation-sources-international-basic-safety-standards" },
+      { label: "NIST, X-Ray Mass Attenuation Coefficients (SRD 126)", href: "https://physics.nist.gov/PhysRefData/XrayMassCoef/cover.html" },
+      { label: "IAEA Safety Guide RS-G-1.9, Categorization of Radioactive Sources" },
     ],
   },
   "Cs-137": {
     heading: "Cs-137 as a calibration source, a gauge source and a contaminant",
     paragraphs: [
-      "Cs-137 is a fission product, and it reaches the field in two very different forms. As a sealed source it is the reference nuclide for dose rate calibration, the source in level and density gauges, and the former source in blood irradiators that are now being replaced. As a contaminant it is the long-lived signature of weapons fallout and of the Chernobyl and Fukushima releases, and it is the nuclide most often found when food, soil or scrap metal is screened.",
+      "Cs-137 is a fission product, and it reaches the field in two very different forms. As a sealed source it is the reference nuclide for dose rate calibration, the source in level and density gauges, and the former source in blood irradiators that are now being replaced. As a contaminant it is the long-lived signature of weapons fallout and of the Chernobyl and Fukushima releases, and it is the artificial nuclide most often found when food or soil is screened, and among the most frequent finds in scrap metal.",
       "The photon that defines Cs-137 is not emitted by Cs-137 at all. The decay feeds the metastable Ba-137m, which reaches equilibrium with its parent within minutes and emits the line that dominates the table below, the other entries being barium X-rays; a gamma spectrum of a caesium source is therefore a barium spectrum. Chemically, caesium chloride is a soluble, dispersible powder, which is why orphaned sources have caused contamination incidents out of proportion to their activity.",
       "For shielding, the single line makes the half- and tenth-value layers on this page directly usable, and the ratio between them is close to the single-energy value. For environmental work the relevant quantity is not the dose rate at a metre but the activity concentration, and the decay table is the tool for projecting how long a contaminated site remains above a clearance level.",
+      "In soil, caesium is bound tightly by clay minerals and stays close to the surface for years, so contamination surveys report activity per unit area as well as per unit mass. An in-situ gamma spectrometer only gives a usable deposition figure once a depth profile is assumed: the same deposit worked a few centimetres into the ground reads markedly lower at the detector. For food the international reference points are the guideline levels of the Codex Alimentarius, alongside national limits that are set separately and often differ from them; this page supplies the decay arithmetic, not the limits.",
+      "The caesium chloride form was at the centre of the Goiânia accident in Brazil, where a teletherapy head left in an abandoned clinic was broken open and the powder spread through a neighbourhood. The same chemistry is why source-security programmes are exchanging caesium blood irradiators for X-ray units: a tube that is switched off leaves nothing behind to lose.",
+    ],
+    sources: [
+      { label: "US EPA, Radionuclide Basics: Cesium-137", href: "https://www.epa.gov/radiation/radionuclide-basics-cesium-137" },
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
+      { label: "IAEA GSR Part 3, Radiation Protection and Safety of Radiation Sources: International Basic Safety Standards", href: "https://www.iaea.org/publications/8930/radiation-protection-and-safety-of-radiation-sources-international-basic-safety-standards" },
+      { label: "Codex Alimentarius, General Standard for Contaminants and Toxins in Food and Feed (CXS 193-1995), radionuclide guideline levels" },
     ],
   },
   "Na-22": {
     heading: "Na-22 as a long-lived positron reference",
     paragraphs: [
       "Na-22 is a positron emitter with a half-life of years rather than minutes, and that combination is its whole value. Positron emission tomography (PET) scanners, coincidence counters and well counters are checked with Na-22 point or rod sources because the annihilation photons are the same ones the instruments are built to detect, while the activity stays usable for years. In materials science it is the standard positron source for positron annihilation lifetime spectroscopy, where the prompt gamma that follows each decay provides the start signal.",
-      "Each decay produces the pair of annihilation photons plus a higher-energy gamma, and the table below shows how the dose rate divides between them. The annihilation photons are only produced where the positron stops, which is within the source encapsulation or the first millimetre of surrounding material; an unencapsulated Na-22 deposit behaves differently from a sealed one.",
-      "Sources are usually small, and the handling question is contamination rather than external dose. The half-life, shown in the decay table, means a source bought for a scanner acceptance test is still usable at the next one, which is the practical reason it is specified over F-18 for anything that is not a patient study.",
+      "About nine decays in ten produce the pair of annihilation photons, and almost every decay also gives a higher-energy gamma, and the table below shows how the dose rate divides between them. The annihilation photons are only produced where the positron stops, which is within the source encapsulation or the first millimetre of surrounding material; an unencapsulated Na-22 deposit behaves differently from a sealed one.",
+      "Sources are usually small, and the handling question is contamination rather than external dose. The half-life, shown in the decay table, means a source bought for a scanner acceptance test is still usable at the next one, which is the practical reason it is chosen over F-18 for point-source checks that recur over years.",
+      "Na-22 is also made in nature. Cosmic rays striking argon in the upper atmosphere produce it continuously, and air-filter monitoring stations record it together with Be-7 as a cosmogenic tracer of air exchange between the stratosphere and the troposphere. A small Na-22 peak in an air-filter spectrum is therefore not, by itself, evidence of a release.",
+      "Laboratory sources come from an accelerator, and the two well-separated peaks they give, the annihilation line and the higher gamma, make Na-22 a convenient source for setting the energy scale and checking the linearity of a scintillation spectrometer. As the chloride it is soluble, so a damaged source spreads easily, and periodic wipe tests tell more about it than its dose rate does.",
+    ],
+    sources: [
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
+      { label: "ICRP Publication 107, Nuclear Decay Data for Dosimetric Calculations", href: "https://www.icrp.org/publication.asp?id=ICRP%20Publication%20107" },
+      { label: "NIST, X-Ray Mass Attenuation Coefficients (SRD 126)", href: "https://physics.nist.gov/PhysRefData/XrayMassCoef/cover.html" },
     ],
   },
   "P-32": {
@@ -67,23 +114,43 @@ export const NUCLIDE_NOTES: Record<string, NuclideNote> = {
       "Co-57 is the nuclide of the flood sources and marker sources used to check gamma cameras. Its principal photon lies close to the Tc-99m line that the cameras are tuned for, so a uniformity test with a Co-57 sheet source exercises the detector at a realistic energy without preparing a short-lived radiopharmaceutical. The same decay, through its iron daughter, is the source of the recoil-free gamma used in Mössbauer spectroscopy, where the Co-57 is diffused into a rhodium matrix.",
       "The photons are low in energy, as the table below shows, and are stopped by modest thicknesses of lead; the half-value layer figure here is small and the sources are easy to store. The half-life, under a year, sets a replacement cycle for flood sources and means that a disused source decays to background within a working lifetime.",
       "Electron capture produces iron X-rays alongside the gamma lines, and they appear in a spectrum below the main peaks. For uniformity testing the activity distribution across the sheet matters more than the absolute activity, and that is a property of the source manufacture that no figure on this page can confirm.",
+      "Co-57 is made in a cyclotron, and a freshly produced source can carry traces of Co-56 and Co-58. Their harder photons pass through collimator septa and spoil a uniformity image out of proportion to their activity, so the radionuclidic purity statement on the certificate is worth reading; both contaminants are shorter-lived than Co-57 and matter most in the first months of a flood source's service.",
+      "Sealed Co-57 vials are also among the reference sources for the accuracy and constancy tests of radionuclide dose calibrators, where they stand for the low-energy end of the range beside Ba-133 and Cs-137. Since the source loses half its activity in less than a year, a test schedule built on it needs a decay-corrected expected reading at every use rather than a fixed number on the wall.",
+    ],
+    sources: [
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
+      { label: "ICRP Publication 107, Nuclear Decay Data for Dosimetric Calculations", href: "https://www.icrp.org/publication.asp?id=ICRP%20Publication%20107" },
+      { label: "NIST, X-Ray Mass Attenuation Coefficients (SRD 126)", href: "https://physics.nist.gov/PhysRefData/XrayMassCoef/cover.html" },
     ],
   },
   "Ni-63": {
     heading: "Ni-63 in electron capture detectors and activated steel",
     paragraphs: [
-      "Ni-63 emits a very low-energy beta and nothing else, and that is why it sits inside the electron capture detector of a gas chromatograph: the betas ionise the carrier gas, and electronegative analytes reduce the standing current. The same property makes it the preferred isotope for betavoltaic batteries, and the long half-life recorded in the decay table below is what gives those detectors and batteries their service life.",
+      "Ni-63 emits a very low-energy beta and nothing else, and that is why it sits inside the electron capture detector of a gas chromatograph: the betas ionise the carrier gas, and electronegative analytes reduce the standing current. The same property makes it one of the main isotopes, with tritium, for betavoltaic batteries, and the long half-life recorded in the decay table below is what gives those detectors and batteries their service life.",
       "In reactor steels Ni-63 is an activation product of natural nickel, alongside the longer-lived Ni-59, and it is one of the hard-to-measure nuclides in decommissioning characterisation. There is no photon to find it with, so it is inferred from scaling factors against Co-60 or determined radiochemically and counted by liquid scintillation.",
-      "A sealed Ni-63 source reads next to nothing on a Geiger–Müller probe through its window, and that absence is not evidence of a leak-free source: a swipe counted by liquid scintillation is the only check that works. The beta range table on this page shows how little material stops the emission, which is the same fact seen from the other side.",
-      "Electron capture detectors are licensed items in most jurisdictions, and the foil inside the cell is not opened or replaced by the user: servicing is done by the manufacturer or a licensed contractor, and the cell is returned to the supplier when the instrument is retired rather than scrapped with it. In decommissioning, the ratio of Ni-63 to Co-60 used as a scaling factor does not stay fixed. Co-60 decays far faster, so the ratio rises year by year, and a factor derived from older samples has to be decay-corrected for each waste package. Nickel-based alloys, such as steam generator tubing and some core internals, carry the largest inventories, and sampling plans for those components give Ni-63 particular weight.",
+      "A sealed Ni-63 source reads next to nothing on a Geiger–Müller probe through its window, and that absence is not evidence of a leak-free source: a wipe counted by liquid scintillation, or in a windowless proportional counter, is the check that works. The beta range table on this page shows how little material stops the emission, which is the same fact seen from the other side.",
+      "Electron capture detectors are licensed items in most jurisdictions, and the foil inside the cell is not opened or replaced by the user: servicing is done by the manufacturer or a licensed contractor, and the cell is returned to the supplier when the instrument is retired rather than scrapped with it. In decommissioning, the ratio of Ni-63 to Co-60 used as a scaling factor does not stay fixed. Co-60 decays far faster, so the ratio rises year by year, and a factor derived from older samples has to be decay-corrected for each waste package. Nickel-bearing parts that sat in the neutron flux, such as core internals, carry the largest inventories, while steam generator tubing carries Ni-63 only in the corrosion films deposited on it; sampling plans for the core components give Ni-63 particular weight.",
+      "As an external hazard it barely exists, since the beta does not get through the dead outer layer of skin. The protection question is entirely contamination and intake, which is why regulatory attention on these detectors concerns custody and leak testing rather than dose rate.",
+    ],
+    sources: [
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
+      { label: "NIST ESTAR, stopping power and range tables for electrons", href: "https://physics.nist.gov/PhysRefData/Star/Text/ESTAR.html" },
+      { label: "ICRP Publication 107, Nuclear Decay Data for Dosimetric Calculations", href: "https://www.icrp.org/publication.asp?id=ICRP%20Publication%20107" },
     ],
   },
   "Ba-133": {
     heading: "Ba-133 as a multi-line calibration source and an iodine stand-in",
     paragraphs: [
-      "Ba-133 decays by electron capture and emits a group of photon lines spread across the low and medium energy range, which is why it appears in almost every gamma spectrometry calibration set. Its lines bracket those of I-131, and sealed Ba-133 standards are used as a long-lived stand-in for I-131 when thyroid uptake probes and dose calibrators are checked, since a true I-131 standard would decay within weeks.",
-      "The spread of energies is also what the shielding table below reflects: the half-value layer is set by the harder lines and the tenth-value layer by them even more so, so the ratio between the two departs from the single-energy value. Barium X-rays from the electron capture add to the low-energy end of any spectrum.",
-      "The decay table shows a half-life long enough for one calibration source to outlive several instruments. Coincidence summing is noticeable when a Ba-133 source is counted close to a detector, because several lines are emitted in cascade; an efficiency curve built from close-geometry Ba-133 points without correction will be biased.",
+      "Ba-133 decays by electron capture and emits a group of photon lines spread across the low and medium energy range, which is why it appears in many gamma spectrometry calibration sets. Its strongest line sits close to the principal line of I-131, and sealed Ba-133 standards are used as a long-lived stand-in for I-131 when thyroid uptake probes and dose calibrators are checked, since a true I-131 standard would decay within weeks.",
+      "The spread of energies is also what the shielding table below reflects: the half-value layer is set by the harder lines and the tenth-value layer by them even more so, so the ratio between the two departs from the single-energy value. Caesium X-rays, emitted as the daughter Cs-133 settles after the electron capture, add to the low-energy end of any spectrum.",
+      "The decay table shows a half-life long enough for one calibration source to serve an instrument through much of its working life. Coincidence summing is noticeable when a Ba-133 source is counted close to a detector, because several lines are emitted in cascade; an efficiency curve built from close-geometry Ba-133 points without correction will be biased.",
+      "Outside the calibration room Ba-133 turns up as an activation product. Barium is a natural constituent of concrete and is added on purpose, as barite, to heavy shielding concrete; neutrons around reactors and high-energy accelerators convert part of it, so Ba-133 joins Eu-152 and Co-60 in the inventory of activated concrete that a decommissioning survey has to quantify and that sets how deep a wall must be scabbled.",
+      "For efficiency calibration the practical choice is between correcting the summing and avoiding it. Moving the source further from the crystal reduces the effect at the cost of counting time; Monte Carlo or semi-empirical correction codes recover the close-geometry efficiency but need a faithful model of the detector. A mixed-nuclide standard that contains Ba-133 deserves the same care, since its summing error passes into every energy interpolated from the curve.",
+    ],
+    sources: [
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
+      { label: "LNHB / DDEP, Recommended nuclear data tables", href: "https://www.lnhb.fr/home/nuclear-data/nuclear-data-table/" },
+      { label: "NIST, X-Ray Mass Attenuation Coefficients (SRD 126)", href: "https://physics.nist.gov/PhysRefData/XrayMassCoef/cover.html" },
     ],
   },
   "Ir-192": {
@@ -98,8 +165,15 @@ export const NUCLIDE_NOTES: Record<string, NuclideNote> = {
     heading: "Sr-90 with its daughter Y-90 in gauges, applicators and waste",
     paragraphs: [
       "Sr-90 is a fission product and a pure beta emitter, but almost nothing about a Sr-90 source is set by its own beta. Its daughter Y-90 reaches equilibrium within weeks and emits a far more energetic beta, so a Sr-90 source is in practice a Y-90 source with a long half-life. That pairing is used in thickness gauges for paper and plastic film, in ophthalmic applicators, and historically in radioisotope thermoelectric generators left at remote sites.",
-      "The beta energy of the daughter brings the bremsstrahlung question: the fraction of beta energy converted to X-rays rises with the atomic number of the absorber, so shielding is acrylic first and lead, if needed, outside it. For intake the concern is that strontium follows calcium into bone, where the long half-life in the decay table means the activity stays for the rest of life.",
-      "Detection is direct with a thin-window Geiger–Müller probe because of the Y-90 beta, which is also why Sr-90 is the usual beta calibration source for contamination monitors. The range and bremsstrahlung figures on this page are for the beta of Sr-90 itself. The Y-90 beta has a far higher endpoint and travels several times further in any absorber, so for a source in equilibrium the Y-90 page is the one to read for shielding.",
+      "The beta energy of the daughter brings the bremsstrahlung question: the fraction of beta energy converted to X-rays rises with the atomic number of the absorber, so shielding is acrylic first and lead, if needed, outside it. For intake the concern is that strontium follows calcium into bone, where the long half-life in the decay table means much of the activity stays in the skeleton for many years.",
+      "Detection is direct with a thin-window Geiger–Müller probe because of the Y-90 beta, which is also why Sr-90 with its Y-90 is a standard high-energy beta reference source for contamination monitors. The range and bremsstrahlung figures on this page are for the beta of Sr-90 itself. The Y-90 beta has a far higher endpoint and travels several times further in any absorber, so for a source in equilibrium the Y-90 page is the one to read for shielding.",
+      "Most of the Sr-90 in the environment came from atmospheric weapons testing and reached people through milk, because strontium travels with calcium from pasture to cow to bone; the surveys of children's milk teeth in the testing era measured exactly that uptake. Thermoelectric generators built around a ceramic strontium heat source have been found abandoned or damaged at remote coastal and northern sites, and recovering them has been a recurring task of international source-security programmes.",
+      "In environmental samples the measurement is indirect. Strontium is first separated chemically with a carrier that gives the chemical yield; the sample is then either left for its Y-90 to grow back before beta counting, or the separated Y-90 is counted on its own by Cherenkov counting in a liquid scintillation counter. Either way the result rests on a recorded separation time and a yield, not on a peak in a spectrum.",
+    ],
+    sources: [
+      { label: "US EPA, Radionuclide Basics: Strontium-90", href: "https://www.epa.gov/radiation/radionuclide-basics-strontium-90" },
+      { label: "NIST ESTAR, stopping power and range tables for electrons", href: "https://physics.nist.gov/PhysRefData/Star/Text/ESTAR.html" },
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
     ],
   },
   "C-14": {
@@ -114,17 +188,32 @@ export const NUCLIDE_NOTES: Record<string, NuclideNote> = {
   "I-131": {
     heading: "I-131 in thyroid therapy, waste decay and effluent monitoring",
     paragraphs: [
-      "I-131 is a fission product used therapeutically because the thyroid concentrates iodine: administered as iodide, it treats hyperthyroidism and ablates thyroid tissue after cancer surgery. It emits both a beta, which delivers the therapeutic dose locally, and photons, listed below, which make the patient a measurable external source and allow the uptake to be imaged.",
+      "I-131 is a fission product, although most of the medical supply is made by neutron irradiation of tellurium, and it is used therapeutically because the thyroid concentrates iodine: administered as iodide, it treats hyperthyroidism and ablates thyroid tissue after cancer surgery. It emits both a beta, which delivers the therapeutic dose locally, and photons, listed below, which make the patient a measurable external source and allow the uptake to be imaged.",
       "The decay table sets the clinical logistics: short enough that ward waste is held for decay rather than shipped, long enough that a treated patient carries measurable activity home. Patient release rules, the handling of excreta and the monitoring of hospital effluent all follow from that balance. Elemental iodine is volatile, so iodide solutions are handled in a fume cupboard and the worker's own thyroid is monitored.",
       "In gamma spectrometry the principal line is distinctive and is one of the first peaks sought after a reactor release, where its short half-life makes it the marker of a recent event. The shielding table here gives the layers for the photon component; the beta is stopped by the first few millimetres of any material and does not reach a person at a distance.",
+      "Release criteria for treated patients rest on the dose expected to family members and the public, and countries express them differently: as retained activity, as a dose rate at a stated distance, or through an individual dose assessment. The IAEA guidance on patient release sets out the reasoning that national rules adapt. Excreted I-131 is regularly found in sewage sludge and in rivers below treatment works, which is why some therapy wards route their toilets to delay tanks.",
+      "After a reactor accident the protective action specific to this nuclide is thyroid blocking with stable potassium iodide, taken shortly before or within a few hours after exposure, so that stable iodine saturates the gland and blocks further uptake. For staff who dispense therapy activities, a thyroid count with a collimated probe is the routine check that the fume cupboard and the handling procedure are working.",
+    ],
+    sources: [
+      { label: "US EPA, Radionuclide Basics: Iodine", href: "https://www.epa.gov/radiation/radionuclide-basics-iodine" },
+      { label: "IAEA Safety Reports Series No. 63, Release of Patients After Radionuclide Therapy", href: "https://www.iaea.org/publications/8179/release-of-patients-after-radionuclide-therapy" },
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
+      { label: "NIST, X-Ray Mass Attenuation Coefficients (SRD 126)", href: "https://physics.nist.gov/PhysRefData/XrayMassCoef/cover.html" },
     ],
   },
   "Pu-239": {
     heading: "Pu-239 as fissile material and as an intake hazard",
     paragraphs: [
-      "Pu-239 is the fissile isotope bred from U-238 in reactors, present in spent fuel, recycled in mixed-oxide fuel and accounted for under international safeguards. In radiation protection it is an alpha emitter whose photons are weak, as the table below makes plain: the external dose rate from plutonium is small, and the hazard is almost entirely the inhalation of fine oxide particles, which deposit the alpha energy in lung, liver and bone over a lifetime.",
+      "Pu-239 is the fissile isotope bred from U-238 in reactors, present in spent fuel, recycled in mixed-oxide fuel and accounted for under international safeguards. In radiation protection it is an alpha emitter whose photons are weak, as the table below makes plain: the external dose rate from plutonium is small, and the hazard is chiefly the inhalation of fine oxide particles or entry through a contaminated wound, which deposit the alpha energy in lung, liver and bone over a lifetime.",
       "The weak photon emission is also what makes measurement difficult. Plutonium in a glovebox or a container is assayed from its low-energy X-rays and gammas with high-resolution detectors, from neutrons emitted in spontaneous fission and in alpha-neutron reactions on light elements, or, for aged material, from the Am-241 that has grown in from Pu-241. Alpha spectrometry and mass spectrometry are the laboratory methods.",
       "The decay table on this page spans a half-life long enough that no storage period reduces the inventory, which is why plutonium-bearing waste is a geological disposal question. The limits section states the consequence directly: for this nuclide the controlling dose is internal, and the figures above do not describe it.",
+      "One reporting convention follows from the physics. The alpha energies of Pu-239 and Pu-240 lie too close together for an alpha spectrometer to separate, so environmental and bioassay results are routinely given as the sum of the two, and only mass spectrometry splits them. The ratio between them then distinguishes weapons fallout from plutonium made in power reactors.",
+      "Fissile material is also governed by rules that have nothing to do with dose. Criticality safety limits the mass, geometry, concentration and moderation of plutonium at each process step, so a glovebox can be well within its dose constraints and still breach a criticality limit. Waste with appreciable plutonium content is classed as long-lived everywhere and, in some national systems, as a separate transuranic category destined for deep disposal.",
+    ],
+    sources: [
+      { label: "US EPA, Radionuclide Basics: Plutonium", href: "https://www.epa.gov/radiation/radionuclide-basics-plutonium" },
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
+      { label: "ICRP Publication 107, Nuclear Decay Data for Dosimetric Calculations", href: "https://www.icrp.org/publication.asp?id=ICRP%20Publication%20107" },
     ],
   },
   "Eu-152": {
@@ -173,7 +262,15 @@ export const NUCLIDE_NOTES: Record<string, NuclideNote> = {
     paragraphs: [
       "Ra-226 is the historical radionuclide: luminous paint, early brachytherapy needles and the original definition of the curie all come from it, and disused radium sources still surface in hospitals, schools and scrap. It is also the parent of radon, and radium accumulated in oil-field scale, water-treatment residues and phosphate by-products is the usual reason a material is classed as naturally occurring radioactive material (NORM).",
       "The photon table below lists the lines of Ra-226 alone, and the dose rate figures follow from them. In a sealed source that has reached equilibrium, almost all of the photon dose rate comes instead from the short-lived progeny of radon, Pb-214 and Bi-214, which this page does not include, so a radium source in equilibrium reads far higher than the figures here suggest. A freshly separated sample, or a leaking source that lets radon escape, reads lower than the same activity sealed; gamma spectrometry of environmental samples waits for that equilibrium before counting.",
-      "Nothing in the decay table happens on a human scale, so radium waste does not decay away in storage. Old sources are frequently found leaking, and the escaping radon rather than the external photon dose is the hazard that a survey must look for.",
+      "Nothing in the decay table happens on a human scale, so radium waste does not decay away in storage. Old sources are frequently found leaking, and the escaping radon and loose radium contamination are what a survey must look for, in addition to the external photon dose.",
+      "The dial painters who shaped their brushes with their lips in the early luminous-paint industry gave radiation protection its first body-burden limits, and their medical follow-up remains one of the principal human data sets on internally deposited alpha emitters. Radium-painted aircraft instruments and clock faces still contain measurable radium and fill a closed drawer or display case with radon.",
+      "Two traps sit in gamma spectrometry. The radium line itself almost coincides with a line of U-235, so in uranium-bearing samples the peak cannot be assigned to radium without a uranium correction, and laboratories usually rely on the progeny lines instead. Those progeny lines are valid only after the sample has been sealed in a gas-tight container for three to four weeks, long enough for radon and its daughters to come back into equilibrium.",
+    ],
+    sources: [
+      { label: "US EPA, Radionuclide Basics: Radium", href: "https://www.epa.gov/radiation/radionuclide-basics-radium" },
+      { label: "WHO, Radon and health (fact sheet)", href: "https://www.who.int/news-room/fact-sheets/detail/radon-and-health" },
+      { label: "US EPA, Technologically Enhanced Naturally Occurring Radioactive Materials (TENORM)", href: "https://www.epa.gov/radiation/technologically-enhanced-naturally-occurring-radioactive-materials-tenorm" },
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
     ],
   },
   "K-40": {
@@ -197,8 +294,16 @@ export const NUCLIDE_NOTES: Record<string, NuclideNote> = {
     heading: "F-18 as the working nuclide of positron emission tomography",
     paragraphs: [
       "F-18 is the radionuclide of most positron emission tomography (PET) studies, usually as fluorodeoxyglucose. It is produced in a cyclotron, incorporated into the tracer within hours and administered the same day; the decay table below shows why delivery schedules, patient throughput and staff rotas in a PET department are all built around its half-life.",
-      "Each decay ends in two annihilation photons emitted in opposite directions, which is what the scanner detects and also what makes a dosed patient a penetrating source. The shielding table reflects photons harder than those of most diagnostic nuclides: syringe shields are thick tungsten rather than thin lead, and the extremity dose to the technologist drawing the dose is the limiting quantity in many departments.",
+      "Almost every decay ends in two annihilation photons emitted in opposite directions, which is what the scanner detects and also what makes a dosed patient a penetrating source. The shielding table reflects photons harder than those of most diagnostic nuclides: syringe shields are thick tungsten rather than thin lead, and the extremity dose to the technologist drawing the dose is the limiting quantity in many departments.",
       "Waste decays to background overnight, so the handling problem is short-term external dose rather than disposal. The metre dose rate in the limits section is the number behind the distance and time rules for staff near a freshly injected patient.",
+      "The nuclide is made by proton bombardment of water enriched in O-18, and most departments receive it from a regional cyclotron rather than producing it on site. The activity ordered therefore includes the decay expected in transit, and a late delivery reduces the number of patients who can be scanned that day.",
+      "Among PET nuclides F-18 emits a positron of low energy, which travels only a short distance in tissue before it annihilates; that is part of why F-18 images are sharper than those made with Ga-68 or Rb-82. The penetrating annihilation photons are the price. Facility shielding is often designed with the method of the AAPM task group report on PET and PET/CT, and the uptake rooms where patients rest after injection often set the requirement, because that is where the patient sits with the most activity. Contamination is a lesser problem than with longer-lived tracers: a small spill can often be covered, cordoned off and left to decay for a day, which exposes fewer people than an immediate clean-up.",
+    ],
+    sources: [
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
+      { label: "ICRP Publication 107, Nuclear Decay Data for Dosimetric Calculations", href: "https://www.icrp.org/publication.asp?id=ICRP%20Publication%20107" },
+      { label: "NIST, X-Ray Mass Attenuation Coefficients (SRD 126)", href: "https://physics.nist.gov/PhysRefData/XrayMassCoef/cover.html" },
+      { label: "Madsen et al., AAPM Task Group 108: PET and PET/CT shielding requirements, Medical Physics 33 (2006)" },
     ],
   },
   "Tc-99m": {
@@ -207,6 +312,13 @@ export const NUCLIDE_NOTES: Record<string, NuclideNote> = {
       "Tc-99m is the most widely used diagnostic radionuclide. It is eluted on site from a generator loaded with its parent Mo-99, bound to one of many kit preparations, and imaged with a gamma camera whose collimators and crystals are designed around its one gamma line. The decay table below shows a half-life long enough to prepare, inject and image, and short enough to keep the patient's dose low.",
       "Quality control of the eluate includes a check for Mo-99 breakthrough, because the parent emits harder photons and would both degrade the image and add dose. The daughter of Tc-99m is the long-lived Tc-99, present in every used vial and in patient excreta, but at an activity so small that it is a disposal accounting matter rather than a dose question.",
       "Radiopharmacy shielding is lead glass and thin lead, consistent with the half-value layer on this page, and departmental waste is held for decay for a few days. Flood-source uniformity tests for the camera are done with Co-57, whose photon is close to this one and whose half-life is long.",
+      "Each kit preparation is checked for radiochemical purity before it leaves the radiopharmacy, because two impurities go to the wrong organs: free pertechnetate collects in the thyroid, stomach and salivary glands, and reduced, hydrolysed technetium is taken up by the liver and spleen as a colloid. Thin-layer chromatography with two solvents separates the three forms in minutes, and an unexpected uptake pattern on a scan is often traced back to a kit that would have failed this test.",
+      "Patient doses are drawn up behind lead-glass syringe shields, yet the finger doses of the staff who prepare and inject them are typically the highest personal doses in a nuclear medicine department, and ring dosimeters on the hand that holds the syringe are how they are followed. At this photon energy a lead apron still removes an appreciable share of the body dose of a technologist positioning an injected patient, which is not true of the annihilation photons in a PET suite.",
+    ],
+    sources: [
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
+      { label: "ICRP Publication 107, Nuclear Decay Data for Dosimetric Calculations", href: "https://www.icrp.org/publication.asp?id=ICRP%20Publication%20107" },
+      { label: "NIST, X-Ray Mass Attenuation Coefficients (SRD 126)", href: "https://physics.nist.gov/PhysRefData/XrayMassCoef/cover.html" },
     ],
   },
   "I-125": {
@@ -222,7 +334,14 @@ export const NUCLIDE_NOTES: Record<string, NuclideNote> = {
     paragraphs: [
       "Se-75 is the alternative to Ir-192 in industrial radiography when the steel is thinner or the geometry is confined. Its photon spectrum, listed below, is softer than that of Ir-192, which gives better contrast on thin sections and allows a smaller projector shield for the same activity, and because it decays more slowly, as a comparison of the two decay tables shows, a source is exchanged less often.",
       "The source is produced by neutron activation of enriched selenium, and the chemistry of selenium, which is volatile at elevated temperature, is a constraint on source fabrication and on what happens to a source in a fire. In the field the handling rules are those of radiography generally: a high-activity source moved remotely, with the controlled area set from the figure at a metre in the limits section.",
-      "The shielding table here is representative of the whole spectrum, and the tenth-value layer in lead is the figure that sizes a transport container. Because the photons are softer than those of Ir-192, scatter from the object under inspection is a larger fraction of the dose at the operator's position than the narrow-beam figures suggest.",
+      "The shielding table here is representative of the whole spectrum, and the tenth-value layer in lead is the figure that sizes a transport container. Because the photons are softer than those of Ir-192, scatter from the object under inspection can make up a larger share of the dose at the operator's position than the narrow-beam figures suggest.",
+      "Its half-life is roughly one and a half times that of Ir-192, so a company running Se-75 changes sources less often, at the price of a lower output from a source of the same size. The choice between the two nuclides usually follows the wall thickness and access of the job in hand.",
+      "Selenium has a medical history too. Selenomethionine labelled with Se-75 was once used to image the pancreas, and a taurine-conjugated bile acid analogue labelled with it is still used in some countries to test for bile acid malabsorption: the patient swallows a capsule and the retained fraction is measured with a gamma camera a week later, a test that depends on the long half-life.",
+    ],
+    sources: [
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
+      { label: "ICRP Publication 107, Nuclear Decay Data for Dosimetric Calculations", href: "https://www.icrp.org/publication.asp?id=ICRP%20Publication%20107" },
+      { label: "NIST, X-Ray Mass Attenuation Coefficients (SRD 126)", href: "https://physics.nist.gov/PhysRefData/XrayMassCoef/cover.html" },
     ],
   },
   "Cf-252": {
@@ -373,9 +492,16 @@ export const NUCLIDE_NOTES: Record<string, NuclideNote> = {
   "Ra-224": {
     heading: "Ra-224 as the short-lived radium of the thorium series",
     paragraphs: [
-      "Ra-224 is the daughter of Th-228 in the thorium series, and it is the radium isotope that a thorium-bearing material emits as thoron, the short-lived radon isotope of that series, rather than the familiar radon of the uranium series. It was once injected as a treatment for bone disease, is still the parent of Pb-212 generators used in targeted alpha therapy research, and appears in the characterisation of thorium ores, gas mantles and welding electrodes.",
-      "For Ra-224 this dataset has no photon line, and only the alpha lines appear. In practice a weak gamma line exists and, more importantly, the daughters that grow in within hours, especially Pb-212 and Tl-208, emit strong lines that dominate any gamma spectrum of a thorium-series sample. The external dose from such a sample is a daughter story.",
-      "A half-life of days means Ra-224 cannot be stockpiled, and a Ra-224 source is in practice a Th-228 source in equilibrium. Intake governs protection, as for all radium, with the thoron progeny adding an inhalation component in enclosed spaces.",
+      "Ra-224 is the daughter of Th-228 in the thorium series, and it is the radium isotope whose decay releases thoron, the short-lived radon isotope of that series, from a thorium-bearing material, rather than the familiar radon of the uranium series. It was once injected as a treatment for bone disease, is still the parent of Pb-212 generators used in targeted alpha therapy research, and appears in the characterisation of thorium ores, gas mantles and welding electrodes.",
+      "For Ra-224 this dataset has no photon line, and only the alpha lines appear. In practice a weak gamma line exists and, more importantly, the daughters that grow in over a day or two, especially Pb-212 and Tl-208, emit strong lines that dominate any gamma spectrum of a thorium-series sample. The external dose from such a sample is a daughter story.",
+      "A half-life of days means Ra-224 cannot be stockpiled, and a Ra-224 source is in practice a Th-228 source in equilibrium. Intake governs protection, as for all radium, with the thoron progeny adding an inhalation component in enclosed spaces. In a gamma spectrum its presence is normally inferred from that Pb-212, so a freshly prepared sample has to settle for those days before the line represents the radium.",
+      "Thoron itself lasts about a minute, so most of it decays within a short distance of the surface that releases it, how short depending on the air movement. Indoor readings near thorium-rich plaster, stored thorium compounds or mineral sand therefore depend strongly on where the detector stands, and some passive radon detectors also register thoron, which can push a radon result upward close to such surfaces.",
+      "The historical injections of Ra-224 for ankylosing spondylitis and for bone tuberculosis were followed up for decades, and the excess of bone sarcomas among those patients is part of the evidence on which the risk of alpha emitters at bone surfaces rests. Present-day research uses the nuclide differently: in implanted seeds that release its short-lived daughters into a tumour, and in generators supplying Pb-212 for labelled antibodies and peptides.",
+    ],
+    sources: [
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
+      { label: "ICRP Publication 107, Nuclear Decay Data for Dosimetric Calculations", href: "https://www.icrp.org/publication.asp?id=ICRP%20Publication%20107" },
+      { label: "US EPA, Radionuclide Basics: Radium", href: "https://www.epa.gov/radiation/radionuclide-basics-radium" },
     ],
   },
   "Ra-228": {
@@ -384,6 +510,14 @@ export const NUCLIDE_NOTES: Record<string, NuclideNote> = {
       "Ra-228 is the first long-lived daughter of Th-232 and the member of the thorium series that regulators and geochemists measure to characterise thorium-bearing materials: monazite sands, oil-field scale, water-treatment residues and some fertilisers. Unlike Ra-226 it is a beta emitter, and its activity in a water sample is a marker for thorium-series input as opposed to uranium-series input.",
       "The dataset behind this page records neither a photon line nor a beta spectrum for Ra-228, so the figures table carries only the half-life and specific activity and the page has no shielding or range sections. That reflects the nuclide's very soft beta and negligible gamma; in practice Ra-228 is determined through its daughter Ac-228, whose strong gamma lines appear once equilibrium is reached within days, or by beta counting after chemical separation.",
       "Its half-life of a few years, in the decay table, means that a radium-bearing scale sample changes character over a decade: the Ra-228 decays while the longer-lived Ra-226 remains. The intake hazard is that of radium generally, with deposition in bone.",
+      "In oil and gas production both radium isotopes co-precipitate with barium and strontium sulfate as pipe scale, and the pair works as a clock. Ra-228 decays much faster than Ra-226, so their ratio falls as the scale ages, while the Th-228 growing in from Ra-228 supplies a second ratio that rises over the first years. Together they let an operator estimate when a deposit formed, which matters when old scale in stored equipment is assessed for disposal. Because Ac-228 follows Ra-228 within days but Th-228 takes years, a gamma result from the Ac-228 lines describes Ra-228 itself, whereas one from the Pb-212 and Tl-208 lines describes Th-228 and can differ widely from it in young scale.",
+      "Some drinking-water standards regulate the two radium isotopes as a combined value, and the laboratory work splits accordingly: a gamma or beta method for Ra-228 and an alpha or radon-emanation method for Ra-226. A result for one isotope on its own does not describe the radium content of the water.",
+    ],
+    sources: [
+      { label: "US EPA, Radionuclide Basics: Radium", href: "https://www.epa.gov/radiation/radionuclide-basics-radium" },
+      { label: "US EPA, Technologically Enhanced Naturally Occurring Radioactive Materials (TENORM)", href: "https://www.epa.gov/radiation/technologically-enhanced-naturally-occurring-radioactive-materials-tenorm" },
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
+      { label: "ICRP Publication 107, Nuclear Decay Data for Dosimetric Calculations", href: "https://www.icrp.org/publication.asp?id=ICRP%20Publication%20107" },
     ],
   },
   "Sm-147": {
@@ -421,9 +555,17 @@ export const NUCLIDE_NOTES: Record<string, NuclideNote> = {
   "Th-232": {
     heading: "Th-232 as the primordial head of the thorium series",
     paragraphs: [
-      "Th-232 is the primordial parent of the thorium series and the most abundant actinide in the crust after uranium. It is the fertile material of the thorium fuel cycle, breeding U-233 under neutron irradiation, and it is met in practice through its minerals and products: monazite sand, thoriated tungsten welding electrodes, old gas mantles and optical glass, and the residues of rare-earth processing.",
-      "The page shows a few soft photon lines and an alpha table; the figures describe pure thorium, which reads very little. A natural thorium material in equilibrium is a different source entirely, because the chain through Ra-228, Th-228 and Tl-208 adds beta and penetrating gamma emission, and that is what a survey meter sees on a bag of monazite.",
+      "Th-232 is the primordial parent of the thorium series and the most abundant actinide in the Earth's crust, several times as common as uranium. It is the fertile material of the thorium fuel cycle, breeding U-233 under neutron irradiation, and it is met in practice through its minerals and products: monazite sand, thoriated tungsten welding electrodes, old gas mantles and optical glass, and the residues of rare-earth processing.",
+      "The page shows a few soft photon lines and an alpha table; the figures describe Th-232 on its own, which reads very little, although even purified thorium still carries Th-228, whose hard-gamma progeny grow back within weeks. A natural thorium material in equilibrium is a different source entirely, because the chain through Ra-228, Th-228 and Tl-208 adds beta and penetrating gamma emission, and that is what a survey meter sees on a bag of monazite.",
       "With a half-life comparable to the age of the universe, as the decay table shows, Th-232's own activity per gram is small and its hazard arises from the progeny and from intake of thorium dust, which deposits on bone surfaces and in the lung. Thoron from the chain is a concern in enclosed thorium stores.",
+      "Chemical processing breaks the chain, and the activity of the product then drifts for decades. Purified thorium has lost its radium, so the Th-228 and its hard-gamma progeny decay away over the following years, pass through a minimum and then slowly grow back as fresh Ra-228 forms. Two surveys of the same drum ten years apart can therefore disagree markedly without anything having been added or removed.",
+      "Thoriated tungsten electrodes show where exposure really arises: storing them is a minor matter, but grinding the tips releases fine thorium-bearing dust into the welder's breathing zone, which is why ceriated and lanthanated electrodes are offered instead. At the scale of mineral sands and rare-earth plants, the international safety standards bring a material into regulatory scope when its thorium-series activity concentration exceeds a stated level, and the national value derived from them is the one that applies.",
+    ],
+    sources: [
+      { label: "US EPA, Radionuclide Basics: Thorium", href: "https://www.epa.gov/radiation/radionuclide-basics-thorium" },
+      { label: "US EPA, Technologically Enhanced Naturally Occurring Radioactive Materials (TENORM)", href: "https://www.epa.gov/radiation/technologically-enhanced-naturally-occurring-radioactive-materials-tenorm" },
+      { label: "IAEA GSR Part 3, Radiation Protection and Safety of Radiation Sources: International Basic Safety Standards", href: "https://www.iaea.org/publications/8930/radiation-protection-and-safety-of-radiation-sources-international-basic-safety-standards" },
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
     ],
   },
   "U-232": {
@@ -461,9 +603,18 @@ export const NUCLIDE_NOTES: Record<string, NuclideNote> = {
   "U-236": {
     heading: "U-236 as the fingerprint of irradiated uranium",
     paragraphs: [
-      "U-236 is formed when U-235 captures a neutron without fissioning, so it is present in any uranium that has been through a reactor and essentially absent from natural uranium. That makes it the fingerprint of recycled uranium: its presence in a sample proves irradiation, and its ratio to U-238 is a tracer for reprocessing releases in the environment, measured by accelerator mass spectrometry at extraordinarily low levels.",
+      "U-236 is formed when U-235 captures a neutron without fissioning, so it is present in any uranium that has been through a reactor and essentially absent from natural uranium. That makes it the fingerprint of recycled uranium: its presence above the trace natural level proves irradiation, and its ratio to U-238 is a tracer for reprocessing releases in the environment, measured by accelerator mass spectrometry at extraordinarily low levels.",
       "Only alpha lines appear on this page; the gamma emission is negligible, and U-236 is never seen by a survey meter and rarely by a spectrometer, and its radiological contribution to recycled uranium fuel is small. Its practical cost is as a neutron absorber in the reactor, which is why recycled uranium is enriched slightly higher to compensate.",
       "Its half-life is tens of millions of years, so it is permanent on any scale that matters, and its alpha decay feeds Th-232. Intake governs protection as for all uranium isotopes.",
+      "Measuring it is a problem of separation rather than sensitivity. In an alpha spectrum its peak falls among the higher U-235 lines, below U-234, and sits on their tails, so routine alpha spectrometry seldom reports more than an upper limit unless the sample is rich in it. Thermal ionisation and inductively coupled plasma mass spectrometry resolve it in fuel and reprocessed material, where the tails of the U-235 and U-238 peaks and, in plasma instruments, the hydride ion formed from U-235 are the interferences to correct; environmental levels need accelerator mass spectrometry, which removes molecular ions altogether.",
+      "Reprocessed uranium carries a second tell-tale isotope, U-232, whose short-lived descendants include Tl-208 with a very hard gamma line. That, and not U-236, is what raises the dose rate around recycled uranium as it ages, so the missing shielding section on this page is accurate for U-236 alone and silent about the material it usually travels in.",
+      "Because the ratio of U-236 to U-238 in seawater records both weapons fallout and the discharges of European reprocessing plants, oceanographers use it to follow water masses through the North Atlantic and into the Arctic.",
+    ],
+    sources: [
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
+      { label: "ICRP Publication 107, Nuclear Decay Data for Dosimetric Calculations", href: "https://www.icrp.org/publication.asp?id=ICRP%20Publication%20107" },
+      { label: "US EPA, Radionuclide Basics: Uranium", href: "https://www.epa.gov/radiation/radionuclide-basics-uranium" },
+      { label: "P. Steier et al., Natural and anthropogenic U-236 in environmental samples, Nuclear Instruments and Methods in Physics Research B 266 (2008)" },
     ],
   },
   "U-238": {
@@ -471,7 +622,14 @@ export const NUCLIDE_NOTES: Record<string, NuclideNote> = {
     paragraphs: [
       "U-238 is almost all of natural uranium by mass, the fertile isotope that breeds Pu-239 in reactors, and the head of the uranium series that ends in Pb-206 by way of Ra-226 and radon. Depleted uranium, the leftover of enrichment, is nearly pure U-238 and is used for shielding, counterweights and penetrators. Its half-life, in the decay table, is of the same order as the age of the Earth, which is what makes uranium-lead dating possible.",
       "The photon lines on this page are few and soft, and a bare piece of U-238 metal reads chiefly through the beta emission of its first daughters, Th-234 and Pa-234m, which reach equilibrium within months and are not represented here. The figures therefore describe freshly separated U-238 and understate aged metal.",
-      "Intake governs the radiological hazard, and for soluble forms the kidney's chemical sensitivity to uranium is often the limiting factor. Radon from the chain is the dominant public exposure in many regions, but it is a product of the Ra-226 far down the chain rather than of U-238 itself.",
+      "Intake governs the radiological hazard, and for soluble forms the kidney's chemical sensitivity to uranium is often the limiting factor. Radon from the chain is the dominant public exposure in many regions, but it is a product of the Ra-226 far down the chain rather than of U-238 itself. Industrial residues often break the chain at that point: in phosphate processing, for example, uranium follows the acid while radium stays with the gypsum, so each stream has to be characterised separately.",
+      "Depleted uranium is denser than lead, and that, rather than any radiological property, is why it forms the shield inside many gamma radiography projectors and some transport packages: the same attenuation fits into a smaller, lighter body. Such shields are radioactive items in their own right, with their own surveys and disposal route. Where depleted uranium munitions have been used, post-conflict environmental assessments have concentrated on chemical toxicity and on dust from impacts rather than on external dose.",
+      "Gamma spectrometry never measures U-238 by its own lines. The usual indicators are Th-234, whose soft line sits in a crowded region of the spectrum, and Pa-234m, whose weak but clean high-energy line is free of interference. Both assume that the first daughters have had several months since the uranium was last chemically processed.",
+    ],
+    sources: [
+      { label: "US EPA, Radionuclide Basics: Uranium", href: "https://www.epa.gov/radiation/radionuclide-basics-uranium" },
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
+      { label: "ICRP Publication 107, Nuclear Decay Data for Dosimetric Calculations", href: "https://www.icrp.org/publication.asp?id=ICRP%20Publication%20107" },
     ],
   },
   "Pb-210": {
@@ -807,7 +965,14 @@ export const NUCLIDE_NOTES: Record<string, NuclideNote> = {
     paragraphs: [
       "Xe-133 is inhaled as a gas for ventilation imaging of the lungs, and it is also one of the radioxenon isotopes whose presence in air is the clearest evidence of an underground nuclear test, because noble gases escape from rock that holds everything else back. The global monitoring network that watches for tests measures Xe-133 and its isomer at concentrations so low that releases from medical isotope production plants are a known source of false signals.",
       "Caesium X-rays dominate the photon table here, with one gamma line above them, and a fraction of a millimetre of lead halves the field; shielding is trivial. No beta appears in this dataset's tables for Xe-133. Being a noble gas it is not retained by the body; a release gives an external dose from immersion and a lung dose from the gas within.",
-      "Imaging waste gas is held in a charcoal trap or a decay tank for a few half-lives rather than vented, and reactor off-gas systems use the same principle to let it decay before discharge.",
+      "Exhaled imaging gas is collected in a charcoal trap, where it decays, or discharged through a dedicated exhaust rather than into the room, and reactor off-gas systems hold xenon in charcoal delay beds to let it decay before discharge. Xenon is several times denser than air, so a leak in a poorly ventilated room collects near the floor, and the exhaust for a ventilation imaging room is usually drawn at low level.",
+      "Telling a test from an isotope plant depends on ratios, not on Xe-133 alone. Monitoring stations compare it with Xe-131m, Xe-133m and Xe-135, whose relative amounts differ between a fresh fission event and the steady emissions of a reactor or a production facility, and most of the systems count the collected gas by beta–gamma coincidence, others by high-resolution gamma spectrometry, to reach the sensitivity that comparison needs. The xenon released when uranium targets are dissolved to extract Mo-99 is the largest civilian background those stations see.",
+      "In nuclear medicine many departments have moved ventilation studies to technetium-labelled aerosols, which need no gas delivery system, sealed exhaust or charcoal trap. Where Xe-133 is still used, the negative pressure of the imaging room and the breakthrough of the trap are what a radiation protection survey checks, together with the leak tightness of the patient's mouthpiece circuit.",
+    ],
+    sources: [
+      { label: "CTBTO, Radionuclide monitoring", href: "https://www.ctbto.org/our-work/monitoring-technologies/radionuclide-monitoring" },
+      { label: "IAEA Live Chart of Nuclides (ENSDF decay data)", href: "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html" },
+      { label: "ICRP Publication 107, Nuclear Decay Data for Dosimetric Calculations", href: "https://www.icrp.org/publication.asp?id=ICRP%20Publication%20107" },
     ],
   },
   "Y-88": {
