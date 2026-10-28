@@ -153,7 +153,7 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
       {p.shares.length > shown.length && (
         <p class="mt-2 text-[13px] text-ink-faint">
           Showing the {shown.length} largest contributors of {p.shares.length} lines above the cutoff; the
-          remainder together carry {((1 - shown.reduce((a, s) => a + s.share, 0)) * 100).toFixed(2)}% of the dose rate.
+          {p.shares.length - shown.length === 1 ? "remaining line carries" : "remainder together carry"} {(() => { const r = (1 - shown.reduce((a, s) => a + s.share, 0)) * 100; return r < 0.005 ? "under 0.01" : r.toFixed(2); })()}% of the dose rate.
         </p>
       )}
     </section>

@@ -7,13 +7,13 @@
 export const EX = {
   gamma: {
     /** Cs-137 37 GBq, 차폐 없음 — mGy/h */
-    cs1m: "2.85", cs2m: "0.714",
+    cs1m: "2.85", cs2m: "0.712",
     /** 납 5 cm, 감쇠만(산란 제외) — µGy/h 와 투과율 % */
     csLeadUGyH: "5.11", csLeadPct: "0.18",
     /** Ir-192 1.5 TBq, 20 m — µGy/h, 그리고 20 µGy/h 가 되는 거리 m */
-    ir20mUGyH: "410", irBoundaryM: "90.6",
+    ir20mUGyH: "409", irBoundaryM: "90.5",
     /** 공기커마율 상수 mGy·m²/(GBq·h), 20 keV 하한 */
-    csConst: "0.0771", irConst: "0.109", coConst: "0.306",
+    csConst: "0.0769", irConst: "0.109", coConst: "0.306",
     /** 납의 반가층 cm — 662 keV, 좁은 빔 */
     leadHvlCs: "0.55",
   },
