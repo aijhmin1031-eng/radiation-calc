@@ -1,6 +1,6 @@
 {
   "$comment": "Radiation Lab common shell — HEADER-SPEC v3 (2026-10-28). The one source for the header, footer, 404 and theme of every origin (radiation-lab.com, /calc/, pro., radimeter., disposal.). Served at https://radiation-lab.com/shell/shell.json; every repo vendors a copy at shell/shell.json and renders it with render.mjs at build time. hrefs are absolute; render.mjs makes them root-relative on the apex. Bump `version` when anything here or in shell.css/shell.js changes.",
-  "version": 4,
+  "version": 5,
   "brand": {
     "name": "Radiation Lab",
     "home": "https://radiation-lab.com/",
@@ -95,12 +95,12 @@
                    "nav": [ { "href": "https://disposal.radiation-lab.com/", "long": "Calculator", "short": "Calc" },
                             { "href": "https://disposal.radiation-lab.com/scenarios", "long": "Scenarios", "short": "Scenarios" },
                             { "href": "https://disposal.radiation-lab.com/fit", "long": "Fit", "short": "Fit" },
-                            { "href": "https://disposal.radiation-lab.com/fit/compare", "long": "Compare", "short": "Compare" },
+                            { "href": "https://disposal.radiation-lab.com/fit/compare", "long": "Compare", "short": "Compare", "phone": "sheet" },
                             { "href": "https://disposal.radiation-lab.com/kinetics", "long": "Kinetics", "short": "Kinetics" },
                             { "href": "https://disposal.radiation-lab.com/transport", "long": "Transport", "short": "Transport" },
-                            { "href": "https://disposal.radiation-lab.com/notes", "long": "Notes", "short": "Notes" } ],
+                            { "href": "https://disposal.radiation-lab.com/notes", "long": "Notes", "short": "Notes", "phone": "sheet" } ],
                    "account": "https://disposal.radiation-lab.com/login", "disclaimer": "https://disposal.radiation-lab.com/disclaimer",
-                   "badge": null, "$comment": "Beta chip removed (owner decision 2026-10-28, round 3 Q6); the limits are a sentence on About." }
+                   "badge": null, "$comment": "Beta chip removed (owner decision 2026-10-28, round 3 Q6); the limits are a sentence on About. v5 (owner decision 2026-10-28 evening): seven items wrapped to two rows below 640px (130px bar) — Compare and Notes carry phone:sheet, so on phones the bar keeps five and the ☰ sheet lists the whole section (render.mjs · shell.css)." }
   },
   "footer": {
     "platform": { "title": "Radiation Lab", "links": [

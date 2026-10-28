@@ -20,7 +20,6 @@ import { elapsedFromRatio } from "../engine";
  *  ★ 없는 것을 있다고 쓰지 않는다 — 자료에 선이 없으면 「없다」가 아니라
  *    **「이 자료에 기록이 없다」**고 쓴다(임계 아래 방출이 실제로 있을 수 있다).
  */
-const pct = (x: number, d = 1) => `${(x * 100).toFixed(d)}%`;
 const mm = (cm: number, d = 3) => `${(cm * 10).toPrecision(d)} mm`;
 const sig = (x: number, d = 3) => (Number.isFinite(x) ? x.toPrecision(d) : "—");
 /** ★ `toPrecision` 은 1000 부터 **지수 표기**로 넘어가 「7.0e+2× the thickness above」가 된다
@@ -115,7 +114,10 @@ export function paragraphs(p: NuclidePage): string[] {
         ? `${times(gammaVs(p.key, refs[0]))} ${refs[0]} and ${times(gammaVs(p.key, refs[1]))} ${refs[1]}`
         : `${times(gammaVs(p.key, refs[0]))} ${refs[0]}`;
     })();
-    const rates = `1 GBq at 1 m reads ${sig(p.doseAt1mPerGBq)} mGy/h, and 1 Ci at the same distance ${sig(p.doseAt1mPerCi)} mGy/h`;
+    /** ★★ 2026-10-29(T10-②) — 「1 GBq at 1 m reads … mGy/h, and 1 Ci … mGy/h」를 **문장에서 뺐다.** 광자 방출 47쪽에 숫자만
+     *  바뀌어 서 있었고, 두 값은 바로 아래 수치표(「Dose rate, 1 GBq at 1 m」·「1 Ci at 1 m」)가 이미 든다 — 표를 산문으로
+     *  되풀이한 것이라 쪽의 「다른 쪽에도 있는 틀」 몫만 키웠다(T10-① 실측: 해설 없는 40쪽 중앙 65%). 띠 문장은 표에 **없는**
+     *  판단(크기 순위 · 기준 핵종 대비 배수 · 20 µSv/h 에 필요한 활동도)만 남긴다. */
     /** ★★★ **연쇄가 잘린 쪽에는 「작다」·순위·「몇 GBq 라야 20 µSv/h」를 주지 않는다**
      *  (2026-09-23). Ra-226 쪽이 「small — 88× less than Cs-137 … ranking 80 of 96 … 22.8 GBq
      *  라야 20 µSv/h」라고 소개하고 있었다. 그 값은 **Ra-226 자신의 것**이고 라듐 선원의
@@ -124,32 +126,41 @@ export function paragraphs(p: NuclidePage): string[] {
      *    순위는 특히 나쁘다: 남들은 상수가 곧 전체 장인데 이 쪽만 아니기 때문이다. */
     out.push(
       CHAIN_TRUNCATED.includes(p.key)
-        ? `The air kerma rate constant recorded for ${p.key} is ${sig(p.gamma)} mGy·m²/(GBq·h). ${rates} — ` +
-          `for that emission alone. No ranking against the other emitters here is drawn: for most of them the ` +
-          `constant is the whole field, and for ${p.key} it is not.`
+        ? `The air kerma rate constant recorded for ${p.key} is ${sig(p.gamma)} mGy·m²/(GBq·h), and the dose ` +
+          `rates in the table are for that emission alone. No ranking against the other emitters here is drawn: ` +
+          `for most of them the constant is the whole field, and for ${p.key} it is not.`
         : p.gamma < 0.005
         ? `The air kerma rate constant is small — ${sig(p.gamma)} mGy·m²/(GBq·h), ${cmp}, ` +
           `ranking ${r.rank} of ${r.of} by Γ — near the bottom of the photon emitters, but above the ` +
           `cutoff, which ${Object.keys(NUCLIDES).length - r.of} nuclides in this dataset are not. ` +
-          `${rates}. It takes ${act((0.02 / p.doseAt1mPerGBq) * 1e9)} at a metre to reach 20 µSv/h from the ` +
+          `It takes ${act((0.02 / p.doseAt1mPerGBq) * 1e9)} at a metre to reach 20 µSv/h from the ` +
           `photons alone.`
         : p.gamma < 0.05
         ? `At ${sig(p.gamma)} mGy·m²/(GBq·h) the air kerma rate constant is ${cmp}, placing it ${r.rank} of ` +
-          `${r.of} photon emitters in this dataset. ${rates}.`
+          `${r.of} photon emitters in this dataset.`
         : p.gamma < 0.2
-        ? `${rates}, from an air kerma rate constant of ${sig(p.gamma)} mGy·m²/(GBq·h) — ${cmp}, and ` +
+        ? `An air kerma rate constant of ${sig(p.gamma)} mGy·m²/(GBq·h) is ${cmp}, and ` +
           `${r.rank} of ${r.of} among the photon emitters carried here.`
         : `Among the strong external emitters here: Γ of ${sig(p.gamma)} mGy·m²/(GBq·h) ranks ` +
-          `${r.rank} of ${r.of}, ${cmp}. ${rates} — a metre-scale hazard at gigabecquerel activities, and ` +
+          `${r.rank} of ${r.of}, ${cmp} — a metre-scale hazard at gigabecquerel activities, and ` +
           `${act((0.02 / p.doseAt1mPerGBq) * 1e9)} is already 20 µSv/h at that distance.`,
     );
-    out.push(
-      p.shares.length === 1
-        ? `One line at ${top.eKeV.toFixed(1)} keV carries all of that.`
-        : `${p.shares.length} lines clear the 20 keV cutoff, but ${p.linesFor90 === 1 ? "one of them carries" : `${p.linesFor90} of them carry`} 90% of the dose rate. ` +
-          `The leading one is ${top.eKeV.toFixed(1)} keV at ${pct(top.share)} of the total — its emission ` +
-          `probability is ${top.yPct}%, which is ${top.yPct >= p.shares[1].yPct ? "also the highest" : `lower than the ${p.shares[1].yPct}% of the ${p.shares[1].eKeV.toFixed(1)} keV line it outranks`}.`,
-    );
+    /** ★★ 2026-10-29(T10-②) — 「N lines clear the 20 keV cutoff, but M of them carry 90% of the dose rate. The leading one is
+     *  … keV at …% of the total — its emission probability is …%, which is also the highest.」가 40쪽에 숫자만 바뀌어 섰다.
+     *  선 수 · 맨 윗줄의 에너지 · 몫 · 방출 확률은 아래 방출선 표의 첫 줄과 캡션이 이미 든다 — **뺐다.**
+     *  남기는 것은 표를 한 줄씩 읽어서는 안 보이는 **관계** 하나: 선량을 가장 많이 나르는 선이 가장 자주 나오는 선이
+     *  **아닐 때**(표의 두 열이 순서를 달리할 때, 실측 6쪽). 선이 하나뿐인 쪽(7쪽)은 그 사실을 한 문장으로 둔다. */
+    const outranked = p.shares.length > 1 ? p.shares.slice(1).find((s) => s.yPct > top.yPct) : undefined;
+    if (p.shares.length === 1)
+      out.push(`One line at ${top.eKeV.toFixed(1)} keV carries the whole of the dose rate.`);
+    else if (outranked)
+      out.push(
+        `The two columns of the line table disagree here: the ${top.eKeV.toFixed(1)} keV line carries the largest share of ` +
+        `the dose rate although the ${outranked.eKeV.toFixed(1)} keV line is emitted more often` +
+        /* ★ 감독 검토(10-29) — 맨 윗줄이 더 무른 선이면(Xe-133: 31 keV X선이 81 keV 감마보다 선량을 더 나른다 — 이 에너지에서는
+           공기가 무른 광자를 훨씬 잘 흡수한다) 「에너지가 차폐를 정한다」는 틀린 말이 된다. 그 꼬리는 더 단단한 선이 앞설 때만 붙인다. */
+        (top.eKeV > outranked.eKeV ? ` — energy, not frequency, decides which photons set the shield.` : `.`),
+      );
 
     const pb = p.shields.find((s) => s.material === "lead")!;
     const fe = p.shields.find((s) => s.material === "iron")!;

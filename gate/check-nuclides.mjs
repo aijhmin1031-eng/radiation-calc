@@ -300,18 +300,22 @@ note(`안 본 것: 쪽이 없는 핵종의 글 ${noteKeys.length - shownNotes.le
    ★ 재는 것 — ① 20종 모두 쪽이 서 있고 색인된다(noindex 아님 — 10-06 에 지운 U-236 · Ra-224 를 되살렸고, Ra-228 의 noindex 를
      뗐다) ② 글 300~600어(문단만, 산출물 기준) ③ 출처 목록에 https 링크 둘 이상 ④ 구조화 데이터 쪽 노드의 description 이
      글의 첫 문장과 같다 ⑤ **20편 사이에 같은 문장이 하나도 없다**(여섯 낱말 이상 문장, 소문자 · 문장부호 제거 뒤 비교 —
-     인계서 기준 「3문장 이상 겹치면 실패」보다 좁다). 보고서용으로 쪽별 어수 · 출처 수를 찍는다. */
-console.log("\n④-4 노출 상위 20쪽 손글 — 300~600어 · 출처 링크 둘 이상 · 구조화 설명 = 첫 문장 · 20편 사이 같은 문장 0");
-const { GSC_TOP20, noteFirstSentence } = await tsImport("../src/data/nuclide-notes.ts", import.meta.url);
+     인계서 기준 「3문장 이상 겹치면 실패」보다 좁다). 보고서용으로 쪽별 어수 · 출처 수를 찍는다.
+   ★★ 2026-10-29(T10-②) — **2차 20편**(`NOTES_ROUND2`, 해설 없던 색인 40쪽 중 문장 틀 몫 상위 20)을 같은 자로 함께 잰다.
+     ⑤ 「같은 문장 0」은 **40편 전부 사이**에서 본다(1차와 2차 사이도 — 2차가 1차의 문장을 빌려 오면 같은 틀을 새로 만드는 것이다). */
+console.log("\n④-4 출처를 단 손글 40편(1차 GSC_TOP20 + 2차 NOTES_ROUND2) — 300~600어 · 출처 링크 둘 이상 · 구조화 설명 = 첫 문장 · 40편 사이 같은 문장 0");
+const { GSC_TOP20, NOTES_ROUND2, noteFirstSentence } = await tsImport("../src/data/nuclide-notes.ts", import.meta.url);
+const NOTED = [...GSC_TOP20, ...NOTES_ROUND2];
+if (new Set(NOTED).size !== NOTED.length) fail.push("④-4 1차 · 2차 목록에 겹치는 핵종이 있다");
 const { isNoindex } = await tsImport("../src/lib/nuclide-pages.ts", import.meta.url);
 const TOP_MIN = 300, TOP_MAX = 600;
 const sentOwner = new Map();
 const topRows = [];
-for (const key of GSC_TOP20) {
+for (const key of NOTED) {
   const slug = key.toLowerCase();
   const pg = pages.get(slug);
-  if (!pg) { fail.push(`④-4 ${key}: 쪽이 없다(상위 20종은 쪽이 서야 한다 — lib/nuclide-pages.ts PUBLISHED)`); continue; }
-  if (isNoindex(key) || /<meta name="robots" content="[^"]*noindex/i.test(pg.html)) fail.push(`④-4 ${key}: noindex 다 — 손글을 단 상위 20쪽은 색인한다`);
+  if (!pg) { fail.push(`④-4 ${key}: 쪽이 없다(손글을 단 40종은 쪽이 서야 한다 — lib/nuclide-pages.ts PUBLISHED)`); continue; }
+  if (isNoindex(key) || /<meta name="robots" content="[^"]*noindex/i.test(pg.html)) fail.push(`④-4 ${key}: noindex 다 — 손글을 단 40쪽은 색인한다(소유주 결정: noindex · 합치기 없음)`);
   const got = noteText.get(key);
   if (!got) { fail.push(`④-4 ${key}: 손글이 그려지지 않았다`); continue; }
   /* ★ 문단만 센다 — 제목은 넣지 않는다(인계서 「쪽당 300~600어의 해설」은 글 본문이다. 제목까지 세면 F-18 이 305어로
@@ -336,8 +340,9 @@ for (const key of GSC_TOP20) {
   }
   topRows.push(`${key} ${words}어 · 출처 ${srcN}(링크 ${links.length})`);
 }
-note(`상위 20쪽: ${topRows.join(" | ")}`);
-note(`20편 사이 같은 문장(여섯 낱말 이상): ${fail.filter((f) => f.startsWith("④-4") && f.includes("같은 문장")).length}건 · 비교한 문장 ${sentOwner.size}개`);
+note(`1차 20쪽: ${topRows.slice(0, GSC_TOP20.length).join(" | ")}`);
+note(`2차 20쪽: ${topRows.slice(GSC_TOP20.length).join(" | ")}`);
+note(`40편 사이 같은 문장(여섯 낱말 이상): ${fail.filter((f) => f.startsWith("④-4") && f.includes("같은 문장")).length}건 · 비교한 문장 ${sentOwner.size}개`);
 
 /* ── ⑤ 계산기 링크가 실제로 복원되는가 ───────────────────── */
 console.log("\n⑤ 계산기 프리필이 실제로 복원되는가");

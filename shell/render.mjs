@@ -104,7 +104,9 @@ export function renderHeader(spec, { section = "home", currentHref = "", apex = 
   const items = sec.nav.map((n) => {
     const cur = same(n.href, currentHref) ? ' aria-current="page"' : "";
     const label = n.long === n.short ? esc(n.long) : `<span class="hd-l">${esc(n.long)}</span><span class="hd-s">${esc(n.short)}</span>`;
-    return `<a class="hd-item" href="${esc(hrefFor(n.href, apex))}"${cur}>${label}</a>`;
+    // v5: an item with phone:"sheet" (shell.json) leaves the bar below 640px and is reached from the ☰ sheet (shell.css hides it).
+    const ph = n.phone === "sheet" ? ' data-phone="sheet"' : "";
+    return `<a class="hd-item" href="${esc(hrefFor(n.href, apex))}"${cur}${ph}>${label}</a>`;
   });
   const count = spec.menus.length + items.length;
   const wrap = count >= 8 ? ' data-wrap="1340"' : count === 7 ? ' data-wrap="1240"' : "";
@@ -119,12 +121,19 @@ export function renderHeader(spec, { section = "home", currentHref = "", apex = 
     : "";
   // v3: a section whose bar wraps (2 menus + 5–7 items) gets a phone sheet — below 640px the two global menus leave
   // the row and open behind a ☰ button, so the row keeps the section's own items on one line (shell.css). Never on the apex.
+  // v5: when the section demotes items to the sheet on phones (nav[].phone === "sheet" — disposal: Compare · Notes, seven
+  // items wrapped to 130px), the sheet opens with the whole section list first, current item marked, then the global menus.
+  const secGroup = sec.nav.some((n) => n.phone === "sheet")
+    ? `<p class="sheet-h">${esc(sec.name)}</p>
+        <ul class="sheet-l">${sec.nav.map((n) => `<li><a href="${esc(hrefFor(n.href, apex))}"${same(n.href, currentHref) ? ' aria-current="page"' : ""}>${esc(n.long)}</a></li>`).join("")}</ul>
+        `
+    : "";
   const sheet = wrap
     ? `
     <details class="hd-sheet" id="hd-sheet">
       <summary class="hd-burger" aria-label="Menu" title="Menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></summary>
       <div class="sheet">
-        ${spec.menus.map((m) => {
+        ${secGroup}${spec.menus.map((m) => {
           const groups = m.columns ? [...m.groups, spec.extraGroupOffApex] : m.groups;
           const items = groups.flatMap((g) => g.items).map((i) => `<li><a href="${esc(hrefFor(i.href, apex))}">${esc(i.name)}</a></li>`).join("");
           return `<p class="sheet-h">${esc(m.long)}</p>\n        <ul class="sheet-l">${items}</ul>`;
