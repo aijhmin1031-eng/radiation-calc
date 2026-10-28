@@ -156,8 +156,10 @@ export function paragraphs(p: NuclidePage): string[] {
     else if (outranked)
       out.push(
         `The two columns of the line table disagree here: the ${top.eKeV.toFixed(1)} keV line carries the largest share of ` +
-        `the dose rate although the ${outranked.eKeV.toFixed(1)} keV line is emitted more often — energy, not frequency, ` +
-        `decides which photons set the shield.`,
+        `the dose rate although the ${outranked.eKeV.toFixed(1)} keV line is emitted more often` +
+        /* ★ 감독 검토(10-29) — 맨 윗줄이 더 무른 선이면(Xe-133: 31 keV X선이 81 keV 감마보다 선량을 더 나른다 — 이 에너지에서는
+           공기가 무른 광자를 훨씬 잘 흡수한다) 「에너지가 차폐를 정한다」는 틀린 말이 된다. 그 꼬리는 더 단단한 선이 앞설 때만 붙인다. */
+        (top.eKeV > outranked.eKeV ? ` — energy, not frequency, decides which photons set the shield.` : `.`),
       );
 
     const pb = p.shields.find((s) => s.material === "lead")!;
