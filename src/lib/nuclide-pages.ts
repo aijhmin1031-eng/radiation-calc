@@ -29,6 +29,10 @@ export const PUBLISHED: ReadonlySet<string> = new Set([
   /* 연료주기 · 환경 · NORM · 해체 */
   "Pu-238", "Pu-240", "Pu-241", "Am-243", "Np-237", "Cm-244", "U-238", "U-235", "U-234", "U-233", "Th-232", "Th-230",
   "Ra-228", "Pb-210", "Cs-135", "I-129", "Tc-99", "Se-79",
+  /* ★ 2026-10-28(T7, 소유주 「상위 20쪽 고유 해설을 하자」) — 10-06 에 지운 쪽 둘을 되살린다. Search Console 3개월
+     (9/9~10/25) 노출이 U-236 103회(핵종 쪽 2위) · Ra-224 64회였다 — 지운 뒤에도 찾는 사람이 있었고 그 주소는 404 였다.
+     둘 다 300어 넘는 손글과 출처를 달고 선다(`data/nuclide-notes.ts` 의 `GSC_TOP20`). */
+  "U-236", "Ra-224",
 ]);
 
 const T = nuclides as unknown as Record<string, { t_half_s: number }>;
@@ -48,7 +52,7 @@ for (const k of PUBLISHED) {
     throw new Error(`nuclide-pages: 반감기 ${T[k].t_half_s} s 인 ${k} 는 쪽을 세우지 않는다(하한 ${MIN_HALF_LIFE_S} s)`);
 }
 
-/** ★★ **쪽은 두고 색인에서만 뺀다 — 13장**(2026-10-25, 애드센스 재신청 준비 D2).
+/** ★★ **쪽은 두고 색인에서만 뺀다 — 12장**(2026-10-25 13장, 애드센스 재신청 준비 D2 · 10-28 Ra-228 해제).
  *  기준: 쪽 본문(표 제외) 500어 미만인 18장 중 방문 상위 26종에 들지 않는 13장. 방문 상위 다섯(Po-210 · Cf-252 ·
  *  C-14 · Ni-63 · H-3)은 빼지 않고 손글 단락을 하나씩 더했다(`data/nuclide-notes.ts`).
  *  ★ `noindex,follow` 다 — 쪽·허브 목록·내부 링크는 그대로 두고, 링크는 따라가게 한다. robots.txt 로 막지 않는다
@@ -56,7 +60,8 @@ for (const k of PUBLISHED) {
  *  ★ 낱장의 robots meta(`pages/nuclides/[slug].astro`)와 사이트맵 거르기(`astro.config.mjs`)가 **이 한 목록**을 본다 —
  *    둘이 갈라지면 「noindex 인데 사이트맵에 있다」가 된다(`check-output` ④ 가 잰다). */
 export const NOINDEX: ReadonlySet<string> = new Set([
-  "Ni-59", "Ra-228", "Th-230", "Np-237", "Tl-204", "U-233", "Ho-166", "Cs-135", "Fe-55", "Tc-99", "Am-243", "I-129", "Se-79",
+  /* ★ 2026-10-28(T7) — Ra-228 을 뺐다. 노출 64회(핵종 쪽 10위)에 손글을 300어 넘게 늘려 색인한다. */
+  "Ni-59", "Th-230", "Np-237", "Tl-204", "U-233", "Ho-166", "Cs-135", "Fe-55", "Tc-99", "Am-243", "I-129", "Se-79",
 ]);
 
 /* 쪽이 없는 핵종을 noindex 목록에 적으면 아무 일도 안 일어난다 — 오타를 빌드에서 막는다. */

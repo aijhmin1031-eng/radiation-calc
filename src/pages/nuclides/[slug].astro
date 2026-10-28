@@ -6,7 +6,7 @@ import { ALL_KEYS, NUCLIDES, nuclidePage, slugOf, longName, decayWord, halfLifeT
 import { paragraphs, decayCaption, sectionHeads } from "../../lib/nuclide-prose";
 import { nuclideSeo } from "../../lib/nuclide-seo";
 import { PAGE_KEYS, isNoindex } from "../../lib/nuclide-pages";
-import { NUCLIDE_NOTES } from "../../data/nuclide-notes";
+import { NUCLIDE_NOTES, noteFirstSentence } from "../../data/nuclide-notes";
 import NuclideRef from "../../components/NuclideRef.astro";
 import { FIELD_PRO } from "../../lib/tools";
 
@@ -28,6 +28,9 @@ const seo = nuclideSeo(p);
  *  머리글과 `check-nuclides` ④-3 이 든다. 글이 없는 핵종이면 구획 자체가 없다.
  *  ★ 2026-10-06 ④ 부터 쪽이 있는 핵종의 글만 그려진다 — 나머지 글은 자료로 남는다(되살릴 때를 위해). */
 const note = NUCLIDE_NOTES[key];
+/** ★ 2026-10-28(T7) — 출처를 단 손글(Search Console 노출 상위 20종)은 구조화 데이터의 쪽 설명을 **손글 첫 문장**으로 한다.
+ *  meta description 은 `nuclideSeo` 그대로다(검색 결과에 수치 요약이 낫다). */
+const noteLead = note?.sources ? noteFirstSentence(note) : undefined;
 
 const sig = (x: number, d = 3) => (Number.isFinite(x) ? x.toPrecision(d) : "—");
 const mm = (cm: number) => (Number.isFinite(cm) ? (cm * 10).toPrecision(3) : "—");
@@ -73,7 +76,8 @@ const TOOLS_FOR: { href: string; label: string; when: boolean; prefill?: boolean
 ];
 const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).slice(0, 8);
 ---
-<Base schema="TechArticle" title={seo.title} description={seo.description} noindex={isNoindex(key)}>
+<Base schema="TechArticle" title={seo.title} description={seo.description} noindex={isNoindex(key)}
+      schemaDescription={noteLead} citations={note?.sources?.map((x) => x.label) ?? []}>
   <nav class="tap-list mb-4 flex flex-wrap items-center gap-x-1.5 text-[12px] text-ink-faint">
     <a href="/" class="hover:text-ink">Home</a> <span aria-hidden>/</span>
     <a href={u("/nuclides/")} class="hover:text-ink">Nuclides</a> <span aria-hidden>/</span> {p.key}
@@ -95,6 +99,17 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
     <section class="mt-8 max-w-3xl" data-note={p.key}>
       <h2 class="text-[20px] font-semibold text-ink">{note.heading}</h2>
       {note.paragraphs.map((t) => <p class="mt-2 text-[15px] leading-relaxed text-ink-muted">{t}</p>)}
+      {/* ★ 출처(T7) — 문단(`<p>`)이 아니라 목록이다. 게이트 ④-3 은 `<p>` 만 글로 세고, 출처의 문서 번호는 「글 속 숫자」가 아니다.
+          ★ 이름표는 제목(h3)이 아니다 — 20쪽에 같은 「Sources」 제목이 서면 ④-2 「제목 틀 겹침」 중앙이 12% 를 넘는다(실측 14.3%).
+            목록은 `aria-label` 로 이름을 갖는다. */}
+      {note.sources && (
+        <>
+          <div class="mt-4 text-[14px] font-semibold text-ink" aria-hidden="true">Sources</div>
+          <ul class="mt-1 list-disc pl-5 text-[13.5px] leading-relaxed text-ink-muted" data-note-sources aria-label={`Sources for ${p.key}`}>
+            {note.sources.map((x) => <li><a href={x.href} class="underline underline-offset-2 hover:text-ink" rel="noopener">{x.label}</a></li>)}
+          </ul>
+        </>
+      )}
     </section>
   )}
 

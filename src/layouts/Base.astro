@@ -27,8 +27,13 @@ interface Props {
   /** ★ 없는 주소에 나가는 쪽(404) — 주소가 정해져 있지 않으므로 canonical·og:url·쪽 노드를 달지 않는다(2026-10-25 D5).
    *  그전에는 `/calc/404/` 를 정본이라 말해, 어느 없는 주소든 그 주소의 정본이 404 쪽이라고 주장했다. */
   notFound?: boolean;
+  /** 구조화 데이터의 쪽 노드에만 쓰는 설명 — 없으면 `description`(meta)과 같다. 핵종 상위 20쪽(2026-10-28, T7)은 meta 에는
+   *  검색 결과용 수치 요약을, 쪽 노드에는 **손글의 첫 문장**을 싣는다(쪽에 실제로 보이는 문장이다). */
+  schemaDescription?: string;
+  /** 쪽 노드의 `citation` 에 더할 출처 이름 — 손글 아래 「Sources」 목록에 실제로 보이는 것만 받는다(T7). */
+  citations?: readonly string[];
 }
-const { title, description, noindex, share = true, schema = "WebApplication", faq, notFound = false } = Astro.props;
+const { title, description, noindex, share = true, schema = "WebApplication", faq, notFound = false, schemaDescription, citations = [] } = Astro.props;
 const here = Astro.url.pathname;
 /** ★★ 압축 고정 바의 칸 — **머리글과 같은 글자·순서**다(명세 §1, 2026-10-06 ⑥).
  *  ★ 바에는 메뉴 판을 다시 싣지 않는다 — 같은 일곱 링크가 쪽마다 두 벌 서면 쪽 사이 겹침만 는다.
@@ -172,10 +177,10 @@ const footerHtml = renderFooter(spec, { section: "calc", pageUrl: shareOf.pageUr
             url: canonical(here),
             inLanguage: "en",
             isAccessibleForFree: true,
-            description,
+            description: schemaDescription ?? description,
             /* 자료의 출처를 기계가 읽을 수 있게 단다 — 값이 우리 것이 아니라 IAEA·NIST 의 것이다.
                ★ `WebPage`(면책 등 안내 쪽)에는 달지 않는다 — 그 쪽은 그 자료로 쓴 글이 아니다. */
-            ...(schema === "WebPage" ? {} : { citation: DATA_SOURCES.map((d) => d.name) }),
+            ...(schema === "WebPage" ? {} : { citation: [...DATA_SOURCES.map((d) => d.name), ...citations] }),
           }]),
       /* ★ 쪽의 주 노드(`#app`·`#page`)를 바꾸지 않고 **곁에** 선다 — 계산기는 계산기, 문답은 문답이다. */
       ...(faq?.length

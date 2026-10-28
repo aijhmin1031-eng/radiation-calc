@@ -11,18 +11,23 @@
  *   `src/data/og-manifest.json` 에 그때의 제목을 적고 `check-og.mjs` 가 현재 제목과 대조한다.
  *
  * 실행: npm run build && npm run make-og
+ *       쪽 몇 개만: npm run make-og -- --only=/nuclides/u-236/,/nuclides/ra-224/   (Git Bash 에서는 앞에 MSYS_NO_PATHCONV=1 — 인자의 /… 를 경로로 바꾼다)
+ *   ★ `--only` 는 그 쪽만 굽고 매니페스트의 나머지 칸은 그대로 둔다(2026-10-28, T7 — 되살린 쪽 둘 때문에 그림 100여 장을
+ *     다시 구우면 바뀐 것 없는 PNG 가 전부 diff 에 선다). 사이트맵에 없는 주소를 주면 멈춘다.
+ *   ★ 경로는 `fileURLToPath` 로 만든다 — `new URL(…).pathname` 은 Windows 에서 `/E:/…` 가 되어 파일을 못 연다.
  */
 import { chromium } from "playwright";
 import { LAUNCH } from "../gate/chromium.mjs";
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const DIST = new URL("../dist/calc/", import.meta.url).pathname;
+const DIST = fileURLToPath(new URL("../dist/calc/", import.meta.url));
 const BASE = "/calc";
 const stripBase = (p) => (p === BASE ? "/" : p.startsWith(BASE + "/") ? p.slice(BASE.length) : p);
-const OUT = new URL("../public/og/", import.meta.url).pathname;
-const MANIFEST = new URL("../src/data/og-manifest.json", import.meta.url).pathname;
-const ART = new URL("../public/img/tools/", import.meta.url).pathname;
+const OUT = fileURLToPath(new URL("../public/og/", import.meta.url));
+const MANIFEST = fileURLToPath(new URL("../src/data/og-manifest.json", import.meta.url));
+const ART = fileURLToPath(new URL("../public/img/tools/", import.meta.url));
 
 if (!existsSync(join(DIST, "sitemap-0.xml"))) {
   console.error("❌ dist 가 없다 — 먼저 `npm run build`");
@@ -33,7 +38,10 @@ mkdirSync(OUT, { recursive: true });
 const sm = readFileSync(join(DIST, "sitemap-0.xml"), "utf8");
 /** ★ 매니페스트 키는 **base 없는 정본 경로**다 — 쪽의 조회도 `canonicalPath()` 로 한다.
  *  base 가 붙은 키를 넣으면 조회가 안 맞아 **전부 조용히 폴백으로 떨어진다**(이웃 lab 의 사고). */
-const paths = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => stripBase(new URL(m[1]).pathname));
+const allPaths = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => stripBase(new URL(m[1]).pathname));
+const ONLY = (process.argv.find((a) => a.startsWith("--only=")) ?? "").slice("--only=".length).split(",").filter(Boolean);
+for (const p of ONLY) if (!allPaths.includes(p)) { console.error(`❌ --only 의 ${p} 가 사이트맵에 없다(base 없는 정본 경로로 — 예: /nuclides/u-236/)`); process.exit(1); }
+const paths = ONLY.length ? ONLY : allPaths;
 
 const read = (p) => {
   const f = join(DIST, p === "/" ? "index.html" : p.replace(/^\//, ""), "index.html")
@@ -80,7 +88,7 @@ ${art ? `<div class="r"><img src="${art}"></div>` : ""}`;
 
 const browser = await chromium.launch(LAUNCH);
 const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
-const manifest = {};
+const manifest = ONLY.length ? JSON.parse(readFileSync(MANIFEST, "utf8")) : {};
 for (const p of paths) {
   const { heading, title } = read(p);
   const slug = p === "/" ? "home" : p.replace(/^\/|\/$/g, "").replace(/\//g, "-");
@@ -92,7 +100,7 @@ for (const p of paths) {
 /* ★★ 2026-10-06 ⑥ — `/calc/` 허브가 걷혀 사이트맵에 `/` 가 없다. 사이트맵 밖 쪽(404 · `/saved/`)이 받는 대체 카드를
    따로 굽고 매니페스트의 `"*"` 칸에 적는다 — `Base.astro` 가 그것을 읽고, `check-og` 의 「매니페스트 밖 그림」 검사가
    그 그림을 고아로 보지 않는다. */
-if (!manifest["/"]) {
+if (!ONLY.length && !manifest["/"]) {
   await page.setContent(card({ heading: "Radiation calculators that show their work", art: "" }), { waitUntil: "load" });
   await page.screenshot({ path: join(OUT, "home.png"), type: "png" });
   manifest["*"] = { slug: "home", title: "" };

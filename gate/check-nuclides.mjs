@@ -293,6 +293,52 @@ for (const key of noteKeys) {
 note(`정본 ${noteKeys.length}장 중 쪽이 있는 ${shownNotes.length}장 · 그려진 구획 ${renderedNotes}개 · 어수 최소 ${noteMin} 합 ${noteSum} · 숫자 밖 ${strayDigits}건 · 공유 ${NOTE_GRAM}-그램 ${sharedPairs.size}쌍`);
 note(`안 본 것: 쪽이 없는 핵종의 글 ${noteKeys.length - shownNotes.length}장(자료로만 남는다 — 10-05 에 147장 전부 이 검사를 통과했다)`);
 
+/* ── ④-4 노출 상위 20쪽의 손글 — 300~600어 · 출처 · 구조화 설명 · 같은 문장 0 (2026-10-28, T7) ──────────
+   ★★ 계기: Search Console 3개월(9/9~10/25) 사이트 클릭 99 · 노출 4,048 중 핵종 쪽이 클릭 32 · 노출 1,864 이고, 클릭 상위
+     10쪽이 전부 핵종 쪽이다. 애드센스 10-06 거절(「가치가 별로 없는 콘텐츠」)의 가장 큰 후보가 같은 틀의 핵종 쪽이라,
+     소유주가 「상위 20쪽 고유 해설」을 골랐다. 그 20편(`GSC_TOP20`)만 더 높은 자로 잰다.
+   ★ 재는 것 — ① 20종 모두 쪽이 서 있고 색인된다(noindex 아님 — 10-06 에 지운 U-236 · Ra-224 를 되살렸고, Ra-228 의 noindex 를
+     뗐다) ② 글 300~600어(문단만, 산출물 기준) ③ 출처 목록에 https 링크 둘 이상 ④ 구조화 데이터 쪽 노드의 description 이
+     글의 첫 문장과 같다 ⑤ **20편 사이에 같은 문장이 하나도 없다**(여섯 낱말 이상 문장, 소문자 · 문장부호 제거 뒤 비교 —
+     인계서 기준 「3문장 이상 겹치면 실패」보다 좁다). 보고서용으로 쪽별 어수 · 출처 수를 찍는다. */
+console.log("\n④-4 노출 상위 20쪽 손글 — 300~600어 · 출처 링크 둘 이상 · 구조화 설명 = 첫 문장 · 20편 사이 같은 문장 0");
+const { GSC_TOP20, noteFirstSentence } = await tsImport("../src/data/nuclide-notes.ts", import.meta.url);
+const { isNoindex } = await tsImport("../src/lib/nuclide-pages.ts", import.meta.url);
+const TOP_MIN = 300, TOP_MAX = 600;
+const sentOwner = new Map();
+const topRows = [];
+for (const key of GSC_TOP20) {
+  const slug = key.toLowerCase();
+  const pg = pages.get(slug);
+  if (!pg) { fail.push(`④-4 ${key}: 쪽이 없다(상위 20종은 쪽이 서야 한다 — lib/nuclide-pages.ts PUBLISHED)`); continue; }
+  if (isNoindex(key) || /<meta name="robots" content="[^"]*noindex/i.test(pg.html)) fail.push(`④-4 ${key}: noindex 다 — 손글을 단 상위 20쪽은 색인한다`);
+  const got = noteText.get(key);
+  if (!got) { fail.push(`④-4 ${key}: 손글이 그려지지 않았다`); continue; }
+  /* ★ 문단만 센다 — 제목은 넣지 않는다(인계서 「쪽당 300~600어의 해설」은 글 본문이다. 제목까지 세면 F-18 이 305어로
+     통과했지만 문단만은 296어였다 — 2026-10-28 실측으로 자를 좁혔다). */
+  const words = got.ps.join(" ").split(/\s+/).filter(Boolean).length;
+  if (words < TOP_MIN || words > TOP_MAX) fail.push(`④-4 ${key}: 손글 문단 ${words}어 — ${TOP_MIN}~${TOP_MAX}어`);
+  const sec = (pg.main.match(/<section[^>]*data-note="[^"]+"[^>]*>([\s\S]*?)<\/section>/) || [, ""])[1];
+  const links = [...((sec.match(/<ul[^>]*data-note-sources[^>]*>([\s\S]*?)<\/ul>/) || [, ""])[1].matchAll(/<a href="(https?:\/\/[^"]+)"/g))].map((m) => m[1]);
+  const srcN = ((sec.match(/<ul[^>]*data-note-sources[^>]*>([\s\S]*?)<\/ul>/) || [, ""])[1].match(/<li>/g) || []).length;
+  if (links.filter((h) => h.startsWith("https://")).length < 2) fail.push(`④-4 ${key}: 출처 링크(https) ${links.length}개 — 둘 이상`);
+  const lead = noteFirstSentence(NUCLIDE_NOTES[key]);
+  const ld = [...pg.html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)].map((m) => { try { return JSON.parse(m[1]); } catch { return null; } });
+  const node = ld.flatMap((x) => x?.["@graph"] ?? []).find((x) => x?.["@type"] === "TechArticle");
+  if (!node) fail.push(`④-4 ${key}: 구조화 데이터에 TechArticle 쪽 노드가 없다`);
+  else if (node.description !== lead) fail.push(`④-4 ${key}: TechArticle description 이 손글 첫 문장이 아니다 — 「${String(node.description).slice(0, 60)}…」`);
+  for (const sent of got.ps.join(" ").split(/(?<=[.!?])\s+/)) {
+    const k = sent.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+    if (k.split(" ").length < 6) continue;
+    const first = sentOwner.get(k);
+    if (first && first !== key) fail.push(`④-4 ${first}↔${key}: 같은 문장 — 「${sent.slice(0, 80)}」`);
+    else sentOwner.set(k, key);
+  }
+  topRows.push(`${key} ${words}어 · 출처 ${srcN}(링크 ${links.length})`);
+}
+note(`상위 20쪽: ${topRows.join(" | ")}`);
+note(`20편 사이 같은 문장(여섯 낱말 이상): ${fail.filter((f) => f.startsWith("④-4") && f.includes("같은 문장")).length}건 · 비교한 문장 ${sentOwner.size}개`);
+
 /* ── ⑤ 계산기 링크가 실제로 복원되는가 ───────────────────── */
 console.log("\n⑤ 계산기 프리필이 실제로 복원되는가");
 const srv = createServer((q, r) => {
