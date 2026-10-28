@@ -204,6 +204,9 @@
   @media (max-width:639.98px) {
     .hd:has(> .hd-nav[data-wrap]) .hd-sheet { display:block; }
     .hd:has(> .hd-nav[data-wrap]) .hd-nav > details.hd-tools { display:none; }
+    /* v5 — items a section demotes to the sheet on phones (shell.json nav[].phone: "sheet"; disposal's Compare · Notes:
+       seven items wrapped the row to 130px, five keep it at 91px like pro · radimeter). The sheet lists the whole section. */
+    .hd:has(> .hd-nav[data-wrap]) .hd-nav > a.hd-item[data-phone="sheet"] { display:none; }
     .hd:has(> .hd-nav[data-wrap]) .hd-ctl > #thm { display:none; }
     .hd:has(> .hd-nav[data-wrap]) .acct b { display:none; }
     .hd:has(> .hd-nav[data-wrap]) .acct { padding:7px; border:1px solid rgb(var(--c-line)); border-radius:6px; }
@@ -220,6 +223,7 @@
                text-transform:uppercase; color:rgb(var(--c-ink-faint)); }
     .sheet-l { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:0 12px; }
     .sheet-l a { display:block; padding:8px 6px; border-radius:6px; color:rgb(var(--c-ink)); text-decoration:none; font-size:14px; }
+    .sheet-l a[aria-current="page"] { font-weight:600; }
     .sheet-l a:hover { background:rgb(var(--c-panel)); }
     .sheet .thm { margin-top:12px; min-height:36px; padding:0 12px; gap:8px; font-size:13px; }
   }
