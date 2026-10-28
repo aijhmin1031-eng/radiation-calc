@@ -1,7 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { u, DATA_SOURCES } from "../../lib/site";
-import { ALL_KEYS, NUCLIDES, nuclidePage, longName, halfLifeText, decayWord, emissionKinds } from "../../lib/nuclides";
+import { ALL_KEYS, NUCLIDES, nuclidePage, longName, halfLifeText, decayWordOf, emissionKinds } from "../../lib/nuclides";
 import { PAGE_KEYS } from "../../lib/nuclide-pages";
 import NuclideRef from "../../components/NuclideRef.astro";
 
@@ -21,6 +21,14 @@ const sig = (x: number, d = 3) => (Number.isFinite(x) && x > 0 ? x.toPrecision(d
  *  ★ Sn-113 은 쪽이 없다(2026-10-06 ④) — 그래서 「here」가 아니라 「in the dataset」이라고 말한다.
  *  ★★ 「the extreme case」의 **핵종도** 자료에서 고른다(2026-10-29). Kβ 이중 계산을 고치자 Sn-113 의 비가 84 → 29 로
  *    내려가 Ba-133m · Xe-133m 아래가 됐다 — 비만 자료에서 내고 이름을 글자로 두면 문장이 거짓이 된다. */
+/* ★ T12 1-51 — 「For most nuclides the answer is one or two out of a list of twenty or more」는 자료와 어긋났다(한두 줄이면 되는
+ *   쪽은 목록이 짧고, 20줄 넘는 목록은 3줄 이상이 필요하다). 쪽 하나하나의 「90% 에 필요한 줄」에서 센다. */
+const photonPages = rows.filter((r) => r.kinds.includes("gamma")).map((r) => nuclidePage(r.key));
+const LONG_LIST = 20;
+const fewLines = photonPages.filter((p) => p.linesFor90 <= 2);
+const fewMaxLines = Math.max(...fewLines.map((p) => p.shares.length));
+const longLists = photonPages.filter((p) => p.shares.length >= LONG_LIST);
+const longNeed = longLists.map((p) => p.linesFor90);
 const leadRatio = (k: string) => nuclidePage(k).shields.find((s) => s.material === "lead")?.ratio ?? NaN;
 const extremeKey = ALL_KEYS.filter((k) => Number.isFinite(leadRatio(k))).sort((a, b) => leadRatio(b) - leadRatio(a))[0];
 const extremeRatio = leadRatio(extremeKey).toFixed(0);
@@ -54,8 +62,10 @@ const extremeRatio = leadRatio(extremeKey).toFixed(0);
       A line's emission probability says how often it appears per hundred decays. Its share of the dose
       rate also carries its energy and the absorption coefficient of air at that energy, so the two
       rankings differ — a weak, hard line can outrank a strong, soft one. Each sheet prints both columns
-      side by side and says how many lines it takes to account for ninety per cent of the dose rate.
-      For most nuclides the answer is one or two out of a list of twenty or more.
+      side by side, lines in order of their share of the dose rate. For {fewLines.length} of the
+      {" "}{gammaCount} sheets with photons above the cutoff, one or two lines carry ninety per cent of it,
+      and none of those has more than {fewMaxLines} lines above the cutoff{longLists.length > 0 && <>; the {longLists.length} sheets with
+      {" "}{LONG_LIST} or more need from {Math.min(...longNeed)} to {Math.max(...longNeed)}</>}.
     </p>
 
     <h3 id="hvl">Half-value layers are solved for the spectrum, not for one energy</h3>
@@ -92,8 +102,9 @@ const extremeRatio = leadRatio(extremeKey).toFixed(0);
       They are not rare or exotic — they include tritium, carbon-14, nickel-63, strontium-90,
       technetium-99 and iodine-129, which is to say most of what matters in waste characterisation and
       decommissioning. Calculators built around a table of gamma constants either omit them or return
-      zero without saying why. Their sheets give what does apply: beta endpoint and mean, range in
-      common absorbers, bremsstrahlung yield against atomic number, and specific activity.
+      zero without saying why. Their sheets give what does apply: for the beta emitters among them the
+      beta endpoint and mean, range in common absorbers and bremsstrahlung yield against atomic number,
+      for the alpha emitters the recorded alpha lines, and for every one of them the specific activity.
     </p>
 
     <h3 id="beta">Beta shielding is a low-atomic-number job</h3>
@@ -145,7 +156,7 @@ const extremeRatio = leadRatio(extremeKey).toFixed(0);
             <td>{halfLifeText(r.n)}</td>
             {/* ★ 모바일에서 뺀다 — 이 칸이 265px 로 가장 넓은데(「electron capture with
                 beta-plus」) 훑을 때 쓰는 축이 아니다. 낱장을 열면 맨 위에 있다. */}
-            <td class="hidden lg:table-cell">{decayWord(r.n.decay)}</td>
+            <td class="hidden lg:table-cell">{decayWordOf(r.n)}</td>
             <td>{words(r.kinds)}</td>
             {/* ★ 모바일에서 뺀다 — 좁은 화면에서 이 목록의 일은 **찾아서 누르는 것**이고,
                 Γ 는 낱장 맨 위 「Key figures」에 있다. 넷을 넘기면 가로 스크롤이 생기고,

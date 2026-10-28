@@ -1,7 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import NuclideRef from "../components/NuclideRef.astro";
-import { NUCLIDES, nuclidePage, halfLifeText, decayWord } from "../lib/nuclides";
+import { NUCLIDES, nuclidePage, halfLifeText, decayWordOf } from "../lib/nuclides";
 import { u } from "../lib/site";
 
 /** ★★ 측정 곤란 핵종과 척도인자 — 2026-10-06 소유주 지시 「각 lab 에 전문가 글 3~5편」의 셋째 편.
@@ -22,7 +22,7 @@ const left = (k: string, y: number) => Math.pow(2, -y * YEAR / N[k].t_half_s);
 /** 표 — 붕괴 전후로 바깥에 무엇이 나오는가. 20 keV 위 광자선이 기록돼 있는지는 자료가 말한다. */
 const HTM = ["H-3", "C-14", "Cl-36", "Ca-41", "Fe-55", "Ni-59", "Ni-63", "Sr-90", "Tc-99", "I-129", "Pu-241"]
   .filter((k) => N[k])
-  .map((k) => ({ k, t: halfLifeText(N[k]), mode: decayWord(N[k].decay), g: N[k].gamma_const,
+  .map((k) => ({ k, t: halfLifeText(N[k]), mode: decayWordOf(N[k]), g: N[k].gamma_const,
                  e: N[k].beta_max_keV ?? null, r: acr(k) }));
 const noPhoton = HTM.filter((r) => r.g === 0).length;
 

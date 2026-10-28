@@ -227,6 +227,22 @@ Th-232 「우라늄 다음으로 많은 악티나이드」 → 우라늄보다 �
   「사정거리 수치 = 주된 베타」(관례상 희귀 가지의 끝점이다), F-18 손글(TG-108 은 환자 몸의 감쇠를 넣은 더 낮은 상수를 쓴다).
 - Ra-228 은 β 가 생겨 쪽 각도가 「beta shielding」이 되어 제목이 바뀌었다 — 공유 이미지를 다시 구웠다(`make-og --only`).
 - 우산 랜딩의 `radcalc.betaalpha` 가 45 → **46**(Ra-228) — 정본이라 여기서 고치지 않는다(감독).
+
+★★ **생성 문장 결함 수정**(2026-10-29, T12 — T11 교차 검토가 찾은 「그 전부터 있던 문장 문제」 42건 + 같은 종류 6건). 계산값 · `nuclides.json` 은
+그대로고 **글만** 고쳤다(예외 하나: 아래 흔적 가지 관례). 쪽마다 덧대지 않고 **틀**을 고쳤고, 바뀐 문장은 쪽 전수로 뽑아 교차 검토 세 차례를 받았다.
+- 붕괴 캡션 — 1~1000년 띠를 셋으로(「decay storage out of reach」 뒤에 「0.52% survives forty years」가 붙던 것 · Co-60 · Cd-109 · Cs-134), 1년 미만 띠의
+  「7.2e-35% still there after a year」. 붕괴 절 제목을 열 반감기로 다시 짰다(hours and days · days and weeks · weeks and months · months and years ·
+  years and decades · decades and centuries · centuries and millennia).
+- 차폐 띠 — 근거 없는 「a source capsule is likely to exceed」를 뺐고 「barely arises」는 납 TVL 도 1 mm 아래일 때만, 띠 D 의 「설계해야 하는 차폐」 뒤에 「이미
+  20 µSv/h 아래」가 오던 것을 갈랐다. 딸이 차폐를 정하는 쪽(Pb-210)은 「자기 광자」로 한정.
+- 붕괴 낱말 — 산문은 「decays by beta-minus emission」(낱말 겹침), EC+B+ 는 자기 511 keV 줄로 β+ 몫을 내어 Ga-68 · F-18 · Na-22 「positron emission and
+  some electron capture」, Mn-54 · Ni-59 「electron capture」(`decayWordOf` · `decayProse`, `n.decay` 는 그대로).
+- 정확도 주장 — 「agrees with published constants to within about 2%」(감마 쪽 · 옆 칸 · `/methods/`)는 사실이 아니었다 — 그 테스트는 얼어 둔 회귀 기준과
+  비교한다. 뺐고, 검증 보고서가 실제로 보이는 것(단위 사슬 · 보간 · 방출선 표본)으로 바꿨다. `/methods/` 의 어림값(1 Ci · 1 m)은 쪽에서 계산한다.
+- ★ **흔적 가지 관례**(소유주 결정) — 사정거리는 최대 끝점 그대로, **제동복사 몫 · 「ten hardest」 목록은 세기 1% 이상 가지**(`betaBremsMeV`). 바뀐 표시값:
+  Co-60 납 4.28 → 0.91% · I-131 2.32 → 1.74% · Cs-134 4.17 → 1.89% · Au-198 3.93 → 2.76% · 목록에서 Ta-182 빠지고 Sb-124m1 들어옴.
+- 자발 핵분열 — `SPONTANEOUS_FISSION`(출처 단 작은 목록, 지금 Cf-252 3.102%)으로 Cf-252 의 「intake, not external」 결론을 거두고 단서 한 줄을 더했다.
+- 손글 6편(Ba-133 — 40편 중 유일 · Au-198 · Ra-223 · U-235 · Fe-55 · Ge-68). 전후는 작업 보고서.
 - 글: 손글 18곳 — 「이 자료에는 베타가 없다」 15곳, T10-② 에서 뺀 「limits 절의 1 m 선량률」을 가리키던 3곳(Ir-192 · Se-75 · F-18 → 「figures table」).
   붕괴 표기 `Eu-152` 「EC+B+」→「EC+B-」(electron capture and beta-minus decay). 베타 문장이 β− 몫이 99% 미만이면 그 몫을 밝힌다(Eu-152 27.9% · K-40 · Ir-192 ·
   Cl-36 · Tl-204), 희귀 가지 안내의 문턱 5% → 10%(Cs-137 의 1.18 MeV 는 5.3% 가지), 방출선 표 아래 「0.00%」→「under 0.01%」, `/dataset-limits/` 의
@@ -1109,10 +1125,10 @@ SRD 는 **15 U.S.C. §290e** 로 별도 권리가 붙어 미국 정부 저작물
 | 항목 | 결과 |
 |---|---|
 | NIST 감쇠계수 5점 | 문헌과 **0.5% 이내** (662 keV 는 표점 사이 보간이라 1.5%) |
-| Γ — Cs-137·I-131·Cs-134·Co-60·Ir-192 | 문헌과 **2% 이내** (δ=20 keV) |
+| Γ — Cs-137·I-131·Cs-134·Co-60·Ir-192 | **얼어 둔 회귀 기준**(2026-09-13 자기 계산)과 2% 이내 (δ=20 keV) — 문헌 대조가 아니다(T12, `gamma.test.ts` 주석 · `/validation/gamma-shielding/`) |
 | 비방사능 — Co-60·Cs-137·Pu-239·U-238·Am-241·Sr-90·H-3 | 문헌과 **1% 이내** |
-| β E_max — H-3·C-14·P-32·S-35·Ca-45·Ni-63·Sr-90·Y-90·Tc-99·Pm-147·Cl-36·Tl-204·Kr-85·Pu-241·I-129 | **1% 이내** (15/15) |
-| α 주선 — Am-241·Pu-239·Po-210·U-238·Ra-226·Cm-244·Pu-238·Th-230 | **0.01% 이내** (8/8) |
+| β E_max — H-3·C-14·P-32·S-35·Ca-45·Ni-63·Sr-90·Y-90·Tc-99·Pm-147·Cl-36·Tl-204·Kr-85·Pu-241·I-129 | **1% 이내** (15/15) — 커밋 4a22cd6 의 **한 번 확인**이고 지금 이를 다시 재는 테스트는 없다(T12 에서 `/methods/` 의 같은 주장을 뺐다) |
+| α 주선 — Am-241·Pu-239·Po-210·U-238·Ra-226·Cm-244·Pu-238·Th-230 | **0.01% 이내** (8/8) — 위와 같이 한 번 확인, 테스트 없음 |
 | 붕괴·역산·Bateman·MDA·스캔 MDC·역제곱·비정·제동복사 | 해석해·경험식과 일치 |
 | 단위환산 — **군마다 바깥 기준으로 확인한 쌍 16개** + 농도 군 분모 검사 | 정확값과 1e-9 이내 |
 | 데이터 무결성 (이성질체 혼입·표 중복·EC 분류·δ 보존) | 게이트 8건 |

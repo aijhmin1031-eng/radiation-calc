@@ -1,7 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { u, DATA_SOURCES } from "../../lib/site";
-import { ALL_KEYS, NUCLIDES, nuclidePage, slugOf, longName, decayWord, halfLifeText, elementName,
+import { ALL_KEYS, NUCLIDES, nuclidePage, slugOf, longName, decayWordOf, SPONTANEOUS_FISSION, halfLifeText, elementName,
          belowCutoff, alphaSpread } from "../../lib/nuclides";
 import { paragraphs, decayCaption, sectionHeads } from "../../lib/nuclide-prose";
 import { nuclideSeo } from "../../lib/nuclide-seo";
@@ -120,7 +120,7 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
     <table class="mt-3">
       <tbody>
         <tr><td>Half-life</td><td>{halfLifeText(n)} ({sig(n.t_half_s, 4)} s)</td></tr>
-        <tr><td>Decay mode</td><td>{decayWord(n.decay)}</td></tr>
+        <tr><td>Decay mode</td><td>{decayWordOf(n)}</td></tr>
         <tr><td>Specific activity</td><td>{sig(n.sa_bq_g)} Bq/g ({sig(p.saCiPerG)} Ci/g)</td></tr>
         {p.gamma > 0 && <tr><td>Air kerma rate constant Γ (δ = 20 keV)</td><td>{sig(p.gamma)} mGy·m²/(GBq·h)</td></tr>}
         {p.gamma > 0 && <tr><td>Dose rate, 1 GBq at 1 m</td><td>{sig(p.doseAt1mPerGBq)} mGy/h</td></tr>}
@@ -135,10 +135,14 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
     <section class="mt-8 max-w-3xl">
       <h2 class="text-[20px] font-semibold text-ink">{H.lines}</h2>
       <p class="mt-2 text-[14px] leading-relaxed text-ink-muted">
-        {cut
-          ? `${cut.count} further ${plural(cut.count, "line", "lines")} below the 20 keV cutoff, the highest at ` +
+        {/* ★ T12 1-18 — 한 줄일 때 「the highest at … in all」이 여러 줄을 전제했다. */}
+        {cut && cut.count === 1
+          ? `One further line below the 20 keV cutoff, at ${cut.topKeV.toFixed(2)} keV with ` +
+            `${cut.iPct.toPrecision(3)}% emission probability, is excluded here and from Γ.`
+          : cut
+          ? `${cut.count} further lines below the 20 keV cutoff, the highest at ` +
             `${cut.topKeV.toFixed(2)} keV and ${cut.iPct.toPrecision(3)}% emission probability in all, ` +
-            `${plural(cut.count, "is", "are")} excluded here and from Γ.`
+            `are excluded here and from Γ.`
           : `No recorded line for ${p.key} falls below the 20 keV cutoff, so this table is the whole photon spectrum.`}
         {" "}<a href={u(hubLinks.lines)} class="underline">Why the two columns rank differently</a>.
       </p>
@@ -163,8 +167,11 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
     <section class="mt-8 max-w-3xl">
       <h2 class="text-[20px] font-semibold text-ink">{H.shield}</h2>
       <p class="mt-2 text-[14px] leading-relaxed text-ink-muted">
-        Solved numerically across all {p.shares.length} {plural(p.shares.length, "line", "lines")}, narrow beam.
-        {" "}<a href={u(hubLinks.hvl)} class="underline">Why not one representative energy</a>.
+        {/* ★ T12 1-17 — 「across all 1 line」. 한 줄이면 스펙트럼을 풀 것이 없다(TVL/HVL 이 정확히 3.32 다). */}
+        {p.shares.length === 1 ? "Solved for the single line, narrow beam."
+          : p.shares.length === 2 ? "Solved numerically across both lines, narrow beam."
+          : `Solved numerically across all ${p.shares.length} lines, narrow beam.`}
+        {" "}<a href={u(hubLinks.hvl)} class="underline">{p.shares.length === 1 ? "How the half-value layer is solved" : "Why not one representative energy"}</a>.
       </p>
       <table class="mt-3">
         <thead><tr><th>Material</th><th>HVL (mm)</th><th>TVL (mm)</th><th>TVL / HVL</th></tr></thead>
@@ -177,8 +184,9 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
         </tbody>
       </table>
       <p class="mt-2 text-[13px] text-ink-faint">
-        A single energy would give 3.32.
-        {" "}<a href={u(hubLinks.tvl)} class="underline">What a spread of energies does instead</a>.
+        {/* ★ T12 검토 — 한 줄 쪽(TVL/HVL 이 정확히 3.32)에서 「A single energy would give 3.32 … What a spread of energies does instead」가 어색했다. */}
+        {p.shares.length === 1 ? "With one line the ratio is the single-energy 3.32." : "A single energy would give 3.32."}
+        {" "}<a href={u(hubLinks.tvl)} class="underline">{p.shares.length === 1 ? "What a spread of energies would do" : "What a spread of energies does instead"}</a>.
       </p>
     </section>
   )}
@@ -197,6 +205,13 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
           {p.betaRanges.map((r) => <tr><td>{r.material}</td><td>{mm(r.cm)}</td></tr>)}
         </tbody>
       </table>
+      {/* ★ 흔적 가지 관례(T12) — 제동복사 몫은 세기 1% 이상 가지의 최대 끝점으로 계산한다. 사정거리 끝점과 다르면 밝힌다. */}
+      {p.bremsMeV && p.bremsMeV !== p.betaMaxMeV && (
+        <p class="mt-4 text-[14px] leading-relaxed text-ink-muted">
+          The conversion below uses the {sig(p.bremsMeV)} MeV branch; the rarer {sig(p.betaMaxMeV ?? NaN)} MeV branch
+          sets only the range above.
+        </p>
+      )}
       <table class="mt-4">
         <thead><tr><th>Shield material</th><th>Fraction of beta energy converted to X-rays</th></tr></thead>
         <tbody>
@@ -268,7 +283,12 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
         <li>{mmText(p.betaRanges[0].cm)} of {p.betaRanges[0].material} for the {sig(p.betaMaxMeV)} MeV
           endpoint: a ±10% fit, and not a skin dose.</li>
       )}
-      {Boolean(n.alpha?.length) && <li>Alpha reaches nothing through skin — {p.key} is an intake problem, not an external one.</li>}
+      {/* ★ T12 1-39 · 1-40 — 「Ra-226 is an intake problem, not an external one」은 광자 수치가 있는 쪽에서 핵종 전체를 두고 말했다.
+          진술은 **알파에 대한 것**이다(위 알파 문단이 2026-09-23 에 고친 것과 같은 결함). */}
+      {Boolean(n.alpha?.length) && <li>Alpha reaches nothing through skin — {p.key}'s alpha is an intake problem, not an external one.</li>}
+      {/* ★ T12 h — 자발 핵분열 가지는 이 자료의 어떤 수치에도 들지 않는다(SPONTANEOUS_FISSION, 출처는 그 목록). */}
+      {/* ★ T12 검토 — 반감기 · 붕괴 표는 SF 가지까지 든 전체 붕괴의 값이다. 빠진 것은 핵분열이 내는 중성자 · 즉발 감마뿐이다. */}
+      {SPONTANEOUS_FISSION[p.key] && <li>No figure on this page covers the neutrons and prompt gamma rays of spontaneous fission, which occurs in about {SPONTANEOUS_FISSION[p.key].toPrecision(2)}% of {p.key} decays.</li>}
       <li><a href={u(hubLinks.limits)} class="underline">What every sheet leaves out</a>, internal dose included.</li>
     </ul>
   </section>

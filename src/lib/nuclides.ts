@@ -36,6 +36,11 @@ export const NUCLIDES = nuclides as unknown as NuclideMap;
  *    (`decay-chain` 은 첫머리 「EC」로 딸을 고르므로 딸은 그대로 Sm-152 다). */
 const DECAY_FIX: Record<string, string> = { "Pu-241": "B-", "Nb-95m": "IT", "Cl-36": "B-", "K-40": "B-", "Ir-192": "B-", "Eu-152": "EC+B-" };
 for (const [k, mode] of Object.entries(DECAY_FIX)) if (NUCLIDES[k]) NUCLIDES[k].decay = mode;
+/** ★ 자발 핵분열 가지가 **이 자료의 수치 밖에서** 외부 위험을 만드는 핵종(2026-10-29, T12 h) — 자료의 붕괴 표기는 「A」뿐이고
+ *  중성자 · 핵분열 감마는 어떤 계산에도 들지 않는다. 그런데 쪽이 「한계는 섭취이지 외부선량이 아니다」라고 말하고 있었다(Cf-252).
+ *  값은 몫(% of decays). Cf-252: IAEA Live Chart(ENSDF) ground_states 「SF 3.102(3)%」(DDEP 도 약 3.09%) — 2026-10-29 확인.
+ *  ★ 판정에만 쓴다(자료는 바꾸지 않는다). 쪽이 「limits」 제목 · 알파 문장 · 단서 한 줄을 이 목록으로 가른다. */
+export const SPONTANEOUS_FISSION: Readonly<Record<string, number>> = { "Cf-252": 3.102 };
 export const ATTEN = attenuation as unknown as Record<Material, Row[]>;
 
 /** ★ 원소 이름은 **미국 철자**로 쓴다 — 엔진의 물질 이름이 이미 `aluminum` 이다.
@@ -75,6 +80,24 @@ const DECAY_WORD: Record<string, string> = {
 };
 export const decayWord = (d: string | null) => (d && DECAY_WORD[d]) || (d ?? "not recorded");
 
+/** ★ 「EC+B+」 한 낱말이 β+ 몫이 89% 인 Ga-68 과 10⁻⁶% 인 Mn-54 에 똑같이 붙었다(2026-10-29, T12 1-29 · 1-37).
+ *  ENSDF 의 이 표기는 「EC 와 β+ 를 합쳐」라는 뜻이라 갈림을 말하지 않는다. 자료가 갈림을 드는 곳은 **그 핵종 자신의
+ *  511 keV 줄**이다(소멸 광자 둘 = 양전자 하나) — 몫 ≥ 50% 면 양전자가 주, 줄이 없으면 전자포획뿐이라고 쓴다.
+ *  그 사이(Y-88 0.21% · Zn-65 1.42%)는 지금 낱말 그대로다. ★ `n.decay` 는 바꾸지 않는다 — 딸 고르기 · 계산기가 그 값을 읽는다. */
+const positronShare = (n: Nuclide) =>
+  n.lines.filter(([e]) => Math.abs(e - 511) < 1).reduce((s, [, i]) => s + i, 0) / 200;
+export function decayWordOf(n: Nuclide): string {
+  if (n.decay === "EC+B+") {
+    const s = positronShare(n);
+    if (s >= 0.5) return "positron emission and some electron capture";
+    if (s === 0) return "electron capture";
+  }
+  return decayWord(n.decay);
+}
+/** 산문용 — 「decays by beta-minus decay」처럼 낱말이 겹치지 않게 「… decay」를 「… emission」으로 쓴다(T12 1-32).
+ *  표의 「Decay mode」 칸은 `decayWordOf` 그대로다. */
+export const decayProse = (n: Nuclide) => decayWordOf(n).replace(/ decay$/, " emission");
+
 /** 반감기를 사람이 읽는 한 줄로. 데이터의 `hl`·`hl_unit` 은 IAEA 표기 그대로다. */
 const UNIT_WORD: Record<string, string> = {
   s: "seconds", m: "minutes", h: "hours", d: "days", Y: "years", ms: "milliseconds", us: "microseconds",
@@ -110,6 +133,8 @@ export interface NuclidePage {
   hardens: boolean;
   betaMaxMeV: number | null;
   betaRanges: { material: string; cm: number }[];
+  /** 제동복사 몫을 계산한 끝점 [MeV] — 세기 1% 이상 가지의 최대 끝점(아래 `betaBremsMeV`). 사정거리의 `betaMaxMeV` 와 다를 수 있다 */
+  bremsMeV: number | null;
   bremsLow: number; bremsLead: number;    // 제동복사 수율 (아크릴 Z≈6 대 납 Z=82)
   decayPoints: { label: string; frac: number }[];
   timeTo: { label: string; text: string }[];
@@ -138,6 +163,19 @@ export const fmtTime = (s: number): string => {
   return `${s.toPrecision(3)} seconds`;
 };
 
+/** ★★ 흔적 가지 관례(소유주 결정 2026-10-29, T12) — **사정거리**는 기록된 가지(0.001% 초과)의 **최대 끝점**으로 잡는다
+ *  (가장 센 베타를 막아야 한다 — 차폐를 보수적으로 잡는다). **제동복사 몫**과 「가장 센 베타」 목록은 그렇게 하면 안 된다:
+ *  Co-60 의 1.49 MeV 는 0.12% 가지이고, Au-198 의 1.37 MeV 는 0.025% 가지다 — 그 끝점으로 계산한 제동복사 몫은
+ *  거의 모든 붕괴가 내는 베타보다 수십 % ~ 몇 배 크다. 그래서 둘은 **세기 1% 이상 가지의 최대 끝점**으로 계산한다.
+ *  1% 이상 가지가 없으면(지금 자료에는 없다) 최대 끝점으로 돌아간다. */
+export const BETA_BRANCH_FLOOR_PCT = 1;
+export function betaBremsMeV(key: string): number | null {
+  const b = NUCLIDES[key].beta?.filter((x) => x.max != null) as { max: number; i: number }[] | undefined;
+  if (!b?.length) return null;
+  const sig = b.filter((x) => x.i >= BETA_BRANCH_FLOOR_PCT);
+  return Math.max(...(sig.length ? sig : b).map((x) => x.max)) / 1000;
+}
+
 export function nuclidePage(key: string): NuclidePage {
   const n = NUCLIDES[key];
   const kinds = emissionKinds(n);
@@ -156,6 +194,7 @@ export function nuclidePage(key: string): NuclidePage {
   const hardens = shields.some((s) => Number.isFinite(s.ratio) && s.ratio > SINGLE * 1.25);
 
   const betaMaxMeV = n.beta_max_keV ? n.beta_max_keV / 1000 : null;
+  const bremsMeV = betaBremsMeV(key);
   const betaRanges = betaMaxMeV
     ? [["acrylic", 1.18], ["aluminum", DENSITY_G_CM3.aluminum], ["water", 1.0], ["glass", 2.5]]
         .map(([material, rho]) => ({ material: material as string, cm: betaRangeCm(betaMaxMeV, rho as number) }))
@@ -171,9 +210,9 @@ export function nuclidePage(key: string): NuclidePage {
     doseAt1mPerGBq: pointSourceDoseRate(gamma, 1, 1),
     doseAt1mPerCi: pointSourceDoseRate(gamma, BQ_PER_CI / 1e9, 1),
     shares, meanPhotonKeV: shares.length ? meanPhotonEnergyKeV(n.lines, ATTEN.air, DELTA_DEFAULT_KEV) : NaN,
-    linesFor90, shields, hardens, betaMaxMeV, betaRanges,
-    bremsLow: betaMaxMeV ? bremsstrahlungYield(6, betaMaxMeV) : NaN,
-    bremsLead: betaMaxMeV ? bremsstrahlungYield(82, betaMaxMeV) : NaN,
+    linesFor90, shields, hardens, betaMaxMeV, betaRanges, bremsMeV,
+    bremsLow: bremsMeV ? bremsstrahlungYield(6, bremsMeV) : NaN,
+    bremsLead: bremsMeV ? bremsstrahlungYield(82, bremsMeV) : NaN,
     decayPoints,
     timeTo: [
       { label: "10 % of today's activity", text: fmtTime(elapsedFromRatio(0.1, T)) },
