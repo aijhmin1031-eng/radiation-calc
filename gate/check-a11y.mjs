@@ -25,6 +25,7 @@
  *  `landmark-unique [moderate]` 로 **참고에만** 찍힌다(빨갛지 않다 — 그것이 설계다). */
 import { chromium } from "playwright";
 import { LAUNCH } from "./chromium.mjs";
+import { serveShell } from "./shell-assets.mjs";
 import { createServer } from "node:http";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { extname, join, relative } from "node:path";
@@ -42,6 +43,7 @@ const PLATFORM_ROOT = { "/track.js": ["text/javascript", "/* platform layer stub
 
 const srv = createServer((q, r) => {
   let p = decodeURIComponent(q.url.split("?")[0]);
+  if (serveShell(p, r)) return;   // 공통 셸 자산 /shell/* — 플랫폼 층(우산)이 내주는 것을 흉내 낸다(gate/shell-assets.mjs)
   if (PLATFORM_ROOT[p]) { r.writeHead(200, { "content-type": PLATFORM_ROOT[p][0] }); return r.end(PLATFORM_ROOT[p][1]); }
   let f = join(DIST, p);
   if (p.endsWith("/")) f = join(f, "index.html");

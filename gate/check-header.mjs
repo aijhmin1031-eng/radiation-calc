@@ -6,9 +6,16 @@
  *
  *  ★ 다른 게이트가 못 보는 것 — ① 로그인 **상태별** 화면은 저장소를 채워야만 생긴다
  *    ② 첫 그림의 글자(로그인한 사람에게 「Sign in」이 보이면 안 된다)
- *    ③ 머리글 높이 예산(줄이 하나 늘 때마다 모바일에서 40px 씩 먹는다). */
+ *    ③ 머리글 높이 예산(줄이 하나 늘 때마다 모바일에서 40px 씩 먹는다).
+ *  ★★ 2026-10-28 공통 셸 v3 — 손잡이와 칩은 이제 정본 `radiation-lab/public/shell/` 의 render.mjs 출력이다: 손잡이 `#thm`
+ *    (해 `.thm-sun` · 달 `.thm-moon`), 칩 `#acct`(`[data-acct-out]` 「Sign in」 · `[data-acct-in] #acct-who` 이름 — shell.js 가
+ *    글자를 넣는다; 어느 쪽이 보이는지는 shell.css 가 `html[data-acct]` 로 정한다). 묻는 것은 그대로다 — 선택자만 바뀌었다.
+ *  ★ 칩은 shell.json 이 apex 의 모든 쪽에 두는 **셸의 일부**라 빌드의 환경변수와 무관하게 늘 있다. 환경변수가 없는 빌드(CI)는
+ *    상태별 화면을 만들 수 없으므로 **상태 검사만** 건너뛴다 — 그때 「Sign in」이 가는 /calc/saved/ 는 기능이 꺼졌다고
+ *    밝힌다(check-save 가 잰다). 그전 「꺼진 빌드에는 칩이 없어야 한다」는 셸 이전의 규칙이다. */
 import { chromium } from "playwright";
 import { LAUNCH } from "./chromium.mjs";
+import { serveShell } from "./shell-assets.mjs";
 import { createServer } from "node:http";
 import { readFileSync, existsSync } from "node:fs";
 import { extname, join } from "node:path";
@@ -30,6 +37,7 @@ const who0 = (signed) => (signed ? "로그인" : "로그아웃");
 
 const srv = createServer((q, r) => {
   let p = decodeURIComponent(q.url.split("?")[0]);
+  if (serveShell(p, r)) return;   // 공통 셸 자산 /shell/* — 플랫폼 층(우산)이 내주는 것을 흉내 낸다(gate/shell-assets.mjs)
   if (p.startsWith("/calc")) p = p.slice(5) || "/";
   let f = join(DIST, p);
   if (existsSync(f) && !extname(f)) f = join(f, "index.html");
@@ -51,7 +59,7 @@ const refInBuild = html.match(/sb-\s*"?\s*\+?\s*"?([a-z0-9]{15,})/)?.[1]
    **표시가 없다는 것**을. 켜진 쪽에만 걸면 CI 가 늘 빨개져 아무도 안 본다. */
 const REF = refInBuild || SB_REF;
 const ON = Boolean(refInBuild);
-console.log(ON ? `   계정 기능 켜진 빌드 — ref ${REF.slice(0, 6)}…` : "   계정 기능 꺼진 빌드 — 표시가 없어야 맞다");
+console.log(ON ? `   계정 기능 켜진 빌드 — ref ${REF.slice(0, 6)}…` : "   계정 기능 꺼진 빌드 — 칩은 셸이 두되(「Sign in」) 상태별 화면은 재지 않는다");
 
 const SESSION = JSON.stringify({
   expires_at: Math.floor(Date.now() / 1000) + 3600,
@@ -72,8 +80,8 @@ for (const [w, h, tag] of [[1280, 900, "데스크톱"], [390, 844, "모바일"]]
 
     const m = await pg.evaluate(() => {
       const hd = document.querySelector("header");
-      const chip = hd.querySelector("[data-acct-chip]");
-      const tg = hd.querySelector("[data-theme-toggle]");
+      const chip = hd.querySelector("#acct");
+      const tg = hd.querySelector("#thm");
       const vis = (e) => !!e && getComputedStyle(e).display !== "none" && e.getBoundingClientRect().width > 0;
       const out = hd.querySelector("[data-acct-out]"), inn = hd.querySelector("[data-acct-in]");
       const r = (e) => { const q = e.getBoundingClientRect(); return { w: Math.round(q.width), h: Math.round(q.height) }; };
@@ -81,7 +89,7 @@ for (const [w, h, tag] of [[1280, 900, "데스크톱"], [390, 844, "모바일"]]
         height: Math.round(hd.getBoundingClientRect().height),
         chip: !!chip, toggle: !!tg,
         signedOutShown: vis(out), signedInShown: vis(inn),
-        who: inn?.getAttribute("data-who") || "",
+        who: (inn?.textContent || "").trim(),   // shell.js 가 #acct-who 에 글자로 넣는다(옛 칩은 data-who 속성 + ::after 였다)
         chipBox: chip ? r(chip) : null, tgBox: tg ? r(tg) : null,
         /** ★★ 2026-09-26 에 손잡이가 **점 + 낱말(LIGHT/DARK)** 에서 **해·달 그림**으로
          *  바뀌었는데 이 검사가 따라오지 않아 **게이트가 4건 빨간 채로 나갔다.**
@@ -91,9 +99,9 @@ for (const [w, h, tag] of [[1280, 900, "데스크톱"], [390, 844, "모바일"]]
          *    ① 두 그림 중 **정확히 하나**만 그려지는가(테마에 맞는 쪽) · ② 그림뿐이므로
          *    **읽어 줄 이름이 있는가**(aria-label/title). 점에는 뜻이 없지만 해·달에는
          *    있고, 화면낭독기에는 그 뜻이 안 가므로 이름이 반드시 있어야 한다. */
-        themeGlyphs: [...hd.querySelectorAll(".rmt-theme-on-light,.rmt-theme-on-dark")]
+        themeGlyphs: [...hd.querySelectorAll(".thm-sun,.thm-moon")]
           .filter((e) => getComputedStyle(e).display !== "none")
-          .map((e) => (e.classList.contains("rmt-theme-on-dark") ? "moon" : "sun")),
+          .map((e) => (e.classList.contains("thm-moon") ? "moon" : "sun")),
         themeName: (tg?.getAttribute("aria-label") || tg?.getAttribute("title") || tg?.textContent || "").trim(),
         overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         /** ★★ **머리글·꼬리말이 본문과 면으로 갈리는가**(2026-09-16 소유주 지적
@@ -139,8 +147,7 @@ for (const [w, h, tag] of [[1280, 900, "데스크톱"], [390, 844, "모바일"]]
     note(`층 대비 — 머리글 ${m.bands.head} · 꼬리말 ${m.bands.foot}(최소 ${BAND_MIN}) · 띠 ${m.bands.headW}px`);
 
     const who = signed ? "로그인" : "로그아웃";
-    if (ON && !m.chip) fail.push(`${tag} ${who}: 머리글에 계정 표시가 없다`);
-    if (!ON && m.chip) fail.push(`${tag} ${who}: 계정 기능이 꺼진 빌드인데 머리글이 로그인을 말한다`);
+    if (!m.chip) fail.push(`${tag} ${who}: 머리글에 계정 칩(#acct)이 없다 — 공통 셸 출력이 아니다`);
     if (!m.toggle) fail.push(`${tag} ${who}: 머리글에 테마 손잡이가 없다`);
     // ★ **첫 그림의 글자** — 로그인한 사람에게 「Sign in」이 보이면 안 되고, 그 반대도 안 된다
     if (ON && signed && m.signedOutShown) fail.push(`${tag} 로그인: 머리글이 여전히 「Sign in」을 보여 준다`);
@@ -162,12 +169,12 @@ for (const [w, h, tag] of [[1280, 900, "데스크톱"], [390, 844, "모바일"]]
     if (!signed && m.toggle) {
       const flip = await pg.evaluate(async () => {
         const before = document.documentElement.dataset.theme || "(없음)";
-        document.querySelector("[data-theme-toggle]").click();
+        document.querySelector("#thm").click();
         await new Promise((r) => setTimeout(r, 120));
         let saved = "";
         try { saved = (JSON.parse(localStorage.getItem("radmeter-v2-theme") || "{}").state || {}).mode || ""; } catch (e) {}
         return { before, after: document.documentElement.dataset.theme || "(없음)", saved,
-                 pressed: document.querySelector("[data-theme-toggle]").getAttribute("aria-pressed") };
+                 pressed: document.querySelector("#thm").getAttribute("aria-pressed") };
       });
       if (flip.before === flip.after) fail.push(`${tag}: 테마 손잡이를 눌러도 안 바뀐다(${flip.before})`);
       if (flip.saved !== flip.after) fail.push(`${tag}: 테마가 저장되지 않았다(화면 ${flip.after} · 저장 ${flip.saved || "없음"})`);
@@ -180,7 +187,7 @@ for (const [w, h, tag] of [[1280, 900, "데스크톱"], [390, 844, "모바일"]]
       note(`${who} — 머리글 ${m.height}px · 칩 ${m.chipBox ? "있음" : "없음"} · 손잡이 없음`);
     } else if (signed) {
       note(ON ? `${who} — 머리글 ${m.height}px · 이름 「${m.who}」 · 「Sign in」 숨김 ${!m.signedOutShown}`
-              : `${who} — 머리글 ${m.height}px · 계정 표시 없음(꺼진 빌드)`);
+              : `${who} — 머리글 ${m.height}px · 계정 칩 「Sign in」(꺼진 빌드 — 상태 검사 생략)`);
     }
     await ctx.close();
   }
@@ -189,5 +196,5 @@ for (const [w, h, tag] of [[1280, 900, "데스크톱"], [390, 844, "모바일"]]
 await browser.close();
 srv.close();
 console.log(fail.length ? `\n❌ ${fail.length}건\n` + fail.map((f) => "   " + f).join("\n")
-                        : `\n✅ 머리글 — 테마 손잡이 · 계정 표시(${ON ? "켜짐: 상태 둘" : "꺼짐: 표시 없음"}) · 2뷰포트`);
+                        : `\n✅ 머리글 — 테마 손잡이 · 계정 칩(${ON ? "켜짐: 상태 둘" : "꺼짐: 칩만, 상태 검사 생략"}) · 2뷰포트`);
 process.exit(fail.length ? 1 : 0);

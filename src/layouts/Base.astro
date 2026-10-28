@@ -4,14 +4,18 @@ import { SITE_NAME, UMBRELLA_NAME, DATA_SOURCES, SITE_URL, u, canonical, canonic
 import { TOOLS, menuName } from "../lib/tools";
 import ogManifest from "../data/og-manifest.json";
 import SiteHeader from "../components/brand/SiteHeader.astro";
-import ThemeToggle from "../components/ThemeToggle.astro";
-import AccountChip from "../components/AccountChip.astro";
-import ShareRow from "../components/ShareRow.astro";
+/* ★★ 공통 셸 v3(2026-10-28) — 머리글 · 꼬리말 · head 자산은 정본 `radiation-lab/public/shell/` 의 사본(`shell/`,
+ *  `npm run sync-shell`)이 그린다. 옛 `ThemeToggle` · `AccountChip` · `ShareRow` 는 걷었다 — 테마 단추와 계정 칩은
+ *  머리글 출력에, 공유 줄은 꼬리말 출력에 들어 있고 동작은 `/shell/shell.js` 가 든다. */
+import spec from "../../shell/shell.json";
+import { renderHeadAssets, renderFooter } from "../../shell/render.mjs";
+import { shareFor } from "../lib/shell-page.mjs";
 interface Props {
   title: string;
   description: string;
   noindex?: boolean;
-  /** 남에게 권할 쪽이 아닌 곳(개인 저장 목록)은 끈다 */
+  /** 남에게 권할 쪽이 아닌 곳(개인 저장 목록)은 끈다 — 공통 꼬리말의 공유 줄은 모든 쪽에 있으므로, 끄면 이 쪽 대신
+   *  apex 홈을 권한다(`lib/shell-page.mjs`). */
   share?: boolean;
   /** ★★ **이 쪽이 무엇인지 사실대로 적는다.** 기본값은 계산기(`WebApplication`)인데,
    *  핵종 낱장(그때 147장, 2026-10-06 ④ 부터 70장)은 **계산기가 아니라 자료 낱장**이라 그대로 두면 그 쪽들이 거짓을
@@ -58,6 +62,13 @@ const ogImage = new URL(u(`/og/${ogSlug}.png`), SITE_URL).href;
 /* 세션 표식을 그리기 전에 세우려면 부팅 스크립트가 저장소 칸 이름을 알아야 한다.
    ★ 이름을 글자로 박지 않고 **환경변수에서 뽑는다** — 프로젝트가 바뀌면 저절로 따라온다. */
 const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z0-9]+)\.supabase\.co/)?.[1] ?? "";
+/* 공통 셸 — head 자산(/shell/shell.css?v=N · /shell/shell.js?v=N + 그리기 전 테마 스크립트)과 꼬리말.
+   ★ `apex: true` — 같은 오리진의 루트 상대 주소다(제3자 요청 0). 라이브에서는 우산 Worker 가 `/shell/*` 을 내주고,
+     게이트의 로컬 서버는 `gate/shell-assets.mjs` 가 vendored 사본으로 흉내 낸다(`/track.js` 와 같은 처방).
+   ★ 꼬리말이 권하는 주소는 이 쪽의 canonical 이고, 404(주소가 없다) · `share={false}`(개인 화면)는 apex 홈이다. */
+const headAssets = renderHeadAssets(spec, { apex: true, withThemeBoot: true });
+const shareOf = shareFor({ canonicalUrl: notFound ? undefined : canonical(here), title, share }, SITE_URL);
+const footerHtml = renderFooter(spec, { section: "calc", pageUrl: shareOf.pageUrl, shareText: shareOf.shareText, apex: true });
 ---
 <html lang="en">
   <head>
@@ -87,14 +98,12 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={ogImage} />
-    {/* 그리기 전에 테마를 적용한다 — JS 로 글자를 넣으면 첫 그림에 반대 상태가 보인다 */}
-    <script is:inline>
-      try {
-        const s = JSON.parse(localStorage.getItem("radmeter-v2-theme") || "null");
-        const m = s && s.state && s.state.mode;
-        if (m === "dark" || m === "light") document.documentElement.dataset.theme = m;
-      } catch (e) {}
-    </script>
+    {/* ★★ 공통 셸의 head 자산 — **그리기 전 테마 스크립트** + `/shell/shell.css?v=N` + `/shell/shell.js?v=N`(defer).
+        테마 스크립트는 우산 쪽과 같은 것(`withThemeBoot`)이다: 저장된 선택이 없으면 OS 설정을 읽어 `data-theme` 을 **항상**
+        세운다. 그전 이 자리의 스크립트는 저장된 선택이 있을 때만 세웠는데, shell.js 의 단추(`#thm`)와 해·달 그림은
+        `data-theme` 만 보므로 — OS 가 다크인 사람에게 해가 보이고 첫 클릭이 「다크 → 다크」가 되는 어긋남이 있었다.
+        ★ JS 로 글자를 넣으면 첫 그림에 반대 상태가 보인다 — 그래서 CSS 가 그리고 스크립트는 속성 하나만 세운다(그대로). */}
+    <Fragment set:html={headAssets} />
     {/* ★★ 계정 상태도 **그리기 전에** 세운다 — 로그인한 사람이 첫 그림에 「Sign in」을 보면
         안 된다. 같은 오리진의 localStorage 한 칸을 읽을 뿐이라 **요청이 0건**이고, 동의
         배너 이전에 나가는 제3자 호출도 없다. 세 lab 과 우산이 같은 칸을 읽는다. */}
@@ -189,12 +198,10 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
     <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-surface focus:px-3 focus:py-2">Skip to content</a>
 
     {/* ★★ **머리글은 한 줄이다**(2026-10-06 ⑥ — 소유주 「상단에 놓아두는 2가지 영역이 다르네… 하나의 계산기 안에
-        다양한 도구가 들어있는 형태로」, 정본 `components/brand/SiteHeader.astro` · 명세 `HEADER-SPEC.md`).
-        그전의 두 막대(분야 칸 셋 + lab 막대)는 걷었다. 전환 손잡이와 계정 표시는 맨 오른쪽 그대로다. */}
-    <SiteHeader here={here}>
-      <ThemeToggle compactOnMobile />
-      <AccountChip />
-    </SiteHeader>
+        다양한 도구가 들어있는 형태로」). 2026-10-28 부터 그 한 줄은 **공통 셸 v3**(정본 `radiation-lab/public/shell/`,
+        HEADER-SPEC v3)의 render.mjs 출력이다 — 우산 홈과 글자 그대로 같은 막대. 전환 손잡이(`#thm`)와 계정 칩(`#acct`)은
+        그 출력 안에 있다. */}
+    <SiteHeader here={here} />
 
     {/* ★★ **압축 고정 바** — 진짜 머리글은 흘려보내고, **지나친 뒤에만** 45px 바가 뜬다.
         머리글 전체를 고정하면 세로 공간을 영구히 뺏는다 — 2026-10-06 두 막대가 된 뒤로는 더하다
@@ -249,55 +256,43 @@ const SB_REF = (import.meta.env.VITE_SUPABASE_URL ?? "").match(/^https:\/\/([a-z
     {/* ★ tabindex="-1" 이 없으면 건너뛰기 링크가 **절반만 듣는다** — 주소는 #main 으로 가고
         화면도 내려가지만 **초점은 body 에 남아**, 다음 Tab 이 다시 쪽 맨 위로 돌아간다.
         키보드 이용자에게는 링크가 아무 일도 안 한 것과 같다(2026-09-14 실측으로 잡았다). */}
-    {/* ★ 공유 줄은 본문 끝에 둔다 — 읽고 난 뒤에 권하는 것이지 읽기 전에 권하는 것이 아니다.
-        저장 목록처럼 **개인 화면**에는 두지 않는다(남에게 권할 쪽이 아니다). */}
+    {/* ★ 공유 줄은 읽고 난 뒤에 권한다 — 2026-10-28 부터 공통 꼬리말의 첫 줄이다(`ShareRow.astro` 는 걷었다 — 같은 다섯
+        단추가 본문 끝과 꼬리말에 두 벌 서면 안 된다). 개인 화면(`share={false}`)은 이 쪽 대신 apex 홈을 권한다. */}
     <main id="main" tabindex="-1" class="mx-auto max-w-content px-5 py-8 focus:outline-none sm:px-8">
       <slot />
-      {share ? <ShareRow title={title} /> : null}
     </main>
 
-    <footer class="mt-16 border-t border-line-strong bg-panel">
-      <div class="mx-auto max-w-content space-y-5 px-5 py-8 text-[13px] sm:px-8">
-        <nav aria-label="Site" class="flex flex-wrap gap-x-4 gap-y-1.5">
-          {TOOLS.map((t) => <a href={u(`/${t.slug}/`)} class="text-ink-muted hover:text-ink">{menuName(t)}</a>)}
-        </nav>
-        <div>
-          <p class="label">Data sources</p>
-          <ul class="mt-1 space-y-0.5 text-ink-muted">
-            {DATA_SOURCES.map((d) => (
-              <li><a href={d.url} rel="noopener" class="hover:text-ink">{d.name}</a></li>
-            ))}
-          </ul>
-        </div>
-        <p class="text-ink-faint leading-relaxed">
-          {UMBRELLA_NAME}'s calculators are for orientation and
-          cross-checking. They <strong>do not replace</strong> an accredited calibration, a shielding
-          design, a dose assessment, or a radiation survey by a qualified person.
-        </p>
-        <nav aria-label="Platform documents" class="flex flex-wrap gap-x-4 gap-y-1.5 text-ink-faint">
-          <a href={u("/disclaimer/")} class="hover:text-ink">Disclaimer</a>
-          <a href={u("/methods/")} class="hover:text-ink">Methods and data</a>
-          <a href={u("/validation/")} class="hover:text-ink">Validation</a>
-          {/* ★★ 개인정보·약관·연락은 **플랫폼 층**이고 이제 **우산 루트**에 산다.
-              2026-09-14 에는 루트에 없어서(라이브 404) `/radimeter/` 밑을 가리켰는데,
-              2026-09-21 부터 루트에 실재한다(2026-09-28 라이브 200 으로 확인).
-              ★ 옮기는 이유는 편의가 아니라 **내용이 다르기 때문**이다 — 오리진 전체를
-                덮는 단일 정책과 구글 광고 쿠키·맞춤 광고 해제 고지는 **루트 문서에만**
-                있다. 이 lab 하단의 Privacy 를 누른 사람이 RadiMeter 의 측정 데이터
-                설명을 읽는 것은 틀린 안내였다.
-              ★★ **끝 슬래시를 붙이지 않는다.** 우산 쪽의 정본은 슬래시 없는 쪽이다 —
-                우산 자기 꼬리말·사이트맵·라이브 canonical 셋이 모두 `/privacy` 다.
-                슬래시를 붙여도 200 이지만 그것은 canonical 이 딴 곳을 가리키는
-                **중복 주소**이고, 거기로 세 lab 을 보내면 중복을 새로 만든다.
-              ★ About(운영 주체 소개)도 같은 층이라 우산 루트 `/about` 을 가리킨다
-                (2026-10-25 라이브 200·canonical 슬래시 없음 확인). */}
-          <a href="/about" class="hover:text-ink">About</a>
-          <a href="/privacy" class="hover:text-ink">Privacy</a>
-          <a href="/terms" class="hover:text-ink">Terms</a>
-          <a href="/contact" class="hover:text-ink">Contact</a>
-        </nav>
+    {/* ★★ 공통 꼬리말(v3)에는 이 lab 의 **도구 여덟 · 자료 출처 · 면책 문단**이 없다(공유 줄 · 3열 · 한 줄 — 네 오리진 동일).
+        그 셋은 쪽마다 있어야 하는 것들이라(check-output ⑦ 「면책 · IAEA/NIST 출처가 모든 쪽에」, 도구 링크 여덟은
+        내부 링크 수의 일부) 꼬리말 **위의 aside** 로 옮겨 보존한다. `<main>` 밖이다 — 안에 두면 쪽마다 어수가 늘어
+        얇은 쪽 검사(check-output ⑥ · check-adsense ②)가 둔해진다. 도구 링크는 `<nav>` 라 check-notes 가 세지 않는다.
+        옛 꼬리말의 「Platform documents」(Disclaimer · Methods · Validation · About · Privacy · Terms · Contact)는 공통
+        꼬리말의 About the site · Legal 열이 전부 든다 — 잃은 링크 0. */}
+    <aside class="site-notes mx-auto max-w-content px-5 pb-10 pt-2 text-[13px] sm:px-8" aria-label="Calculators, data sources and scope">
+      <nav aria-label="All calculators" class="flex flex-wrap gap-x-4 gap-y-1.5">
+        {TOOLS.map((t) => <a href={u(`/${t.slug}/`)} class="text-ink-muted hover:text-ink">{menuName(t)}</a>)}
+      </nav>
+      <div class="mt-5">
+        <p class="label">Data sources</p>
+        <ul class="mt-1 space-y-0.5 text-ink-muted">
+          {DATA_SOURCES.map((d) => (
+            <li><a href={d.url} rel="noopener" class="hover:text-ink">{d.name}</a></li>
+          ))}
+        </ul>
       </div>
-    </footer>
+      <p class="mt-5 text-ink-faint leading-relaxed">
+        {UMBRELLA_NAME}'s calculators are for orientation and
+        cross-checking. They <strong>do not replace</strong> an accredited calibration, a shielding
+        design, a dose assessment, or a radiation survey by a qualified person.
+      </p>
+    </aside>
+
+    {/* ★★ 공통 꼬리말 — render.mjs 출력 그대로(공유 줄 · About the site / Radiation Lab / Legal · 한 줄).
+        ★★ 개인정보·약관·연락·About 은 **플랫폼 층**이고 우산 루트에 산다(`/privacy` · `/terms` · `/contact` · `/about`,
+          끝 슬래시 없음 — 우산의 canonical 이 그렇다; 2026-09-28 · 2026-10-25 라이브 200 확인). 그 주소는 이제 shell.json 이
+          들고 render.mjs 가 apex 에서 루트 상대로 낸다 — 이 레포가 글자로 적지 않는다(check-output ② 의 허용 목록은 그대로다).
+        ★ `gate/check-shell.mjs` 가 산출물의 footer.site 를 같은 호출로 다시 그려 바이트 동일을 잰다. */}
+    <Fragment set:html={footerHtml} />
   </body>
 </html>
 

@@ -1,6 +1,6 @@
 /** 이름·주소 정본 — 한 곳이다. 쪽에서 이름을 글자로 적지 않는다.
  *  주소는 환경변수 SITE_URL 이 이기고, env 가 닿지 않는 자리는 아래 기본값을 쓴다. */
-/** ★★ 2026-10-06 ⑥ — 화면에 보이는 이름은 `Radiation Lab` 하나다(소유주 승인 명세 `HEADER-SPEC.md` §7). apex 가 계산기 하나가 되면서
+/** ★★ 2026-10-06 ⑥ — 화면에 보이는 이름은 `Radiation Lab` 하나다(소유주 승인 명세 — 지금 정본은 `radiation-lab/public/shell/` (HEADER-SPEC v3)). apex 가 계산기 하나가 되면서
  *  `RadCalc` 과 `Radiation Lab` 두 이름이 한 화면에 섞여 있었다. `RadCalc` 은 **등록된 식별자**에만 남는다 —
  *  DOI·Zenodo 인용(`CITATION_NAME`) · GitHub 저장소 · 레포 문서. */
 export const SITE_NAME = "Radiation Lab";

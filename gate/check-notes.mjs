@@ -32,6 +32,7 @@
  *    · 사람이 실제로 누르는지는 못 잰다. 보증하는 것은 **닿을 수 있다**까지다. */
 import { chromium } from "playwright";
 import { LAUNCH } from "./chromium.mjs";
+import { serveShell } from "./shell-assets.mjs";
 import { createServer } from "node:http";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join, extname, dirname } from "node:path";
@@ -61,6 +62,7 @@ if (!existsSync(DIST)) {
 const stripBase = (p) => (p.startsWith(BASE_PATH) ? p.slice(BASE_PATH.length) || "/" : p);
 const server = createServer((req, res) => {
   let p = stripBase(decodeURIComponent(req.url.split("?")[0]));
+  if (serveShell(p, res)) return;   // 공통 셸 자산 /shell/* — 플랫폼 층(우산)이 내주는 것을 흉내 낸다(gate/shell-assets.mjs)
   if (p.endsWith("/")) p += "index.html";
   if (!extname(p)) p += "/index.html";
   const f = join(DIST, p);

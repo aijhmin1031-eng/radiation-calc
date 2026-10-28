@@ -59,7 +59,10 @@ console.log("\n② base 경로 — 내부 링크가 /calc/ 밖을 가리키지 �
  *  301 을 한 번 더 도는 낡은 링크다 — 그래서 허용 목록에서 뺐다. */
 /* ★ 2026-10-25 — `/about`(운영 주체 소개)을 더했다. 법무 셋과 같은 우산 루트 문서이고, 라이브 200 ·
  *  canonical 슬래시 없음을 `curl` 로 재서 확인했다(`/about/` 은 307 로 `/about` 에 보낸다). */
-const EXACT_OK = ["/", "/robots.txt", "/track.js", "/about", "/privacy", "/terms", "/contact", "/calc/"];
+/* ★ 2026-10-28 공통 셸 v3 — `/shell/shell.css?v=N` · `/shell/shell.js?v=N` 도 `/track.js` 와 같은 **플랫폼 층**의 파일이다
+ *  (우산 저장소 `public/shell/`, 같은 apex 의 우산 Worker 가 내준다 — 2026-10-28 라이브 200). base 를 붙이면 404 다.
+ *  위 정규식은 `?` 가 붙은 주소를 애초에 잡지 않지만, 버전 질의가 빠진 날에도 같은 판단이 서야 하므로 적어 둔다. */
+const EXACT_OK = ["/", "/robots.txt", "/track.js", "/shell/shell.css", "/shell/shell.js", "/about", "/privacy", "/terms", "/contact", "/calc/"];
 let stray = 0;
 for (const p of pages) {
   for (const m of p.s.matchAll(/(?:href|src)="(\/[^"#?]*)"/g)) {
