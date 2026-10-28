@@ -6,6 +6,15 @@
 // plus a section slot ("/ RadiMeter"), a section nav and a three-column footer. Styles: shell.css.
 // Behaviour (one open menu, Escape, theme, copy link, account label): shell.js.
 
+/**
+ * @typedef {"home"|"calc"|"pro"|"radimeter"|"disposal"} SectionKey
+ * @typedef {{ section?: SectionKey, currentHref?: string, apex?: boolean }} HeaderOpts
+ * @typedef {{ section?: SectionKey, pageUrl?: string, shareText?: string, apex?: boolean, versionLabel?: string }} FooterOpts
+ * @typedef {{ section: SectionKey, trail?: { label: string, href?: string }[], apex?: boolean }} BreadcrumbOpts
+ * @typedef {{ section: SectionKey }} SectionOpts
+ * @typedef {{ apex?: boolean, withThemeBoot?: boolean }} HeadOpts
+ * @typedef {Record<string, any>} ShellSpec  shell.json
+ */
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const APEX = "https://radiation-lab.com";
 const same = (a, b) => a && b && a.replace(/\/$/, "") === b.replace(/\/$/, "");
@@ -88,6 +97,7 @@ function menu(m, { apex, currentHref, extraGroup }) {
  *  currentHref absolute URL of the page; marks aria-current on the bar and inside the Calculators panel.
  *  apex        true on radiation-lab.com (umbrella and RadCalc): apex hrefs become root-relative.
  */
+/** @param {ShellSpec} spec @param {HeaderOpts} [opts] @returns {string} */
 export function renderHeader(spec, { section = "home", currentHref = "", apex = section === "home" || section === "calc" } = {}) {
   const sec = resolveSection(spec, section);
   const offApex = !(section === "home" || section === "calc");
@@ -147,6 +157,7 @@ function shareRow(pageUrl, shareText) {
  * renderFooter(spec, { section, pageUrl, shareText, apex, versionLabel })
  *  Share row, three columns ({section or About the site} / Radiation Lab / Legal), one line.
  */
+/** @param {ShellSpec} spec @param {FooterOpts} [opts] @returns {string} */
 export function renderFooter(spec, { section = "home", pageUrl, shareText, apex = section === "home" || section === "calc", versionLabel } = {}) {
   const sec = resolveSection(spec, section);
   const col = (title, links) => `<div class="fcol">
@@ -169,6 +180,7 @@ export function renderFooter(spec, { section = "home", pageUrl, shareText, apex 
 }
 
 /** Breadcrumb for every page that is not a home: Radiation Lab / {Section} / … Each crumb a link but the last. Emits BreadcrumbList JSON-LD. */
+/** @param {ShellSpec} spec @param {BreadcrumbOpts} opts @returns {string} */
 export function renderBreadcrumb(spec, { section, trail = [], apex = section === "home" || section === "calc" }) {
   const sec = resolveSection(spec, section);
   const crumbs = [{ label: spec.brand.name, href: spec.brand.home }];
@@ -183,12 +195,14 @@ export function renderBreadcrumb(spec, { section, trail = [], apex = section ===
 }
 
 /** One line under the breadcrumb on app screens (workbench UIs): a way back that does not depend on the browser's history. */
+/** @param {ShellSpec} spec @param {SectionOpts} opts @returns {string} */
 export function renderBackLine(spec, { section }) {
   const sec = resolveSection(spec, section);
   return `<p class="back"><a href="${esc(sec.home)}">&larr; Back to ${esc(sec.name)} home</a></p>`;
 }
 
 /** 404 body for the subdomains (the umbrella keeps its own, longer one). */
+/** @param {ShellSpec} spec @param {SectionOpts} opts @returns {string} */
 export function renderNotFound(spec, { section }) {
   const sec = resolveSection(spec, section);
   const links = [
@@ -209,6 +223,7 @@ export function renderNotFound(spec, { section }) {
  * <head> fragment. apex=true: root-relative asset URLs (same origin, no third-party request);
  * otherwise absolute. withThemeBoot adds the before-paint theme script the umbrella pages already carry.
  */
+/** @param {ShellSpec} spec @param {HeadOpts} [opts] @returns {string} */
 export function renderHeadAssets(spec, { apex = false, withThemeBoot = !apex } = {}) {
   const v = `?v=${spec.version}`;
   const css = apex ? "/shell/shell.css" : spec.assets.css;

@@ -26,7 +26,10 @@ const got = new Map();
 try {
   for (const f of FILES) {
     if (from) {
-      got.set(f, readFileSync(join(from, f)));
+      /* 로컬 체크아웃은 Windows 에서 CRLF 로 놓여 있다 — apex 가 내주는 것(LF)과 같은 바이트가 되게 글자 파일만 LF 로 맞춘다.
+         git 도 LF 로 저장하므로(autocrlf) 커밋되는 내용은 어느 경로로 받아도 같다. */
+      const raw = readFileSync(join(from, f));
+      got.set(f, /\.(json|mjs|css|js|txt)$/.test(f) ? Buffer.from(raw.toString("utf8").replace(/\r\n/g, "\n"), "utf8") : raw);
     } else {
       const res = await fetch(ORIGIN + f, { headers: { "cache-control": "no-cache" } });
       if (!res.ok) throw new Error(`${ORIGIN}${f} → HTTP ${res.status}`);
