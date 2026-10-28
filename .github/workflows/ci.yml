@@ -42,6 +42,13 @@ jobs:
       - name: 게이트 자기 점검 (크로미움 경로 정본)
         run: node gate/check-gates.mjs
 
+      # ★★ 공통 셸 v3(2026-10-28) — 머리글 · 꼬리말이 정본(radiation-lab/public/shell → vendored `shell/`, `npm run sync-shell`)의
+      #   render.mjs 출력과 **바이트 동일**한가 · head 자산 `?v=` 가 shell.json 과 같은가 · 쪽 CSS/JS 에 옛 사본(`--c-paper:` ·
+      #   `.shdr-` · 테마를 쓰는 스크립트)이 0 인가. 정적이라 Chromium 앞에 둔다.
+      #   아래 Chromium 게이트의 로컬 서버는 `/shell/*` 을 같은 사본으로 내준다(gate/shell-assets.mjs) — 라이브에서 우산 Worker 가 하는 일.
+      - name: 공통 셸 정본 대조
+        run: node gate/check-shell.mjs
+
       # ★ 빌드 통과는 아무것도 보장하지 않는다 — 산출물을 직접 본다
       - name: 산출물 점검
         run: node gate/check-output.mjs

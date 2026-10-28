@@ -5,6 +5,7 @@
  *  ⑥ JS 없이 아무 일도 안 일어나는가 ⑦ 좁은 화면에서 한 줄인가. */
 import { chromium } from "playwright";
 import { LAUNCH } from "./chromium.mjs";
+import { serveShell } from "./shell-assets.mjs";
 import { createServer } from "node:http";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { extname, join, relative } from "node:path";
@@ -18,6 +19,7 @@ const note = (s) => console.log("   " + s);
 
 const srv = createServer((q, r) => {
   let p = decodeURIComponent(q.url.split("?")[0]);
+  if (serveShell(p, r)) return;   // 공통 셸 자산 /shell/* — 플랫폼 층(우산)이 내주는 것을 흉내 낸다(gate/shell-assets.mjs)
   if (p.startsWith("/calc")) p = p.slice(5) || "/";
   let f = join(DIST, p);
   if (existsSync(f) && !extname(f)) f = join(f, "index.html");
@@ -185,8 +187,10 @@ for (const vp of [{ w: 1280, h: 900, tag: "데스크톱" }, { w: 360, h: 780, ta
   const r = await pg.$eval("#topbar", (b) => ({ vis: getComputedStyle(b).visibility, on: b.dataset.on }));
   if (r.vis !== "hidden") fail.push(`JS 없음: 바가 보인다(${r.vis}) — 회귀가 생긴다`);
   // ★ 머리글의 화면 좌표가 아니라 **배치 방식**을 본다 — 스크롤하면 좌표는 당연히 음수다
+  // ★ 2026-10-28 공통 셸 v3 — `header.site` 는 `position: relative; z-index: 40`(shell.css — 메뉴 판이 아래 쪽 위에 서게)이다.
+  //   묻는 것은 그대로 「흐름 안에 있는가」다 — static · relative 는 흐름 안, fixed · sticky · absolute 는 밖이다.
   const hp = await pg.$eval("header", (h) => getComputedStyle(h).position);
-  if (hp !== "static") fail.push(`JS 없음: 머리글 position ${hp} — 흐름에서 벗어났다`);
+  if (hp !== "static" && hp !== "relative") fail.push(`JS 없음: 머리글 position ${hp} — 흐름에서 벗어났다`);
   note(`JS 없음 — 바 ${r.vis} · 머리글 position ${hp} (회귀 0)`);
   await ctx.close();
 }

@@ -10,6 +10,51 @@
 
 우산 정본은 `aijhmin1031-eng/radiation-lab`, 절차는 `radiation-meter-tester/docs/umbrella-setup.md`.
 
+## ★★★ 공통 셸 v3 — 머리글 · 꼬리말을 `radiation-lab/public/shell` 정본으로 (2026-10-28, T2)
+
+**계기.** 소유주 「radiation-lab.com 이 사이트가 하나의 사이트처럼 보이게 해줘야 해. 지금 탑재된 pro 기능들이 별도로 구축된 것들이
+있어 다른 사이트처럼 보이는 경향이 있어」. 네 오리진 17쪽 실측(우산 README 2026-10-28 절)에서 「Radiation Lab /」 글자 말고는 글꼴 ·
+배경 · 메뉴 · 꼬리말 · 로그인 입구가 제각각이었다. 이 lab 은 우산과 apex 를 같이 쓰므로 막대가 **한 픽셀도** 달라선 안 되는데, 그것을
+`SiteHeader.astro` 가 우산 `.hd/.tm` 과 같은 모양을 **제 CSS(`.shdr-*` · `.tmenu-*`)로 다시 그려** 지키고 있었다 — 2026-09-16 절
+「레포가 셋이라 공유 모듈을 둘 수 없다 — 같은 숫자를 세 곳에 적는다」의 사본 셋 중 하나. 인용하던 정본 `C:\dev\rl\HEADER-SPEC.md` 는
+이 PC 에 없다. 설계 · 결정 기록: `D:\Files\_작업\20261028_radiation-lab 사이트 개편\20261028_1240_…_공통 셸 명세·결정 기록·작업 분해_설계안.md` §3.9 · §4 B행.
+
+**정본은 우산 `public/shell/`** (shell.json · render.mjs · shell.css · shell.js · fonts/ — https://radiation-lab.com/shell/, 2026-10-28 배포).
+이 저장소는 그 **사본 `shell/`** 을 든다 — `npm run sync-shell`(`scripts/sync-shell.mjs`)이 apex 에서 받아 온다(받은 것이 셸인지 검사한 뒤
+쓴다 · 네트워크가 안 되면 사본을 두고 경고 · `--from=<dir>` 로 로컬 체크아웃 복사). **사본은 손으로 고치지 않는다** — 고칠 것은 우산에
+고치고 다시 받는다. 빌드는 shell.json · render.mjs 만 쓴다(네트워크 없이 재현 가능); shell.css · shell.js · fonts 는 라이브에서 우산 Worker 가
+내주고, 사본은 **게이트의 로컬 서버**만 쓴다.
+
+| 자리 | 전 | 후 |
+|---|---|---|
+| 머리글 `components/brand/SiteHeader.astro` | 마크업 60행 + CSS 75행 + 메뉴 스크립트 — 우산과 같은 숫자를 손으로 | `renderHeader(spec, { section: "calc", currentHref, apex: true })` 출력(`set:html`). 「현재」는 `lib/shell-page.mjs` 의 `currentHrefFor` — 구역 셋(`/calc/nuclides/` · `/calc/methods/` · `/calc/validation/`)은 **뿌리**를 넘겨 낱장에서도 켜지고(옛 `startsWith` 와 같은 뜻), 도구 쪽은 제 주소(Calculators 패널이 지금 도구를 표시). `apex: true` 라 apex 링크가 `/calc/…` 루트 상대 — check-output ② 그대로 |
+| 테마 단추 · 계정 칩 | `ThemeToggle.astro`(저장 · aria-pressed 스크립트) · `AccountChip.astro`(`data-who` + `::after`)를 머리글 슬롯에 | 머리글 출력의 `#thm` · `#acct` — 동작은 `/shell/shell.js`(테마 저장 모양 `{"state":{"mode","resolved"},"version":0}` 그대로). 두 컴포넌트 **삭제**. 계정 **상태**(`data-acct` · `data-acct-who`, SB_REF)는 그대로 `Base.astro` 의 부팅 스크립트 |
+| 그리기 전 테마 스크립트 | 저장된 선택이 있을 때만 `data-theme` | 우산과 같은 것(`renderHeadAssets(…, { withThemeBoot: true })`): 저장이 없으면 OS 설정을 읽어 **항상** 세운다. 옛 방식은 shell.js 의 단추와 해·달 그림이 `data-theme` 만 보므로 OS 다크 + 저장 없음에서 해가 보이고 첫 클릭이 「다크 → 다크」가 됐다 |
+| 꼬리말 `Base.astro` | 도구 여덟 · Data sources · 면책 · Platform documents(링크 7) | `renderFooter(…)` 출력 — 공유 줄 + About the site / Radiation Lab / Legal + 한 줄. 도구 여덟 · 출처 · 면책은 꼬리말 **위의 `aside.site-notes`** 로(`<main>` 밖 — 어수 검사가 둔해지지 않게; 도구 링크는 `<nav>` 라 check-notes 가 세지 않는다). Platform documents 일곱은 공통 열이 전부 든다 — **잃은 링크 0**(내부 링크 4,036개 · 죽은 주소 0) |
+| 공유 줄 `ShareRow.astro`(본문 끝) | 다섯 단추 + 복사 스크립트 | **삭제** — 공통 꼬리말 첫 줄이 같은 다섯이다(두 벌 금지). `share={false}`(저장 목록)와 404 는 이 쪽 대신 **apex 홈**을 권한다(`shareFor`, 우산 404 와 같은 처방) |
+| 색 토큰 `styles/global.css` 12–63행 | `--c-*` 라이트 · 다크 두 블록(+ `color-scheme`) | **삭제** — `/shell/shell.css` 가 같은 이름 · 값을 준다. Tailwind `rgb(var(--c-x) / <alpha>)` 그대로. 실측: `--c-paper` 232 234 230 / 18 21 23, body 배경 같은 값 |
+| head | 테마 스크립트 | `/shell/shell.css?v=1` · `/shell/shell.js?v=1`(defer) — 같은 오리진의 루트 상대, 제3자 요청 0 |
+| 압축 고정 바 `#topbar` | | **그대로**(이번 범위 밖) |
+| `HEADER-SPEC.md` 인용 주석 | SiteHeader · check-platform · check-lockup · lucide.ts · tools.ts · brand.ts | `radiation-lab/public/shell/ (HEADER-SPEC v3)` |
+
+**실측**(Playwright, dist/calc + 우산 public/shell, 4쪽 × 1280/390 × 라이트/다크 = 16, `D:\Files\_작업\20261028_radiation-lab 사이트 개편\T2_캡처\실측.md`):
+머리글 **56px(1280) · 90px(390)** 16/16, 가로 넘침 0, JS · HTTP 오류 0, shell.css 200 · 적용, shell.js 동작(aria-pressed 선다), `data-theme` light/dark, 「현재」 Nuclide data · Methods(390 에서 Nuclides).
+
+### 게이트
+- **`check-shell`**(신설, 체인 2번째, 정적 · 우산 것을 본뜸) — 산출물 **101쪽 전부**: `header.site` · `footer.site` 가 같은 호출의 render.mjs 출력과 **바이트 동일**(머리글 10,247자 · 꼬리말 2,870자 — Astro 의 `compressHTML` 이 `set:html` 을 건드리지 않는다는 것이 이것으로 확인됐다) · 꼬리말이 권하는 주소가 canonical 이고 글이 `<title>` 과 같다(홈을 권하는 쪽은 noindex 둘뿐) · head `?v=` = shell.json version · 그리기 전 테마 스크립트 · 인라인 + `_astro` CSS/JS 에 옛 사본(`--c-paper:` · `.shdr-` · `.tmenu-` · `.rmt-theme` · 테마를 **쓰는** 스크립트 · 옛 컴포넌트 표식) 0 · aside 도구 8 · 출처 · 면책 · shell.json 절대 주소 53개 · 옆에 우산 체크아웃이 있으면 사본 대조(경고만 — CI 에는 우산이 없다). `package.json` 의 `gate` 와 `ci.yml` 두 자리에 적었다(check-gates ② 확인).
+  · 잡은 것: 처음 `<title>` 의 `&#39;` 를 안 되돌려 `/validation/mda/`(MARSSIM's) 하나가 빨갰다 — 엔터티 되돌리기를 숫자 엔터티까지로.
+- **게이트 로컬 서버 11곳**에 `/shell/*` 을 더했다(`gate/shell-assets.mjs` — `SHELL_DIR` 환경변수 → 없으면 vendored `shell/`). 없으면 check-render 가 전 쪽 「HTTP 404」, 다른 게이트는 **벗은 쪽**(토큰 · 막대 CSS 없음)을 잰다. CI 에는 우산이 없으므로 사본이 기본값 — 그래서 sync-shell 이 css · js · fonts 도 받는다(산출물에는 안 들어간다).
+- 고친 것: `check-lockup` `[data-site-header]` → `header.site[data-shell]`(옛 표식은 「옛 막대」로 센다) · `check-header` 선택자(`#thm` · `.thm-sun/.thm-moon` · `#acct` · `#acct-who` 글자) + **칩은 늘 있다**(셸의 일부 — 환경변수 없는 빌드는 상태 검사만 생략) · `check-save` 「켜짐」을 머리글 링크가 아니라 빌드의 `SB_REF` 로 읽고, 꺼진 빌드는 칩 밖의 저장 링크 0 을 요구 · `check-sticky` ⑥ 머리글 `position` static **또는 relative**(shell.css 가 `relative; z-index:40` 을 준다 — 흐름 안이면 된다) · `check-output` 허용 목록에 `/shell/shell.css` · `/shell/shell.js` · `check-gates` · `check-adsense` 의 Windows 경로(`E:\E:\…`)를 `fileURLToPath` 로(CI 에는 차이 없음 — 로컬에서 돌리려고).
+- 로컬 결과 2026-10-28(Windows · PW_CHROMIUM · **환경변수 없는 빌드 = CI 와 같은 상태**): check-gates · **check-shell** · check-output · check-render · check-lockup · check-inputs · check-save · check-sticky · check-header · **check-platform**(치수 · 색 · 메뉴 동작 — 한 픽셀도 안 움직였다) · check-a11y · check-nuclides · check-notes · check-progeny · check-og · check-lastmod · check-adsense · check-validation **전부 통과**. `tsc` · `astro check` 0 오류(`.mjs` 의 서명은 `shell/render.d.mts` — 이 파일만 사본이 아니라 이 저장소 것).
+- 계정 **켜진** 빌드도 따로 확인했다(가짜 Supabase 값으로 빌드 — 커밋 아님): check-header 로그아웃 「Sign in」 · 로그인 이름 「알토리」 · 「Sign in」 숨김 · 전환 light→dark 저장, 1280/390 · check-save 「켜짐」(머리글 · 우측 레일 2곳 · 조작부 있음) · check-shell 그대로. 두 상태 모두 초록이다.
+
+### 못 보는 것 · 다음
+- 머리글 안여백이 **600–639px** 에서 32px 인데 본문(`px-5`)은 20px 이다 — shell.css 의 `@media (max-width:600px)` 규칙(우산과 같음). 이 폭에서 머리글과 본문 글줄이 12px 어긋난다(check-platform 의 글줄 검사는 1280 에서만). 정본에서 640 으로 맞출지는 우산 쪽 결정 — 정본 변경 요청으로 올렸다.
+- `.tm` 패널(z 50, 머리글의 z 40 안)과 `#topbar`(fixed z 40, DOM 뒤) — 메뉴를 연 채 스크롤해 바가 뜨면 바가 패널 위에 선다. 메뉴는 머리글과 함께 흘러가므로 겹치는 구간은 짧다. 실측 결함 아님.
+- 글꼴: shell.css 의 Saira 는 묶음 제목 · 꼬리말 열 제목 · 건너뛰기만 쓴다(막대 글자는 `--body` = system-ui). 이 lab 의 본문은 그대로 Tailwind sans.
+- 사본 `shell/` 이 정본보다 뒤처지는 것은 check-shell ⑧ 이 **옆에 우산이 있을 때만** 경고한다. 정본의 `version` 이 오르면 각 저장소가 `npm run sync-shell` → 빌드 → 커밋해야 한다(자동이 아니다).
+- 하위 도메인 셋(T3 Field Pro · T4 RadiMeter · T5 M-Phreefiteq)은 각자 같은 방식으로 받는다 — 이 저장소의 `scripts/sync-shell.mjs` · `gate/shell-assets.mjs` · `gate/check-shell.mjs` 를 본뜨면 된다.
+
 ## ★★★ 계산기 하나, 도구 일곱 — 머리글 한 줄 · 허브는 apex 홈 · 이름은 「Radiation Lab」 (2026-10-06 ⑥)
 
 소유주: 「여기 상단에 놓아두는 2가지 영역이 다르네… **하나의 계산기 안에 다양한 도구가 들어있는 형태로** 구성해보자.

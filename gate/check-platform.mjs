@@ -16,14 +16,18 @@
  *  ★ 칸(탭)이 없는 층은 칸 검사를 건너뛴다 — 우산에는 구획 탭이 없다(컨트롤뿐이다).
  *
  *  ★★ RadCalc 판(2026-10-06 ⑥) — **우산 레포 `gate/check-platform.mjs`(ab49970)를 그대로 옮기고 설정만 바꿨다.**
- *    머리글 한 줄(명세 `C:\dev\rl\HEADER-SPEC.md`)이 apex 의 모든 쪽에 같은 마크업·같은 치수로 서야 하므로 측정 함수까지
+ *    머리글 한 줄(정본 `radiation-lab/public/shell/` — HEADER-SPEC v3)이 apex 의 모든 쪽에 같은 마크업·같은 치수로 서야 하므로 측정 함수까지
  *    같다. `PBAR`·`SPEC`·`MARK` 를 고치면 **두 레포를 함께** 고친다. 다른 점 셋 —
+ *  ★★ 2026-10-28 공통 셸 v3 — 머리글 마크업은 이제 두 레포가 **같은 render.mjs**(shell.json)로 그린다(`check-shell` 이 바이트 동일을
+ *    잰다). 이 게이트는 그 출력이 화면에서 정본 치수 · 색 · 동작으로 서는지를 그대로 잰다 — 측정 함수는 바꾸지 않았다.
+ *    아래 `PBAR` 의 숫자는 shell.css 의 값과 같아야 한다; 정본을 옮기면 shell.json/shell.css(우산) → sync-shell → 여기 순이다.
  *    ① 쪽마다 현재 칸이 있다(Methods·Nuclide data·Validation 쪽) — `CURRENT` 를 「쪽마다」로 둔다(우산은 0개를 요구한다)
  *    ② 본문 칸 좌측(GUTTER 148px)은 이 lab 의 모든 쪽에서 잰다 — 모든 쪽이 `max-w-content` 한 칸이다
  *    ③ 옛 lab 막대가 없으므로 `HAS_TABS` 는 꺼 둔다(옛 두 막대가 돌아오면 `check-lockup` 이 잡는다)
  */
 import { chromium } from "playwright";
 import { LAUNCH } from "./chromium.mjs";
+import { serveShell } from "./shell-assets.mjs";
 import { createServer } from "node:http";
 import { readFileSync, existsSync } from "node:fs";
 import { extname, join, dirname } from "node:path";
@@ -39,7 +43,7 @@ const SPEC = {
 const TAB = { size: "13px", radius: "4px", padY: "6px", padX: "12px" };
 const GUTTER = 148;   // 1280px 에서 글줄이 시작하는 x (우산 1048/32 · RadiMeter 1024/20 · RadCalc 1048/32)
 
-/* ───────── 머리글 정본 (2026-10-06 ④ — 한 줄 머리글, C:\dev\rl\HEADER-SPEC.md) ─────────
+/* ───────── 머리글 정본 (2026-10-06 ④ — 한 줄 머리글 · 2026-10-28 공통 셸 v3: radiation-lab/public/shell/ (HEADER-SPEC v3)) ─────────
  *  소유주 「여기 상단에 놓아두는 2가지 영역이 다르네… 하나의 계산기 안에 다양한 도구가 들어있는 형태로 구성해보자」 → 「고」.
  *  플랫폼 막대(분야 칸 셋) + lab 막대(RadCalc 칸 셋) 두 줄을 **한 줄**로 합쳤다: 브랜드 · Tools ▾ · Nuclide data · Methods ·
  *  Validation · 테마 · 계정. Tools 는 `<details>` 메뉴이고 도구 여덟(세 묶음)과 자매 사이트 셋을 든다.
@@ -114,6 +118,7 @@ const eq = (what, got, want) => { if (got !== want) fail.push(`${what}: ${got} (
 
 const srv = createServer((q, r) => {
   let p = decodeURIComponent(q.url.split("?")[0]);
+  if (serveShell(p, r)) return;   // 공통 셸 자산 /shell/* — 플랫폼 층(우산)이 내주는 것을 흉내 낸다(gate/shell-assets.mjs)
   if (BASE && p.startsWith(BASE)) p = p.slice(BASE.length) || "/";
   let f = join(DIST, p);
   if (existsSync(f) && !extname(f)) f = join(f, "index.html");

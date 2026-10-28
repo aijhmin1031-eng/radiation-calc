@@ -15,6 +15,7 @@
  */
 import { chromium } from "playwright";
 import { LAUNCH } from "./chromium.mjs";
+import { serveShell } from "./shell-assets.mjs";
 import { createServer } from "node:http";
 import { readFileSync, existsSync } from "node:fs";
 import { extname, join } from "node:path";
@@ -25,6 +26,7 @@ const MIME = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript
                ".svg": "image/svg+xml", ".webp": "image/webp" };
 const srv = createServer((q, r) => {
   let p = decodeURIComponent(q.url.split("?")[0]);
+  if (serveShell(p, r)) return;   // 공통 셸 자산 /shell/* — 플랫폼 층(우산)이 내주는 것을 흉내 낸다(gate/shell-assets.mjs)
   if (p.startsWith("/calc")) p = p.slice(5) || "/";
   let f = join(DIST, p);
   if (existsSync(f) && !extname(f)) f = join(f, "index.html");
@@ -73,12 +75,18 @@ const saved = await page.evaluate(() => {
 });
 await browser.close(); srv.close();
 
-const on = tool.navSaved;
-console.log(`   저장 기능: ${on ? "켜짐" : "꺼짐"} · 저장을 말하는 자리 ${tool.where.length}곳${tool.where.length ? ` (${tool.where.join(", ")})` : ""}`);
+/* ★ 2026-10-28 공통 셸 v3 — 머리글의 계정 칩(#acct → /calc/saved/)은 shell.json 이 apex 의 모든 쪽에 두는 **셸의 일부**라
+ *   빌드의 환경변수와 무관하게 늘 있다. 그래서 「켜짐」을 머리글 링크로 읽을 수 없다 — **빌드에 박힌 저장소 칸 이름**
+ *   (`SB_REF`, check-header 와 같은 규칙)으로 읽는다. 꺼진 빌드에서 저장을 말하는 자리는 머리글 칩 하나뿐이어야 하고,
+ *   그 칩이 가는 /calc/saved/ 는 꺼졌다고 밝혀야 한다(아래 admitsOff). */
+const on = /SB_REF\s*=\s*"[a-z0-9]{15,}"/.test(readFileSync(join(DIST, "gamma-shielding/index.html"), "utf8"));
+const outsideShell = tool.where.filter((w) => w !== "머리글");
+console.log(`   저장 기능: ${on ? "켜짐" : "꺼짐"}(빌드의 SB_REF) · 저장을 말하는 자리 ${tool.where.length}곳${tool.where.length ? ` (${tool.where.join(", ")})` : ""}`);
 console.log(`   도구 쪽 저장 조작부 ${tool.controls.length}개${tool.controls.length ? ` (${tool.controls.join(", ")})` : ""}`);
 console.log(`   낱장: 참조번호 설명 ${saved.claimsRefNumbers ? "있음" : "없음"} · 꺼졌다고 밝힘 ${saved.admitsOff ? "예" : "아니오"} · 로그인 단추 ${saved.controls}개`);
 
 if (on) {
+  if (!tool.navSaved) fail.push("기능이 켜졌는데 머리글에 저장 링크(/calc/saved/)가 없다 — 공통 셸의 계정 칩이 빠졌다");
   if (!tool.controls.length)
     fail.push(`저장 링크가 ${tool.where.join("·")}에 있는데 **도구 쪽에 저장 조작부가 없다** — 없는 기능을 광고한다`);
   if (!saved.claimsRefNumbers)
@@ -86,8 +94,10 @@ if (on) {
   if (!saved.controls)
     fail.push("기능이 켜졌는데 낱장에 로그인 단추가 없다");
 } else {
+  if (outsideShell.length)
+    fail.push(`저장이 꺼졌는데 머리글 칩 밖(${outsideShell.join("·")})에 저장 링크가 있다 — 없는 기능을 광고한다`);
   if (tool.controls.length)
-    fail.push("저장 링크가 없는데 도구 쪽에 저장 조작부가 있다");
+    fail.push("저장이 꺼졌는데 도구 쪽에 저장 조작부가 있다");
   if (tool.saysSignIn)
     fail.push("저장이 꺼졌는데 쪽이 아직 **「Google 로그인이 필요하다」**고 말한다");
   if (saved.claimsRefNumbers)

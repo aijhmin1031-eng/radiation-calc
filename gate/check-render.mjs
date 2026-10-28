@@ -3,6 +3,7 @@
  *    getComputedStyle·getBoundingClientRect 로 재고, 계산이 실제로 도는지까지 본다. */
 import { chromium } from "playwright";
 import { LAUNCH } from "./chromium.mjs";
+import { serveShell } from "./shell-assets.mjs";
 import { createServer } from "node:http";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { extname, join, relative } from "node:path";
@@ -25,6 +26,7 @@ const PLATFORM_ROOT = { "/track.js": ["text/javascript", "/* platform layer stub
 // ★ 서버가 base 를 떼어 파일을 찾는다 — 브라우저가 보는 주소는 /calc/… 그대로다
 const srv = createServer((q, r) => {
   let p = decodeURIComponent(q.url.split("?")[0]);
+  if (serveShell(p, r)) return;   // 공통 셸 자산 /shell/* — 플랫폼 층(우산)이 내주는 것을 흉내 낸다(gate/shell-assets.mjs)
   if (PLATFORM_ROOT[p]) {
     const [type, body] = PLATFORM_ROOT[p];
     r.writeHead(200, { "content-type": type });

@@ -1,7 +1,9 @@
 /** Lucide 아이콘(ISC 라이선스, https://lucide.dev) — 안쪽 SVG 마크업만 든다.
  *
- *  ★★ 2026-10-06 ⑥ 머리글 한 줄 개편(소유주 승인 명세 `HEADER-SPEC.md` §4·§6) — 머리글의 Tools 메뉴와
- *    도구 쪽 왼쪽 목록이 **같은 글리프**를 쓴다. 그전의 손그림 표식(`tool-icons.ts`)은 걷었다.
+ *  ★★ 2026-10-06 ⑥ 머리글 한 줄 개편(소유주 승인 명세 — 지금 정본은 `radiation-lab/public/shell/` (HEADER-SPEC v3)) — 머리글의
+ *    Tools 메뉴와 도구 쪽 왼쪽 목록이 **같은 글리프**를 쓴다. 그전의 손그림 표식(`tool-icons.ts`)은 걷었다.
+ *  ★ 2026-10-28 공통 셸 v3 — 머리글 메뉴의 아이콘은 이제 `shell/shell.json` 이 든다(같은 Lucide 경로). 이 파일은 도구 쪽
+ *    왼쪽 목록 · 홈 타일 등 **쪽 안**의 글리프를 든다. 둘이 어긋나면 check-platform 이 메뉴 항목의 아이콘 유무를 잰다.
  *  ★ 바깥 요청 0 — 파일을 내려받아 마크업을 박았다(CDN 을 부르지 않는다).
  *  ★ 쓰는 쪽이 `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
  *    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">` 로 감싼다(`components/Icon.astro`).

@@ -13,16 +13,20 @@
  *               ② `gate/chromium.mjs` 임포트를 지우면 걸린다. 둘 다 **이름을 댄다**. */
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const ROOT = new URL("..", import.meta.url).pathname;
+/* ★ `new URL(…).pathname` 은 Windows 에서 `/E:/…` 가 되어 join 이 `E:\E:\…` 를 만든다(README 2026-10-06 「경로 게이트는 임시 사본으로」).
+ *   fileURLToPath 는 두 OS 에서 같은 답을 낸다 — CI(리눅스)에는 차이가 없다. 2026-10-28 공통 셸 작업 때 로컬에서 돌리려고 고쳤다. */
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const CANON = "gate/chromium.mjs";
 /** ★ **자기 자신을 세지 않는다** — 이 파일의 정규식 안에 `playwright`·`CHROMIUM_PATH` 라는
  *  글자가 들어 있어서, 안 빼면 **자를 자기 자로 재어** 늘 빨개진다(첫 실행에서 실제로 그랬다). */
 const SELF = "gate/check-gates.mjs";
 
 const files = [
-  ...readdirSync(join(ROOT, "gate")).map((f) => join("gate", f)),
-  ...readdirSync(join(ROOT, "scripts")).map((f) => join("scripts", f)),
+  /* 이름은 슬래시로 둔다 — join 은 Windows 에서 역슬래시를 내어 아래 CANON · SELF 비교가 어긋난다(2026-10-28). join(ROOT, f) 는 둘 다 받는다. */
+  ...readdirSync(join(ROOT, "gate")).map((f) => `gate/${f}`),
+  ...readdirSync(join(ROOT, "scripts")).map((f) => `scripts/${f}`),
 ].filter((f) => f.endsWith(".mjs") && f !== CANON && f !== SELF);
 
 const fail = [];

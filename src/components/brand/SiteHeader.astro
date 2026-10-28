@@ -1,201 +1,30 @@
 ---
 /**
- * 머리글 한 줄 — 브랜드 · Calculators 메뉴 · Pro workbenches 메뉴 · 쪽 셋 · 테마·계정(2026-10-06 ⑥, 정본 명세 `C:\dev\rl\HEADER-SPEC.md`).
+ * 머리글 — **공통 셸 v3 의 render.mjs 출력**이다(정본 `radiation-lab/public/shell/` — HEADER-SPEC v3, 2026-10-28).
  *
- * ★★ 계기(2026-10-06 소유주): 「여기 상단에 놓아두는 2가지 영역이 다르네… 하나의 계산기 안에 다양한 도구가
- *   들어있는 형태로 구성해보자. 구조를 다시 잘 잡아봐」 → 시안 승인 「고」.
- *   그전에는 막대가 둘이었다 — 위는 분야 칸 셋(Dose & shielding · Instrument testing · Disposal & transport),
- *   아래는 lab 이름 `RadCalc` 과 칸 셋(Calculators · Nuclides · Methods). 위 칸은 **세 사이트**를, 아래 칸은
- *   **한 사이트 안의 쪽**을 가리켜 같은 모양의 칸이 다른 층을 말하고 있었다. 이제 apex 는 계산기 하나다 —
- *   도구는 `Calculators` 메뉴 **안에** 있다.
- * ★★ 2026-10-27(소유주 승인 — 감독 지시 31): 「Tools」 가 「Calculators」(도구 여덟 · 세 묶음 그대로)가 되고,
- *   그 메뉴 맨 아래 「More from Radiation Lab」 한 줄에 있던 워크벤치 셋이 제 메뉴 「Pro workbenches」로 나왔다.
- *   좁은 폭(<640px)은 짧은 이름 「Calc」·「Pro」.
- * ★ 화면에 보이는 이름은 `Radiation Lab` 하나다(명세 §7). `RadCalc` 은 DOI 인용에만 남는다.
- * ★ 마크업 뼈대(`nav[aria-label="Main"] > details > summary` · 묶음 `ul[aria-labelledby]` · 이름 `b` · 한 줄 `em`)는 우산 홈과 같다 —
- *   두 레포의 `check-platform` 이 같은 함수로 잰다. 메뉴 칸은 도구 쪽에서도 켜 두지 않는다(쪽이 아니라 메뉴다) — 지금 도구는
- *   메뉴 안의 칸과 왼쪽 목록이 표시한다.
- * ★ 메뉴는 `<details>` 다 — JS 가 없어도 열리고 닫힌다. 스크립트는 한 번에 하나 · Escape(초점은 그 단추로) · 바깥 누르기만 더한다.
- * ★ 앰버를 막대에 쓰지 않는다(앰버는 활성·포커스·기준선 전용). 메뉴 안의 「지금 도구」만 accent-soft 바탕이다.
+ * ★★ 계기(2026-10-28 소유주 「radiation-lab.com 이 사이트가 하나의 사이트처럼 보이게 해줘야 해」): 네 오리진이 머리글을
+ *   **각자 그리고 같은 숫자를 손으로 적어** 맞추고 있었다. 이 파일도 그랬다 — 우산 홈의 `.hd/.tm` 과 같은 모양을
+ *   `.shdr-*` · `.tmenu-*` 라는 제 CSS 로 다시 그렸고(2026-10-06 ⑥ 한 줄 머리글, 2026-10-27 메뉴 둘 · Pro 칩),
+ *   메뉴 동작(한 번에 하나 · Esc · 바깥 누르기)도 제 스크립트였다. 이제 마크업은 `shell/render.mjs` 가 만들고,
+ *   모양은 `/shell/shell.css`, 동작은 `/shell/shell.js` 가 든다 — 우산과 **글자 그대로 같은 막대**다.
+ * ★ 이 저장소가 정하는 것은 둘뿐이다 — 어느 칸이 「현재」인가(`lib/shell-page.mjs` 의 `currentHrefFor`:
+ *   구역 셋은 뿌리로, 도구 쪽은 제 주소로) · `apex: true`(apex 링크가 `/calc/…` 루트 상대로 나와 `check-output` 의
+ *   base 검사와 맞는다). 테마 단추(`#thm`)와 계정 칩(`#acct`, `/calc/saved/`)은 출력에 이미 들어 있다 —
+ *   옛 `ThemeToggle.astro` · `AccountChip.astro` 는 걷었다(계정 **상태**는 그대로 `Base.astro` 의 부팅 스크립트가 세운다).
+ * ★ `gate/check-shell.mjs` 가 산출물의 `header.site` 를 같은 호출로 다시 그려 **바이트 동일**을 잰다 — 여기서 출력을
+ *   손보면 그 자리에서 빨개진다. 고칠 것이 있으면 우산의 정본을 고치고 `npm run sync-shell` 로 받는다.
+ * ★ 치수 · 순서 · 메뉴 동작은 `check-platform` 이 그대로 잰다(구조가 같아 측정 함수를 바꾸지 않았다).
  */
-import Icon from "../Icon.astro";
-import { TOOL_GROUPS, toolsIn, menuName, PRO_WORKBENCHES } from "../../lib/tools";
-import { u } from "../../lib/site";
+import spec from "../../../shell/shell.json";
+import { renderHeader } from "../../../shell/render.mjs";
+import { SITE_URL } from "../../lib/site";
+import { currentHrefFor } from "../../lib/shell-page.mjs";
 
 interface Props {
-  /** 지금 쪽(base 붙은 pathname). 칸의 「현재」와 메뉴의 「지금 도구」를 판정한다. */
+  /** 지금 쪽(base 붙은 pathname). 구역 셋의 「현재」와 Calculators 패널의 「지금 도구」를 정한다. */
   here: string;
 }
 const { here } = Astro.props;
-const HOME = "https://radiation-lab.com/";
-/** 쪽 칸 — 순서·글자·주소 고정(명세 §3). 좁은 화면(<640px)은 짧은 글자. */
-const PAGES = [
-  { href: "/calc/nuclides/", wide: "Nuclide data", narrow: "Nuclides" },
-  { href: "/calc/methods/", wide: "Methods", narrow: "Methods" },
-  { href: "/calc/validation/", wide: "Validation", narrow: "Validation" },
-] as const;
-const onPage = (href: string) => here.startsWith(href);
-const toolOn = (slug: string) => here === u(`/${slug}/`);
+const html = renderHeader(spec, { section: "calc", currentHref: currentHrefFor(here, SITE_URL), apex: true });
 ---
-<header data-site-header class="shdr">
-  <div class="shdr-in mx-auto max-w-content px-5 sm:px-8">
-    <a class="shdr-brand" href={HOME} aria-label="Radiation Lab — home">
-      {/* 마크는 우산 `favicon.svg` 와 같은 좌표다(팔각 + 구). 색은 토큰 — 고정색이면 어두운 판에서 묻힌다. */}
-      <svg class="shdr-mark" viewBox="0 0 64 64" aria-hidden="true">
-        <polygon points="32.00,6.20 50.24,13.76 57.80,32.00 50.24,50.24 32.00,57.80 13.76,50.24 6.20,32.00 13.76,13.76"
-                 fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="miter" />
-        <circle cx="32" cy="32" r="15" fill="currentColor" opacity="0.82" />
-      </svg>
-      <span class="shdr-name">Radiation Lab</span>
-    </a>
-    <nav aria-label="Main" lang="en" class="shdr-nav">
-      {/* ★ 2026-10-27(감독 지시 32 보충) — 위계를 뒤집었다: 워크벤치가 대표라 Pro workbenches 가 앞, 가벼운 Calculators 가 뒤.
-          Pro 칸은 상시 칩(ink · 600 · line-strong 테두리 · 바탕 투명)이다 — 「현재」(바탕 surface)와 갈린다. */}
-      <details class="tmenu" data-tools-menu>
-        <summary class="shdr-tab shdr-chip">
-          <span class="shdr-wide">Pro workbenches</span><span class="shdr-narrow">Pro</span><Icon name="chevron-down" size={14} class="tmenu-chev" />
-        </summary>
-        <div class="tmenu-panel tmenu-pro">
-          <p class="tmenu-h" id="tm-pro">Pro workbenches</p>
-          <ul aria-labelledby="tm-pro">
-            {PRO_WORKBENCHES.map((p) => (
-              <li>
-                <a class="tmenu-item" href={p.href}>
-                  <Icon name={p.icon} size={20} class="tmenu-ic" />
-                  <span><b class="tmenu-n">{p.name}<Icon name="arrow-up-right" size={13} class="tmenu-ext" /></b><em class="tmenu-l">{p.line}</em></span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </details>
-      <details class="tmenu" data-tools-menu>
-        <summary class="shdr-tab">
-          <span class="shdr-wide">Calculators</span><span class="shdr-narrow">Calc</span><Icon name="chevron-down" size={14} class="tmenu-chev" />
-        </summary>
-        <div class="tmenu-panel">
-          <div class="tmenu-cols">
-            {TOOL_GROUPS.map((g) => (
-              <div class="tmenu-col">
-                <p class="tmenu-h" id={`tm-${g.key}`}>{g.label}</p>
-                <ul aria-labelledby={`tm-${g.key}`}>
-                  {toolsIn(g.key).map((t) => (
-                    <li>
-                      <a class="tmenu-item" href={u(`/${t.slug}/`)} aria-current={toolOn(t.slug) ? "page" : undefined}>
-                        <Icon name={t.icon} size={20} class="tmenu-ic" />
-                        <span><b class="tmenu-n">{menuName(t)}</b><em class="tmenu-l">{t.line}</em></span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-      </details>
-      {PAGES.map((p) => (
-        <a class="shdr-tab" href={p.href} title={p.wide} aria-current={onPage(p.href) ? "page" : undefined}>
-          <span class="shdr-wide">{p.wide}</span><span class="shdr-narrow">{p.narrow}</span>
-        </a>
-      ))}
-    </nav>
-    <div class="shdr-ctl"><slot /></div>
-  </div>
-</header>
-
-<script is:inline>
-  (function () {
-    var ms = document.querySelectorAll("[data-tools-menu]");
-    if (!ms.length) return;
-    /* One open at a time: opening a menu closes the other (2026-10-27, two menus). */
-    ms.forEach(function (m) {
-      m.addEventListener("toggle", function () {
-        if (m.open) ms.forEach(function (o) { if (o !== m) o.open = false; });
-      });
-    });
-    document.addEventListener("keydown", function (e) {
-      if (e.key !== "Escape") return;
-      ms.forEach(function (m) {
-        if (m.open) { m.open = false; var s = m.querySelector("summary"); if (s) s.focus(); }
-      });
-    });
-    document.addEventListener("click", function (e) {
-      ms.forEach(function (m) { if (m.open && !m.contains(e.target)) m.open = false; });
-    });
-  })();
-</script>
-
-<style is:global>
-  /* ★★ 치수는 우산 홈 머리글(`radiation-lab` 의 `.hd`·`.tm`)과 **같은 값**이다 — 같은 오리진에서 쪽을 옮겨도
-     막대가 한 픽셀도 안 움직여야 한다(소유주 「하나의 계산기」). 고치면 두 레포를 함께 고치고 `check-platform` 이 잰다.
-     ★ 글줄 여백만 이 lab 의 것을 따른다(px-5 · sm:px-8) — 본문과 머리글이 같은 세로선에서 시작해야 한다. */
-  /* ★ 머리글은 흐름 안(static)이다 — 판의 쌓임은 판 자신의 z-index 가 정한다(`check-sticky` ⑥: JS 없이 흐름에서 벗어나지 않는다). */
-  .shdr { background: rgb(var(--c-panel)); border-bottom: 1px solid rgb(var(--c-line-strong)); }
-  .shdr-in { position: relative; display: flex; align-items: center; gap: 12px 28px; padding-top: 9px; padding-bottom: 9px; line-height: 1.5; }
-  .shdr-brand { display: inline-flex; align-items: center; gap: 8px; flex: none; min-height: 24px; color: rgb(var(--c-ink)); text-decoration: none; }
-  .shdr-brand:hover .shdr-name { text-decoration: underline; }
-  .shdr-mark { width: 24px; height: 24px; flex: none; color: rgb(var(--c-ink)); }
-  .shdr-name { font-size: 16px; font-weight: 650; letter-spacing: -0.012em; white-space: nowrap; }
-  .shdr-nav { display: flex; align-items: center; gap: 4px; min-width: 0; }
-  .shdr-tab { display: inline-flex; align-items: center; gap: 5px; font-size: 14px; font-weight: 400; line-height: 1.5;
-              padding: 7px 12px; border: 1px solid transparent; border-radius: 6px; color: rgb(var(--c-ink-muted));
-              text-decoration: none; white-space: nowrap; cursor: pointer; list-style: none; background: none; user-select: none; }
-  .shdr-tab::-webkit-details-marker { display: none; }
-  .shdr-tab:hover { color: rgb(var(--c-ink)); }
-  .shdr-tab[aria-current="page"], .tmenu[open] > .shdr-tab {
-    color: rgb(var(--c-ink)); border-color: rgb(var(--c-line-strong)); background: rgb(var(--c-surface)); }
-  .shdr-tab[aria-current="page"] { font-weight: 600; }
-  /* Pro workbenches 칸의 상시 칩(2026-10-27, 소유주 「좋은 도구라 잘 보였으면」) — ink · 600 · line-strong 테두리, 바탕은 투명이라
-     「현재」(바탕 surface)와 갈린다. 앰버 없음. 우산 `.hd-chip` 과 같은 값. */
-  .shdr-tab.shdr-chip { color: rgb(var(--c-ink)); font-weight: 600; border-color: rgb(var(--c-line-strong)); }
-  .shdr-tab.shdr-chip:hover { background: rgb(var(--c-surface)); }
-  .shdr-tab:focus-visible, .shdr-brand:focus-visible { outline: 2px solid rgb(var(--c-accent)); outline-offset: 2px; }
-  .tmenu-chev { width: 14px; height: 14px; flex: none; transition: transform .2s ease; }
-  .tmenu[open] .tmenu-chev { transform: rotate(180deg); }
-  .shdr-narrow { display: none; }
-  .shdr-ctl { margin-left: auto; display: flex; align-items: center; gap: 10px; min-width: 0; }
-  .shdr-ctl [data-acct-chip] { flex-shrink: 1; min-width: 0; }
-
-  /* ── 메뉴 판(명세 §4) — 머리글 안쪽 상자에 매달린다(글줄과 같은 세로선, 폰에서 오른쪽으로 안 넘친다) ── */
-  .tmenu-panel { position: absolute; z-index: 50; top: calc(100% + 8px); left: 32px; width: min(820px, calc(100% - 64px));
-    background: rgb(var(--c-surface)); border: 1px solid rgb(var(--c-line-strong)); border-radius: 10px;
-    box-shadow: 0 18px 40px rgba(0,0,0,.12); padding: 22px 24px 14px; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tmenu-panel { box-shadow: 0 18px 40px rgba(0,0,0,.45); } }
-  :root[data-theme="dark"] .tmenu-panel { box-shadow: 0 18px 40px rgba(0,0,0,.45); }
-  .tmenu-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 28px; }
-  .tmenu-h { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .14em;
-             color: rgb(var(--c-ink-faint)); margin: 0 0 8px 10px; }
-  .tmenu-panel ul { list-style: none; margin: 0; padding: 0; }
-  .tmenu-item { display: flex; gap: 12px; padding: 9px 10px; border-radius: 8px; color: rgb(var(--c-ink)); text-decoration: none; }
-  .tmenu-item:hover, .tmenu-item:focus-visible { background: rgb(var(--c-panel)); }
-  .tmenu-item:focus-visible { outline: 2px solid rgb(var(--c-accent)); outline-offset: 0; }
-  .tmenu-item[aria-current="page"] { background: rgb(var(--c-accent-soft)); }
-  .tmenu-ic { width: 20px; height: 20px; margin-top: 2px; color: rgb(var(--c-ink-muted)); }
-  .tmenu-n { display: block; font-size: 14px; font-weight: 600; line-height: 1.4; color: rgb(var(--c-ink)); }
-  .tmenu-l { display: block; font-style: normal; font-size: 12.5px; line-height: 1.45; color: rgb(var(--c-ink-muted)); }
-  /* Pro workbenches 판(2026-10-27) — 한 칸, 바깥 워크벤치 셋. 항목 모양은 Calculators 판과 같고, 이름 뒤 화살표가 「이 사이트 밖」을 말한다. */
-  .tmenu-pro { width: min(560px, calc(100% - 64px)); }
-  .tmenu-n .tmenu-ext { display: inline; width: 13px; height: 13px; margin: 0 0 0 5px; vertical-align: -1px; color: rgb(var(--c-ink-faint)); }
-
-  /* 1024px 아래는 두 줄 — 브랜드·컨트롤, 그다음 칸 줄. 640px 아래는 짧은 글자·좁은 안여백, 360px 아래는 옆 안여백 4px. */
-  @media (max-width: 1023.98px) {
-    .shdr-in { flex-wrap: wrap; row-gap: 4px; padding-top: 8px; padding-bottom: 8px; }
-    .shdr-ctl { flex: 1 1 0; justify-content: flex-end; }
-    .shdr-nav { order: 3; flex: 1 0 100%; margin-left: -7px; }
-    /* 두 줄 · 긴 이름(640–1023px)은 가로 8px — CI(DejaVu Sans)에서 칸 다섯이 640px 글줄을 19px 넘었다(2026-10-27). */
-    .shdr-tab { padding: 7px; }   /* 7px — Pro 칩(600)과 굵은 현재 칸이 함께면 CI 640px 에서 3px 넘었다(2026-10-27) */
-  }
-  /* ★ 2026-10-27 — 칸이 다섯(메뉴 둘 + 쪽 셋)이 되어 360px 에서 넘쳤다(CI DejaVu 13px). 안여백 8 → 4px, 꺾쇠 14 → 12px(우산과 같은 값). */
-  @media (max-width: 639.98px) {
-    .shdr-nav { gap: 2px; margin-left: -4px; }
-    .shdr-tab { font-size: 13px; padding: 8px 4px; gap: 3px; }
-    .tmenu-chev { width: 12px; height: 12px; }
-    .shdr-wide { display: none; } .shdr-narrow { display: inline; }
-    .tmenu-cols { grid-template-columns: 1fr; }
-    .tmenu-panel { left: 20px; width: calc(100% - 40px); padding: 16px 14px 10px; }
-  }
-  /* ★ 2026-10-07 — CI(DejaVu Sans)에서 320px 칸 끝이 302~310px 로 글줄(300) 밖이었다. 12px · 가로 5px(RadiMeter 와 같은 처방).
-     ★ 2026-10-27 — 칸 다섯: 가로 2px · 꺾쇠 10px(CI 에서 320px 칸 끝 311 > 300 이었다). */
-@media (max-width: 359.98px) { .shdr-tab { font-size: 12px; padding: 8px 2px; gap: 2px; } .tmenu-chev { width: 10px; height: 10px; } .shdr-nav { margin-left: -2px; } }
-  @media (prefers-reduced-motion: reduce) { .tmenu-chev { transition: none; } }
-</style>
+<Fragment set:html={html} />

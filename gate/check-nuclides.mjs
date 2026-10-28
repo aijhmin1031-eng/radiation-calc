@@ -21,6 +21,7 @@
  */
 import { chromium } from "playwright";
 import { LAUNCH } from "./chromium.mjs";
+import { serveShell } from "./shell-assets.mjs";
 import { createServer } from "node:http";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { extname, join } from "node:path";
@@ -296,6 +297,7 @@ note(`안 본 것: 쪽이 없는 핵종의 글 ${noteKeys.length - shownNotes.le
 console.log("\n⑤ 계산기 프리필이 실제로 복원되는가");
 const srv = createServer((q, r) => {
   let p = decodeURIComponent(q.url.split("?")[0]);
+  if (serveShell(p, r)) return;   // 공통 셸 자산 /shell/* — 플랫폼 층(우산)이 내주는 것을 흉내 낸다(gate/shell-assets.mjs)
   if (p.startsWith(BASE)) p = p.slice(BASE.length) || "/";
   let f = join(DIST, p);
   if (existsSync(f) && !extname(f)) f = join(f, "index.html");

@@ -28,8 +28,11 @@
  */
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const DIST = new URL("../dist/calc/", import.meta.url).pathname.replace(/\/$/, "");
+/* ★ `new URL(…).pathname` 은 Windows 에서 `/E:/…` 가 되어 게이트가 「dist 가 없다」로 죽었다(README 2026-10-06 「경로 게이트는 임시 사본으로」).
+ *   fileURLToPath 는 두 OS 에서 같은 답이다 — CI(리눅스)에는 차이가 없다. 2026-10-28 공통 셸 작업 때 로컬에서 돌리려고 고쳤다. */
+const DIST = fileURLToPath(new URL("../dist/calc/", import.meta.url)).replace(/[\\/]$/, "");
 const BASE = "/calc";
 const stripBase = (p) => (p === BASE ? "/" : p.startsWith(BASE + "/") ? p.slice(BASE.length) : p);
 
