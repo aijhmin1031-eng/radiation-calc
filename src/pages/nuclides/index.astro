@@ -1,7 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { u, DATA_SOURCES } from "../../lib/site";
-import { ALL_KEYS, NUCLIDES, nuclidePage, longName, halfLifeText, decayWordOf, emissionKinds } from "../../lib/nuclides";
+import { ALL_KEYS, NUCLIDES, nuclidePage, longName, halfLifeText, decayWordOf, emissionKinds, gammaOf } from "../../lib/nuclides";
 import { PAGE_KEYS } from "../../lib/nuclide-pages";
 import NuclideRef from "../../components/NuclideRef.astro";
 
@@ -161,7 +161,7 @@ const extremeRatio = leadRatio(extremeKey).toFixed(0);
             {/* ★ 모바일에서 뺀다 — 좁은 화면에서 이 목록의 일은 **찾아서 누르는 것**이고,
                 Γ 는 낱장 맨 위 「Key figures」에 있다. 넷을 넘기면 가로 스크롤이 생기고,
                 스크롤이 생기면 고정 칸 옆으로 글자 꼬리가 삐져나온다(실측으로 봤다). */}
-            <td class="hidden lg:table-cell">{sig(r.n.gamma_const)}</td>
+            <td class="hidden lg:table-cell">{sig(gammaOf(r.key))}</td>
           </tr>
         ))}
       </tbody>

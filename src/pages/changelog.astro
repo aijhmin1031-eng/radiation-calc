@@ -2,7 +2,7 @@
 import Base from "../layouts/Base.astro";
 import NuclideRef from "../components/NuclideRef.astro";
 import { u, DOI, DOI_URL } from "../lib/site";
-import { NUCLIDES } from "../lib/nuclides";
+import { NUCLIDES, gammaOf } from "../lib/nuclides";
 import { PAGE_KEYS } from "../lib/nuclide-pages";
 import { bremsEndpointKeV, bremsstrahlungYield } from "../engine/beta";
 import { RELEASES, VERSION, dateText } from "../lib/version";
@@ -15,7 +15,11 @@ import CHANGES from "../data/changes-1.1.0.json";
  *  ★ 절 머리의 판 · 날짜는 `lib/version.ts` 의 `RELEASES` 에서 **번호로 찾는다**(T15 검토 — 자리로 받으면 1.1.1 을 위에 더하는
  *    날 1.1.0 의 글이 1.1.1 머리 아래로 조용히 밀린다). `check-output` ⑦-2 가 모든 판에 절이 하나씩 있는지 잰다. */
 const rel = (v: string) => RELEASES.find((r) => r.version === v)!;
-const v110 = rel("1.1.0"), v101 = rel("1.0.1");
+const v111 = rel("1.1.1"), v110 = rel("1.1.0"), v101 = rel("1.0.1");
+/* ★ T16 — 1.1.1 의 예: 저장 값과 낱장 값이 가장 크게 갈린 핵종. 글자로 박지 않고 자료에서 고른다. */
+const drift = Object.keys(NUCLIDES).filter((k) => NUCLIDES[k].gamma_const > 0)
+  .map((k) => ({ k, stored: NUCLIDES[k].gamma_const, sheet: gammaOf(k) }))
+  .sort((a, b) => Math.abs(b.stored / b.sheet - 1) - Math.abs(a.stored / a.sheet - 1))[0];
 const idOf = (v: string) => `v${v.replaceAll(".", "-")}`;
 const pct = (a: number, b: number) => (a / b - 1) * 100;
 /* ★ 반올림해 0.00% 가 되는 변화에 부호를 붙이지 않는다(U-238m −0.0017% 가 「−0.00%」로 찍혔다 — T15 검토). */
@@ -74,6 +78,19 @@ const all = Object.keys(NUCLIDES).length;
       {" "}{VERSION.version} of {dateText(VERSION.date)}; every page shows it above the footer.
       Released versions are archived on Zenodo, where the concept DOI
       {" "}<a href={DOI_URL} rel="noopener" class="underline">{DOI}</a> always resolves to the newest.
+    </p>
+
+    {/* ★ T16(2026-10-29) — 표시만 바뀐 판(끝자리). 계산값 · 자료는 그대로다. */}
+    <h2 id={idOf(v111.version)}>{v111.version} — {dateText(v111.date)}</h2>
+    <p>
+      No calculated value changes in this version; it corrects what some pages display. The air kerma
+      rate constant shown in the nuclide list, in the gamma calculator's results and on several reference
+      pages was read from a stored copy rounded to six decimal places, so the smallest constants kept
+      fewer than two significant figures and could differ from their own sheet: it showed
+      {" "}{drift.stored.toExponential(2)} for <NuclideRef k={drift.k} />, whose sheet gives {drift.sheet.toExponential(2)}.
+      Those places now show the value each sheet computes from its emission lines. The dose rates,
+      thicknesses and activities the calculators work out were already computed from the lines and do
+      not change.
     </p>
 
     <h2 id={idOf(v110.version)}>{v110.version} — {dateText(v110.date)}</h2>

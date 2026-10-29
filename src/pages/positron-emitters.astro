@@ -1,7 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import NuclideRef from "../components/NuclideRef.astro";
-import { NUCLIDES, nuclidePage, halfLifeText, fmtTime } from "../lib/nuclides";
+import { NUCLIDES, nuclidePage, halfLifeText, fmtTime, gammaOf } from "../lib/nuclides";
 import { u } from "../lib/site";
 
 /** ★★ 양전자 방출체와 511 keV — 2026-10-06 소유주 지시 「각 lab 에 전문가 글 3~5편」의 넷째 편.
@@ -23,7 +23,7 @@ const ANNIH = Object.keys(N)
   .map(({ k, l }) => {
     const other = N[k].lines.filter(([e, i]) => Math.abs(e - 511) >= 0.5 && e >= 20 && i > 1)
       .sort((a, b) => b[1] - a[1])[0];
-    return { k, i511: l![1], beta: l![1] / 2, other, g: N[k].gamma_const, t: halfLifeText(N[k]) };
+    return { k, i511: l![1], beta: l![1] / 2, other, g: gammaOf(k), t: halfLifeText(N[k]) };
   })
   .sort((a, b) => b.beta - a.beta);
 const strong = ANNIH.filter((r) => r.beta > 50);
@@ -37,7 +37,7 @@ const tcPb = sh("Tc-99m", "lead");
 const csPb = sh("Cs-137", "lead");
 const apronCm = 0.05;
 const apronT = Math.pow(2, -apronCm / f18Pb.hvlCm);
-const gRatio = N["F-18"].gamma_const / N["Tc-99m"].gamma_const;
+const gRatio = gammaOf("F-18") / gammaOf("Tc-99m");
 
 /** 시간 — 하루 일과 안의 감쇠와 발생기 재생. */
 const f18Day = [1, 2, 4, 8].map((h) => ({ h, f: after("F-18", h * H) }));

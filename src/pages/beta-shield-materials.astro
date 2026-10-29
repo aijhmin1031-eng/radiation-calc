@@ -1,7 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import NuclideRef from "../components/NuclideRef.astro";
-import { NUCLIDES, nuclidePage, BETA_BRANCH_FLOOR_PCT } from "../lib/nuclides";
+import { NUCLIDES, nuclidePage, BETA_BRANCH_FLOOR_PCT, gammaOf } from "../lib/nuclides";
 import { betaRangeCm, DENSITY_G_CM3 } from "../engine";
 import { dominantProgeny } from "../lib/decay-chain";
 import { u } from "../lib/site";
@@ -17,7 +17,7 @@ const all: Row[] = Object.keys(NUCLIDES)
     const p = nuclidePage(key), n = NUCLIDES[key], eMeV = p.bremsMeV ?? 0;
     const at = (rho: number) => (eMeV ? betaRangeCm(eMeV, rho) : NaN);
     return { key, e: eMeV * 1000, acr: at(1.18), al: at(DENSITY_G_CM3.aluminum),
-             wat: at(1.0), low: p.bremsLow, pb: p.bremsLead, g: n.gamma_const };
+             wat: at(1.0), low: p.bremsLow, pb: p.bremsLead, g: gammaOf(key) };
   })
   .filter((r) => r.e > 0)
   .sort((a, b) => b.e - a.e);

@@ -20,11 +20,12 @@ test("판 — 정본 · CITATION.cff · .zenodo.json · README 가 같다", () =
   assert.ok(readme.includes(`**판: v${VERSION.version} · ${VERSION.date}**`), "README 판 줄");
 });
 
-test("판 목록 — 최신이 위, 번호와 날짜가 함께 내려간다", () => {
+/* ★ T16 — 같은 날 두 판이 나올 수 있다(1.1.0 · 1.1.1 이 둘 다 2026-10-29). 번호는 반드시 내려가고, 날짜는 같거나 내려간다. */
+test("판 목록 — 최신이 위, 번호는 내려가고 날짜는 거꾸로 가지 않는다", () => {
   const num = (v: string) => v.split(".").map(Number).reduce((s, x) => s * 1000 + x, 0);
   for (let i = 1; i < RELEASES.length; i++) {
     assert.ok(num(RELEASES[i - 1].version) > num(RELEASES[i].version), RELEASES[i].version);
-    assert.ok(RELEASES[i - 1].date > RELEASES[i].date, RELEASES[i].date);
+    assert.ok(RELEASES[i - 1].date >= RELEASES[i].date, RELEASES[i].date);
   }
   assert.equal(dateText("2026-10-29"), "29 October 2026");
 });

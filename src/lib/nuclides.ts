@@ -247,6 +247,11 @@ const GAMMA_KEYS = Object.keys(NUCLIDES).filter((k) => NUCLIDES[k].gamma_const >
 const GAMMA_OF: Record<string, number> = Object.fromEntries(GAMMA_KEYS.map((k) => [k, gammaConstant(NUCLIDES[k], ATTEN.air, DELTA_DEFAULT_KEV)]));
 const GAMMA_SORTED = [...GAMMA_KEYS].sort((a, b) => GAMMA_OF[b] - GAMMA_OF[a]);
 
+/** 쪽 · 목록이 **보여 주는** Γ — 낱장 「Key figures」에 찍히는 것과 같은 엔진 값(T16, 2026-10-29). 목록 · 계산기 · 참고 쪽이
+ *  저장 값을 그대로 찍어 작은 Γ 에서 낱장과 어긋났다(Pm-147 은 저장 1e-06, 낱장 5.19e-07). 저장 값이 0 이면 0 이다 —
+ *  「Γ 가 있는가」는 그대로 저장 값이 가른다. */
+export const gammaOf = (key: string): number => GAMMA_OF[key] ?? 0;
+
 /** Γ 순위 — 「이 핵종은 센 편인가」. 공개 표에는 없는 값이다(표는 순서가 없다). */
 export const gammaRank = (key: string) =>
   ({ rank: GAMMA_SORTED.indexOf(key) + 1, of: GAMMA_SORTED.length });
