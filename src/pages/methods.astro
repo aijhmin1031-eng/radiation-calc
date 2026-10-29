@@ -5,9 +5,16 @@ import { REPORTS } from "../validation/registry";
 import { TOOLS } from "../lib/tools";
 import { NOTES } from "../lib/notes";
 import { GSC_TOP20, NOTES_ROUND2 } from "../data/nuclide-notes";
+import { NUCLIDES, ATTEN } from "../lib/nuclides";
+import { shieldedDoseRate } from "../engine";
 
 /* ★ 보고서가 있는 도구 목록을 **글자로 들지 않는다** — 평가가 하나 늘 때마다 이 문장만
    낡고 게이트는 산문을 못 본다. 등록부에서 파생시키면 저절로 따라온다. */
+/* ★ T12 §5-a — Validation 문단의 어림값 둘(1 Ci · 1 m)을 글자로 적어 두었다가 T11(Kβ 이중 계산) 뒤 Cs-137 이 0.326 → 0.325 로
+ *   낡았다. `gamma.test.ts` 「현장 경험칙」과 같은 식(좁은 빔, δ 20 keV, 1 R = 8.764 mGy 공기커마)으로 여기서 계산한다. */
+const MGY_PER_R = 2.58e-4 * 33.97 * 1e3;
+const rOf = (k: string) => (shieldedDoseRate({ lines: NUCLIDES[k].lines, air: ATTEN.air, shield: ATTEN.lead, material: "lead",
+  activityGBq: 37, distanceM: 1, thicknessCm: 0, mode: "none", deltaKeV: 20 }).doseRate / MGY_PER_R);
 const nameOf = (slug: string) => TOOLS.find((t) => t.slug === slug)?.name ?? slug;
 const done = REPORTS.filter((r) => r.status === "published").map((r) => nameOf(r.tool));
 /* ★ 도구 이름에 「and」가 들어 있어(「Decay and half-life」) 「A, B and C」로 이으면
@@ -51,15 +58,24 @@ const without = TOOLS.filter((t) => !publishedSlugs.has(t.slug)).map((t) => t.na
 
     <h2>Validation</h2>
     <p>
-      The engine is covered by 99 automated tests that run on every change. Computed gamma constants
-      are checked against published values for Cs-137, I-131, Cs-134, Co-60 and Ir-192 and agree
-      within 2%. Specific activities for Co-60, Cs-137, Pu-239, U-238, Am-241, Sr-90 and H-3 agree
-      within 1%. Beta maximum energies for fifteen nuclides and alpha principal energies for eight
-      agree within 1% and 0.01% respectively. Attenuation coefficients are checked at five points
-      against published values within 0.5%. Field rules of thumb are also checked for order of magnitude — one
-      curie of Co-60 at one metre computes to 1.29 R/h against the remembered 1.32, and Cs-137 to
-      0.326 against 0.33 — but a remembered number is not a citable source, and those two checks are
-      labelled as what they are rather than as validation.
+      {/* ★ T12 §5-a — 「checked against published values … agree within 2%」은 사실이 아니었다(그 테스트는 2026-09-13 에 얼어 둔
+          자기 계산값과 비교한다 — `gamma.test.ts` 주석). 「99 automated tests」는 낡았고, 「Beta maximum energies for fifteen
+          nuclides … alpha … for eight」은 저장소의 어떤 테스트도 다시 재지 않는다(커밋 4a22cd6 의 한 번 확인). 감쇠계수
+          「five points … within 0.5%」은 넷이 0.5%, 표점 사이 납 662 keV 가 1.5% 다. 받쳐지는 것만 남긴다. */}
+      The engine is covered by automated tests that run on every change. Specific activities for
+      Co-60, Cs-137, Pu-239, U-238, Am-241, Sr-90 and H-3 agree with published values within 1%, and
+      the NIST attenuation coefficients are checked at five points, four within 0.5% and an
+      interpolated value for lead at 662 keV within 1.5%. Computed gamma constants are not compared
+      with published constants, which describe a different quantity and often do not state the
+      cutoff they apply: tests hold the constants of Cs-137, I-131, Cs-134, Co-60 and Ir-192 within 2%
+      of fixed reference values set when the engine was written, so that a large unintended change
+      shows, and the
+      {" "}<a href={u("/validation/gamma-shielding/")} class="underline">validation report</a> checks the
+      unit chain, the table interpolation and a sample of emission lines instead. Field rules of thumb
+      are also checked for order of magnitude — one curie of Co-60 at one metre computes to
+      {" "}{rOf("Co-60").toFixed(2)} R/h against the remembered 1.32, and Cs-137 to {rOf("Cs-137").toFixed(3)} against
+      0.33 — but a remembered number is not a citable source, and those two checks are labelled as
+      what they are rather than as validation.
     </p>
     <p>
       Analytic identities are tested rather than asserted — one half-life leaves exactly half, one

@@ -54,7 +54,7 @@ const CUTOFF_KEV   = 20;
     </p>
     {truncated.length > 0 && (
       <p>
-        For {truncated.length} of them the next nuclide is not in the table at all:
+        For {truncated.length} alpha emitters with a photon constant of their own, the next nuclide is not in the table at all:
         {" "}{truncated.map((k, i) => (
           <>{i > 0 ? ", " : ""}<NuclideRef k={k} />
           {" "}(decays to {daughterLabel(k) ?? "a nuclide not carried here"})</>

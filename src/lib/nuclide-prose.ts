@@ -1,7 +1,7 @@
 import type { NuclidePage } from "./nuclides";
 import { NUCLIDES, nuclidePage } from "./nuclides";
 import { dominantProgeny, daughterLabel, CHAIN_TRUNCATED } from "./decay-chain";
-import { decayWord, halfLifeText, gammaRank, gammaVs, leadForTarget, horizons,
+import { decayProse, SPONTANEOUS_FISSION, halfLifeText, gammaRank, gammaVs, leadForTarget, horizons,
          betaEndpointBranch, betaDominantBranch, lineSpan, alphaSpread,
          tenHalfLives, meanLife, remainingAfterYears, fmtTime } from "./nuclides";
 import { elapsedFromRatio } from "../engine";
@@ -30,9 +30,12 @@ const ratioText = (r: number) => {
   return `${(Math.round(r * p) / p).toLocaleString("en-US")}×`;
 };
 /* ★ 5% 안은 「about the same as」(2026-10-29) — Kβ 이중 계산을 고치자 In-111 의 Γ 가 Cs-137 의 0.996 배가 되어
- *   「1.0× less than Cs-137」이라는, 말이 안 되는 문장이 섰다(그전에는 1.046 배라 「1.0× Cs-137」). */
+ *   「1.0× less than Cs-137」이라는, 말이 안 되는 문장이 섰다(그전에는 1.046 배라 「1.0× Cs-137」).
+ * ★ 유효숫자 둘은 지키되 **고정 표기**로 쓴다(T12 2-9) — `toPrecision(2)` 는 100 부터 지수로 넘어가 Pu-239 가
+ *   「9.6e+3× less than Cs-137」이 됐다. 위 `ratioText` 와 같은 규칙이다(100 아래는 글자까지 그대로다). */
+const fixed2 = (v: number) => { const t = v.toPrecision(2); return Number(t) >= 100 ? Number(t).toLocaleString("en-US") : t; };
 const times = (r: number) => (r < 1.05 && r > 1 / 1.05 ? "about the same as"
-  : r >= 1 ? `${r.toPrecision(2)}×` : `${(1 / r).toPrecision(2)}× less than`);
+  : r >= 1 ? `${fixed2(r)}×` : `${fixed2(1 / r)}× less than`);
 /** ★ 질량은 자리수가 24자리를 넘나든다(Tc-99m 의 5 pg 대 Ca-41 의 0.3 g) — 고정 소수점으로
  *  쓰면 `0.0000239 g`, 단위 고르기를 잘못하면 `2.39e+4 ng` 가 된다. **눈금마다 위 경계를 준다.** */
 const mass = (g: number) => {
@@ -74,7 +77,7 @@ export function paragraphs(p: NuclidePage): string[] {
   {
     const h = horizons(p.key);
     const sa = n.sa_bq_g, ci = sig(p.saCiPerG), bq = sig(sa), g1 = mass(1e9 / sa);
-    const mode = decayWord(n.decay), T = halfLifeText(n);
+    const mode = decayProse(n), T = halfLifeText(n);
     out.push(
       sa < 1e9
         /* ★ 이 띠에서는 시평 둘이 **모두 100.00%** 로 찍혀 문장이 아무것도 안 알려 줬다
@@ -185,17 +188,23 @@ export function paragraphs(p: NuclidePage): string[] {
     const target = truncated
       ? ``
       : t20 === 0
-      ? `At 1 GBq and a metre it is already under 20 µSv/h with nothing in the way.`
+      /* ★ T12 검토 — 딸이 차폐를 정하는 쪽(Pb-210 → Bi-210)에서는 이 판정이 이 핵종 자신의 광자 이야기임을 밝힌다. */
+      ? (dominantProgeny(p.key)?.betaHotter
+          ? `At 1 GBq and a metre the dose rate from ${p.key}'s own photons is already under 20 µSv/h with nothing in the way.`
+          : `At 1 GBq and a metre it is already under 20 µSv/h with nothing in the way.`)
       : `Reaching 20 µSv/h from 1 GBq at a metre takes ${mm(t20)} of lead.`;
     out.push(
       (truncated
         ? `For ${p.key}'s own photons, ${mm(pb.hvlCm)} of lead halves the air kerma rate, ${mm(fe.hvlCm)} ` +
           `if the material is steel, and ${mm(pb.tvlCm)} of lead takes it to a tenth. What thickness the ` +
           `source in front of you needs is a question about its chain, not about this line list.`
-        : hvlMm < 0.2
-        ? `Shielding barely arises: ${mm(pb.hvlCm)} of lead halves the air kerma rate and ${mm(pb.tvlCm)} ` +
-          `takes it to a tenth, thicknesses a source capsule is likely to exceed on its own. Steel does the ` +
-          `halving in ${mm(fe.hvlCm)}. ${target}`
+        /* ★ T12(2026-10-29) — 「thicknesses a source capsule is likely to exceed on its own」을 뺐다. 캡슐 두께 · 재질은 자료에
+             없고(캡슐은 강 · 알루미늄이다) 같은 쪽 강 행과 맞지 않았다(Co-57 · Ce-139). ★ 「barely arises」는 **납 TVL 도
+             1 mm 아래**일 때만 쓴다 — Pu-239 는 HVL 0.120 mm 지만 TVL 2.57 mm(TVL/HVL 21)라 1/10 에는 얇지 않다. */
+        : hvlMm < 0.2 && pb.tvlCm * 10 < 1
+        ? `${dominantProgeny(p.key)?.betaHotter ? `For ${p.key}'s own photons, shielding barely arises` : `Shielding barely arises`}: ` +
+          `${mm(pb.hvlCm)} of lead halves the air kerma rate and ${mm(pb.tvlCm)} ` +
+          `takes it to a tenth. Steel does the halving in ${mm(fe.hvlCm)}. ${target}`
         : hvlMm < 1
         ? `A half-value layer of ${mm(pb.hvlCm)} in lead puts this in foil and thin sheet, with ${mm(fe.hvlCm)} ` +
           `needed if the material is steel; ten-fold attenuation comes at ${mm(pb.tvlCm)} of lead. ${target}`
@@ -203,6 +212,15 @@ export function paragraphs(p: NuclidePage): string[] {
         ? `Halving the air kerma rate calls for ${mm(pb.hvlCm)} of lead, or ${mm(fe.hvlCm)} of steel where lead ` +
           `is unwelcome, and a factor of ten calls for ${mm(pb.tvlCm)} of lead — sheet thicknesses that a glovebox ` +
           `or a transport container can carry. ${target}`
+        /* ★ T12 — 두께만 보고 「설계해야 하는 차폐」라고 한 뒤 바로 「1 GBq 에서 이미 20 µSv/h 아래」가 와서 부딪쳤다(K-40 ·
+             Mo-99 · Sr-89). 목표두께가 0 이면 「큰 선원에서 필요할 때 두껍다」로 말한다. */
+        : t20 === 0
+        /* ★ T12 검토 — 「이미 20 µSv/h 아래」는 이 핵종 **자신의** 광자 이야기다(Mo-99 는 Tc-99m 이 자라 실제 선원이 더 높고,
+             Sr-89 의 실제 광자장은 대부분 제동복사다). 그래서 주어를 그 광자로, 두께를 「these lines」로 한정한다. */
+        ? `At 1 GBq and a metre the dose rate from ${p.key}'s own photons is already under 20 µSv/h with nothing in the way; ` +
+          `where a larger source does need a shield for ${p.shares.length === 1 ? "this line" : "these lines"}, it is a thick one — ` +
+          `${mm(pb.hvlCm)} of lead for a factor of two and ` +
+          `${mm(pb.tvlCm)} for a factor of ten, or ${mm(fe.hvlCm)} of steel for a factor of two.`
         : `This is a shield that has to be designed: ${mm(pb.hvlCm)} of lead for a factor of two and ` +
           `${mm(pb.tvlCm)} for a factor of ten, or ${mm(fe.hvlCm)} of steel to halve it, at which point the ` +
           `mass of the shield is part of the problem. ${target}`) +
@@ -212,15 +230,24 @@ export function paragraphs(p: NuclidePage): string[] {
         : ``),
     );
   } else if (n.lines.length) {
+    /* ★ T12(2026-10-29) — ① 「The strongest line」이 가장 높은 **에너지**의 줄이었다(Ge-68 의 10.37 keV 는 가장 약한 줄) — 세기로
+         고르고 세기를 함께 적는다(이 쪽에는 대조할 선 표가 없다). ② 「A monitor calibrated on Cs-137 … understates … rather than
+         missing it outright」을 뺐다 — 자료로 뒷받침되지 않고 같은 쪽 손글(「invisible」)과 어긋났다. ③ 줄이 하나면(Pu-241)
+         「All 1 recorded photon lines」 · 「runs 16.7 to 16.7 keV」가 됐다 — 한 줄 꼴로 쓴다. */
+    const nl = n.lines.length, top = n.lines.reduce((a, b) => (b[1] > a[1] ? b : a));
     out.push(
-      `All ${n.lines.length} recorded photon lines sit below the 20 keV cutoff, so Γ is zero by convention and no ` +
-      `external dose rate is quoted. The strongest line is ${Math.max(...n.lines.map(([e]) => e)).toFixed(2)} keV. ` +
-      `A monitor calibrated on Cs-137 under-responds at these energies, so a reading taken without an energy ` +
-      `correction understates ${p.key} rather than missing it outright. ` +
-      ((): string => { const l = lineSpan(p.key)!;
-        return `The recorded spectrum runs ${l.loKeV.toPrecision(3)} to ${l.hiKeV.toPrecision(3)} keV and ` +
-               `carries ${l.totPct.toPrecision(3)}% emission probability in all, which sets what a thin-window ` +
-               `or proportional detector has to see.`; })(),
+      (nl === 1
+        ? `The one recorded photon line sits below the 20 keV cutoff, so Γ is zero by convention and no external ` +
+          `dose rate is quoted. It is at ${top[0].toFixed(2)} keV with ${sig(top[1])}% emission probability` +
+          /* ★ T12 검토 — 베타 방출체(Y-90 · Pu-241)는 이 줄로 찾지 않는다 — 검출기 꼬리는 베타가 없을 때만 붙인다. */
+          (p.betaMaxMeV ? `.` : `, which sets what a thin-window or proportional detector has to see.`)
+        : `All ${nl} recorded photon lines sit below the 20 keV cutoff, so Γ is zero by convention and no ` +
+          `external dose rate is quoted. The strongest line is ${top[0].toFixed(2)} keV, at ${sig(top[1])}% emission ` +
+          `probability. ` +
+          ((): string => { const l = lineSpan(p.key)!;
+            return `The recorded spectrum runs ${l.loKeV.toPrecision(3)} to ${l.hiKeV.toPrecision(3)} keV and ` +
+                   `carries ${l.totPct.toPrecision(3)}% emission probability in all` +
+                   (p.betaMaxMeV ? `.` : `, which sets what a thin-window or proportional detector has to see.`); })()),
     );
   }
 
@@ -251,7 +278,12 @@ export function paragraphs(p: NuclidePage): string[] {
        *  **베타를 납으로 막으면 안 되는 이유가 정확히 이것**이라 값이 낮게 나가면 결론이 뒤집힌다.
        *  ★ 여기서는 **누구의 에너지인지 밝히고**, 딸의 값은 아래 연쇄 문단이 든다. */
       `acrylic or ${mm(glass.cm)} of glass. Of ${dominantProgeny(p.key)?.betaHotter ? `${p.key}'s own` : `the`} ` +
-      `beta energy, ${frac(p.bremsLow)} turns into X-rays in acrylic and ${frac(p.bremsLead)} in lead.`,
+      `beta energy, ${frac(p.bremsLow)} turns into X-rays in acrylic and ${frac(p.bremsLead)} in lead` +
+      /* ★ 흔적 가지 관례(T12) — 제동복사 몫은 세기 1% 이상 가지의 최대 끝점으로 계산한다(`betaBremsMeV`). 그 끝점이
+         사정거리의 끝점과 다르면(Co-60 · I-131 · Cs-134 · Au-198) 어느 끝점으로 계산했는지 밝힌다. */
+      (p.bremsMeV && p.bremsMeV !== p.betaMaxMeV
+        ? `, worked out for the ${sig(p.bremsMeV)} MeV branch, the hardest in at least 1% of decays.`
+        : `.`),
     );
   }
 
@@ -306,7 +338,10 @@ export function paragraphs(p: NuclidePage): string[] {
       out.push(
         `The photon field around ${p.key} is ${prog.key}'s. ${prog.key} (${dHl}) follows close enough to be ` +
         `present in any aged source, and its air kerma rate constant is ${sig(d.gamma_const)} mGy·m²/(GBq·h)` +
-        (n.gamma_const > 0 ? `, against ${sig(n.gamma_const)} for ${p.key}` : `, where no photon line is recorded for ${p.key}`) +
+        /* ★ T12 1-24 — Γ 가 0 이어도 줄은 있을 수 있다(Ge-68: 줄 다섯, 모두 컷오프 아래). 「no photon line is recorded」는 그때 거짓이다. */
+        (n.gamma_const > 0 ? `, against ${sig(n.gamma_const)} for ${p.key}`
+          : n.lines.length ? `, against zero for ${p.key}`
+          : `, where no photon line is recorded for ${p.key}`) +
         `. Shield for ${prog.key}.`,
       );
     } else {
@@ -339,6 +374,10 @@ export function paragraphs(p: NuclidePage): string[] {
       (p.gamma > 0
         ? `. None of it reaches through skin, so the alpha is an intake hazard rather than an external one — ` +
           `the photon figures above are the separate question.`
+        /* ★ T12 h — 자발 핵분열 가지가 있으면(SPONTANEOUS_FISSION) 외부 위험이 이 자료 밖에 있다 — 「the limit here is intake」로
+             쪽 전체를 결론짓지 않는다(Cf-252 는 중성자 선원으로 쓰인다). */
+        : SPONTANEOUS_FISSION[p.key]
+        ? `. None of it reaches through skin, so the alpha is an intake hazard rather than an external one.`
         : `. None of it reaches through skin, so the limit here is intake, not external dose.`),
     );
   }
@@ -355,7 +394,9 @@ export function paragraphs(p: NuclidePage): string[] {
        그 반쪽을 재던 게이트가 「색인 0쪽 · 통과」를 찍었다(그 구멍은 게이트에서 막았다). */
     const hz = (key: string) => {
       const g2 = horizons(key);
-      return `Decay is the only handle: ${g2[0].label} leaves ${frac(g2[0].frac)} of today's activity ` +
+      /* ★ T12 검토 — 자발 핵분열 가지가 있으면(Cf-252) 「Decay is the only handle」이 중성자 차폐를 부정한다. 이 쪽의 수치 안으로 한정한다. */
+      return `${SPONTANEOUS_FISSION[key] ? "Within the figures on this page, decay is the only handle" : "Decay is the only handle"}: ` +
+             `${g2[0].label} leaves ${frac(g2[0].frac)} of today's activity ` +
              `and ${g2[1].label} leaves ${frac(g2[1].frac)}, with ten half-lives at ` +
              `${tenHalfLives(key)} and a mean life of ${meanLife(key)} per atom.`;
     };
@@ -394,14 +435,29 @@ export function decayCaption(key: string): string {
   if (T < D)
     return `Ten half-lives is ${ten}, so the activity moves measurably while a count is running: every ` +
            `figure has to carry the time it was referred to. The mean life 1/λ is ${tau}.`;
-  if (T < Y)
-    return `Ten half-lives is ${ten} — a storage problem rather than a disposal one, with ` +
-           `${frac(remainingAfterYears(key, 1))} of today's activity still there after a year. ` +
+  /* ★ T12 §5-e — 1년 뒤 남는 몫이 0.1% 아래면 「7.2e-35% … still there after a year」(Tl-201)처럼 「남아 있다」가 거짓이 된다.
+     그때는 0.1% 를 넘어갔다고만 쓴다. */
+  if (T < Y) {
+    const r1 = remainingAfterYears(key, 1);
+    /* ★ T12 검토 — 「storage rather than disposal」은 **이 핵종 자신**의 판정이다(Lu-177 은 Lu-177m 이 처분을 정할 수 있다). */
+    return `Ten half-lives is ${ten} — for ${key} itself, a storage problem rather than a disposal one, ` +
+           (r1 >= 1e-3 ? `with ${frac(r1)} of today's activity still there after a year. `
+                       : `since those ten half-lives already take it below 0.1% of today's activity. `) +
            `The mean life 1/λ is ${tau}.`;
-  if (T < 1000 * Y)
-    return `Ten half-lives is ${ten}, which puts decay storage out of reach: ` +
-           `${frac(remainingAfterYears(key, 40))} survives forty years. The mean life 1/λ, the quantity that ` +
-           `enters an integrated dose, is ${tau}.`;
+  }
+  /* ★★ T12 1-7 · 1-14 · 1-15 — 1~1000년을 한 문장(「which puts decay storage out of reach: X survives forty years」)으로 덮어
+     Cd-109(3.0e-8%) · Cs-134 · Co-60(0.52%)에서 문장이 스스로 어긋났다. 띠를 쪽의 값으로 셋으로 가른다 —
+     열 반감기가 40년 안 · 반감기가 40년 아래(40년이 대부분을 없앤다) · 반감기 40년 이상(지금 문장이 맞는 띠). */
+  if (T < 1000 * Y) {
+    const r40 = remainingAfterYears(key, 40);
+    const lead = 10 * T <= 40 * Y
+      ? `Ten half-lives is ${ten}, so forty years of decay takes it past the 0.1% mark, to ${frac(r40)}.`
+      : T < 40 * Y
+      ? `Ten half-lives is ${ten}, so forty years of decay stops short of the 0.1% mark: it removes most of the ` +
+        `activity but leaves ${frac(r40)}.`
+      : `Ten half-lives is ${ten}, which puts decay storage out of reach: ${frac(r40)} survives forty years.`;
+    return `${lead} The mean life 1/λ, the quantity that enters an integrated dose, is ${tau}.`;
+  }
   return `Ten half-lives is ${ten}. On any timescale a facility can be planned over the activity is ` +
          `constant — ${frac(remainingAfterYears(key, 40))} is left after forty years — and the mean ` +
          `life 1/λ is ${tau}.`;
@@ -435,16 +491,27 @@ export function sectionHeads(p: NuclidePage) {
          (실측: Ca-41 ↔ Ni-59 · Fe-55 ↔ Ra-228). 이름을 넣어도 소용없다 — 게이트가 이름을
          지우고 센다(그리고 그것이 맞다: 이름만 갈아 끼운 제목은 갈린 제목이 아니다).
          그래서 **이 핵종의 수**를 제목에 들린다. 표에 실제로 서는 두 줄이다. */
-      :        `Half-life ${halfLifeText(n)}, ${sig(n.sa_bq_g)} Bq/g, and no line recorded`,
+      /* ★ T12 1-25 · 1-26 · §5-c — 「no line recorded」가 줄이 있는 쪽(Fe-55 · Ge-68: 모두 컷오프 아래)과 알파 줄이 있는 쪽에도
+           섰다. 여기는 Γ 가 0 인 자리라 줄이 있으면 전부 컷오프 아래다. */
+      : n.lines.length ? `Half-life ${halfLifeText(n)}, ${sig(n.sa_bq_g)} Bq/g, and no line above the 20 keV cutoff`
+      : a             ? `Half-life ${halfLifeText(n)}, ${sig(n.sa_bq_g)} Bq/g, and no photon line recorded`
+      :                 `Half-life ${halfLifeText(n)}, ${sig(n.sa_bq_g)} Bq/g, and no line recorded`,
     /* 붕괴 표가 덮는 눈금 — 열 반감기가 어디까지 가는가.
        ★ 첫 판의 경계가 틀렸다(2026-09-20, 눈으로 잡았다) — 100년에서 바로 「millennia」로
          넘어가는 바람에 **H-3(열 반감기 123년)·Cs-137(301년)·Sr-90(288년)이 「천년 단위」**
          라고 말했다. 이름이 그 눈금을 실제로 가리키는지 **값을 넣어 확인할 것.** */
+    /* ★★ T12 1-47 · §5-f — 띠를 열 반감기로 다시 짰다. 그전에는 30일 · 10년 · 1000년 셋뿐이라 Tl-201(30.4일)이 「months and
+         years」, Tc-99m(2.5일)이 「days and weeks」, Cd-109(12.6년) · Co-60(52.7년)이 「decades and centuries」였다. 경계는 쪽의
+         붕괴 표가 실제로 덮는 기간에 맞춘다 — 7일 · 91일(13주, `horizons()` 의 「three months」와 같은 눈금) · 1년 · 10년 · 100년. */
     decay:
       t10 < D          ? "Activity over the first hours"
-      : t10 < 30 * D   ? "Activity over days and weeks"
+      : t10 < 7 * D    ? "Activity over hours and days"
+      : t10 < 91 * D   ? "Activity over days and weeks"
+      : t10 < Y        ? "Activity over weeks and months"
       : t10 < 10 * Y   ? "Activity over months and years"
+      : t10 < 100 * Y  ? "Activity over years and decades"
       : t10 < 1000 * Y ? "Activity over decades and centuries"
+      : t10 < 1e4 * Y  ? "Activity over centuries and millennia"
       : t10 < 1e6 * Y  ? "Activity over millennia"
       :                  "Activity over geological time",
     /* 그 쪽에서 실제로 문제가 되는 한계.
@@ -453,9 +520,12 @@ export function sectionHeads(p: NuclidePage) {
          드물다」고 말한다.** 제목이 본문과 어긋나면 제목이 거짓말을 하는 것이다.
        ★ 그래서 알파가 있고 Γ 가 약한 띠(0.005, 산문에서 쓰는 것과 같은 문턱)이면
          섭취 쪽을 든다. */
+    /* ★ T12 1-41 — 연쇄가 이 자료에서 끊기는 알파 핵종(Ra-226 · U-238)은 Γ 가 작아도 자손의 광자장이 빠진 값이라 「intake, not
+         external」로 결론짓지 않는다. ★ T12 h — 자발 핵분열 가지(SPONTANEOUS_FISSION, Cf-252)도 외부 위험이 이 자료 밖에 있다. */
     limits:
-      a && p.gamma < 0.005 ? "Limits — intake, not external dose"
+      a && p.gamma < 0.005 && !CHAIN_TRUNCATED.includes(p.key) && !SPONTANEOUS_FISSION[p.key] ? "Limits — intake, not external dose"
       : g ? "Limits of these dose rates"
+      : SPONTANEOUS_FISSION[p.key] ? "Limits of these figures"
       : a ? "Limits — intake, not external dose"
       : b ? "Limits of these range figures"
       :     "Limits of these figures",

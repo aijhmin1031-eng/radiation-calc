@@ -224,3 +224,14 @@ test("케이스 id 가 겹치지 않고, 세우지 못한 것이 목록으로 �
   assert.ok(UNVERIFIED.length >= 5, `세우지 못한 것 ${UNVERIFIED.length}건`);
   for (const u of UNVERIFIED) assert.ok(u.why.length > 40, `${u.id}: 이유가 너무 짧다`);
 });
+
+/* ★ T12 1-52 · 1-53 · 1-54 — B-W-03 의 단계 문장이 자료와 어긋나 있었다(「the lowest in the data set」 — Pu-241 이 더 낮다 ·
+ *   「Five orders of magnitude」 — 같은 쪽 계산은 164배 · 「a fraction of a micrometre」 — 같은 맞춤식으로 5.85 µm).
+ *   고친 문장이 다시 낡지 않게 문장이 기대는 사실을 자료로 붙잡는다. */
+test("B-W-03 의 문장이 기대는 사실 — 평균 에너지 순위 · Y-90 대비 배수 · 삼중수소 사정거리", () => {
+  const byMean = [...BETA].sort((a, b) => a[1].beta_mean_keV! - b[1].beta_mean_keV!).map(([k]) => k);
+  assert.deepEqual(byMean.slice(0, 2), ["Pu-241", "H-3"], `평균 에너지가 가장 낮은 둘: ${byMean.slice(0, 3).join(", ")}`);
+  const ratio = infiniteMediumDoseRate(NUC["Y-90"].beta_mean_keV! / 1000, 1e6) / infiniteMediumDoseRate(NUC["H-3"].beta_mean_keV! / 1000, 1e6);
+  assert.equal(Math.round(ratio), 164, `Y-90 ÷ H-3 = ${ratio}`);
+  assert.ok(betaRangeCm(NUC["H-3"].beta_max_keV! / 1000, 1.0) < 6e-4, "삼중수소 끝점 사정거리가 물에서 6 µm 아래");
+});

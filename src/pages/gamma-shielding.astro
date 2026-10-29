@@ -15,8 +15,11 @@ const G = EX.gamma;
       each photon line of the nuclide, the energy and the emission probability come from the
       evaluated nuclear data, and the mass energy-absorption coefficient of air at that energy comes
       from the NIST tables. Summing E·y·(µ<sub>en</sub>/ρ) over the lines and dividing by 4π gives
-      the air kerma rate constant directly. The result agrees with published constants to within
-      about 2% for the well-characterised nuclides.
+      the air kerma rate constant directly. The result is not set against published gamma constants,
+      which describe a different quantity and often do not state the cutoff they apply. The
+      {" "}<a href={u("/validation/gamma-shielding/")} class="underline">validation report</a> checks the
+      parts instead: the unit chain by hand, the interpolation of the NIST tables, and a sample of
+      emission lines against an independent evaluation.
     </p>
     <p>
       Computing rather than copying has a practical benefit beyond provenance: the low-energy cutoff

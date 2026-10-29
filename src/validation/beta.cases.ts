@@ -327,10 +327,10 @@ export const WORKED_CASES: WorkedCase[] = [
   { id: "B-W-03", title: "Tritium at one megabecquerel per kilogram",
     nuclide: "H-3", kind: "doseRate", input: 1e6, expect: 3.2761307812e-6, unit: "Gy/h",
     steps: [
-      "Ē = 5.68 keV = 0.005 68 MeV, the lowest in the data set.",
+      "Ē = 5.68 keV = 0.005 68 MeV, the second lowest in the data set after plutonium-241 at 5.23 keV.",
       "0.005 68 × 1.602 176 634 × 10⁻¹³ × 10⁶ × 3600 = 3.276 130 781 2 × 10⁻⁶ Gy/h.",
-      "Five orders of magnitude below yttrium-90 at the same activity concentration, from the energy alone.",
-      "The infinite-medium condition is easily met for tritium: its range in water is a fraction of a micrometre, so any sample qualifies.",
+      "Yttrium-90 at the same activity concentration gives 164 times as much, a little over two orders of magnitude, from the energy alone.",
+      "The infinite-medium condition is easily met for tritium: its endpoint range in water is under 6 µm, so any sample of ordinary size qualifies.",
     ] },
   { id: "B-W-04", title: "Strontium-90 at a plane surface",
     nuclide: "Sr-90", kind: "surface", input: 1e6, expect: 5.6438274110e-5, unit: "Gy/h",

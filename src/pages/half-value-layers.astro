@@ -109,11 +109,11 @@ const ir1000naive = 3 * irPb.tvlCm;
       leaves it is harder than the one that entered.
     </p>
     <p>
-      Cs-137 shows the effect at its smallest. Besides its 662&nbsp;keV line it emits barium K X-rays near
+      Cs-137 shows a small version of the effect. Besides its 662&nbsp;keV line it emits barium K X-rays near
       32&nbsp;keV, which carry little dose but are stopped almost at once. The first half-value layer in
       lead is therefore {mm3(csPb.hvlCm)}&nbsp;mm, a little thinner than the {mm3(csPb.tvl2Cm / SINGLE)}&nbsp;mm
-      that the second tenth-value layer implies for the 662&nbsp;keV line alone. Ir-192 shows it at its
-      largest among these six: its first half-value layer in lead is {mm3(irPb.hvlCm)}&nbsp;mm, its first
+      that the second tenth-value layer implies for the 662&nbsp;keV line alone. Ir-192 shows it
+      clearly: its first half-value layer in lead is {mm3(irPb.hvlCm)}&nbsp;mm, its first
       tenth-value layer {mm3(irPb.tvlCm)}&nbsp;mm — {ratio("Ir-192", "lead").toFixed(1)} half-value layers
       rather than {SINGLE.toFixed(1)} — and its second tenth-value layer {mm3(irPb.tvl2Cm)}&nbsp;mm. The
       lines between 296 and 317&nbsp;keV carry most of the dose in front of the shield; behind a

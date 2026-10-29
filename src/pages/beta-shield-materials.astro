@@ -1,19 +1,23 @@
 ---
 import Base from "../layouts/Base.astro";
 import NuclideRef from "../components/NuclideRef.astro";
-import { NUCLIDES, nuclidePage } from "../lib/nuclides";
+import { NUCLIDES, nuclidePage, BETA_BRANCH_FLOOR_PCT } from "../lib/nuclides";
+import { betaRangeCm, DENSITY_G_CM3 } from "../engine";
 import { dominantProgeny } from "../lib/decay-chain";
 import { u } from "../lib/site";
 
-/** ★★ 숫자를 글자로 적지 않는다 — 표도 문장도 엔진과 자료에서 파생시킨다. */
+/** ★★ 숫자를 글자로 적지 않는다 — 표도 문장도 엔진과 자료에서 파생시킨다.
+ *  ★★ 흔적 가지 관례(소유주 결정 2026-10-29, T12) — 이 목록은 **세기 1% 이상 가지의 최대 끝점**으로 순위를 매기고 그 끝점의
+ *    사정거리 · 제동복사를 보인다(`p.bremsMeV`). 그전에는 기록된 가지 전부의 최대 끝점이라 Ta-182 가 0.058% 가지의 1.71 MeV 로
+ *    「ten hardest」에 들었다(거의 모든 붕괴는 0.59 MeV 아래). 낱장의 사정거리는 지금처럼 가장 센 가지로 잡는다 — 캡션이 밝힌다. */
 type Row = { key: string; e: number; acr: number; al: number; wat: number;
              low: number; pb: number; g: number };
 const all: Row[] = Object.keys(NUCLIDES)
   .map((key) => {
-    const p = nuclidePage(key), n = NUCLIDES[key];
-    const of = (m: string) => p.betaRanges.find((r) => r.material === m)?.cm ?? NaN;
-    return { key, e: n.beta_max_keV ?? 0, acr: of("acrylic"), al: of("aluminum"),
-             wat: of("water"), low: p.bremsLow, pb: p.bremsLead, g: n.gamma_const };
+    const p = nuclidePage(key), n = NUCLIDES[key], eMeV = p.bremsMeV ?? 0;
+    const at = (rho: number) => (eMeV ? betaRangeCm(eMeV, rho) : NaN);
+    return { key, e: eMeV * 1000, acr: at(1.18), al: at(DENSITY_G_CM3.aluminum),
+             wat: at(1.0), low: p.bremsLow, pb: p.bremsLead, g: n.gamma_const };
   })
   .filter((r) => r.e > 0)
   .sort((a, b) => b.e - a.e);
@@ -100,8 +104,10 @@ const gammaLed = top.filter((r) => r.g >= GAMMA_FLOOR).sort((a, b) => b.g - a.g)
     </table>
     </div>
     <p class="mt-2 text-[13px]">
-      The ten hardest beta emitters carried here, of {all.length}. Ranges are Katz–Penfold fits to
-      the endpoint: stopping thicknesses rather than attenuation lengths, good to about ±10%.
+      The ten hardest beta emitters carried here, of {all.length}, ranked on the hardest branch that
+      occurs in at least {BETA_BRANCH_FLOOR_PCT}% of decays. Ranges are Katz–Penfold fits to that endpoint:
+      stopping thicknesses rather than attenuation lengths, good to about ±10%. A nuclide's own sheet
+      sizes its range on the hardest branch recorded, however rare, and can show a thicker figure.
     </p>
     {gammaLed.length > 0 && (
       <p>

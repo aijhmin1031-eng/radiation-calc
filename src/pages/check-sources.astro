@@ -64,7 +64,10 @@ const am = ALPHA.find((a) => a.k === "Am-241")!, pu = ALPHA.find((a) => a.k === 
 const csTen = frac("Cs-137", 10 * YEAR), naThree = frac("Na-22", 3 * YEAR);
 const coGamma = P["Co-60"].g / P["Cs-137"].g;
 const eu = nuclidePage("Eu-152");
-const euSpan = NUCLIDES["Eu-152"].lines.filter(([, i]) => i > 1).map(([e]) => e).filter((e) => e > 20);
+/* ★ T12 1-66 — 1% 이하 줄을 말없이 빼면서 문장은 「its recorded lines above the cutoff」라고 했다(1408 keV 위에 약한 줄이 있다).
+ *   거르는 문턱을 문장이 밝힌다. */
+const EU_MIN_PCT = 1;
+const euSpan = NUCLIDES["Eu-152"].lines.filter(([, i]) => i > EU_MIN_PCT).map(([e]) => e).filter((e) => e > 20);
 const i131 = line("I-131", 364)!, ba356 = line("Ba-133", 356)!, cd88 = line("Cd-109", 88)!;
 ---
 <Base title="Nuclides for check and calibration sources"
@@ -202,7 +205,7 @@ const i131 = line("I-131", 364)!, ba356 = line("Ba-133", 356)!, cd88 = line("Cd-
     </p>
     <p>
       Eu-152 sits at the other extreme: it needs {P["Eu-152"].n90} lines to account for nine-tenths of
-      its kerma, and its recorded lines above the cutoff run from {Math.min(...euSpan).toFixed(0)} keV
+      its kerma, and its lines above the cutoff with an emission probability over {EU_MIN_PCT}% run from {Math.min(...euSpan).toFixed(0)} keV
       to {Math.max(...euSpan).toFixed(0)} keV. That spread is a nuisance for dose-rate work and is
       exactly what a germanium spectrometer's efficiency calibration needs — many points across the
       energy range from one source with one certificate. Y-88 extends such a calibration above Co-60,
@@ -226,8 +229,9 @@ const i131 = line("I-131", 364)!, ba356 = line("Ba-133", 356)!, cd88 = line("Cd-
       reach {(BETA.find((b) => b.k === "Y-90")!.e / 1000).toFixed(2)} MeV, and Y-90 is back in
       equilibrium within {yTen}. What a Sr-90 check source tests — the penetration through a detector
       window, the response to energetic electrons — is set by Y-90. Ge-68 sources, used for PET
-      calibration, have no photon line of their own in this table at all; the field is the
-      annihilation radiation from their daughter Ga-68, which is back in equilibrium within {gaTen}.
+      calibration, have no photon line of their own above the 20 keV cutoff in this table, only soft
+      gallium X-rays below it; the field is the annihilation radiation from their daughter Ga-68, which
+      is back in equilibrium within {gaTen}.
     </p>
 
     <h2>Beta and alpha sources</h2>
