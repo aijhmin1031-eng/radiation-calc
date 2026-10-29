@@ -1,4 +1,5 @@
 import { MEV_J } from "./constants";
+import type { BetaBranch } from "./types";
 
 /** 베타 — **정확히 유도되는 것만** 싣는다.
  *
@@ -72,6 +73,20 @@ export function betaTransmission(eMaxMeV: number, thicknessGcm2: number): number
 export function bremsstrahlungYield(z: number, eMaxMeV: number): number {
   const f = 3.5e-4 * z * eMaxMeV;
   return Math.min(Math.max(f, 0), 1);
+}
+
+/** ★★ 흔적 가지 관례(소유주 결정 2026-10-29, T12) — 제동복사 몫은 **세기 1% 이상 가지의 최대 끝점**으로 계산한다.
+ *  사정거리는 그대로 기록된 가지 전체의 최대 끝점이다(가장 센 베타를 막아야 한다). Co-60 의 1.49 MeV 는 0.12% 가지라
+ *  그 끝점으로 낸 제동복사 몫은 거의 모든 붕괴가 내는 베타의 몫보다 몇 배 크다.
+ *  ★ T13 — 낱장 · `/beta-shield-materials/` 만 이 규칙을 쓰고 **계산기는 최대 끝점**으로 계산하고 있었다(같은 핵종에서 값이
+ *    달랐다). 규칙을 여기 한 곳에 두고 셋이 함께 읽는다. 1% 이상 가지가 없으면(지금 자료에는 없다) 최대 끝점으로 돌아간다. */
+export const BETA_BRANCH_FLOOR_PCT = 1;
+/** 제동복사를 계산할 끝점 [keV] — 위 관례. 끝점이 있는 가지가 없으면 `null`. */
+export function bremsEndpointKeV(branches: readonly BetaBranch[] | undefined): number | null {
+  const b = (branches ?? []).filter((x): x is BetaBranch & { max: number } => x.max != null);
+  if (!b.length) return null;
+  const sig = b.filter((x) => x.i >= BETA_BRANCH_FLOOR_PCT);
+  return Math.max(...(sig.length ? sig : b).map((x) => x.max));
 }
 
 /** 제동복사로 나가는 일률 [MeV/s] 과 그 평균 광자에너지(≈E_max/3 어림). */

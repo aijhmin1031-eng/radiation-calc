@@ -250,6 +250,22 @@ Th-232 「우라늄 다음으로 많은 악티나이드」 → 우라늄보다 �
   as」, In-111 · Y-88), `/nuclides/` 의 「Tin-113 is the extreme case」(TVL/HVL 84 → 29, 이제 Ba-133m 42 — 핵종도 자료에서 고른다). 검증 케이스
   G-W-01 · G-W-04 · G-W-05 · G-DL-02 와 `worked-examples.ts`(Cs-137 2 m 0.714 → 0.712 · Γ 0.0771 → 0.0769 · Ir-192 20 m 410 → 409 µGy/h · 경계 90.6 → 90.5 m).
 
+★★ **남은 문장 · 관례 정리**(2026-10-29, T13 — T12 보고 §9 의 남은 판단 중 감독이 정한 8건). 계산값 · `nuclides.json` 은 그대로다(예외: 베타 계산기의 제동복사).
+- 정확도 주장 — 베타 사정거리의 「±10%」(낱장 34장의 캡션 · limits 줄, `/beta-shield-materials/` · `/dataset-limits/` · `/daughter-shielding/` · `/disclaimer/`)를
+  뺐다. 검증 보고서(B-N-01 · B-F-01)가 그 정확도를 재현하지 못했다고 적는다. 대신 보고서가 보이는 것(경로길이가 아니라 깊이, B-E-01)을 쓴다.
+- 흔적 가지 관례를 **계산기까지** — 규칙을 엔진 한 곳(`bremsEndpointKeV` · `BETA_BRANCH_FLOOR_PCT`)에 두고 낱장 · 목록 · `/beta/` 계산기가 함께 읽는다
+  (계산기 표는 `lib/beta-absorbers.ts` — 테스트가 계산기 연결까지 고정한다).
+  계산기 제동복사 칸이 바뀐 핵종 10종(Co-60 납 4.28 → 0.912% 등, 전후표는 작업 보고서). 검증 B-D-03 의 「드문 가지」 문턱 2% → 1%(Sb-124m1 빠짐, 11 → 10종).
+- 자발 핵분열 — `SPONTANEOUS_FISSION` 에 Cm-244(ENSDF 0.000137%). limits 제목 「dose rates」 · 단서 줄 · 광자 차폐 판정 셋(「It takes … to reach
+  20 µSv/h」 · 「barely arises」 · 「already under」)을 「the photons in these figures」로 한정.
+- 여러 걸음 연쇄 — `chainLeavesDataset`(실린 딸을 40년 · 평형 조건으로 따라가 Z ≥ 84 의 실리지 않은 딸에 닿는가 — 값은 내지 않는다). Th-232 의 광자
+  판정 셋을 「Th-232's own photons」로, limits 제목을 「dose rates」로. 같은 꼴: Pb-210(「those photons」 · 「their」로 받음) · Ra-228 제동복사 「Ra-228's own」.
+- 「Decay is the only handle」은 쪽이 막을 것(베타 사정거리 · 딸 · 자발 핵분열 · 이 자료 밖 연쇄)을 말하지 않을 때만 — 25 → 6쪽, 그중 이 자료에 딸이 실린
+  3쪽(Th-230 · U-233 · U-236)은 「For X itself」. 판정을 뺀 19쪽 중 값이 이미 쪽에 있는 14쪽은 문장째 뺐고, 첫 문단에 시평이 없는 5쪽은 숫자만 남겼다.
+- Γ 순위 판정 — 96위 중 96위(Pm-147)는 「the lowest」, 아래 10분의 1 은 「near the bottom」, 그 위는 「in the bottom quarter」(`bottomOf`).
+- 손글 2편(Pu-241 「no photon line above the cutoff」 · Y-90 「the only photons recorded fall below the cutoff」) — 40편 밖.
+- `check-progeny` 가 새 규칙 둘(광자 판정의 주어 · 「only handle」 조건)을 잰다. 보류: 공기커마(µGy/h)와 µSv/h 목표의 1:1 비교(소유주 결정 대기).
+
 ★★ **글 쓰는 방식 공개**(2026-10-29, T10 F6 — 소유주 「추천대로」). Methods 에 「How the pages are written」(`#writing`) 한 절을 두었다 —
 수치 · 표 · 핵종 쪽 머리 문장은 자료에서 계산한다 · 그 둘레의 글은 AI 도움으로 쓴다 · 출처를 단 해설은 그 출처로 썼고 다른 AI 검토가 대조한 뒤
 고친 문장을 다시 대조했다. **글은 저자가 쓴다 — 쪽마다 범위와 방향을 정하고 내용을 책임진다 · AI 는 초안 작성을 돕는다**(소유주 「AI 는 그냥 도구 · 대필이다 —

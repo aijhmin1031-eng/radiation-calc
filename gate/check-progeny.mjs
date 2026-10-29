@@ -14,8 +14,8 @@
  *
  * ★ **못 보는 것**: 문장이 **맞는가**는 재지 않는다 — 두께가 0 이어도 「mm」만 있으면 통과한다.
  *   조립된 문장은 사람이 읽는다(그렇게 해서 「7.0e+2×」·「0.0448 MeV 베타」·이성질체에
- *   「chemically separated」 셋을 잡았다). 그리고 **한 걸음짜리 검사**다 —
- *   여러 걸음 연쇄(Th-230·U-232)는 `src/lib/decay-chain.ts` 가 밝힌 대로 범위 밖이다.
+ *   「chemically separated」 셋을 잡았다). 그리고 ①~③ 은 **한 걸음짜리 검사**다 —
+ *   여러 걸음 연쇄는 T13 부터 「있는가」만 잰다(`chainLeavesDataset` — 광자 판정의 주어를 한정하는지).
  */
 import { readFileSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -24,8 +24,8 @@ import { fileURLToPath } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = join(ROOT, "dist/calc/nuclides");
 
-const { WITH_DOMINANT_PROGENY, CHAIN_TRUNCATED } = await import("../src/lib/decay-chain.ts");
-const { NUCLIDES } = await import("../src/lib/nuclides.ts");
+const { WITH_DOMINANT_PROGENY, CHAIN_TRUNCATED, chainLeavesDataset, dominantProgeny } = await import("../src/lib/decay-chain.ts");
+const { NUCLIDES, SPONTANEOUS_FISSION } = await import("../src/lib/nuclides.ts");
 /** ★★ 2026-10-06 ④ — 낱장은 **쪽 목록의 핵종에만** 선다(검색 제외 77장을 지웠다). 목록에 든 핵종 가운데 쪽이 없는
  *  것은 「산출물이 없다」가 결함이 아니라 **설계**다 — 그래서 건너뛰고 몇 장을 건너뛰었는지 찍는다.
  *  ★ 쪽이 **있어야 하는데 없는** 것은 여전히 결함이다(`hasPage` 가 참인데 파일이 없다). 빠져나갈 길을 열지 않는다.
@@ -89,7 +89,9 @@ for (const [key, prog] of WITH_DOMINANT_PROGENY) {
  *  ★ Ru-106 때와 다르다 — **맞는 값을 만들 수 없으므로 주장을 거둔다.** 그래서 이 검사는
  *    「무엇이 있는가」가 아니라 **「무엇이 없어야 하는가」**를 묻는다. */
 const VERDICTS = ["constant is small", "barely arises", "with nothing in the way",
-                  "near the bottom of the photon emitters", "of the photon emitters in this dataset"];
+                  "near the bottom of the photon emitters", "of the photon emitters in this dataset",
+                  /* T13 — 순위 판정 낱말을 순위에 맞췄다(`bottomOf`). 새 낱말도 같은 판정이다. */
+                  "the lowest of the photon emitters", "in the bottom quarter of the photon emitters", "photon emitters below it"];
 for (const key of CHAIN_TRUNCATED) {
   const t = bodyOf(key);
   if (t === undefined) continue;
@@ -127,6 +129,38 @@ for (const [key, prog] of WITH_DOMINANT_PROGENY) {
     fail.push(`${key}: 딸(${prog.key})의 제동복사를 적지 않는다`);
 }
 
+/** ★★ T13 — **광자 차폐 판정의 주어가 한정되는가.** Th-232 쪽이 자기 광자만으로 「Shielding barely arises」·「it is already under
+ *  20 µSv/h with nothing in the way」라고 판정하고 있었다 — 토륨 선원의 광자장은 이 자료에 없는 Ac-228 · Tl-208 의 것이다
+ *  (`chainLeavesDataset`). Cm-244 는 같은 판정이 중성자 차폐(그 쪽 손글)와 부딪쳤다(`SPONTANEOUS_FISSION`).
+ *  그 쪽에는 주어 없는 판정이 서면 안 된다. 연쇄가 잘린 쪽은 위에서 판정 자체를 거둔다. */
+let scoped = 0;
+for (const key of Object.keys(NUCLIDES)) {
+  if (CHAIN_TRUNCATED.includes(key) || !(NUCLIDES[key].gamma_const > 0)) continue;
+  if (!chainLeavesDataset(key) && !SPONTANEOUS_FISSION[key]) continue;
+  const t = bodyOf(key);
+  if (t === undefined) continue;
+  if (t === null) { fail.push(`${key}: 산출물이 없다`); continue; }
+  scoped++;
+  for (const v of ["Shielding barely arises", "At 1 GBq and a metre it is already under", "to reach 20 µSv/h from the photons alone"])
+    if (t.includes(v)) fail.push(`${key}: 광자 판정의 주어를 한정하지 않는다 — 「${v}」`);
+}
+
+/** ★★ T13 — **「Decay is the only handle」이 같은 쪽의 차폐 이야기와 부딪치지 않는가.** 그 판정은 쪽이 막을 것을 하나도
+ *  말하지 않을 때만 선다 — 베타 사정거리 표 · 딸 문단 · 자발 핵분열 · 이 자료 밖으로 이어지는 연쇄가 있으면 서면 안 된다
+ *  (Ge-68 은 바로 앞 문장이 「Shield for Ga-68.」였다). */
+let handles = 0;
+for (const key of Object.keys(NUCLIDES)) {
+  const n = NUCLIDES[key];
+  const shieldTalk = Boolean(n.beta?.length && n.beta_max_keV) || dominantProgeny(key) || SPONTANEOUS_FISSION[key] || chainLeavesDataset(key);
+  const t = bodyOf(key);
+  if (t === undefined) continue;
+  if (t === null) { fail.push(`${key}: 산출물이 없다`); continue; }
+  if (/decay is the only handle/i.test(t)) {
+    handles++;
+    if (shieldTalk) fail.push(`${key}: 막을 것을 말하는 쪽인데 「Decay is the only handle」이라고 판정한다`);
+  }
+}
+
 // ③ 목록 밖의 쪽이 남의 딸 이야기를 들고 있지 않은가
 const MARKERS = ["does not stand alone", "grows in beneath", "The photon field around"];
 let strays = 0;
@@ -150,5 +184,7 @@ console.log(
   ` · 연쇄가 이 자료에서 끊기는 핵종 ${CHAIN_TRUNCATED.length}종 중 쪽이 있는 ${withPage(CHAIN_TRUNCATED)}장 — 전부 단서를 들고 결론을 내지 않는다` +
   ` · 쪽이 없어 건너뛴 핵종 ${skipped.size}종(${[...skipped].join(", ") || "없음"})` +
   ` · 광자장 있는 알파 쪽이 「섭취뿐」이라 말하는 것 0건 · 제동복사가 누구 것인지 밝히지 않는 쪽 0건` +
-  `\n                ※ 못 보는 것: 문장이 맞는지 · **하한값이 맞는지**(그것은 decay-chain.ts 의 정의다) · 여러 걸음 연쇄`,
+  ` · 연쇄가 이 자료 밖으로 이어지거나 자발 핵분열이 있는 광자 쪽 ${scoped}장 — 전부 광자 판정의 주어를 한정한다` +
+  ` · 「Decay is the only handle」 ${handles}장 — 전부 막을 것을 말하지 않는 쪽` +
+  `\n                ※ 못 보는 것: 문장이 맞는지 · **하한값이 맞는지**(그것은 decay-chain.ts 의 정의다) · 여러 걸음 연쇄의 세기(있다는 것만 잰다)`,
 );

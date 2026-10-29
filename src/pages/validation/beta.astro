@@ -430,7 +430,8 @@ const description =
 
     <h3>Bremsstrahlung: only the part that can be compared</h3>
     <p>
-      The tool computes the bremsstrahlung fraction as f ≈ 3.5 × 10⁻⁴ · Z · E<sub>max</sub>, so the
+      The tool computes the bremsstrahlung fraction as f ≈ 3.5 × 10⁻⁴ · Z · E<sub>max</sub>, taking
+      E<sub>max</sub> from the hardest branch seen in at least 1% of decays, so the
       ratio between two materials is exactly the ratio of their atomic numbers. NIST tabulates the
       radiation yield for <em>monoenergetic</em> electrons, while that expression is meant for a
       <em>beta spectrum</em> whose mean energy is roughly a third of the endpoint. The absolute values
@@ -508,7 +509,10 @@ const description =
     </div>
     <p>
       <strong>{DATA_CASES.rareBranch.title}</strong> <span class="num text-[12px] text-ink-faint">({DATA_CASES.rareBranch.id})</span>. Using the highest endpoint is the conservative
-      choice for shielding, but it can belong to a branch almost nobody sees. In this data set
+      choice for shielding, but it can belong to a branch almost nobody sees. Rare here means under
+      {" "}{DATA_CASES.rareBranch.thresholdPct}% of decays — the floor below which the nuclide sheets, the calculator
+      and the shield-materials ranking set a branch aside when they work out bremsstrahlung or rank the hardest
+      emitters. In this data set
       {" "}{rare.length === 1 ? "one nuclide is" : `${rare.length} nuclides are`} affected:
     </p>
     <div class="not-prose my-3 pin-first table-fit" tabindex="0">

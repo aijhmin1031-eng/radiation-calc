@@ -106,7 +106,9 @@ const gammaLed = top.filter((r) => r.g >= GAMMA_FLOOR).sort((a, b) => b.g - a.g)
     <p class="mt-2 text-[13px]">
       The ten hardest beta emitters carried here, of {all.length}, ranked on the hardest branch that
       occurs in at least {BETA_BRANCH_FLOOR_PCT}% of decays. Ranges are Katz–Penfold fits to that endpoint:
-      stopping thicknesses rather than attenuation lengths, good to about ±10%. A nuclide's own sheet
+      stopping thicknesses rather than attenuation lengths, and depths reached rather than the longer path
+      lengths NIST tabulates, as the <a href={u("/validation/beta/")} class="underline">validation report</a>
+      measures. A nuclide's own sheet
       sizes its range on the hardest branch recorded, however rare, and can show a thicker figure.
     </p>
     {gammaLed.length > 0 && (
@@ -190,7 +192,8 @@ const gammaLed = top.filter((r) => r.g >= GAMMA_FLOOR).sort((a, b) => b.g - a.g)
       and in endpoint energy. It is an order-of-magnitude guide whose purpose is to show why the
       material matters, and it is not a substitute for a transport calculation: it says nothing
       about where inside the absorber the X-rays are made, what their spectrum is, or how much of
-      it escapes. The ranges carry their own ±10%. Neither figure accounts for the container the
+      it escapes. The ranges come from an empirical fit for which no accuracy is claimed here. Neither
+      figure accounts for the container the
       source already sits in, which for a sealed source may be doing most of the work described
       here before anything is added.
     </p>

@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import nuclides from "../../data/nuclides.json";
 import type { NuclideMap } from "../../engine/types";
 import { infiniteMediumDoseRate, semiInfiniteSurfaceDoseRate, betaRange, betaRangeCm,
-         betaTransmission, bremsstrahlungYield } from "../../engine/beta";
-import { DENSITY_G_CM3 } from "../../engine/gamma";
+         betaTransmission, bremsstrahlungYield, BETA_BRANCH_FLOOR_PCT } from "../../engine/beta";
+import { ABSORBERS, absorberRows, type AbsKey } from "../../lib/beta-absorbers";
 import { TIME_S } from "../../engine/constants";
 import { convert, UNITS } from "../../engine/units";
 import { NuclidePicker } from "../ui/NuclidePicker";
@@ -17,16 +17,7 @@ import { Headline, Rows, fmt, Warn } from "../ui/Result";
 const N = nuclides as unknown as NuclideMap;
 const ACT = Object.keys(UNITS.activity.u);
 
-/** 차폐재 — 베타는 **낮은 Z** 로 막는다. 그것이 이 화면의 요점이라 Z 를 함께 든다. */
-const ABSORBERS = [
-  { value: "acrylic", label: "Acrylic (PMMA)", z: 6.5, rho: 1.19 },
-  { value: "water", label: "Water", z: 7.4, rho: 1.0 },
-  { value: "glass", label: "Glass", z: 11, rho: 2.5 },
-  { value: "aluminum", label: "Aluminium", z: 13, rho: DENSITY_G_CM3.aluminum },
-  { value: "iron", label: "Iron / steel", z: 26, rho: DENSITY_G_CM3.iron },
-  { value: "lead", label: "Lead", z: 82, rho: DENSITY_G_CM3.lead },
-] as const;
-type AbsKey = typeof ABSORBERS[number]["value"];
+/* 차폐재 목록과 그 표의 줄(제동복사 규칙 포함)은 `lib/beta-absorbers.ts` 가 든다 — 테스트가 그 연결을 고정한다(T13). */
 type Mode = "shield" | "dose";
 
 export default function Beta() {
@@ -56,7 +47,9 @@ export default function Beta() {
   const bq = convert(c.act, c.actU, "Bq", "activity");
   const conc = c.massKg > 0 ? bq / c.massKg : NaN;
   const dInf = infiniteMediumDoseRate(n.beta_mean_keV ?? 0, conc);
-  const brems = ABSORBERS.map((a) => ({ ...a, f: bremsstrahlungYield(a.z, eMax) }));
+  /* ★ T13 — 제동복사는 낱장 · `/beta-shield-materials/` 와 같은 규칙(세기 1% 이상 가지의 최대 끝점, `bremsEndpointKeV`)으로 계산한다.
+     그전에는 여기만 최대 끝점이라 Co-60 이 납에서 4.28%(낱장은 0.91%)였다. 두께 · 투과율은 그대로 최대 끝점이다. */
+  const { bremsKeV, eBrems, rows: brems } = absorberRows(n);
 
   if (!hasBeta) {
     return (
@@ -109,18 +102,25 @@ export default function Beta() {
                 {brems.map((a) => (
                   <tr key={a.value} className={a.value === c.absK ? "is-marked bg-accent-soft/50" : ""}>
                     <td>{a.label}</td>
-                    <td className="num text-right">{fmt(betaRangeCm(eMax, a.rho) * 10, 3)} mm</td>
+                    <td className="num text-right">{fmt(a.stopMm, 3)} mm</td>
                     <td className="num text-right">{fmt(a.f * 100, 3)}%</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          {bremsKeV !== n.beta_max_keV && (
+            <p className="text-[13px] leading-relaxed text-ink-muted">
+              Bremsstrahlung is worked out for the {fmt(bremsKeV, 4)} keV branch, the hardest in at least{" "}
+              {BETA_BRANCH_FLOOR_PCT}% of decays; the rarer {fmt(n.beta_max_keV ?? 0, 4)} keV branch sets only the
+              thickness to stop.
+            </p>
+          )}
 
           <Warn>
             <strong>Lead is the wrong choice for beta.</strong> It is thin and convenient, but the
             bremsstrahlung yield scales with atomic number — lead converts about{" "}
-            {fmt(bremsstrahlungYield(82, eMax) / bremsstrahlungYield(6.5, eMax), 2)}× more of the beta
+            {fmt(bremsstrahlungYield(82, eBrems) / bremsstrahlungYield(6.5, eBrems), 2)}× more of the beta
             energy into penetrating X-rays than acrylic does. Stop the beta in a low-Z absorber first,
             then add lead outside it if the bremsstrahlung still matters.
           </Warn>
