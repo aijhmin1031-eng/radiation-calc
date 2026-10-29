@@ -8,9 +8,9 @@
 판본 DOI(릴리스마다 새로 발급)는 배지에 쓰지 않는다. 화면 정본은 `brand.ts` 의 `DOI`,
 발급 절차와 밟은 함정은 `docs/zenodo.md` 4절.
 
-우산 정본은 `aijhmin1031-eng/radiation-lab`, 절차는 `radiation-meter-tester/docs/umbrella-setup.md`.
+우산 정본은 `radiation-lab`(우산 저장소), 절차는 `radiation-meter-tester/docs/umbrella-setup.md`.
 
-**판: v1.1.2 · 2026-10-30** — 정본은 `src/lib/version.ts`. 쪽마다 꼬리말 위에 판 줄이 서고 `/changelog/`(「Changes to the calculators and
+**판: v1.1.3 · 2026-10-30** — 정본은 `src/lib/version.ts`. 쪽마다 꼬리말 위에 판 줄이 서고 `/changelog/`(「Changes to the calculators and
 data」)가 판마다 바뀐 것을 든다. 번호 규칙: 계산값 · 자료가 바뀌면 가운데 자리, 글만 고치면 끝자리. 판을 올리면 `version.ts` ·
 `CITATION.cff`(version · date-released) · `.zenodo.json`(version · publication_date) · 이 줄을 함께 고친다 — `version.test.ts` 가 잰다.
 v1.1.0 은 Zenodo 새 판과 같은 번호이고, 태그 · 릴리스는 소유주 확인 뒤에 만든다. ★ 태그를 만드는 날이 `version.ts` 의 날짜와 다르면
@@ -1198,7 +1198,7 @@ scripts/      원천에서 다시 수확하는 스크립트
 ## 방문 집계 — 플랫폼 층이고, 이 레포는 한 줄만 든다 (2026-09-15)
 
 소유주 지시로 lab 넷 전부에 방문 집계를 세웠다. **정본은 우산 저장소**
-(`aijhmin1031-eng/radiation-lab`)의 `public/track.js` 한 벌이고, lab 넷이 **같은 파일**을 읽는다.
+(`radiation-lab`(우산 저장소))의 `public/track.js` 한 벌이고, lab 넷이 **같은 파일**을 읽는다.
 경위·스키마·utm 낱말 규약은 **그 레포 README 가 정본**이다.
 
 이 레포가 든 것은 `src/layouts/Base.astro` 의 한 줄이다 —
