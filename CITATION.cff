@@ -20,8 +20,8 @@ abstract: >-
 type: software
 # ★ 판(T15) — 정본은 src/lib/version.ts 의 VERSION 이다. 여기 · .zenodo.json · README 가 같은 값을 글자로 들고
 #   src/lib/version.test.ts 가 넷이 같은지 잰다. v1.1.0 은 Zenodo 새 판(릴리스 태그)과 같은 번호다.
-version: "1.1.1"
-date-released: "2026-10-29"
+version: "1.1.2"
+date-released: "2026-10-30"
 repository-code: "https://github.com/aijhmin1031-eng/radiation-calc"
 url: "https://radiation-lab.com/calc/nuclides/"
 keywords:
@@ -34,17 +34,15 @@ keywords:
   - bremsstrahlung
   - waste characterisation
 
-# 저자(2026-09-16 소유주 확인: "min jeho").
-# ★★ **소속을 넣지 않는다**(2026-09-16 소유주 확인: 「내 개인적인 작품이야. kara와는 상관없어」).
+# 저자: Radiation Lab(2026-10-30 소유주 결정 — 익명으로 활동한다. 개인 이름 · 근무처를 싣지 않는다).
+# ★★ **소속을 넣지 않는다**(2026-09-16 소유주 확인 — 개인 작업이다).
 #   처음에는 계정 도메인에서 확인한 기관명을 넣었는데, **개인 작업에 근무처를 적으면 그 기관이
 #   뒤를 받친다는 인상**을 준다 — 이 저장소가 IAEA·NIST 에 대해 「보증하지 않는다」를 명시한 것과
 #   같은 이유로 여기서도 암시하지 않는다. 기관 일로 바뀌면 그때 `affiliation:` 한 줄을 넣는다.
 #   · 국가·주소 필드는 넣지 않는다 — 개인 주소는 영구 공개 기록이 되고 지울 수 없다.
-#   · ORCID 가 생기면 아래 줄의 주석을 푼다(동명이인과 갈린다. orcid.org 에서 5분).
+#   · ORCID 는 넣지 않는다 — 개인을 가리키는 식별자다(익명).
 authors:
-  - family-names: "Min"
-    given-names: "Jeho"
-    # orcid: "https://orcid.org/0000-0000-0000-0000"
+  - name: "Radiation Lab"
 
 # 개념 DOI — Zenodo(2026-09-16 발급). GitHub 의 「Cite this repository」가 이것을 든다.
 doi: "10.5281/zenodo.22794265"

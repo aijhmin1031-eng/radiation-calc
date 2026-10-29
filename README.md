@@ -10,7 +10,7 @@
 
 우산 정본은 `aijhmin1031-eng/radiation-lab`, 절차는 `radiation-meter-tester/docs/umbrella-setup.md`.
 
-**판: v1.1.1 · 2026-10-29** — 정본은 `src/lib/version.ts`. 쪽마다 꼬리말 위에 판 줄이 서고 `/changelog/`(「Changes to the calculators and
+**판: v1.1.2 · 2026-10-30** — 정본은 `src/lib/version.ts`. 쪽마다 꼬리말 위에 판 줄이 서고 `/changelog/`(「Changes to the calculators and
 data」)가 판마다 바뀐 것을 든다. 번호 규칙: 계산값 · 자료가 바뀌면 가운데 자리, 글만 고치면 끝자리. 판을 올리면 `version.ts` ·
 `CITATION.cff`(version · date-released) · `.zenodo.json`(version · publication_date) · 이 줄을 함께 고친다 — `version.test.ts` 가 잰다.
 v1.1.0 은 Zenodo 새 판과 같은 번호이고, 태그 · 릴리스는 소유주 확인 뒤에 만든다. ★ 태그를 만드는 날이 `version.ts` 의 날짜와 다르면
@@ -359,7 +359,7 @@ Th-232 「우라늄 다음으로 많은 악티나이드」 → 우라늄보다 �
      채** 다음에 걸릴 때 그 메시지에서 시작하는 것이 싸다.
 2. ~~**수파베이스 가입자 수 — 소유주 몫.**~~ → **2026-10-04 에 셌다**(소유주 지시 「가입자수 너가 확인해줘」).
    이 세션의 Supabase MCP `execute_sql` 로 `auth.users` 를 **집계만** 읽었다(주소는 찍지 않는다 — 도메인·날짜·제공자만).
-   그날 값: **계정 33개 중 진짜 6개** — 나머지 27개는 7월 저장 기능 시험 때의 가짜 도메인(`rc.test` 26 · `kara.test` 1).
+   그날 값: **계정 33개 중 진짜 6개** — 나머지 27개는 7월 저장 기능 시험 때의 가짜 도메인(`rc.test` 26 · 다른 시험 도메인 1).
    진짜 6개 = 이메일 가입 3(5월 1 · 7월 2) + **구글 로그인 3(10/01·10/02·10/03, 플랫폼 로그인 이후)**. 최근 7일 로그인 4.
    ★ **가짜 27개는 2026-10-04 소유주 지시(「가짜 계정 27개 지워줘」)로 지웠다** — `.test` 도메인만 골라 `auth.users` 에서 지웠고
    (연쇄로 `profiles` 27 · `rc_profiles` 26 · 세션 104 가 함께 사라졌다; 저장 결과·글·댓글은 0건이었다), 지운 수가 27 이 아니면
