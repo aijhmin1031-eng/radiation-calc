@@ -13,6 +13,7 @@ import { UNIT_CASES, COMPOSED_CASES, BRIDGE_CASES, REFUSAL_CASES,
 import { SOURCES, STATEMENTS, statementById } from "../../validation/sources";
 import { reportFor } from "../../validation/registry";
 import { sci, plain, relDiff, relValue } from "../../validation/format";
+import { VERSION, dateText } from "../../lib/version";
 
 const report = reportFor("units")!;
 
@@ -108,6 +109,8 @@ const description =
     <dd class="text-ink-muted">The unit converter at <a href={u("/units/")} class="underline">{u("/units/")}</a>, and the engine module it runs on, <code>src/engine/units.ts</code>.</dd>
     <dt class="text-ink-faint">Report date</dt>
     <dd class="text-ink-muted">{report.validatedOn}</dd>
+    <dt class="text-ink-faint">Version</dt>
+    <dd class="num text-ink-muted">{VERSION.version} ({dateText(VERSION.date)}) · <a href={u("/changelog/")} class="underline">what changed</a></dd>
     <dt class="text-ink-faint">Source revision</dt>
     <dd class="num text-ink-muted">{revision || "not recorded in this build"}</dd>
     <dt class="text-ink-faint">Archived source</dt>

@@ -11,6 +11,7 @@ import {
 } from "../../validation/alara.cases";
 import { reportFor } from "../../validation/registry";
 import { sci, relValue } from "../../validation/format";
+import { VERSION, dateText } from "../../lib/version";
 
 const report = reportFor("alara")!;
 let revision = (process.env.VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7);
@@ -116,6 +117,8 @@ const description =
     <dd class="text-ink-muted">The work planning calculator at <a href={u("/alara/")} class="underline">{u("/alara/")}</a> and the engine module <code>src/engine/alara.ts</code>.</dd>
     <dt class="text-ink-faint">Report date</dt>
     <dd class="text-ink-muted">{report.validatedOn}</dd>
+    <dt class="text-ink-faint">Version</dt>
+    <dd class="num text-ink-muted">{VERSION.version} ({dateText(VERSION.date)}) · <a href={u("/changelog/")} class="underline">what changed</a></dd>
     <dt class="text-ink-faint">Source revision</dt>
     <dd class="num text-ink-muted">{revision || "not recorded in this build"}</dd>
     <dt class="text-ink-faint">Archived source</dt>

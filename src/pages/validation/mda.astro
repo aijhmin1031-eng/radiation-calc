@@ -13,6 +13,7 @@ import {
 import { SOURCES, statementById } from "../../validation/sources";
 import { reportFor } from "../../validation/registry";
 import { sci, relValue } from "../../validation/format";
+import { VERSION, dateText } from "../../lib/version";
 
 const report = reportFor("mda")!;
 let revision = (process.env.VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7);
@@ -143,6 +144,8 @@ const description =
     <dd class="text-ink-muted">The detection limit calculator at <a href={u("/mda/")} class="underline">{u("/mda/")}</a>, both of its modes, and the engine module <code>src/engine/mda.ts</code>.</dd>
     <dt class="text-ink-faint">Report date</dt>
     <dd class="text-ink-muted">{report.validatedOn}</dd>
+    <dt class="text-ink-faint">Version</dt>
+    <dd class="num text-ink-muted">{VERSION.version} ({dateText(VERSION.date)}) · <a href={u("/changelog/")} class="underline">what changed</a></dd>
     <dt class="text-ink-faint">Source revision</dt>
     <dd class="num text-ink-muted">{revision || "not recorded in this build"}</dd>
     <dt class="text-ink-faint">Archived source</dt>

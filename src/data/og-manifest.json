@@ -406,5 +406,9 @@
   "/nuclides/ra-224/": {
     "slug": "nuclides-ra-224",
     "title": "Ra-224 specific activity and alpha line energies · Radiation Lab"
+  },
+  "/changelog/": {
+    "slug": "changelog",
+    "title": "Changes to the calculators and data · Radiation Lab"
   }
 }

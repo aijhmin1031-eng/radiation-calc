@@ -10,6 +10,11 @@
 
 우산 정본은 `aijhmin1031-eng/radiation-lab`, 절차는 `radiation-meter-tester/docs/umbrella-setup.md`.
 
+**판: v1.1.0 · 2026-10-29** — 정본은 `src/lib/version.ts`. 쪽마다 꼬리말 위에 판 줄이 서고 `/changelog/`(「Changes to the calculators and
+data」)가 판마다 바뀐 것을 든다. 번호 규칙: 계산값 · 자료가 바뀌면 가운데 자리, 글만 고치면 끝자리. 판을 올리면 `version.ts` ·
+`CITATION.cff`(version · date-released) · `.zenodo.json`(version · publication_date) · 이 줄을 함께 고친다 — `version.test.ts` 가 잰다.
+v1.1.0 은 Zenodo 새 판과 같은 번호이고, 태그 · 릴리스는 소유주 확인 뒤에 만든다.
+
 ## ★★★ 공통 셸 v3 — 머리글 · 꼬리말을 `radiation-lab/public/shell` 정본으로 (2026-10-28, T2)
 
 **계기.** 소유주 「radiation-lab.com 이 사이트가 하나의 사이트처럼 보이게 해줘야 해. 지금 탑재된 pro 기능들이 별도로 구축된 것들이
@@ -276,6 +281,14 @@ Th-232 「우라늄 다음으로 많은 악티나이드」 → 우라늄보다 �
 - 남은 4건 — 베타가 있는 쪽의 「already under 20 µSv/h」를 「the photon dose rate」로(7쪽) · Pu-238 · Pu-240 을 `SPONTANEOUS_FISSION` 에(ENSDF
   0.00000019% · 0.0000058%, 광자 판정 주어 · SF 줄, 제목은 `SF_INTAKE_GOVERNS` 로 섭취 그대로) · Γ 가 0 인 알파 쪽 중 딸이 실리거나 연쇄가 이 자료 밖으로 이어지는 6쪽은 「the alpha is an intake hazard」로 ·
   Y-90 손글 「emits almost nothing but beta particles」.
+
+★★ **판 표시와 변경 기록**(2026-10-29, T15 — 소유주 결정: RadCalc 부터, v1.1.0 = Zenodo 새 판). 계산값은 그대로다.
+- 판 정본 `src/lib/version.ts`(`RELEASES` · `VERSION`) → 쪽마다 꼬리말 위 aside 에 「Version 1.1.0 · 29 October 2026 · What changed」, 검증 보고서 7편
+  머리에 Version 행(Source revision 은 그대로). `check-output` ⑦-2 가 모든 쪽을 잰다. 정본 shell 은 손대지 않았다.
+- `/changelog/`「Changes to the calculators and data」 — 1.1.0(Kβ 이중 계산 · Γ · 납 HVL · β− 27종 · 붕괴 표기 · 제동복사 관례 · 정확도 문구 ·
+  공기커마 가정, 그리고 9~10월의 계산값 변경) · 1.0.1. 전후 값은 `scripts/make-changes.mts` 가 git 이력(2f0b837^)과 지금 자료에서 계산해
+  `src/data/changes-1.1.0.json` 에 두고, `changes.test.ts` 가 「후」를 지금 엔진과 대조한다. Methods 「Corrections」가 링크한다.
+- `CITATION.cff` · `.zenodo.json` 에 version · 날짜를 넣고 초록의 낡은 수(낱장 70 → 72 · Sn-113 TVL/HVL 84 → 29)를 지금 자료로 — `version.test.ts`.
 
 ★★ **글 쓰는 방식 공개**(2026-10-29, T10 F6 — 소유주 「추천대로」). Methods 에 「How the pages are written」(`#writing`) 한 절을 두었다 —
 수치 · 표 · 핵종 쪽 머리 문장은 자료에서 계산한다 · 그 둘레의 글은 AI 도움으로 쓴다 · 출처를 단 해설은 그 출처로 썼고 다른 AI 검토가 대조한 뒤

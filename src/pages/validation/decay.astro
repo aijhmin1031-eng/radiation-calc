@@ -14,6 +14,7 @@ import {
 import { SOURCES, STATEMENTS, statementById } from "../../validation/sources";
 import { reportFor } from "../../validation/registry";
 import { sci, plain, relDiff, relValue } from "../../validation/format";
+import { VERSION, dateText } from "../../lib/version";
 
 const N = nuclides as unknown as NuclideMap;
 const report = reportFor("decay")!;
@@ -125,6 +126,8 @@ const description =
     <dd class="text-ink-muted">The decay calculator at <a href={u("/decay/")} class="underline">{u("/decay/")}</a>, its three modes, and the engine module <code>src/engine/decay.ts</code>.</dd>
     <dt class="text-ink-faint">Report date</dt>
     <dd class="text-ink-muted">{report.validatedOn}</dd>
+    <dt class="text-ink-faint">Version</dt>
+    <dd class="num text-ink-muted">{VERSION.version} ({dateText(VERSION.date)}) · <a href={u("/changelog/")} class="underline">what changed</a></dd>
     <dt class="text-ink-faint">Source revision</dt>
     <dd class="num text-ink-muted">{revision || "not recorded in this build"}</dd>
     <dt class="text-ink-faint">Archived source</dt>
