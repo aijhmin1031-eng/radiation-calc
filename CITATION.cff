@@ -20,7 +20,7 @@ abstract: >-
 type: software
 # ★ 판(T15) — 정본은 src/lib/version.ts 의 VERSION 이다. 여기 · .zenodo.json · README 가 같은 값을 글자로 들고
 #   src/lib/version.test.ts 가 넷이 같은지 잰다. v1.1.0 은 Zenodo 새 판(릴리스 태그)과 같은 번호다.
-version: "1.1.0"
+version: "1.1.1"
 date-released: "2026-10-29"
 repository-code: "https://github.com/aijhmin1031-eng/radiation-calc"
 url: "https://radiation-lab.com/calc/nuclides/"

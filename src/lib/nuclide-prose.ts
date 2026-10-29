@@ -1,5 +1,5 @@
 import type { NuclidePage } from "./nuclides";
-import { NUCLIDES, nuclidePage } from "./nuclides";
+import { NUCLIDES, nuclidePage, gammaOf } from "./nuclides";
 import { dominantProgeny, daughterOf, daughterLabel, CHAIN_TRUNCATED, chainLeavesDataset } from "./decay-chain";
 import { decayProse, SPONTANEOUS_FISSION, SF_INTAKE_GOVERNS, halfLifeText, gammaRank, gammaVs, leadForTarget, horizons,
          betaEndpointBranch, betaDominantBranch, lineSpan, alphaSpread,
@@ -362,14 +362,14 @@ export function paragraphs(p: NuclidePage): string[] {
         `. The shield is sized on ${prog.key}, and so is the bremsstrahlung: ${frac(dp.bremsLow)} of that ` +
         `energy turns into X-rays in acrylic and ${frac(dp.bremsLead)} in lead.` +
         (prog.gammaHotter ? ` ${prog.key} also carries the photons here — ` +
-          `${sig(d.gamma_const)} mGy·m²/(GBq·h), against nothing recorded for ${p.key}.` : ``),
+          `${sig(gammaOf(prog.key))} mGy·m²/(GBq·h), against nothing recorded for ${p.key}.` : ``),
       );
     } else if (prog.presence === "present" && prog.gammaHotter) {
       out.push(
         `The photon field around ${p.key} is ${prog.key}'s. ${prog.key} (${dHl}) follows close enough to be ` +
-        `present in any aged source, and its air kerma rate constant is ${sig(d.gamma_const)} mGy·m²/(GBq·h)` +
+        `present in any aged source, and its air kerma rate constant is ${sig(gammaOf(prog.key))} mGy·m²/(GBq·h)` +
         /* ★ T12 1-24 — Γ 가 0 이어도 줄은 있을 수 있다(Ge-68: 줄 다섯, 모두 컷오프 아래). 「no photon line is recorded」는 그때 거짓이다. */
-        (n.gamma_const > 0 ? `, against ${sig(n.gamma_const)} for ${p.key}`
+        (n.gamma_const > 0 ? `, against ${sig(gammaOf(p.key))} for ${p.key}`
           : n.lines.length ? `, against zero for ${p.key}`
           : `, where no photon line is recorded for ${p.key}`) +
         `. Shield for ${prog.key}.`,
@@ -382,7 +382,7 @@ export function paragraphs(p: NuclidePage): string[] {
         (d.z === n.z ? `how long ago the isomer was produced` : `how long ago the material was chemically separated`) +
         `, which this page cannot know — ` +
         `at full ingrowth it brings ` +
-        (prog.gammaHotter ? `${sig(d.gamma_const)} mGy·m²/(GBq·h) of air kerma rate constant` : ``) +
+        (prog.gammaHotter ? `${sig(gammaOf(prog.key))} mGy·m²/(GBq·h) of air kerma rate constant` : ``) +
         (prog.gammaHotter && prog.betaHotter ? ` and ` : ``) +
         (prog.betaHotter ? `a ${sig((d.beta_max_keV ?? 0) / 1000)} MeV beta endpoint` : ``) +
         `, which the figures above do not include.`,

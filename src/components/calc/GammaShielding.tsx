@@ -3,7 +3,8 @@ import nuclides from "../../data/nuclides.json";
 import att from "../../data/attenuation.json";
 import type { NuclideMap, Material } from "../../engine/types";
 import type { Row } from "../../engine/interp";
-import { shieldedDoseRate, linearAttenuation, DENSITY_G_CM3, type ShieldMode } from "../../engine/gamma";
+import { shieldedDoseRate, linearAttenuation, gammaConstant, DENSITY_G_CM3, type ShieldMode } from "../../engine/gamma";
+import { DELTA_DEFAULT_KEV } from "../../engine/constants";
 import { convert, UNITS } from "../../engine/units";
 import { hvlFromMu, tvlFromMu } from "../../engine/alara";
 import { NuclidePicker } from "../ui/NuclidePicker";
@@ -70,6 +71,9 @@ export default function GammaShielding() {
     shieldMode, bergerA, bergerB, delta, rateU, targetRate, customRho, rho });
 
   const n = N[c.nuclide];
+  /* ★ T16 — 보여 주는 Γ 는 낱장과 같은 엔진 값(δ 20 keV)이다. 저장된 `gamma_const` 는 소수 여섯째 자리로 반올림돼
+     작은 Γ 에서 두 자리도 안 남는다(Pm-147 저장 1e-06, 실제 5.19e-07). */
+  const gConst = useMemo(() => gammaConstant(n, A.air, DELTA_DEFAULT_KEV), [c.nuclide]);
   const gbq = convert(c.act, c.actU, "Bq", "activity") / 1e9;
   const d = c.dist * DIST[c.distU];
   const tcm = c.thick * THICK[c.thickU];
@@ -250,7 +254,7 @@ export default function GammaShielding() {
       )}
 
       <Rows rows={[
-        { k: "Gamma constant Γ", v: `${fmt(n.gamma_const, 4)} mGy·m²/(GBq·h)`, hint: `computed from the spectrum at δ = 20 keV` },
+        { k: "Gamma constant Γ", v: `${fmt(gConst, 4)} mGy·m²/(GBq·h)`, hint: `computed from the spectrum at δ = 20 keV` },
         { k: "Unshielded dose rate", v: `${fmt(toUnit(calc.unshielded), 4)} ${c.rateU}` },
         ...(tcm > 0 && c.mode !== "thickness" ? [
           { k: "Transmission", v: `${fmt(calc.transmission * 100, 3)}%`, hint: `through ${fmt(tcm, 3)} cm of ${c.mat}` },
@@ -269,7 +273,7 @@ export default function GammaShielding() {
 
       <SaveBar tool="gamma-shielding"
         inputs={{ mode: c.mode, nuclide: c.nuclide, act: c.act, actU: c.actU, dist: c.dist, distU: c.distU, mat: c.mat, thick: c.thick, thickU: c.thickU, shieldMode: c.shieldMode, bergerA: c.bergerA, bergerB: c.bergerB, delta: c.delta, rateU: c.rateU, targetRate: c.targetRate, customRho: c.customRho, rho: c.rho }}
-        outputs={{ doseRate: calc.doseRate, unshielded: calc.unshielded, transmission: calc.transmission, gammaConstant: n.gamma_const, solved, unit: c.rateU }}
+        outputs={{ doseRate: calc.doseRate, unshielded: calc.unshielded, transmission: calc.transmission, gammaConstant: gConst, solved, unit: c.rateU }}
         summary={`${c.nuclide} — ${fmt(c.act)} ${c.actU} at ${fmt(c.dist)} ${c.distU}`} />
     </div>
   );

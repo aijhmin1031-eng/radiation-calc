@@ -1,7 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import NuclideRef from "../components/NuclideRef.astro";
-import { NUCLIDES, nuclidePage, halfLifeText, fmtTime } from "../lib/nuclides";
+import { NUCLIDES, nuclidePage, halfLifeText, fmtTime, gammaOf } from "../lib/nuclides";
 import { WITH_DOMINANT_PROGENY } from "../lib/decay-chain";
 import { u } from "../lib/site";
 
@@ -179,8 +179,8 @@ const worst = beta[0];
           {photon.map((r) => (
             <li>
               <strong>{r.key} → {r.prog.key}</strong> ({halfLifeText(r.dn)}):
-              air kerma rate constant {sig(r.dn.gamma_const)} mGy·m²/(GBq·h), against
-              {" "}{r.n.gamma_const > 0 ? sig(r.n.gamma_const) : "no recorded line"} for {r.key}.
+              air kerma rate constant {sig(gammaOf(r.prog.key))} mGy·m²/(GBq·h), against
+              {" "}{r.n.gamma_const > 0 ? sig(gammaOf(r.key)) : "no recorded line"} for {r.key}.
             </li>
           ))}
         </ul>

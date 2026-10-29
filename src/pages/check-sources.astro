@@ -1,7 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import NuclideRef from "../components/NuclideRef.astro";
-import { NUCLIDES, nuclidePage, halfLifeText, fmtTime } from "../lib/nuclides";
+import { NUCLIDES, nuclidePage, halfLifeText, fmtTime, gammaOf } from "../lib/nuclides";
 import { u } from "../lib/site";
 
 /** ★★ 점검·교정 선원 핵종 — 2026-10-06 애드센스 「가치가 별로 없는 콘텐츠」 판정 뒤 소유주 지시
@@ -31,7 +31,7 @@ const PHOTON = ["Cd-109", "Am-241", "Co-57", "Ba-133", "Cs-137", "Mn-54", "Na-22
     const p = nuclidePage(k);
     const top = [...p.shares].sort((a, b) => b.share - a.share)[0];
     const pb = p.shields.find((s) => s.material === "lead");
-    return { k, e: top.eKeV, share: top.share, n90: p.linesFor90, g: NUCLIDES[k].gamma_const, pbHvl: pb?.hvlCm ?? NaN };
+    return { k, e: top.eKeV, share: top.share, n90: p.linesFor90, g: gammaOf(k), pbHvl: pb?.hvlCm ?? NaN };
   })
   .sort((a, b) => a.e - b.e);
 const P = Object.fromEntries(PHOTON.map((r) => [r.k, r]));
