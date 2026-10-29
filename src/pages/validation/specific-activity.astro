@@ -15,6 +15,7 @@ import {
 import { SOURCES, statementById } from "../../validation/sources";
 import { reportFor } from "../../validation/registry";
 import { sci, relValue } from "../../validation/format";
+import { VERSION, dateText } from "../../lib/version";
 
 const N = nuclides as unknown as NuclideMap;
 const report = reportFor("specific-activity")!;
@@ -130,6 +131,8 @@ const description =
     <dd class="text-ink-muted">The specific activity calculator at <a href={u("/specific-activity/")} class="underline">{u("/specific-activity/")}</a>, both of its directions, and the functions <code>specificActivity</code>, <code>massFromActivity</code> and <code>activityFromMass</code> in <code>src/engine/decay.ts</code>.</dd>
     <dt class="text-ink-faint">Report date</dt>
     <dd class="text-ink-muted">{report.validatedOn}</dd>
+    <dt class="text-ink-faint">Version</dt>
+    <dd class="num text-ink-muted">{VERSION.version} ({dateText(VERSION.date)}) · <a href={u("/changelog/")} class="underline">what changed</a></dd>
     <dt class="text-ink-faint">Source revision</dt>
     <dd class="num text-ink-muted">{revision || "not recorded in this build"}</dd>
     <dt class="text-ink-faint">Archived source</dt>

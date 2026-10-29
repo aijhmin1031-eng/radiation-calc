@@ -188,8 +188,10 @@ const H10_PER_KA: [number, string][] = [
       DOI of that release from the record page instead. Both are listed there.
     </p>
     <p>
-      The committed datasets do not change between visits. They are re-harvested when the upstream
-      evaluations are updated, and each re-harvest is a new release with its own version DOI.
+      The committed datasets do not change between visits. They change when the upstream evaluations
+      are re-harvested or when an error in them is corrected; each change is listed under
+      {" "}<a href={u("/changelog/")} class="underline">Changes to the calculators and data</a> and goes out in
+      a release with its own version DOI.
     </p>
 
     <h3>The decay data</h3>
@@ -246,7 +248,9 @@ const H10_PER_KA: [number, string][] = [
     <p>
       If a value here disagrees with a source you trust, the disagreement is worth reporting — several
       figures in the test suite exist because a check found an error during development. Contact
-      details are on the <a href="/contact" class="underline">contact page</a>.
+      details are on the <a href="/contact" class="underline">contact page</a>. What has been corrected
+      since the first release, and which figures it moved, is listed under
+      {" "}<a href={u("/changelog/")} class="underline">Changes to the calculators and data</a>.
     </p>
   </section>
 

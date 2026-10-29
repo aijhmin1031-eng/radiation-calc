@@ -9,15 +9,19 @@ cff-version: 1.2.0
 message: "If you use these figures or this code, please cite both this work and the upstream data sources listed below."
 title: "RadCalc — nuclide reference sheets and spectrum-solved shielding for radiation protection"
 abstract: >-
-  Reference sheets for 70 nuclides in practical use (the calculators use all 147 in the dataset) with
+  Reference sheets for 72 nuclides in practical use (the calculators use all 147 in the dataset) with
   half-life, decay mode, specific activity, photon, beta and
   alpha emission lines, and — for photon emitters — air kerma rate constants and half- and
   tenth-value layers solved across the whole emission spectrum rather than read from a single-energy
   table. The spectrum solution matters where a nuclide's dose rate is not dominated by one line:
-  for Na-22 the lead half-value layer is 6.5 mm against the 10.5 mm implied by its strongest line,
-  and for Sn-113 the tenth-value layer is 84 times the half-value layer rather than the 3.32 that
+  for Na-22 the lead half-value layer is 6.5 mm against the 10.5 mm implied by its 1275 keV gamma line,
+  and for Sn-113 the tenth-value layer is 29 times the half-value layer rather than the 3.32 that
   holds for a single energy. Figures are narrow beam, with no buildup.
 type: software
+# ★ 판(T15) — 정본은 src/lib/version.ts 의 VERSION 이다. 여기 · .zenodo.json · README 가 같은 값을 글자로 들고
+#   src/lib/version.test.ts 가 넷이 같은지 잰다. v1.1.0 은 Zenodo 새 판(릴리스 태그)과 같은 번호다.
+version: "1.1.0"
+date-released: "2026-10-29"
 repository-code: "https://github.com/aijhmin1031-eng/radiation-calc"
 url: "https://radiation-lab.com/calc/nuclides/"
 keywords:

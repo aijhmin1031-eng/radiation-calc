@@ -133,6 +133,31 @@ for (const p of pages) {
 }
 note("면책 · 이름 · IAEA/NIST 출처");
 
+/* ⑦-2 판 줄(T15) — 모든 쪽이 정본(`src/lib/version.ts`)과 같은 판을 보이고 변경 기록으로 잇는가. 검증 보고서는 머리에도 든다. */
+{
+  const vsrc = readFileSync("src/lib/version.ts", "utf8");
+  const ver = (vsrc.match(/RELEASES[^=]*=\s*\[\s*\{\s*version:\s*"([^"]+)"/) || [])[1];
+  if (!ver) fail.push("⑦-2 src/lib/version.ts 에서 판을 못 읽었다");
+  let shown = 0;
+  for (const p of pages) {
+    if (!p.s.includes(`data-version="${ver}"`)) { fail.push(`${p.path}: 판 줄(Version ${ver})이 없다`); continue; }
+    if (!/href="[^"]*\/changelog\/"/.test(p.s)) fail.push(`${p.path}: 판 줄이 변경 기록(/changelog/)으로 잇지 않는다`);
+    shown++;
+    if (/\/validation\/[a-z-]+\//.test(p.path) && p.s.includes("Source revision") && !/>Version<\/dt>/.test(p.s))
+      fail.push(`${p.path}: 검증 보고서 머리에 Version 이 없다`);
+  }
+  /* 변경 기록 — `RELEASES` 의 판마다 절(<h2 id="vX-Y-Z">)이 하나씩, 첫 절이 지금 판이다(번호로 찾게 했다 — T15 검토). */
+  const vers = [...vsrc.matchAll(/\{\s*version:\s*"([^"]+)",\s*date:/g)].map((m) => m[1]);
+  const cl = pages.find((p) => p.path.endsWith("/changelog/"));
+  if (!cl) fail.push("⑦-2 변경 기록 쪽(/changelog/)이 산출물에 없다");
+  else {
+    const ids = [...cl.s.matchAll(/<h2 id="(v[0-9-]+)"/g)].map((m) => m[1]);
+    for (const v of vers) if (ids.filter((x) => x === `v${v.replaceAll(".", "-")}`).length !== 1) fail.push(`⑦-2 변경 기록에 ${v} 절이 하나가 아니다`);
+    if (ids[0] !== `v${ver.replaceAll(".", "-")}`) fail.push(`⑦-2 변경 기록의 첫 절(${ids[0]})이 지금 판(${ver})이 아니다`);
+  }
+  note(`판 줄 — ${shown}/${pages.length}쪽이 Version ${ver} · 변경 기록 링크 · 변경 기록 절 ${vers.length}개(판마다 하나)`);
+}
+
 /* ── ⑧ 404 쪽이 산출 루트에 있는가 ─────────────────────────────
  *  ★★ Vercel 은 **산출 루트의 `404.html`** 만 없는 주소에 내준다. Astro 는 `dist/calc/404.html` 에
  *    굽고, 그것을 올리는 것은 `scripts/copy-404.mjs`(빌드 끝)다. 그 한 단계가 빠지면 빌드는 통과하고

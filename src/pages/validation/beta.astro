@@ -18,6 +18,7 @@ import {
 import { SOURCES, statementById } from "../../validation/sources";
 import { reportFor } from "../../validation/registry";
 import { sci, relValue } from "../../validation/format";
+import { VERSION, dateText } from "../../lib/version";
 
 type Branch = { max: number | null; mean: number | null; i: number | null; kind: string };
 type Nuc = { beta?: Branch[]; beta_max_keV?: number; beta_mean_keV?: number };
@@ -183,6 +184,8 @@ const description =
     <dd class="text-ink-muted">The beta calculator at <a href={u("/beta/")} class="underline">{u("/beta/")}</a>, both of its modes, and the engine module <code>src/engine/beta.ts</code>.</dd>
     <dt class="text-ink-faint">Report date</dt>
     <dd class="text-ink-muted">{report.validatedOn}</dd>
+    <dt class="text-ink-faint">Version</dt>
+    <dd class="num text-ink-muted">{VERSION.version} ({dateText(VERSION.date)}) · <a href={u("/changelog/")} class="underline">what changed</a></dd>
     <dt class="text-ink-faint">Source revision</dt>
     <dd class="num text-ink-muted">{revision || "not recorded in this build"}</dd>
     <dt class="text-ink-faint">Archived source</dt>

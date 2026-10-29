@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import { SITE_NAME, UMBRELLA_NAME, DATA_SOURCES, SITE_URL, u, canonical, canonicalPath } from "../lib/site";
 import { TOOLS, menuName } from "../lib/tools";
+import { VERSION, dateText } from "../lib/version";
 import ogManifest from "../data/og-manifest.json";
 import SiteHeader from "../components/brand/SiteHeader.astro";
 /* ★★ 공통 셸 v3(2026-10-28) — 머리글 · 꼬리말 · head 자산은 정본 `radiation-lab/public/shell/` 의 사본(`shell/`,
@@ -289,6 +290,11 @@ const footerHtml = renderFooter(spec, { section: "calc", pageUrl: shareOf.pageUr
         {UMBRELLA_NAME}'s calculators are for orientation and
         cross-checking. They <strong>do not replace</strong> an accredited calibration, a shielding
         design, a dose assessment, or a radiation survey by a qualified person.
+      </p>
+      {/* ★ T15(소유주 결정 2026-10-29) — 판 표시. 정본은 `lib/version.ts` 한 곳이다. 공통 꼬리말(정본 shell)은 고치지 않고
+          그 바로 위 이 lab 의 aside 에 둔다. `<main>` 밖이라 쪽의 어수 · 되풀이 몫에 들지 않는다. */}
+      <p class="mt-4 text-ink-faint" data-version={VERSION.version}>
+        Version {VERSION.version} · {dateText(VERSION.date)} · <a href={u("/changelog/")} class="underline hover:text-ink">What changed</a>
       </p>
     </aside>
 

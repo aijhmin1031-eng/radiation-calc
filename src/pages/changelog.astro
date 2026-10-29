@@ -1,0 +1,260 @@
+---
+import Base from "../layouts/Base.astro";
+import NuclideRef from "../components/NuclideRef.astro";
+import { u, DOI, DOI_URL } from "../lib/site";
+import { NUCLIDES } from "../lib/nuclides";
+import { PAGE_KEYS } from "../lib/nuclide-pages";
+import { bremsEndpointKeV, bremsstrahlungYield } from "../engine/beta";
+import { RELEASES, VERSION, dateText } from "../lib/version";
+import CHANGES from "../data/changes-1.1.0.json";
+
+/** ★★ 변경 기록(T15, 소유주 결정 2026-10-29) — 판마다 **계산값이 바뀐 것부터**, 이용자가 알아야 할 것을 쓴다. 최신이 위.
+ *  ★ 수는 손으로 적지 않는다. v1.1.0 의 Γ · 납 HVL · TVL 전후와 β− 가 새로 선 핵종은 `src/data/changes-1.1.0.json`
+ *    (`scripts/make-changes.mts` — git 이력의 T11 앞 자료와 지금 자료를 지금 엔진으로 계산)에서, 제동복사는 지금 자료에서
+ *    여기서 계산한다. `changes.test.ts` 가 그 기록의 「후」가 지금 엔진 값과 같은지 잰다.
+ *  ★ 절 머리의 판 · 날짜는 `lib/version.ts` 의 `RELEASES` 에서 **번호로 찾는다**(T15 검토 — 자리로 받으면 1.1.1 을 위에 더하는
+ *    날 1.1.0 의 글이 1.1.1 머리 아래로 조용히 밀린다). `check-output` ⑦-2 가 모든 판에 절이 하나씩 있는지 잰다. */
+const rel = (v: string) => RELEASES.find((r) => r.version === v)!;
+const v110 = rel("1.1.0"), v101 = rel("1.0.1");
+const idOf = (v: string) => `v${v.replaceAll(".", "-")}`;
+const pct = (a: number, b: number) => (a / b - 1) * 100;
+/* ★ 반올림해 0.00% 가 되는 변화에 부호를 붙이지 않는다(U-238m −0.0017% 가 「−0.00%」로 찍혔다 — T15 검토). */
+const sgn = (x: number, d = 1) => (Math.abs(x) < 0.5 * 10 ** -d ? `<${(10 ** -d).toFixed(d)}%` : `${x > 0 ? "+" : "−"}${Math.abs(x).toFixed(d)}%`);
+const g4 = (x: number) => x.toPrecision(4);
+const mmText = (x: number | null) => (x == null ? "—" : x.toPrecision(3));
+
+type Row = (typeof CHANGES.gamma)[number];
+const rows = CHANGES.gamma as Row[];
+/* 쪽이 있는 핵종 가운데 Γ 가 1% 넘게 바뀐 것 — 바뀐 크기 순(T11 보고 §5 와 같은 순서) */
+const keyRows = rows.filter((r) => r.page && Math.abs(pct(r.gAfter, r.gBefore)) >= 1);
+const cs = rows.find((r) => r.key === "Cs-137");
+const coMoved = rows.some((r) => r.key === "Co-60");
+const top = keyRows[0];
+/* 납 반가층 — 쪽이 있는 핵종에서 5% 넘게 는 것(는 크기 순)과 준 것(Kβ 가 남은 K X선보다 단단했던 쪽) */
+const hvlPct = (r: Row) => pct(r.hvlAfter!, r.hvlBefore!);
+const hvlRows = rows.filter((r) => r.page && r.hvlBefore && r.hvlAfter && hvlPct(r) >= 5).sort((a, b) => hvlPct(b) - hvlPct(a));
+const shrink = rows.filter((r) => r.page && r.hvlBefore && r.hvlAfter && hvlPct(r) <= -1).sort((a, b) => hvlPct(a) - hvlPct(b));
+const bigHvl = hvlRows[0];
+/* 자료 전체에서 납 반가층이 가장 크게 바뀐 핵종(Sn-113 — 1.0.1 의 기록 설명이 그 TVL/HVL 을 인용했다) */
+const widest = [...rows].filter((r) => r.hvlBefore && r.hvlAfter).sort((a, b) => Math.abs(hvlPct(b)) - Math.abs(hvlPct(a)))[0];
+const ratioOf = (t: number | null, h: number | null) => (t && h ? Math.round(t / h) : NaN);
+const betaAdded = CHANGES.betaAdded as string[];
+
+/* 제동복사 — 기록된 최대 끝점이 세기 1% 미만 가지인 핵종. 전: 최대 끝점, 후: 세기 1% 이상 가지의 최대 끝점(납 Z = 82).
+   ★ T15 검토 — 이번 판에 β− 가지가 새로 선 핵종은 「전」 값이 어느 판에도 나간 적이 없다. 전후는 1.0.1 에 가지가 있던 핵종만 든다. */
+const brems = Object.keys(NUCLIDES)
+  .filter((k) => NUCLIDES[k].beta?.length && NUCLIDES[k].beta_max_keV)
+  .map((k) => {
+    const n = NUCLIDES[k], before = n.beta_max_keV!, after = bremsEndpointKeV(n.beta)!;
+    return { k, before, after, leadBefore: bremsstrahlungYield(82, before / 1000) * 100, leadAfter: bremsstrahlungYield(82, after / 1000) * 100 };
+  })
+  .filter((r) => r.after !== r.before)
+  .sort((a, b) => a.k.localeCompare(b.k));
+const bremsOld = brems.filter((r) => !betaAdded.includes(r.k));
+const bremsNew = brems.filter((r) => betaAdded.includes(r.k));
+const sheets = PAGE_KEYS.length;
+/* 문장 첫머리의 작은 수는 낱말로 쓴다 */
+const SMALL = ["None", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
+/* ★ 1.0.1 의 「147」은 **그 판의 사실**이라 글자로 둔다(git show v1.0.1:src/data/nuclides.json — 147키, 2026-10-29 확인).
+ *   지금 자료의 수를 쓰면 자료가 늘 때 옛 판의 기록이 따라 바뀐다. 철회된 낱장 수는 그 147 에서 지금 낱장 수를 뺀다. */
+const V101_SHEETS = 147;
+const all = Object.keys(NUCLIDES).length;
+---
+<Base title="Changes to the calculators and data"
+      description="What changed between versions of RadCalc: corrected nuclide data, the gamma constants and half-value layers that moved, beta branches added, and the conventions now stated. Calculated changes first."
+      schema="TechArticle">
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">Changes to the calculators and data</h1>
+
+  <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <p>
+      This page records what changed from one version of RadCalc to the next, with anything that
+      moves a calculated value listed before changes of wording. The version number moves in its
+      middle place when a calculated value or the data change, as from 1.0 to 1.1, and in its last
+      place when only the wording does, as from 1.1.0 to 1.1.1. The current version is
+      {" "}{VERSION.version} of {dateText(VERSION.date)}; every page shows it above the footer.
+      Released versions are archived on Zenodo, where the concept DOI
+      {" "}<a href={DOI_URL} rel="noopener" class="underline">{DOI}</a> always resolves to the newest.
+    </p>
+
+    <h2 id={idOf(v110.version)}>{v110.version} — {dateText(v110.date)}</h2>
+    <p>
+      Calculated values change in this version. If you kept a figure from {v101.version}: the air kerma
+      rate constants in the first table below, and every dose rate computed from them, are now lower by
+      the amounts shown — most for {top.key}, by {Math.abs(pct(top.gAfter, top.gBefore)).toFixed(1)}% —
+      and their lead half-value layers shift, most on the sheets for {bigHvl.key}, by {Math.round(hvlPct(bigHvl))}%.
+      {cs ? <> Cs-137 moves by {sgn(pct(cs.gAfter, cs.gBefore), 2)}</> : null}{coMoved ? "." : <> and Co-60 not at all.</>}
+      {" "}A conversion of Bq/L or pCi/L to a per-mass unit was off by a factor of a thousand, and a scan
+      detection limit read six thousand times too high in the unit shown; both are set out below. Beta
+      ranges and bremsstrahlung fractions now appear for {betaAdded.length} nuclides that had none, and
+      the sheets of {V101_SHEETS - sheets} nuclides were withdrawn.
+    </p>
+
+    <h3>K-beta X-rays were counted twice</h3>
+    <p>
+      For many nuclides the photon lines harvested from the IAEA Livechart carried the total K-beta
+      X-ray line alongside the K′β1 and K′β2 lines it is made of, so the same photons entered every sum
+      twice. The total line — or, where the second component fell below the listing threshold, the one
+      component recorded beside it — has been removed: {CHANGES.linesRemoved} lines across
+      {" "}{CHANGES.keysLinesRemoved} nuclides. The air kerma rate constant Γ, the dose rates, and the half- and
+      tenth-value layers worked out from those lines changed for {rows.length} nuclides. On the nuclide
+      sheets the constant moved by one per cent or more for these:
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead><tr><th class="text-left">Nuclide</th><th class="text-right">Γ before</th><th class="text-right">Γ now</th><th class="text-right">Change</th></tr></thead>
+        <tbody>
+          {keyRows.map((r) => (
+            <tr><td><NuclideRef k={r.key} /></td><td class="num whitespace-nowrap text-right">{g4(r.gBefore)}</td><td class="num whitespace-nowrap text-right">{g4(r.gAfter)}</td><td class="num whitespace-nowrap text-right">{sgn(pct(r.gAfter, r.gBefore), 2)}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="text-[13px]">Γ in mGy·m²/(GBq·h), δ = {CHANGES.deltaKeV} keV, as on the sheets.</p>
+    <p>
+      Where the removed line was softer than the gamma lines that remain, its loss hardens the
+      spectrum and the lead half-value layer grows — on the sheets most for {bigHvl.key}, by
+      {" "}{Math.round(hvlPct(bigHvl))}%. Where it was the harder of the K X-rays, as for
+      {" "}{shrink.map((r, i) => <>{i ? (i === shrink.length - 1 ? " and " : ", ") : ""}<NuclideRef k={r.key} /></>)}, the
+      half-value layer shrinks, by {Math.abs(hvlPct(shrink[shrink.length - 1])).toFixed(1)} to {Math.abs(hvlPct(shrink[0])).toFixed(1)}%.
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead><tr><th class="text-left">Nuclide</th><th class="text-right">Lead HVL before (mm)</th><th class="text-right">Now (mm)</th><th class="text-right">Change</th></tr></thead>
+        <tbody>
+          {hvlRows.map((r) => (
+            <tr><td><NuclideRef k={r.key} /></td><td class="num whitespace-nowrap text-right">{mmText(r.hvlBefore)}</td><td class="num whitespace-nowrap text-right">{mmText(r.hvlAfter)}</td><td class="num whitespace-nowrap text-right">{sgn(hvlPct(r), 1)}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Across the whole dataset the largest change is for <NuclideRef k={widest.key} />, which has no
+      sheet: its lead half-value layer goes from {mmText(widest.hvlBefore)} to {mmText(widest.hvlAfter)}&nbsp;mm, and its
+      tenth-value layer from {ratioOf(widest.tvlBefore, widest.hvlBefore)} half-value layers to
+      {" "}{ratioOf(widest.tvlAfter, widest.hvlAfter)} — the ratio quoted in the description of {v101.version}.
+    </p>
+    <details class="my-3">
+      <summary class="cursor-pointer text-ink">All {rows.length} nuclides whose Γ or lead half-value layer changed</summary>
+      <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+        <table>
+          <thead><tr><th class="text-left">Nuclide</th><th class="text-right">Γ before</th><th class="text-right">Γ now</th><th class="text-right">Change</th><th class="text-right">Lead HVL before → now (mm)</th></tr></thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr><td><NuclideRef k={r.key} /></td><td class="num whitespace-nowrap text-right">{g4(r.gBefore)}</td><td class="num whitespace-nowrap text-right">{g4(r.gAfter)}</td><td class="num whitespace-nowrap text-right">{sgn(pct(r.gAfter, r.gBefore), 2)}</td><td class="num whitespace-nowrap text-right">{mmText(r.hvlBefore)} → {mmText(r.hvlAfter)}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="text-[13px]">A nuclide with a sheet links to it; every figure there is already the new one.</p>
+    </details>
+
+    <h3>Ranks, multiples and the stored constant</h3>
+    <p>
+      The rank and the multiple of Cs-137 or Co-60 given on each sheet are now worked out from the
+      same Γ the sheet prints, rather than from a stored copy rounded to six decimal places; for
+      <NuclideRef k="Pm-147" />, whose constant is the smallest, the multiple of Cs-137 roughly doubles.
+      That stored constant, which the gamma calculator and the nuclide list display, had drifted from
+      the sheets for seven nuclides, by up to 0.4% for <NuclideRef k="Eu-152" />, and has been recomputed.
+    </p>
+
+    <h3>Beta branches added for {betaAdded.length} nuclides</h3>
+    <p>
+      The data carried no beta-minus branch for {betaAdded.length} nuclides that emit one:
+      {" "}{betaAdded.map((k, i) => <>{i > 0 ? ", " : ""}<NuclideRef k={k} /></>)}. Their sheets
+      now give the beta endpoint, the range table and the fractions converted to bremsstrahlung, and
+      the beta calculator accepts them.
+    </p>
+
+    <h3>Bremsstrahlung worked out on the hardest common branch</h3>
+    <p>
+      Beta ranges are still sized on the highest endpoint recorded, however rare its branch, because
+      the shield has to stop the most energetic beta. The bremsstrahlung fraction, and the ranking on
+      the <a href={u("/beta-shield-materials/")} class="underline">beta shield materials</a> page, now
+      use the hardest branch seen in at least 1% of decays — on the nuclide sheets, on that page and in
+      the <a href={u("/beta/")} class="underline">beta calculator</a>. Where the highest endpoint belongs
+      to a rarer branch, the fraction converted in lead becomes:
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead><tr><th class="text-left">Nuclide</th><th class="text-right">Endpoint used (keV)</th><th class="text-right">In lead before</th><th class="text-right">Now</th></tr></thead>
+        <tbody>
+          {bremsOld.map((r) => (
+            <tr><td><NuclideRef k={r.k} /></td><td class="num whitespace-nowrap text-right">{r.before} → {r.after}</td><td class="num whitespace-nowrap text-right">{r.leadBefore.toFixed(2)}%</td><td class="num whitespace-nowrap text-right">{r.leadAfter.toFixed(2)}%</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p>
+      {SMALL[bremsNew.length] ?? bremsNew.length} of the nuclides given beta branches above have their highest endpoint in a branch
+      below 1%, and their fraction is worked out this way from the start — in lead,
+      {" "}{bremsNew.map((r, i) => <>{i ? ", " : ""}<NuclideRef k={r.k} /> {r.leadAfter.toFixed(2)}%</>)}.
+    </p>
+
+    <h3>Corrections made earlier in this version, September and October 2026</h3>
+    <ul>
+      <li>Unit converter: Bq/L and pCi/L had been converted to and from Bq/kg as if a litre weighed a
+        gram, so those answers were wrong by a factor of a thousand. Volume and mass concentrations are
+        now separate quantities, and crossing between them asks for a density.</li>
+      <li>Detection limits: the scan MDC is calculated in dpm/100&nbsp;cm² but had been labelled
+        Bq/cm², so in the unit shown it read six thousand times too high, as did the line converting it.
+        The unit and the conversion are now right.</li>
+      <li>Specific activity is computed from AME2020 atomic masses instead of the mass number. Every
+        value changed, by at most about half a per cent (H-3).</li>
+      <li>Beta range: the Katz–Penfold fit changes branch at 2.5&nbsp;MeV, not at 3&nbsp;MeV as coded
+        before, which moved one nuclide, Pr-144, by 0.69%. Energies outside the fitted range are now
+        refused rather than answered.</li>
+      <li>All calculators use the Gregorian year of 365.2425 days, the year on which the IAEA's
+        half-lives in seconds are based; the beta calculator had used 365.25 days.</li>
+      <li>Inputs with no physical answer, such as a negative dose rate or a counting efficiency above
+        one, are now refused by the detection-limit and work-planning calculators instead of
+        producing a number.</li>
+    </ul>
+
+    <h3>Decay mode labels</h3>
+    <p>
+      <NuclideRef k="Ir-192" /> had been labelled electron capture, although about 95% of its decays are
+      beta-minus; the label now says beta-minus decay. <NuclideRef k="Eu-152" />, labelled electron
+      capture with beta-plus, now reads electron capture and beta-minus decay: beta-plus is a trace
+      branch and beta-minus takes 27.9% of decays. Earlier in this version the labels of Pu-241
+      (beta-minus, not alpha), Nb-95m (isomeric transition, not beta-minus), and Cl-36 and K-40
+      (beta-minus, not electron capture with beta-plus) were corrected in the same way.
+    </p>
+
+    <h3>Statements of accuracy, and generated sentences</h3>
+    <p>
+      Two claims the validation reports do not support were removed: that the Katz–Penfold range fit
+      is good to about ±10%, and that the gamma constants agree with published values to within
+      about 2%. The pages now say what the reports do show. Generated sentences on the nuclide
+      sheets that contradicted the sheet's own figures were corrected — decay captions, shielding
+      verdicts, ranking phrases, and verdicts now limited to a nuclide's own photons where its decay
+      chain or spontaneous fission sets the field of a real source. None of these changes a number.
+    </p>
+
+    <h3>Air kerma and µSv/h</h3>
+    <p>
+      The gamma figures are air kerma. Where they are set against a µSv/h target, 1&nbsp;µGy is
+      counted as 1&nbsp;µSv; every page that does so now says so, and
+      {" "}<a href={u("/methods/#air-kerma")} class="underline">Methods</a> sets out the energy dependence
+      that convention leaves aside. The values themselves are unchanged.
+    </p>
+
+    <h3>Pages</h3>
+    <ul>
+      <li>Reference sheets for {V101_SHEETS - sheets} of the {V101_SHEETS} nuclides were withdrawn, and their
+        addresses no longer resolve; sheets are kept for the {sheets} nuclides met in practice, each with
+        a note on where it is met. The calculators still use all {all}.</li>
+      <li>A new calculator for the X-ray tube spectrum.</li>
+      <li>Public validation reports for the calculators, a header and footer shared across Radiation
+        Lab, and a version line on every page linking here.</li>
+    </ul>
+
+    <h2 id={idOf(v101.version)}>{v101.version} — {dateText(v101.date)}</h2>
+    <p>
+      The first release archived on Zenodo with a DOI: calculators for gamma dose rate and shielding,
+      beta dose rate and shielding, decay, specific activity, unit conversion, detection limits and
+      work planning, with reference sheets for all {V101_SHEETS} nuclides. A 1.0.0 release published on
+      GitHub half an hour earlier was not archived; 1.0.1 differs from it only in the wording of the
+      NIST notice.
+    </p>
+  </section>
+</Base>
