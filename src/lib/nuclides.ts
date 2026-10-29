@@ -43,8 +43,18 @@ for (const [k, mode] of Object.entries(DECAY_FIX)) if (NUCLIDES[k]) NUCLIDES[k].
  *  ★ T13 — Cm-244 를 더했다. 그 쪽 손글이 「사용후핵연료 중성자 방출을 지배하고 용기 · 핫셀의 중성자 차폐가 이것으로 정해진다」고
  *    하는데 제목은 「Limits — intake, not external dose」였다. Cm-244: 같은 Live Chart ground_states 「SF 0.000137(2)%」
  *    (ENSDF 평가 C.D. Nesaraja, 2017-08-31 마감) — 2026-10-29 확인.
- *  ★ 판정에만 쓴다(자료는 바꾸지 않는다). 쪽이 「limits」 제목 · 알파 문장 · 단서 한 줄 · 광자 차폐 판정의 주어를 이 목록으로 가른다. */
-export const SPONTANEOUS_FISSION: Readonly<Record<string, number>> = { "Cf-252": 3.102, "Cm-244": 1.37e-4 };
+ *  ★ 판정에만 쓴다(자료는 바꾸지 않는다). 쪽이 「limits」 제목 · 알파 문장 · 단서 한 줄 · 광자 차폐 판정의 주어를 이 목록으로 가른다.
+ *  ★ T14 — Pu-238 · Pu-240 을 더했다. 두 쪽의 손글(소유주 통독)이 실제 물질의 외부장은 주로 중성자라고 쓰는데 광자 판정
+ *    「Shielding barely arises」가 주어 없이 섰다. Live Chart ground_states(2026-10-29 확인): Pu-238 「SF 0.00000019(1)%」
+ *    (ENSDF Browne · Tuli, 2014-06 마감), Pu-240 「SF 0.000005769(39)%」(ENSDF C. Morse, 2024-09 마감).
+ *    ★ 두 쪽은 limits 제목을 섭취 그대로 둔다 — 손글이 「Intake … governs」라고 쓴다(`SF_INTAKE_GOVERNS`). */
+export const SPONTANEOUS_FISSION: Readonly<Record<string, number>> =
+  { "Cf-252": 3.102, "Cm-244": 1.37e-4, "Pu-238": 1.9e-7, "Pu-240": 5.769e-6 };
+/** 자발 핵분열이 있어도 limits 제목을 「Limits — intake, not external dose」로 두는 쪽 — 그 쪽 손글(소유주 통독 40편)이 섭취가
+ *  방호를 정한다고 쓴다(Pu-238 「Intake is the controlling hazard」 · Pu-240 「Intake, not external dose, governs protection」). */
+export const SF_INTAKE_GOVERNS: readonly string[] = ["Pu-238", "Pu-240"];
+/** 자발 핵분열 몫을 글로 — 지수 표기 없이 유효숫자 둘(Pu-238 의 1.9e-7 이 「1.9e-7%」로 나가지 않게). Cf-252 · Cm-244 는 그전과 글자가 같다. */
+export const sfPctText = (pct: number) => pct.toLocaleString("en-US", { maximumSignificantDigits: 2 });
 export const ATTEN = attenuation as unknown as Record<Material, Row[]>;
 
 /** ★ 원소 이름은 **미국 철자**로 쓴다 — 엔진의 물질 이름이 이미 `aluminum` 이다.

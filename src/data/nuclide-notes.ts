@@ -1096,7 +1096,7 @@ export const NUCLIDE_NOTES: Record<string, NuclideNote> = {
   "Y-90": {
     heading: "Y-90 as the therapeutic beta behind Sr-90 and liver radioembolisation",
     paragraphs: [
-      "Y-90 emits only beta particles, with an endpoint among the highest in routine use, and it is used for that: glass or resin microspheres loaded with Y-90 go into the hepatic artery against liver tumours, Y-90 labelled antibodies and peptides treat lymphoma and neuroendocrine tumours, and Y-90 colloids are injected into joints. It is also the daughter of Sr-90, in equilibrium within weeks, and the reason a Sr-90 source behaves as it does.",
+      "Y-90 emits almost nothing but beta particles, with an endpoint among the highest in routine use, and it is used for that: glass or resin microspheres loaded with Y-90 go into the hepatic artery against liver tumours, Y-90 labelled antibodies and peptides treat lymphoma and neuroendocrine tumours, and Y-90 colloids are injected into joints. It is also the daughter of Sr-90, in equilibrium within weeks, and the reason a Sr-90 source behaves as it does.",
       "The page gives the energetic beta, its ranges and its bremsstrahlung fractions, and there is no photon section because the only photons recorded fall below the cutoff; the practical imaging of Y-90 after treatment uses the bremsstrahlung, or a minute branch of the decay that produces positron pairs and lets a PET scanner map the microspheres.",
       "Shielding is acrylic first because bremsstrahlung in lead would be the larger hazard, and extremity dose during preparation is the limiting quantity for staff. Waste decays within weeks of a treatment, and a treated patient carries little external hazard beyond the first day.",
     ],

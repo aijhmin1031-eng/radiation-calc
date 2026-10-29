@@ -84,6 +84,7 @@ export const TOOLS: Tool[] = [
     assumes: [
       "A point source radiating isotropically in air, with no capsule and no self-absorption in the source.",
       "Narrow-beam attenuation, unless you enter buildup coefficients yourself.",
+      "Results in µSv/h or mSv/h are air kerma with 1 µGy counted as 1 µSv; no energy-dependent conversion to H*(10) is applied.",
     ],
     excludes: [
       "Scatter from room surfaces and skyshine.",

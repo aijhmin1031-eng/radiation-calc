@@ -3,6 +3,7 @@ import ToolPage from "../components/ToolPage.astro";
 import Units from "../components/calc/Units.tsx";
 import Faq from "../components/Faq.astro";
 import { EX } from "../data/worked-examples";
+import { u } from "../lib/site";
 const U = EX.units;
 ---
 <ToolPage slug="units">
@@ -72,9 +73,12 @@ const U = EX.units;
     <h2>What this tool does not do</h2>
     <p>
       It does not convert absorbed dose to effective dose, which additionally needs tissue weighting
-      factors and an exposure geometry. It does not convert air kerma to a personal dose equivalent
-      such as H*(10), which needs a conversion coefficient that depends on photon energy. Both of
-      those are answered by published coefficient sets, not by a fixed factor.
+      factors and an exposure geometry. It does not convert air kerma to an operational dose
+      equivalent such as the ambient dose equivalent H*(10), which needs a conversion coefficient
+      that depends on photon energy. Both of those are answered by published coefficient sets, not
+      by a fixed factor. Elsewhere on this site, where gamma figures are set against µSv/h targets,
+      1&nbsp;µGy of air kerma is counted as 1&nbsp;µSv; <a href={u("/methods/#air-kerma")} class="underline">Methods</a>
+      states that convention and how far it sits from H*(10).
     </p>
 
     <h2>Worked examples</h2>

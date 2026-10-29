@@ -264,7 +264,18 @@ Th-232 「우라늄 다음으로 많은 악티나이드」 → 우라늄보다 �
   3쪽(Th-230 · U-233 · U-236)은 「For X itself」. 판정을 뺀 19쪽 중 값이 이미 쪽에 있는 14쪽은 문장째 뺐고, 첫 문단에 시평이 없는 5쪽은 숫자만 남겼다.
 - Γ 순위 판정 — 96위 중 96위(Pm-147)는 「the lowest」, 아래 10분의 1 은 「near the bottom」, 그 위는 「in the bottom quarter」(`bottomOf`).
 - 손글 2편(Pu-241 「no photon line above the cutoff」 · Y-90 「the only photons recorded fall below the cutoff」) — 40편 밖.
-- `check-progeny` 가 새 규칙 둘(광자 판정의 주어 · 「only handle」 조건)을 잰다. 보류: 공기커마(µGy/h)와 µSv/h 목표의 1:1 비교(소유주 결정 대기).
+- `check-progeny` 가 새 규칙 둘(광자 판정의 주어 · 「only handle」 조건)을 잰다. 보류: 공기커마(µGy/h)와 µSv/h 목표의 1:1 비교(소유주 결정 대기 → T14).
+
+★★ **공기커마 · µSv/h 단서**(2026-10-29, T14 — 소유주 결정: 값은 그대로 두고 공기커마 1 µGy = 1 µSv 가정을 밝힌다). 계산값 · 단위 계수 · 저장 출력은 그대로다.
+- 설명은 한 곳 — `/methods/#air-kerma`「Air kerma and µSv/h targets」: 무엇을 1:1 로 보는가 · H*(10)/Ka 의 에너지 의존(ICRP Publication 74
+  표 A.21 원문 값 11점 — 20 keV 0.61 · 60 keV 1.74 · 600 keV 1.21 · 1 MeV 1.17 …) · 그래서 30 keV 위에서는 H*(10) 가 이 사이트 값보다 10~74% 높고
+  20 keV 근처는 반대 · 에너지별 환산을 하지 않는다는 것 · 「이미 20 µSv/h 아래」 판정이 H*(10) 으로 뒤집힐 수 있고 측정값에서 거꾸로 푼 방사능은
+  높게 나온다는 것. Field Pro(ISO 4037 기준장)는 H*(10) 계수를 쓴다는 것도 밝힌다. Known limitations 에 한 줄.
+- 짧은 단서 + 링크 — 낱장(산문이 µSv 를 쓰는 43쪽, limits 목록 「Air kerma, 1 µGy counted as 1 µSv — not H*(10).」), 감마 계산기(Sv 단위를 고를 때 ·
+  결과 아래 — 그전 「w_R=1 이라 같다」는 문장을 바꿨다), 감마 도구 쪽 본문 · 가정 줄 · FAQ, `/units/`. `check-nuclides` ③-2 가 단서 · 절을 잰다.
+- 남은 4건 — 베타가 있는 쪽의 「already under 20 µSv/h」를 「the photon dose rate」로(7쪽) · Pu-238 · Pu-240 을 `SPONTANEOUS_FISSION` 에(ENSDF
+  0.00000019% · 0.0000058%, 광자 판정 주어 · SF 줄, 제목은 `SF_INTAKE_GOVERNS` 로 섭취 그대로) · Γ 가 0 인 알파 쪽 중 딸이 실리거나 연쇄가 이 자료 밖으로 이어지는 6쪽은 「the alpha is an intake hazard」로 ·
+  Y-90 손글 「emits almost nothing but beta particles」.
 
 ★★ **글 쓰는 방식 공개**(2026-10-29, T10 F6 — 소유주 「추천대로」). Methods 에 「How the pages are written」(`#writing`) 한 절을 두었다 —
 수치 · 표 · 핵종 쪽 머리 문장은 자료에서 계산한다 · 그 둘레의 글은 AI 도움으로 쓴다 · 출처를 단 해설은 그 출처로 썼고 다른 AI 검토가 대조한 뒤
