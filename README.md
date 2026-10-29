@@ -13,7 +13,8 @@
 **판: v1.1.0 · 2026-10-29** — 정본은 `src/lib/version.ts`. 쪽마다 꼬리말 위에 판 줄이 서고 `/changelog/`(「Changes to the calculators and
 data」)가 판마다 바뀐 것을 든다. 번호 규칙: 계산값 · 자료가 바뀌면 가운데 자리, 글만 고치면 끝자리. 판을 올리면 `version.ts` ·
 `CITATION.cff`(version · date-released) · `.zenodo.json`(version · publication_date) · 이 줄을 함께 고친다 — `version.test.ts` 가 잰다.
-v1.1.0 은 Zenodo 새 판과 같은 번호이고, 태그 · 릴리스는 소유주 확인 뒤에 만든다.
+v1.1.0 은 Zenodo 새 판과 같은 번호이고, 태그 · 릴리스는 소유주 확인 뒤에 만든다. ★ 태그를 만드는 날이 `version.ts` 의 날짜와 다르면
+그날로 고친 뒤 태그한다(넷이 함께 따라와야 테스트가 통과한다) — 그래야 쪽의 판 줄 · CITATION 의 date-released · Zenodo 기록의 날짜가 같다.
 
 ## ★★★ 공통 셸 v3 — 머리글 · 꼬리말을 `radiation-lab/public/shell` 정본으로 (2026-10-28, T2)
 

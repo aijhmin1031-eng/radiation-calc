@@ -134,6 +134,9 @@ const TOOL_SLUGS = new Set(
 const NOT_A_NOTE = new Set([
   "/", "/nuclides/", "/methods/", "/validation/", "/saved/", "/account/",
   "/disclaimer/", "/search/", "/404/", "/units/",
+  /* T15 — 판마다 바뀐 것의 기록. 읽을 글이 아니라 Methods 와 같은 층의 문서 쪽이다 — 쪽마다의 판 줄(꼬리말 위)과
+     Methods 「Corrections」가 잇는다. */
+  "/changelog/",
 ]);
 const pagesDir = readdirSync(join(ROOT, "src", "pages"), { withFileTypes: true });
 const topLevel = pagesDir

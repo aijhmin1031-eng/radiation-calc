@@ -10,7 +10,7 @@
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
-import { gammaConstant, spectrumHVL, DELTA_DEFAULT_KEV } from "../src/engine/index.ts";
+import { gammaConstant, spectrumHVL, spectrumTVL, DELTA_DEFAULT_KEV } from "../src/engine/index.ts";
 import type { Nuclide } from "../src/engine/types.ts";
 import { PAGE_KEYS } from "../src/lib/nuclide-pages.ts";
 
@@ -21,9 +21,11 @@ const att = JSON.parse(readFileSync("src/data/attenuation.json", "utf8"));
 
 const gOf = (n: Nuclide) => gammaConstant(n, att.air, DELTA_DEFAULT_KEV);
 const hOf = (n: Nuclide) => (gOf(n) > 0 ? spectrumHVL(n.lines, att.air, att.lead, "lead") * 10 : null);  // mm
+const tOf = (n: Nuclide) => (gOf(n) > 0 ? spectrumTVL(n.lines, att.air, att.lead, "lead") * 10 : null);  // mm
 const sig = (x: number | null, d = 4) => (x == null || !Number.isFinite(x) ? null : Number(x.toPrecision(d)));
 
-const gamma: { key: string; page: boolean; gBefore: number; gAfter: number; hvlBefore: number | null; hvlAfter: number | null }[] = [];
+const gamma: { key: string; page: boolean; gBefore: number; gAfter: number; hvlBefore: number | null; hvlAfter: number | null;
+               tvlBefore: number | null; tvlAfter: number | null }[] = [];
 for (const k of Object.keys(after)) {
   const b = before[k], a = after[k];
   if (!b) continue;
@@ -32,7 +34,8 @@ for (const k of Object.keys(after)) {
   const hb = hOf(b), ha = hOf(a);
   const moved = Math.abs(ga - gb) > 1e-12 * Math.max(gb, ga) || (hb != null && ha != null && Math.abs(ha - hb) > 1e-9 * hb);
   if (!moved) continue;
-  gamma.push({ key: k, page: PAGE_KEYS.includes(k), gBefore: sig(gb, 7)!, gAfter: sig(ga, 7)!, hvlBefore: sig(hb, 7), hvlAfter: sig(ha, 7) });
+  gamma.push({ key: k, page: PAGE_KEYS.includes(k), gBefore: sig(gb, 7)!, gAfter: sig(ga, 7)!, hvlBefore: sig(hb, 7), hvlAfter: sig(ha, 7),
+               tvlBefore: sig(tOf(b), 7), tvlAfter: sig(tOf(a), 7) });
 }
 gamma.sort((x, y) => (x.gAfter / x.gBefore) - (y.gAfter / y.gBefore));
 const betaAdded = Object.keys(after).filter((k) => before[k] && !before[k].beta?.length && after[k].beta?.length).sort();

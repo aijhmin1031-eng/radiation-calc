@@ -12,7 +12,9 @@
    "gBefore": 0.01236318,
    "gAfter": 0.01056261,
    "hvlBefore": 0.2243894,
-   "hvlAfter": 0.2183869
+   "hvlAfter": 0.2183869,
+   "tvlBefore": 0.8043644,
+   "tvlAfter": 0.791092
   },
   {
    "key": "Ir-192m2",
@@ -20,7 +22,9 @@
    "gBefore": 0.0000818683,
    "gAfter": 0.0000703979,
    "hvlBefore": 0.1888493,
-   "hvlAfter": 0.1854473
+   "hvlAfter": 0.1854473,
+   "tvlBefore": 0.6841059,
+   "tvlAfter": 0.6810532
   },
   {
    "key": "I-125",
@@ -28,7 +32,9 @@
    "gBefore": 0.04000434,
    "gAfter": 0.0350107,
    "hvlBefore": 0.01755214,
-   "hvlAfter": 0.0169565
+   "hvlAfter": 0.0169565,
+   "tvlBefore": 0.05976218,
+   "tvlAfter": 0.05745461
   },
   {
    "key": "Sn-113m",
@@ -36,7 +42,9 @@
    "gBefore": 0.01727921,
    "gAfter": 0.01513132,
    "hvlBefore": 0.01374958,
-   "hvlAfter": 0.01327086
+   "hvlAfter": 0.01327086,
+   "tvlBefore": 0.04679136,
+   "tvlAfter": 0.04490051
   },
   {
    "key": "Cd-109",
@@ -44,7 +52,9 @@
    "gBefore": 0.0451842,
    "gAfter": 0.03972241,
    "hvlBefore": 0.009991012,
-   "hvlAfter": 0.009664451
+   "hvlAfter": 0.009664451,
+   "tvlBefore": 0.0341952,
+   "tvlAfter": 0.03293485
   },
   {
    "key": "Cd-109m1",
@@ -52,7 +62,9 @@
    "gBefore": 0.01924591,
    "gAfter": 0.01698319,
    "hvlBefore": 0.01174444,
-   "hvlAfter": 0.01142821
+   "hvlAfter": 0.01142821,
+   "tvlBefore": 0.04353769,
+   "tvlAfter": 0.04274357
   },
   {
    "key": "Re-188m",
@@ -60,7 +72,9 @@
    "gBefore": 0.009873721,
    "gAfter": 0.008809096,
    "hvlBefore": 0.137665,
-   "hvlAfter": 0.1333505
+   "hvlAfter": 0.1333505,
+   "tvlBefore": 0.4739146,
+   "tvlAfter": 0.4572493
   },
   {
    "key": "Cs-134m",
@@ -68,7 +82,9 @@
    "gBefore": 0.008798691,
    "gAfter": 0.007859067,
    "hvlBefore": 0.03154881,
-   "hvlAfter": 0.0316253
+   "hvlAfter": 0.0316253,
+   "tvlBefore": 0.213879,
+   "tvlAfter": 0.2421153
   },
   {
    "key": "Xe-133",
@@ -76,7 +92,9 @@
    "gBefore": 0.01401192,
    "gAfter": 0.01258371,
    "hvlBefore": 0.03415049,
-   "hvlAfter": 0.03460946
+   "hvlAfter": 0.03460946,
+   "tvlBefore": 0.32968,
+   "tvlAfter": 0.3698021
   },
   {
    "key": "Xe-133m",
@@ -84,7 +102,9 @@
    "gBefore": 0.01244965,
    "gAfter": 0.01119341,
    "hvlBefore": 0.03242688,
-   "hvlAfter": 0.03313443
+   "hvlAfter": 0.03313443,
+   "tvlBefore": 1.083978,
+   "tvlAfter": 1.21634
   },
   {
    "key": "Sm-153",
@@ -92,7 +112,9 @@
    "gBefore": 0.01191763,
    "gAfter": 0.01072614,
    "hvlBefore": 0.06728326,
-   "hvlAfter": 0.0673173
+   "hvlAfter": 0.0673173,
+   "tvlBefore": 0.273673,
+   "tvlAfter": 0.2812628
   },
   {
    "key": "Ba-133m",
@@ -100,7 +122,9 @@
    "gBefore": 0.01779186,
    "gAfter": 0.01624632,
    "hvlBefore": 0.05466945,
-   "hvlAfter": 0.05901827
+   "hvlAfter": 0.05901827,
+   "tvlBefore": 2.310803,
+   "tvlAfter": 2.476
   },
   {
    "key": "Ra-223",
@@ -108,7 +132,9 @@
    "gBefore": 0.01705152,
    "gAfter": 0.01585089,
    "hvlBefore": 0.5409463,
-   "hvlAfter": 0.6280326
+   "hvlAfter": 0.6280326,
+   "tvlBefore": 3.840331,
+   "tvlAfter": 4.026656
   },
   {
    "key": "Ce-139",
@@ -116,7 +142,9 @@
    "gBefore": 0.03093311,
    "gAfter": 0.02883745,
    "hvlBefore": 0.08457166,
-   "hvlAfter": 0.09474386
+   "hvlAfter": 0.09474386,
+   "tvlBefore": 0.9025501,
+   "tvlAfter": 0.941763
   },
   {
    "key": "Sn-113",
@@ -124,7 +152,9 @@
    "gBefore": 0.07058815,
    "gAfter": 0.06619322,
    "hvlBefore": 0.06843518,
-   "hvlAfter": 0.2055917
+   "hvlAfter": 0.2055917,
+   "tvlBefore": 5.776168,
+   "tvlAfter": 6.009697
   },
   {
    "key": "Ce-144",
@@ -132,7 +162,9 @@
    "gBefore": 0.003343786,
    "gAfter": 0.003136546,
    "hvlBefore": 0.08592556,
-   "hvlAfter": 0.0913441
+   "hvlAfter": 0.0913441,
+   "tvlBefore": 0.5519629,
+   "tvlAfter": 0.5729783
   },
   {
    "key": "In-111",
@@ -140,7 +172,9 @@
    "gBefore": 0.08067278,
    "gAfter": 0.07662728,
    "hvlBefore": 0.1584049,
-   "hvlAfter": 0.2077462
+   "hvlAfter": 0.2077462,
+   "tvlBefore": 1.935993,
+   "tvlAfter": 2.000159
   },
   {
    "key": "Ta-182m2",
@@ -148,7 +182,9 @@
    "gBefore": 0.03390652,
    "gAfter": 0.03222666,
    "hvlBefore": 0.2973108,
-   "hvlAfter": 0.3102812
+   "hvlAfter": 0.3102812,
+   "tvlBefore": 1.472466,
+   "tvlAfter": 1.521621
   },
   {
    "key": "Ba-133",
@@ -156,7 +192,9 @@
    "gBefore": 0.0732798,
    "gAfter": 0.06985167,
    "hvlBefore": 0.5816189,
-   "hvlAfter": 0.7029838
+   "hvlAfter": 0.7029838,
+   "tvlBefore": 5.163012,
+   "tvlAfter": 5.304182
   },
   {
    "key": "Eu-152m2",
@@ -164,7 +202,9 @@
    "gBefore": 0.009955511,
    "gAfter": 0.009494545,
    "hvlBefore": 0.07183609,
-   "hvlAfter": 0.07208882
+   "hvlAfter": 0.07208882,
+   "tvlBefore": 0.2513593,
+   "tvlAfter": 0.2528144
   },
   {
    "key": "Eu-154m",
@@ -172,7 +212,9 @@
    "gBefore": 0.01341204,
    "gAfter": 0.01283339,
    "hvlBefore": 0.06377945,
-   "hvlAfter": 0.06360952
+   "hvlAfter": 0.06360952,
+   "tvlBefore": 0.3161067,
+   "tvlAfter": 0.3215429
   },
   {
    "key": "Ce-141",
@@ -180,7 +222,9 @@
    "gBefore": 0.01088969,
    "gAfter": 0.01048625,
    "hvlBefore": 0.1654026,
-   "hvlAfter": 0.1769875
+   "hvlAfter": 0.1769875,
+   "tvlBefore": 0.8078955,
+   "tvlAfter": 0.8231841
   },
   {
    "key": "Tc-99m",
@@ -188,7 +232,9 @@
    "gBefore": 0.01529945,
    "gAfter": 0.01473587,
    "hvlBefore": 0.2289729,
-   "hvlAfter": 0.2429176
+   "hvlAfter": 0.2429176,
+   "tvlBefore": 0.8269466,
+   "tvlAfter": 0.8408914
   },
   {
    "key": "Pu-239",
@@ -196,7 +242,9 @@
    "gBefore": 0.000008233499,
    "gAfter": 0.000007983151,
    "hvlBefore": 0.120469,
-   "hvlAfter": 0.1196301
+   "hvlAfter": 0.1196301,
+   "tvlBefore": 2.45281,
+   "tvlAfter": 2.566052
   },
   {
    "key": "Au-198m",
@@ -204,7 +252,9 @@
    "gBefore": 0.06471877,
    "gAfter": 0.06312505,
    "hvlBefore": 0.4814009,
-   "hvlAfter": 0.4926412
+   "hvlAfter": 0.4926412,
+   "tvlBefore": 2.358836,
+   "tvlAfter": 2.393803
   },
   {
    "key": "Sb-125",
@@ -212,7 +262,9 @@
    "gBefore": 0.07015675,
    "gAfter": 0.06848791,
    "hvlBefore": 2.516465,
-   "hvlAfter": 2.653475
+   "hvlAfter": 2.653475,
+   "tvlBefore": 12.28154,
+   "tvlAfter": 12.43573
   },
   {
    "key": "Lu-177",
@@ -220,7 +272,9 @@
    "gBefore": 0.004200792,
    "gAfter": 0.004103324,
    "hvlBefore": 0.3911782,
-   "hvlAfter": 0.4036895
+   "hvlAfter": 0.4036895,
+   "tvlBefore": 1.940072,
+   "tvlAfter": 1.964596
   },
   {
    "key": "Lu-177m",
@@ -228,7 +282,9 @@
    "gBefore": 0.1312356,
    "gAfter": 0.1288612,
    "hvlBefore": 0.9256001,
-   "hvlAfter": 0.9613417
+   "hvlAfter": 0.9613417,
+   "tvlBefore": 5.325,
+   "tvlAfter": 5.384914
   },
   {
    "key": "Ra-226",
@@ -236,7 +292,9 @@
    "gBefore": 0.000878531,
    "gAfter": 0.0008635283,
    "hvlBefore": 0.4730879,
-   "hvlAfter": 0.4845669
+   "hvlAfter": 0.4845669,
+   "tvlBefore": 1.649323,
+   "tvlAfter": 1.662047
   },
   {
    "key": "Sm-153m",
@@ -244,7 +302,9 @@
    "gBefore": 0.01041588,
    "gAfter": 0.01026137,
    "hvlBefore": 0.02795715,
-   "hvlAfter": 0.02767738
+   "hvlAfter": 0.02767738,
+   "tvlBefore": 0.09819007,
+   "tvlAfter": 0.09657623
   },
   {
    "key": "U-235",
@@ -252,7 +312,9 @@
    "gBefore": 0.01944174,
    "gAfter": 0.01917604,
    "hvlBefore": 0.4340288,
-   "hvlAfter": 0.4417425
+   "hvlAfter": 0.4417425,
+   "tvlBefore": 1.640175,
+   "tvlAfter": 1.651089
   },
   {
    "key": "Eu-152m1",
@@ -260,7 +322,9 @@
    "gBefore": 0.04036958,
    "gAfter": 0.03982342,
    "hvlBefore": 6.215483,
-   "hvlAfter": 6.368655
+   "hvlAfter": 6.368655,
+   "tvlBefore": 24.81121,
+   "tvlAfter": 24.97128
   },
   {
    "key": "Mo-99",
@@ -268,7 +332,9 @@
    "gBefore": 0.01937464,
    "gAfter": 0.0191268,
    "hvlBefore": 5.193663,
-   "hvlAfter": 5.309432
+   "hvlAfter": 5.309432,
+   "tvlBefore": 19.92412,
+   "tvlAfter": 20.04288
   },
   {
    "key": "Cd-109m2",
@@ -276,7 +342,9 @@
    "gBefore": 0.05790631,
    "gAfter": 0.05717923,
    "hvlBefore": 0.7117237,
-   "hvlAfter": 0.7274432
+   "hvlAfter": 0.7274432,
+   "tvlBefore": 2.837334,
+   "tvlAfter": 2.854973
   },
   {
    "key": "Re-188",
@@ -284,7 +352,9 @@
    "gBefore": 0.007616033,
    "gAfter": 0.007526387,
    "hvlBefore": 1.426121,
-   "hvlAfter": 1.489477
+   "hvlAfter": 1.489477,
+   "tvlBefore": 16.72306,
+   "tvlAfter": 16.85224
   },
   {
    "key": "Eu-152",
@@ -292,7 +362,9 @@
    "gBefore": 0.1522848,
    "gAfter": 0.1507158,
    "hvlBefore": 6.240198,
-   "hvlAfter": 6.365296
+   "hvlAfter": 6.365296,
+   "tvlBefore": 27.6603,
+   "tvlAfter": 27.80417
   },
   {
    "key": "U-234",
@@ -300,7 +372,9 @@
    "gBefore": 0.00001672515,
    "gAfter": 0.00001656025,
    "hvlBefore": 0.1066025,
-   "hvlAfter": 0.1064253
+   "hvlAfter": 0.1064253,
+   "tvlBefore": 0.3822076,
+   "tvlAfter": 0.3817947
   },
   {
    "key": "Hg-203",
@@ -308,7 +382,9 @@
    "gBefore": 0.03097089,
    "gAfter": 0.03072388,
    "hvlBefore": 1.212278,
-   "hvlAfter": 1.225584
+   "hvlAfter": 1.225584,
+   "tvlBefore": 4.203282,
+   "tvlAfter": 4.218179
   },
   {
    "key": "Hg-203m",
@@ -316,7 +392,9 @@
    "gBefore": 0.1066465,
    "gAfter": 0.1059412,
    "hvlBefore": 3.613623,
-   "hvlAfter": 3.652461
+   "hvlAfter": 3.652461,
+   "tvlBefore": 13.93907,
+   "tvlAfter": 13.98395
   },
   {
    "key": "Th-228",
@@ -324,7 +402,9 @@
    "gBefore": 0.0002269291,
    "gAfter": 0.000225436,
    "hvlBefore": 0.3631153,
-   "hvlAfter": 0.366047
+   "hvlAfter": 0.366047,
+   "tvlBefore": 1.452447,
+   "tvlAfter": 1.457731
   },
   {
    "key": "In-111m",
@@ -332,7 +412,9 @@
    "gBefore": 0.06679803,
    "gAfter": 0.06638899,
    "hvlBefore": 3.878229,
-   "hvlAfter": 3.915311
+   "hvlAfter": 3.915311,
+   "tvlBefore": 13.59468,
+   "tvlAfter": 13.63177
   },
   {
    "key": "Ta-182",
@@ -340,7 +422,9 @@
    "gBefore": 0.1623465,
    "gAfter": 0.1617142,
    "hvlBefore": 8.299537,
-   "hvlAfter": 8.355052
+   "hvlAfter": 8.355052,
+   "tvlBefore": 31.25207,
+   "tvlAfter": 31.30783
   },
   {
    "key": "Eu-154",
@@ -348,7 +432,9 @@
    "gBefore": 0.1580872,
    "gAfter": 0.1575841,
    "hvlBefore": 7.520226,
-   "hvlAfter": 7.559625
+   "hvlAfter": 7.559625,
+   "tvlBefore": 28.30229,
+   "tvlAfter": 28.34498
   },
   {
    "key": "I-131",
@@ -356,7 +442,9 @@
    "gBefore": 0.05216181,
    "gAfter": 0.05200026,
    "hvlBefore": 2.324373,
-   "hvlAfter": 2.335573
+   "hvlAfter": 2.335573,
+   "tvlBefore": 8.775013,
+   "tvlAfter": 8.789082
   },
   {
    "key": "Cs-137",
@@ -364,7 +452,9 @@
    "gBefore": 0.07714632,
    "gAfter": 0.07694944,
    "hvlBefore": 5.344707,
-   "hvlAfter": 5.364968
+   "hvlAfter": 5.364968,
+   "tvlBefore": 18.10574,
+   "tvlAfter": 18.126
   },
   {
    "key": "Ba-137m",
@@ -372,7 +462,9 @@
    "gBefore": 0.0814966,
    "gAfter": 0.08128876,
    "hvlBefore": 5.344814,
-   "hvlAfter": 5.36506
+   "hvlAfter": 5.36506,
+   "tvlBefore": 18.10584,
+   "tvlAfter": 18.12609
   },
   {
    "key": "Tl-201m",
@@ -380,7 +472,9 @@
    "gBefore": 0.1148314,
    "gAfter": 0.1145691,
    "hvlBefore": 3.312476,
-   "hvlAfter": 3.324535
+   "hvlAfter": 3.324535,
+   "tvlBefore": 13.09152,
+   "tvlAfter": 13.10665
   },
   {
    "key": "Ir-192",
@@ -388,7 +482,9 @@
    "gBefore": 0.1093366,
    "gAfter": 0.1090878,
    "hvlBefore": 2.245548,
-   "hvlAfter": 2.253579
+   "hvlAfter": 2.253579,
+   "tvlBefore": 9.00535,
+   "tvlAfter": 9.016569
   },
   {
    "key": "Ir-192m1",
@@ -396,7 +492,9 @@
    "gBefore": 0.04970826,
    "gAfter": 0.04959632,
    "hvlBefore": 1.70257,
-   "hvlAfter": 1.708226
+   "hvlAfter": 1.708226,
+   "tvlBefore": 6.022815,
+   "tvlAfter": 6.029354
   },
   {
    "key": "Ce-139m",
@@ -404,7 +502,9 @@
    "gBefore": 0.09384794,
    "gAfter": 0.09371103,
    "hvlBefore": 6.321111,
-   "hvlAfter": 6.334634
+   "hvlAfter": 6.334634,
+   "tvlBefore": 21.22821,
+   "tvlAfter": 21.24173
   },
   {
    "key": "Au-198",
@@ -412,7 +512,9 @@
    "gBefore": 0.05458116,
    "gAfter": 0.05452736,
    "hvlBefore": 2.767891,
-   "hvlAfter": 2.771865
+   "hvlAfter": 2.771865,
+   "tvlBefore": 9.321824,
+   "tvlAfter": 9.325892
   },
   {
    "key": "Rh-106",
@@ -420,7 +522,9 @@
    "gBefore": 0.02754026,
    "gAfter": 0.02753399,
    "hvlBefore": 4.785979,
-   "hvlAfter": 4.787596
+   "hvlAfter": 4.787596,
+   "tvlBefore": 17.20176,
+   "tvlAfter": 17.20369
   },
   {
    "key": "Sb-124m1",
@@ -428,7 +532,9 @@
    "gBefore": 0.05990613,
    "gAfter": 0.0598945,
    "hvlBefore": 4.70388,
-   "hvlAfter": 4.705212
+   "hvlAfter": 4.705212,
+   "tvlBefore": 15.97515,
+   "tvlAfter": 15.97654
   },
   {
    "key": "Rh-106m",
@@ -436,7 +542,9 @@
    "gBefore": 0.3673991,
    "gAfter": 0.3673381,
    "hvlBefore": 6.393901,
-   "hvlAfter": 6.395568
+   "hvlAfter": 6.395568,
+   "tvlBefore": 24.99908,
+   "tvlAfter": 25.00122
   },
   {
    "key": "Cs-134",
@@ -444,7 +552,9 @@
    "gBefore": 0.2074102,
    "gAfter": 0.2073866,
    "hvlBefore": 5.854895,
-   "hvlAfter": 5.855871
+   "hvlAfter": 5.855871,
+   "tvlBefore": 20.16153,
+   "tvlAfter": 20.16258
   },
   {
    "key": "Sb-124",
@@ -452,7 +562,9 @@
    "gBefore": 0.2257052,
    "gAfter": 0.2256896,
    "hvlBefore": 7.969593,
-   "hvlAfter": 7.970444
+   "hvlAfter": 7.970444,
+   "tvlBefore": 31.08705,
+   "tvlAfter": 31.08816
   },
   {
    "key": "U-238m",
@@ -460,7 +572,9 @@
    "gBefore": 0.2292005,
    "gAfter": 0.2291967,
    "hvlBefore": 13.6034,
-   "hvlAfter": 13.60373
+   "hvlAfter": 13.60373,
+   "tvlBefore": 45.23471,
+   "tvlAfter": 45.23504
   }
  ],
  "betaAdded": [
