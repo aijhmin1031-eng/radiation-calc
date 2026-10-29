@@ -53,6 +53,8 @@ const brems = Object.keys(NUCLIDES)
 const bremsOld = brems.filter((r) => !betaAdded.includes(r.k));
 const bremsNew = brems.filter((r) => betaAdded.includes(r.k));
 const sheets = PAGE_KEYS.length;
+/* 문장 첫머리의 작은 수는 낱말로 쓴다 */
+const SMALL = ["None", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
 /* ★ 1.0.1 의 「147」은 **그 판의 사실**이라 글자로 둔다(git show v1.0.1:src/data/nuclides.json — 147키, 2026-10-29 확인).
  *   지금 자료의 수를 쓰면 자료가 늘 때 옛 판의 기록이 따라 바뀐다. 철회된 낱장 수는 그 147 에서 지금 낱장 수를 뺀다. */
 const V101_SHEETS = 147;
@@ -183,7 +185,7 @@ const all = Object.keys(NUCLIDES).length;
       </table>
     </div>
     <p>
-      {bremsNew.length} of the nuclides given beta branches above have their highest endpoint in a branch
+      {SMALL[bremsNew.length] ?? bremsNew.length} of the nuclides given beta branches above have their highest endpoint in a branch
       below 1%, and their fraction is worked out this way from the start — in lead,
       {" "}{bremsNew.map((r, i) => <>{i ? ", " : ""}<NuclideRef k={r.k} /> {r.leadAfter.toFixed(2)}%</>)}.
     </p>
