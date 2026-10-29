@@ -1,7 +1,7 @@
 import type { NuclidePage } from "./nuclides";
 import { NUCLIDES, nuclidePage } from "./nuclides";
 import { dominantProgeny, daughterOf, daughterLabel, CHAIN_TRUNCATED, chainLeavesDataset } from "./decay-chain";
-import { decayProse, SPONTANEOUS_FISSION, halfLifeText, gammaRank, gammaVs, leadForTarget, horizons,
+import { decayProse, SPONTANEOUS_FISSION, SF_INTAKE_GOVERNS, halfLifeText, gammaRank, gammaVs, leadForTarget, horizons,
          betaEndpointBranch, betaDominantBranch, lineSpan, alphaSpread,
          tenHalfLives, meanLife, remainingAfterYears, fmtTime } from "./nuclides";
 import { elapsedFromRatio } from "../engine";
@@ -210,8 +210,10 @@ export function paragraphs(p: NuclidePage): string[] {
       /* ★ T12 검토 — 딸이 차폐를 정하는 쪽(Pb-210 → Bi-210)에서는 이 판정이 이 핵종 자신의 광자 이야기임을 밝힌다.
          ★ T13 — 연쇄가 이 자료 밖으로 이어지는 쪽(Th-232) · 자발 핵분열 쪽(Cm-244)도 같다(위 `ownOnly` · `sf`). 자발 핵분열 쪽은
            「photon dose rate」로 중성자와 가른다. */
+      /* ★ T14 — 베타가 있는 쪽(Cl-36 · Kr-85 · Re-188 …)도 「photon dose rate」로 한정한다. 「with nothing in the way」가 베타까지
+           덮는 말로 읽혔는데, 그 쪽 손글은 베타를 차폐 문제로 말한다(1 m 의 공기는 Re-188 의 2.12 MeV 베타를 멈추지 않는다). */
       ? (ownOnly ? `At 1 GBq and a metre the dose rate from ${p.key}'s own photons is already under 20 µSv/h with nothing in the way.`
-        : sf ? `At 1 GBq and a metre the photon dose rate is already under 20 µSv/h with nothing in the way.`
+        : sf || p.betaMaxMeV ? `At 1 GBq and a metre the photon dose rate is already under 20 µSv/h with nothing in the way.`
         : `At 1 GBq and a metre it is already under 20 µSv/h with nothing in the way.`)
       : `Reaching 20 µSv/h from 1 GBq at a metre takes ${mm(t20)} of lead.`;
     out.push(
@@ -404,7 +406,11 @@ export function paragraphs(p: NuclidePage): string[] {
           `the photon figures above are the separate question.`
         /* ★ T12 h — 자발 핵분열 가지가 있으면(SPONTANEOUS_FISSION) 외부 위험이 이 자료 밖에 있다 — 「the limit here is intake」로
              쪽 전체를 결론짓지 않는다(Cf-252 는 중성자 선원으로 쓰인다). */
-        : SPONTANEOUS_FISSION[p.key]
+        /* ★ T14 — 「the limit here」는 쪽 전체의 판정으로 읽혔다. U-233 손글은 늘 따라오는 U-232(끝의 Tl-208)가 저장 U-233 을
+             감마선원으로 만든다고 쓰고, Ra-224 · Am-243 · Np-237 손글은 외부선량이 딸의 것이라고 쓴다. 딸이 이 자료에 실리거나
+             연쇄가 이 자료 밖으로 이어지는 쪽은 진술을 **알파로** 한정한다(자발 핵분열 쪽과 같은 문장). 뒤따르는 「For X itself,
+             decay is the only handle」과 「itself」가 겹치지 않는다(T14 검토). 연쇄가 안정 핵종에서 끝나는 쪽(Po-210)은 그대로다. */
+        : SPONTANEOUS_FISSION[p.key] || daughterOf(p.key) || chainLeavesDataset(p.key)
         ? `. None of it reaches through skin, so the alpha is an intake hazard rather than an external one.`
         : `. None of it reaches through skin, so the limit here is intake, not external dose.`),
     );
@@ -565,10 +571,12 @@ export function sectionHeads(p: NuclidePage) {
          섭취 쪽을 든다. */
     /* ★ T12 1-41 — 연쇄가 이 자료에서 끊기는 알파 핵종(Ra-226 · U-238)은 Γ 가 작아도 자손의 광자장이 빠진 값이라 「intake, not
          external」로 결론짓지 않는다. ★ T12 h — 자발 핵분열 가지(SPONTANEOUS_FISSION, Cf-252 · T13 Cm-244)도 외부 위험이 이 자료 밖에 있다.
+       ★ T14 — 단 Pu-238 · Pu-240 은 손글(소유주 통독)이 「Intake … governs」라고 써서 섭취 제목을 둔다(`SF_INTAKE_GOVERNS`).
        ★ T13 — 연쇄가 이 자료 밖으로 이어지는 쪽(`chainLeavesDataset`, Th-232)도 같다. Γ 가 0 인 쪽(Am-243 · Np-237 · Ra-224)은
          「dose rates」 제목을 세울 수치가 없어 아래 `a` 갈래로 그대로 간다(Am-243 손글이 그 제목을 가리킨다). */
     limits:
-      a && p.gamma < 0.005 && !CHAIN_TRUNCATED.includes(p.key) && !SPONTANEOUS_FISSION[p.key] && !chainLeavesDataset(p.key)
+      a && p.gamma < 0.005 && !CHAIN_TRUNCATED.includes(p.key) && !chainLeavesDataset(p.key) &&
+      (!SPONTANEOUS_FISSION[p.key] || SF_INTAKE_GOVERNS.includes(p.key))
         ? "Limits — intake, not external dose"
       : g ? "Limits of these dose rates"
       : SPONTANEOUS_FISSION[p.key] ? "Limits of these figures"

@@ -1,7 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { u, DATA_SOURCES } from "../../lib/site";
-import { ALL_KEYS, NUCLIDES, nuclidePage, slugOf, longName, decayWordOf, SPONTANEOUS_FISSION, halfLifeText, elementName,
+import { ALL_KEYS, NUCLIDES, nuclidePage, slugOf, longName, decayWordOf, SPONTANEOUS_FISSION, sfPctText, halfLifeText, elementName,
          belowCutoff, alphaSpread } from "../../lib/nuclides";
 import { paragraphs, decayCaption, sectionHeads } from "../../lib/nuclide-prose";
 import { nuclideSeo } from "../../lib/nuclide-seo";
@@ -290,7 +290,11 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
       {Boolean(n.alpha?.length) && <li>Alpha reaches nothing through skin — {p.key}'s alpha is an intake problem, not an external one.</li>}
       {/* ★ T12 h — 자발 핵분열 가지는 이 자료의 어떤 수치에도 들지 않는다(SPONTANEOUS_FISSION, 출처는 그 목록). */}
       {/* ★ T12 검토 — 반감기 · 붕괴 표는 SF 가지까지 든 전체 붕괴의 값이다. 빠진 것은 핵분열이 내는 중성자 · 즉발 감마뿐이다. */}
-      {SPONTANEOUS_FISSION[p.key] && <li>No figure on this page covers the neutrons and prompt gamma rays of spontaneous fission, which occurs in about {SPONTANEOUS_FISSION[p.key].toPrecision(2)}% of {p.key} decays.</li>}
+      {SPONTANEOUS_FISSION[p.key] && <li>No figure on this page covers the neutrons and prompt gamma rays of spontaneous fission, which occurs in about {sfPctText(SPONTANEOUS_FISSION[p.key])}% of {p.key} decays.</li>}
+      {/* ★ T14(소유주 결정) — 이 쪽의 선량률은 공기커마이고, 위 산문이 「20 µSv/h」 목표와 견줄 때 1 µGy 를 1 µSv 로 본다. 설명은
+          Methods 한 곳(#air-kerma)에 두고 여기는 짧은 단서와 링크만 단다 — 43쪽에 같은 긴 문장을 두면 되풀이 몫이 는다.
+          ★ 열한 낱말이다. `check-nuclides` ④-2 는 12어 아래의 `<li>` 를 링크 라벨로 보고 세지 않는다(산문이 아니라 길잡이다). */}
+      {prose.some((t) => /[µμ]Sv/.test(t)) && <li><a href={u("/methods/#air-kerma")} class="underline">Air kerma, 1 µGy counted as 1 µSv</a> — not H*(10).</li>}
       <li><a href={u(hubLinks.limits)} class="underline">What every sheet leaves out</a>, internal dose included.</li>
     </ul>
   </section>

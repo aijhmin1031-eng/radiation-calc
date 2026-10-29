@@ -24,6 +24,15 @@ const doneList = done.join(", ");
    「7 of the 7」처럼 전부 갖춘 것으로 읽힌다(2026-10-25). */
 const publishedSlugs = new Set(REPORTS.filter((r) => r.status === "published").map((r) => r.tool));
 const without = TOOLS.filter((t) => !publishedSlugs.has(t.slug)).map((t) => t.name);
+/* ★★ T14(소유주 결정 2026-10-29) — 감마 선량률은 공기커마로 계산하고, µSv/h 목표와 견줄 때 1 µGy 를 1 µSv 로 본다. 값은 바꾸지
+ *   않고 그 가정을 이 한 곳에서 밝힌다(낱장 · 계산기는 짧은 단서와 #air-kerma 링크만 단다).
+ * ★ 아래 값은 ICRP Publication 74(1996, Ann. ICRP 26(3-4)) 표 A.21 「H*(10)/Ka (Sv/Gy)」 열을 **원문에서 옮긴 것**이다 — ICRP 가
+ *   게시한 일본어판(일본 아이소토프협회, www.icrp.org/docs/P74_Japanese.pdf) 201쪽의 원표를 2026-10-29 직접 읽었다. 기억 값이 아니다.
+ *   (원표의 25점 중 11점. 자료는 원표 각주대로 ICRU Report 47.) */
+const H10_PER_KA: [number, string][] = [
+  [20, "0.61"], [30, "1.10"], [40, "1.47"], [60, "1.74"], [100, "1.65"], [200, "1.40"],
+  [600, "1.21"], [1000, "1.17"], [1500, "1.15"], [3000, "1.13"], [10000, "1.10"],
+];
 ---
 <Base schema="TechArticle" title="Methods and data"
       description="Where the nuclear and attenuation data come from, how the gamma constants are computed, how the results are validated, and the known limitations.">
@@ -54,6 +63,51 @@ const without = TOOLS.filter((t) => !publishedSlugs.has(t.slug)).map((t) => t.na
       summed over photon lines above the low-energy cutoff δ. The default δ is 20 keV, the
       conventional value used by published compilations. Because the sum is performed at calculation
       time rather than baked into the data, δ is adjustable in the shielding calculator.
+    </p>
+
+    <h2 id="air-kerma">Air kerma and µSv/h targets</h2>
+    <p>
+      Every gamma dose rate in these calculators and on the nuclide sheets is an air kerma rate,
+      worked out in gray per hour. Targets and action levels are usually written in sieverts — the
+      20&nbsp;µSv/h the nuclide sheets work to, or a survey reading in µSv/h. Wherever a page sets an
+      air kerma rate against such a figure, and wherever the gamma calculator shows its result in
+      µSv/h or mSv/h, 1&nbsp;µGy of air kerma is counted as 1&nbsp;µSv. The values are unchanged: no
+      energy-dependent conversion is applied in these calculators or on the sheets. The Field Pro
+      workbench, a separate tool, does apply spectrum-averaged H*(10) coefficients to its Cs-137 and
+      Co-60 <a href={u("/iso-4037-reference-fields/")} class="underline">reference fields</a>.
+    </p>
+    <p>
+      That is a convention, not an identity. Area survey meters are calibrated in ambient dose
+      equivalent, H*(10), and its ratio to air kerma depends on photon energy.
+      {" "}<a href="https://www.icrp.org/publication.asp?id=ICRP%20Publication%2074" rel="noopener" class="underline">ICRP Publication 74</a>
+      {" "}tabulates the ratio for photons in its Table A.21; some of its values:
+    </p>
+    <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+      <table>
+        <thead><tr><th class="text-left">Photon energy (keV)</th><th class="text-right">H*(10)/K<sub>a</sub> (Sv/Gy)</th></tr></thead>
+        <tbody>
+          {H10_PER_KA.map(([e, r]) => <tr><td class="num">{e.toLocaleString("en-US")}</td><td class="num text-right">{r}</td></tr>)}
+        </tbody>
+      </table>
+    </div>
+    <p>
+      From 30&nbsp;keV upwards the ratio is above one: largest, about 1.7, between 50 and 100&nbsp;keV,
+      and between 1.15 and 1.21 across the energies of Cs-137 and Co-60. For those photons an H*(10)
+      reading of the same field is higher than the figures here, by 10 to 74 per cent, so a thickness
+      that brings the air kerma rate to 20&nbsp;µGy/h leaves somewhat more than 20&nbsp;µSv/h of H*(10).
+      Below 30&nbsp;keV the ratio falls quickly and passes under one — 0.61 at 20&nbsp;keV, the cutoff used
+      here — so for the softest lines the air kerma figure is the higher of the two.
+    </p>
+    <p>
+      Two consequences follow. A sheet's statement that a gigabecquerel at a metre is already under
+      20&nbsp;µSv/h can fail in H*(10) for a nuclide close to that line. And taken the other way, a
+      survey reading in µSv/h entered into the gamma calculator is read as air kerma, so an activity
+      worked back from it comes out high by the same ratio.
+    </p>
+    <p>
+      The <a href={u("/units/")} class="underline">unit converter</a> keeps the two quantities apart and
+      offers no such conversion. On the nuclide sheets and in the gamma calculator the one-to-one
+      reading is flagged where it is used, with a link to this section.
     </p>
 
     <h2>Validation</h2>
@@ -100,6 +154,7 @@ const without = TOOLS.filter((t) => !publishedSlugs.has(t.slug)).map((t) => t.na
     <h2>Known limitations</h2>
     <ul class="my-3 list-disc space-y-1 pl-5">
       <li>Point-source geometry in air. No room scatter, skyshine, source self-absorption or capsule.</li>
+      <li>Gamma dose rates are air kerma; against a µSv/h target, 1&nbsp;µGy is counted as 1&nbsp;µSv (<a href="#air-kerma" class="underline">above</a>).</li>
       <li>Attenuation without buildup is a narrow-beam result and underestimates behind thick shields.</li>
       <li>Buildup coefficients are not supplied; the Berger form accepts values you provide.</li>
       <li>Skin dose from surface contamination is not calculated.</li>

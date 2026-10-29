@@ -79,6 +79,25 @@ for (const [d, p] of pages) {
 }
 note(`Γ = 0 인 핵종 ${noG}종 — 감마 구획 0개`);
 
+/* ── ③-2 µSv/h 목표를 쓰는 쪽이 공기커마 단서를 다는가 (T14, 소유주 결정 2026-10-29) ──────────
+   ★ 선량률은 공기커마이고 「20 µSv/h」와 견줄 때 1 µGy 를 1 µSv 로 본다 — 값은 그대로, 가정을 밝힌다. 설명은 Methods #air-kerma
+     한 곳에 있고 낱장은 그리로 잇는 짧은 단서만 든다. 산문(<p>)에 µSv 가 있는데 그 링크가 없으면 가정이 숨는다. */
+console.log("\n③-2 µSv/h 목표를 쓰는 쪽에 공기커마 단서(Methods #air-kerma)가 있는가");
+/* ★ T14 검토 — 쪽이 단서를 거는 조건과 같은 글을 본다: 생성 산문(`.prose-doc` 구획)만. 마이크로 기호는 µ(U+00B5) · μ(U+03BC) 둘 다.
+     ★ 하한을 둔다 — 문구가 바뀌어 아무 쪽도 안 걸리면 「0장 · 통과」가 된다(43장, 2026-10-29). 줄이려면 이 값을 함께 고친다. */
+const SV_PAGES_MIN = 43;
+let svPages = 0;
+for (const [d, p] of pages) {
+  const sec = (p.main.match(/<section class="prose-doc[^"]*"[^>]*>([\s\S]*?)<\/section>/i) || [, ""])[1];
+  if (!/[µμ]Sv/.test(sec)) continue;
+  svPages++;
+  if (!/href="[^"]*\/methods\/#air-kerma"/.test(p.main)) fail.push(`${d}: 산문이 µSv/h 목표를 쓰는데 공기커마 단서(Methods #air-kerma)가 없다`);
+}
+const methodsHtml = readFileSync(join(DIST, "methods", "index.html"), "utf8");
+if (!/id="air-kerma"/.test(methodsHtml)) fail.push(`methods: 공기커마 절(#air-kerma)이 없다 — 낱장의 단서가 죽은 링크다`);
+if (svPages < SV_PAGES_MIN) fail.push(`③-2 µSv/h 목표를 쓰는 낱장이 ${svPages}장 — 하한 ${SV_PAGES_MIN}장. 문구가 바뀌어 검사가 비었을 수 있다`);
+note(`µSv/h 목표를 쓰는 낱장 ${svPages}장(하한 ${SV_PAGES_MIN}) — 전부 단서를 단다 · Methods #air-kerma 있음`);
+
 /* ── ④ 틀에 값만 갈아 끼웠는가 (5-그램 겹침) ──────────────── */
 console.log("\n④ 낱장 사이 본문 겹침 (5-그램)");
 const grams = (s) => {

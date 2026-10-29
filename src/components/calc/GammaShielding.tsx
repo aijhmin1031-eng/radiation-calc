@@ -13,6 +13,7 @@ import { initialState, pick as pickState } from "../../lib/restore";
 import { useCommitted } from "../../lib/commit";
 import { CalcButton } from "../ui/CalcButton";
 import { Headline, Rows, fmt, Warn } from "../ui/Result";
+import { u } from "../../lib/site";
 
 const N = nuclides as unknown as NuclideMap;
 const A = att as unknown as Record<Material, Row[]>;
@@ -23,13 +24,21 @@ const RATE = ["µGy/h", "mGy/h", "Gy/h", "µSv/h", "mSv/h", "mR/h", "R/h"] as co
 type RateUnit = typeof RATE[number];
 
 /** 선량률 단위 환산 — 계산은 mGy/h(공기커마)로 하고 표시할 때만 옮긴다.
- *  ★ Sv 는 광자에 대해 w_R=1 이라 수치가 같다. 그것을 화면에 적는다(같은 양이 아니다). */
+ *  ★★ T14(소유주 결정 2026-10-29) — µSv/h · mSv/h 는 **공기커마 1 µGy 를 1 µSv 로 본 값**이다. 그전 주석과 화면은 「광자는 w_R=1 이라
+ *    수치가 같다」고 했는데, w_R 은 흡수선량을 등가선량으로 옮기는 인자라 공기커마와 H*(10) 사이를 잇지 않는다(H*(10)/Ka 는
+ *    ICRP 74 표 A.21 에서 20 keV 0.61 ~ 60 keV 1.74 ~ 1 MeV 1.17). **계수는 그대로 1:1 이다** — 가정을 밝히고 Methods #air-kerma 로 잇는다. */
 const MGY_PER_R = 2.58e-4 * 33.97 * 1e3;        // 1 R 의 공기커마 = 8.764 mGy
 const RATE_FACTOR: Record<RateUnit, number> = {
   "µGy/h": 1e3, "mGy/h": 1, "Gy/h": 1e-3,
   "µSv/h": 1e3, "mSv/h": 1,
   "R/h": 1 / MGY_PER_R, "mR/h": 1e3 / MGY_PER_R,
 };
+
+/** Sv 단위를 고를 때 다는 짧은 단서 — 긴 설명은 Methods 한 곳에 둔다(T14). 선량률 모드는 결과 아래 문장이 들므로 칸에는 달지 않는다.
+ *  ★ T14 검토 — 방사능 모드의 입력은 **측정값**(대개 H*(10))이라, 그것을 공기커마로 읽으면 방사능이 그 비만큼 높게 나온다는 쪽을 말한다. */
+const svHint = (mode: string) => mode === "activity"
+  ? <>Read as air kerma, 1 µSv taken as 1 µGy — from an H*(10) meter the activity comes out somewhat high. <a href={u("/methods/#air-kerma")} className="underline">Why</a></>
+  : <>Target read as air kerma, 1 µSv taken as 1 µGy — not H*(10). <a href={u("/methods/#air-kerma")} className="underline">Why</a></>;
 
 const MATERIALS: { value: Material; label: string }[] = [
   { value: "lead", label: "Lead" }, { value: "iron", label: "Iron / steel" },
@@ -145,7 +154,7 @@ export default function GammaShielding() {
             <Field label={mode === "activity" ? "Measured dose rate" : "Target dose rate"}>
               <NumberInput value={Number.isFinite(targetRate) ? targetRate : ""} onChange={setTargetRate} />
             </Field>
-            <Field label="Dose rate unit"><Select value={rateU} onChange={setRateU} options={RATE as unknown as RateUnit[]} /></Field>
+            <Field label="Dose rate unit" hint={rateU.includes("Sv") ? svHint(mode) : undefined}><Select value={rateU} onChange={setRateU} options={RATE as unknown as RateUnit[]} /></Field>
           </>
         ) : (
           <Field label="Show dose rate in"><Select value={rateU} onChange={setRateU} options={RATE as unknown as RateUnit[]} /></Field>
@@ -227,7 +236,8 @@ export default function GammaShielding() {
       {c.mode === "dose" ? (
         <Headline stale={dirty} label={`Dose rate at ${fmt(d)} m`} value={toUnit(calc.doseRate)} unit={c.rateU}
           note={<>Air kerma from {n.lines.filter((l) => l[0] >= c.delta).length} photon lines.
-            {c.rateU.includes("Sv") ? " Numerically equal to air kerma because the radiation weighting factor for photons is 1 — they are still different quantities." : ""}</>} />
+            {c.rateU.includes("Sv") ? <> Shown in {c.rateU} with 1 µGy counted as 1 µSv; an H*(10) survey meter reads more for most photons
+              (<a href={u("/methods/#air-kerma")} className="underline">Methods</a>).</> : ""}</>} />
       ) : c.mode === "activity" ? (
         <Headline stale={dirty} label="Activity that produces that dose rate" value={solved} unit="GBq"
           note={`${fmt(solved * 1e9 / 3.7e10, 4)} Ci — assumes a bare point source at ${fmt(d)} m with the shielding set above.`} />

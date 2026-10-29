@@ -110,7 +110,8 @@ for (const key of Object.keys(NUCLIDES)) {
   const n = NUCLIDES[key];
   if (!(n.gamma_const > 0)) continue;
   const t = body(key.toLowerCase());
-  if (t && t.includes("the limit here is intake, not external dose"))
+  /* T14 — 문구가 둘이 됐다(「the limit here is …」 · 한때 「for X itself the limit is …」). 둘 다 문다 — 한쪽만 찾으면 검사가 죽는다. */
+  if (t && /limit (here )?is intake, not external dose/.test(t))
     fail.push(`${key}: 광자장(Γ=${n.gamma_const})이 있는데 「한계는 섭취이지 외부선량이 아니다」라고 말한다`);
 }
 
@@ -133,6 +134,14 @@ for (const [key, prog] of WITH_DOMINANT_PROGENY) {
  *  20 µSv/h with nothing in the way」라고 판정하고 있었다 — 토륨 선원의 광자장은 이 자료에 없는 Ac-228 · Tl-208 의 것이다
  *  (`chainLeavesDataset`). Cm-244 는 같은 판정이 중성자 차폐(그 쪽 손글)와 부딪쳤다(`SPONTANEOUS_FISSION`).
  *  그 쪽에는 주어 없는 판정이 서면 안 된다. 연쇄가 잘린 쪽은 위에서 판정 자체를 거둔다. */
+/* T14 — 베타가 있는 광자 쪽은 「already under 20 µSv/h with nothing in the way」를 광자 선량률로 한정한다(손글이 베타를 차폐 문제로 말한다). */
+for (const key of Object.keys(NUCLIDES)) {
+  const n = NUCLIDES[key];
+  if (!(n.gamma_const > 0) || !n.beta_max_keV || CHAIN_TRUNCATED.includes(key)) continue;
+  const t = bodyOf(key);
+  if (!t) continue;
+  if (t.includes("At 1 GBq and a metre it is already under")) fail.push(`${key}: 베타가 있는 쪽인데 「already under 20 µSv/h」가 광자로 한정되지 않았다`);
+}
 let scoped = 0;
 for (const key of Object.keys(NUCLIDES)) {
   if (CHAIN_TRUNCATED.includes(key) || !(NUCLIDES[key].gamma_const > 0)) continue;

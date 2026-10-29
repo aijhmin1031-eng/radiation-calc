@@ -24,7 +24,7 @@ export const TOOL_FAQ: Record<string, readonly FaqItem[]> = {
     },
     {
       q: "Why does my survey meter read more than the calculator?",
-      a: "The calculator gives air kerma rate in gray, while most survey meters read ambient dose equivalent H*(10) in sievert, which is about 20% higher for Cs-137 photons according to the conversion coefficients in ICRP Publication 74. Scatter from walls, floor and the source holder adds more, and meters also have their own energy response.",
+      a: "The calculator gives air kerma rate in gray, while most survey meters read ambient dose equivalent H*(10) in sievert, which is about 20% higher for Cs-137 photons according to the conversion coefficients in ICRP Publication 74. The calculator's µSv/h and mSv/h count 1 µGy of air kerma as 1 µSv, so they do not include that difference. Scatter from walls, floor and the source holder adds more, and meters also have their own energy response.",
     },
     {
       q: "Can the attenuation-only result be used for shielding design?",
