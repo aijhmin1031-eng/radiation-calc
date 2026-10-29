@@ -25,8 +25,10 @@ import { NUCLIDES } from "./nuclides";
  * ★★ **한 걸음만 본다 — 그리고 그것을 숨기지 않는다.** Th-230 → Ra-226 의 실제 위험은
  *   Ra-226 자신이 아니라 **그 아래 연쇄**(Rn-222 이후)이고, U-232 도 마찬가지다(Th-228 이
  *   아니라 그 아래가 센 감마를 낸다). 한 걸음짜리 값을 그대로 쓰면 **100배 규모로 과소**
- *   말하게 되므로, 하한에 걸려 떨어지는 것을 **되살리지 않는다.** 여러 걸음 연쇄는 이
+ *   말하게 되므로, 하한에 걸려 떨어지는 것을 **되살리지 않는다.** 여러 걸음 연쇄의 **값**은 이
  *   모듈의 범위 밖이고, 범위 밖인 것에 대해 이 쪽은 **아무 말도 하지 않는다.**
+ *   ★ T13 — 아래 `chainLeavesDataset` 는 여러 걸음을 보지만 **값을 내지 않는다** — 「연쇄가 이 자료 밖으로 이어지는가」만
+ *     가려, 쪽이 광자 판정의 주어를 그 핵종 자신으로 한정하게 한다(Th-232).
  */
 
 type N = { z: number; a: number; sym: string; decay: string; t_half_s: number;
@@ -101,6 +103,42 @@ export const CHAIN_TRUNCATED = Object.keys(T).filter((k) => {
   const n = T[k];
   return String(n.decay).toUpperCase().startsWith("A") && n.gamma_const > 0 && !daughterOf(k);
 });
+
+/** 연쇄를 여러 걸음 따라가도 되는 한계 — 사이트가 시설 계획의 눈금으로 쓰는 「forty years」(`horizons` · 붕괴 캡션). */
+const WORKING_HORIZON_S = 40 * 31557600;
+/** 안정 핵종이 하나도 없는 원자번호의 아래 끝 — 비스무트(83) 위로는 모든 핵종이 방사성이다. 그래서 이 자료에 없는 딸이라도
+ *  Z 가 이 값 이상이면 「연쇄가 거기서 이어진다」는 것이 산술로 참이다(베타 딸을 「대개 안정」으로 본 `daughterLabel` 의 단서를 넘는 근거). */
+const NO_STABLE_FROM_Z = 84;
+
+/**
+ * ★★ T13 — **연쇄를 여러 걸음 본다.** `dominantProgeny` 는 한 걸음만 보아 Th-232 를 놓쳤다: 딸 Ra-228 은 이 자료에 있지만
+ *   Γ 가 0 이고 베타도 무르다(어느 문턱에도 안 걸린다). 토륨 선원의 광자장을 정하는 Ac-228 · Tl-208 은 **그 아래**에 있고
+ *   이 자료에 없다. 그런데 Th-232 쪽은 자기 광자만으로 「Shielding barely arises」라고 판정하고 있었다(그 쪽 손글은 반대로 말한다).
+ * ★ 판단은 산술뿐이다 — 이 자료에 실린 딸을 따라 내려가되, 그 딸이 **작업 눈금(40년) 안에 자라고**(반감기 ≤ 40년) 머리 핵종과
+ *   평형을 이룰 만큼 짧으면(머리 반감기의 1/10 아래) 한 걸음 더 간다. 실린 딸이 끝나는 자리에서 **다음 딸이 이 자료에 없고
+ *   Z ≥ 84** 면 참이다(연쇄가 이 자료 밖으로 이어진다).
+ *   · 걸리는 쪽: Th-232(→ Ra-228 → Ac-228) · Ra-228(→ Ac-228) · Np-237(→ Pa-233) · Am-243(→ Np-239) · Ra-224(→ Rn-220) · Cf-252,
+ *     그리고 이미 `CHAIN_TRUNCATED` 인 넷(그 쪽은 그 갈래가 먼저 든다).
+ *   · 걸리지 않는 것: U-234 · Pu-238 · Pu-240 · Cm-244 · U-233 — 다음 실린 딸이 길어(수천 ~ 수십만 년) 작업 눈금 안에 안 자란다.
+ * ★ **값을 지어내지 않는다** — 얼마나 세지는지는 말하지 않는다. 쓰는 곳은 「이 쪽의 광자 판정이 그 핵종 자신의 것」이라고
+ *   주어를 한정하는 데뿐이다(`nuclide-prose`). `CHAIN_TRUNCATED` 처럼 순위 · 수치를 거두지는 않는다.
+ */
+/*  ★ 실리지 않은 딸의 반감기는 이 자료로 알 수 없다 — 그래서 마지막 걸음은 Z 만 본다. Cf-252(→ Cm-248, 수십만 년)가 그렇게
+ *    걸린다. 그 쪽은 자발 핵분열 갈래(`SPONTANEOUS_FISSION`)가 먼저 정하므로 결과는 같다(테스트가 고정한다). */
+export function chainLeavesDataset(key: string): boolean {
+  const head = T[key];
+  if (!head) return false;
+  let cur = key;
+  for (let step = 0; step < 20; step++) {
+    const d = daughterOf(cur);
+    /* ★ 딸의 원소기호를 이 자료가 모를 수 있다(라돈은 한 종도 없다 — Ra-224 · Ra-226). Z 는 산술이라 이름 없이도 잰다. */
+    if (!d) return (daughterZA(T[cur])?.[0] ?? 0) >= NO_STABLE_FROM_Z;
+    const c = T[d];
+    if (!(c.t_half_s <= WORKING_HORIZON_S && c.t_half_s < head.t_half_s / EQUILIBRIUM_RATIO)) return false;
+    cur = d;
+  }
+  return false;
+}
 
 export type Progeny = {
   key: string;

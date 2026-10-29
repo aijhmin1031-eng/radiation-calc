@@ -100,7 +100,7 @@ export const TOOLS: Tool[] = [
     assumes: [
       "Katz–Penfold range, an empirical fit to absorption measurements, which depends on mass thickness rather than the material.",
       "The infinite-medium dose rate is exact by energy conservation — every beta deposits its energy locally.",
-      "Bremsstrahlung yield is an approximation that scales with atomic number.",
+      "Bremsstrahlung yield is an approximation that scales with atomic number, worked out for the hardest branch seen in at least 1% of decays.",
     ],
     excludes: [
       "Skin dose from surface contamination. Doing it properly needs a point kernel over the source geometry, the air gap and any covering — use a dedicated code such as VARSKIN.",

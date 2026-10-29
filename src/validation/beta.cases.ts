@@ -243,7 +243,7 @@ export const BREMS_CASE = {
   /** 저Z 쌍은 Z 비와 맞아야 한다 — 맞지 않으면 대조 자체가 잘못된 것이다. */
   lowZPairTolerance: 0.05,
   steps: [
-    "The tool computes the bremsstrahlung fraction as f ≈ 3.5 × 10⁻⁴ · Z · E_max, so the ratio between two materials is exactly the ratio of their atomic numbers, independent of energy.",
+    "The tool computes the bremsstrahlung fraction as f ≈ 3.5 × 10⁻⁴ · Z · E_max, taking E_max from the hardest branch seen in at least 1% of decays, so the ratio between two materials is exactly the ratio of their atomic numbers, independent of energy.",
     "NIST tabulates the radiation yield, defined as the average fraction of an electron's initial kinetic energy converted to bremsstrahlung. That is the same quantity for a monoenergetic electron.",
     "The absolute values are not compared, because the tool's expression is meant for a beta spectrum whose mean energy is roughly a third of the endpoint, while the NIST value is for a single energy. Comparing them directly would repeat the gamma-constant mistake.",
     "The ratio between two materials at the same energy is free of that difference, so it is the part that can be checked.",
@@ -274,10 +274,15 @@ export const DATA_CASES = {
   rareBranch: {
     id: "B-D-03",
     title: "Where that endpoint belongs to a rare branch",
-    /** 강도가 이보다 작으면 쪽이 이름을 들어 밝힌다. */
-    thresholdPct: 2,
+    /** 강도가 이보다 작으면 쪽이 이름을 들어 밝힌다.
+     *  ★ T13 — 2 였다. 낱장 · `/beta-shield-materials/` · 베타 계산기는 세기 1% 이상 가지를 「드물지 않다」로 보아 제동복사와
+     *    「ten hardest」를 계산한다 — 그래서 1.3% 가지의 Sb-124m1 이 목록에 들어왔는데 이 보고서는 그 가지를 「almost nobody
+     *    sees」라고 적었다. 문턱을 그 규칙(엔진 `BETA_BRANCH_FLOOR_PCT`)과 같게 둔다 — 이 파일은 엔진을 import 하지 않으므로
+     *    값으로 적고, `beta.test.ts` 가 둘이 같은지 잰다. */
+    thresholdPct: 1,
     steps: [
       "Using the highest endpoint is the conservative choice for shielding, but it can be a branch almost nobody sees.",
+      "A branch counts as rare here when it occurs in under 1% of decays — the floor below which the nuclide sheets, the calculator and the shield-materials ranking set a branch aside when they work out bremsstrahlung or rank the hardest emitters.",
       "Cobalt-60 is the clearest case: its highest endpoint belongs to a branch emitted in about one decay in eight hundred, while more than 99.8% of its betas stop in a fraction of that thickness.",
       "The report names every nuclide where this happens rather than leaving the reader to discover it, because a thickness quoted without it looks like a measurement of the common beta and is not.",
     ],

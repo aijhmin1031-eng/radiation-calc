@@ -7,7 +7,7 @@ import N from "../data/nuclides.json" with { type: "json" };
 import {
   infiniteMediumDoseRate, semiInfiniteSurfaceDoseRate, betaRange, betaRangeCm,
   betaMassAbsorption, betaTransmission, bremsstrahlungYield,
-  BETA_RANGE_MIN_MEV, BETA_RANGE_BRANCH_MEV,
+  BETA_RANGE_MIN_MEV, BETA_RANGE_BRANCH_MEV, BETA_BRANCH_FLOOR_PCT, bremsEndpointKeV,
 } from "../engine/beta.ts";
 import {
   DERIVATION_CASES, IDENTITY_CASES, FIT_CASES, BRANCH_CASE, ESTAR, DETOUR_CASE,
@@ -180,6 +180,23 @@ test("B-D-03 — 끝점이 희귀 가지인 핵종을 빠짐없이 센다", () =
   assert.ok(rare.length > 0, "희귀 가지 사례가 사라졌다 — 자료가 바뀌었으면 쪽의 설명도 고쳐야 한다");
   assert.ok(rare.includes("Co-60"), `Co-60 이 목록에 있어야 한다: ${rare.join(", ")}`);
   console.log(`  · 끝점이 ${DATA_CASES.rareBranch.thresholdPct}% 미만 가지인 핵종: ${rare.join(", ")}`);
+});
+
+/* ★ T13 — B-D-03 의 「드문 가지」 문턱이 제동복사 · ten hardest 의 문턱(1%)과 같아야 한다. 2% 였을 때 1.3% 가지의 Sb-124m1 이
+ *   목록(/beta-shield-materials/)에는 들고 이 보고서에는 「almost nobody sees」로 적혔다. 같으면 두 목록이 정확히 겹친다:
+ *   「끝점이 드문 가지인 핵종」 = 「제동복사 끝점이 사정거리 끝점과 다른 핵종」. */
+test("B-D-03 — 문턱이 제동복사 관례와 같고, 두 목록이 겹친다", () => {
+  assert.equal(DATA_CASES.rareBranch.thresholdPct, BETA_BRANCH_FLOOR_PCT);
+  const rare: string[] = [], moved: string[] = [];
+  for (const [k, n] of BETA) {
+    const b = (n.beta ?? []).filter((x) => x.max != null);
+    if (!b.length) continue;
+    const mx = b.reduce((a, x) => (x.max! > a.max! ? x : a));
+    if ((mx.i ?? 100) < DATA_CASES.rareBranch.thresholdPct) rare.push(k);
+    if (bremsEndpointKeV(n.beta as never) !== n.beta_max_keV) moved.push(k);
+  }
+  assert.ok(!rare.includes("Sb-124m1"), "Sb-124m1 의 1.3% 가지는 1% 문턱에서 드문 가지가 아니다");
+  assert.deepEqual([...rare].sort(), [...moved].sort(), `B-D-03 ${rare.join(", ")} ≠ 제동복사 끝점이 옮겨진 핵종 ${moved.join(", ")}`);
 });
 
 /* ── 손계산 ── */

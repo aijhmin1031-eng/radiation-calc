@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { infiniteMediumDoseRate, semiInfiniteSurfaceDoseRate, betaRange, betaRangeCm,
-         betaMassAbsorption, betaTransmission, bremsstrahlungYield, bremsstrahlungPower } from "./beta.ts";
+         betaMassAbsorption, betaTransmission, bremsstrahlungYield, bremsstrahlungPower,
+         bremsEndpointKeV, BETA_BRANCH_FLOOR_PCT } from "./beta.ts";
 import { MEV_J } from "./constants.ts";
 const near = (g: number, w: number, pct: number, what: string) =>
   assert.ok(Math.abs(g - w) / Math.abs(w) * 100 < pct, `${what}: ${g.toPrecision(6)} vs ${w}`);
@@ -55,6 +56,22 @@ test("★ 제동복사가 저Z 차폐를 고르는 이유를 보인다", () => {
   near(lead / acrylic, 82 / 6, 1e-9, "Z 에 정비례");
   assert.ok(bremsstrahlungYield(82, 10) <= 1, "분율은 1 을 못 넘는다");
   assert.equal(bremsstrahlungYield(6, 0), 0);
+});
+
+/* ★ T13 — 흔적 가지 관례가 계산기까지 넓어졌다. 규칙 한 곳(`bremsEndpointKeV`)을 낱장 · 목록 · 계산기가 함께 읽는다. */
+test("제동복사 끝점 — 세기 1% 이상 가지의 최대 끝점, 없으면 최대 끝점", () => {
+  const b = (max: number | null, i: number) => ({ max, mean: 0, i, kind: "b-" as const });
+  assert.equal(BETA_BRANCH_FLOOR_PCT, 1);
+  // Co-60 꼴: 0.12% 가지의 1492 keV 는 사정거리만 정한다
+  assert.equal(bremsEndpointKeV([b(317.88, 99.88), b(1492, 0.12)]), 317.88);
+  // 문턱은 「이상」이다 — 정확히 1% 인 가지는 든다
+  assert.equal(bremsEndpointKeV([b(300, 99), b(900, 1)]), 900);
+  // 1% 이상 가지가 없으면 최대 끝점으로 돌아간다
+  assert.equal(bremsEndpointKeV([b(200, 0.5), b(700, 0.4)]), 700);
+  // 끝점이 없는 가지는 건너뛴다 · 아무것도 없으면 null
+  assert.equal(bremsEndpointKeV([b(null, 90), b(500, 10)]), 500);
+  assert.equal(bremsEndpointKeV([]), null);
+  assert.equal(bremsEndpointKeV(undefined), null);
 });
 
 test("제동복사 일률", () => {

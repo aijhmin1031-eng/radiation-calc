@@ -6,6 +6,7 @@ import { emissionKinds } from "../engine/types";
 import {
   gammaConstant, pointSourceDoseRate, DELTA_DEFAULT_KEV, BQ_PER_CI,
   betaRange, betaRangeCm, bremsstrahlungYield, DENSITY_G_CM3, elapsedFromRatio, decayActivity,
+  BETA_BRANCH_FLOOR_PCT, bremsEndpointKeV,
 } from "../engine";
 import { lineShares, meanPhotonEnergyKeV, spectrumHVL, spectrumTVL, spectrumLayer, type LineShare } from "../engine/spectrum";
 
@@ -39,8 +40,11 @@ for (const [k, mode] of Object.entries(DECAY_FIX)) if (NUCLIDES[k]) NUCLIDES[k].
 /** ★ 자발 핵분열 가지가 **이 자료의 수치 밖에서** 외부 위험을 만드는 핵종(2026-10-29, T12 h) — 자료의 붕괴 표기는 「A」뿐이고
  *  중성자 · 핵분열 감마는 어떤 계산에도 들지 않는다. 그런데 쪽이 「한계는 섭취이지 외부선량이 아니다」라고 말하고 있었다(Cf-252).
  *  값은 몫(% of decays). Cf-252: IAEA Live Chart(ENSDF) ground_states 「SF 3.102(3)%」(DDEP 도 약 3.09%) — 2026-10-29 확인.
- *  ★ 판정에만 쓴다(자료는 바꾸지 않는다). 쪽이 「limits」 제목 · 알파 문장 · 단서 한 줄을 이 목록으로 가른다. */
-export const SPONTANEOUS_FISSION: Readonly<Record<string, number>> = { "Cf-252": 3.102 };
+ *  ★ T13 — Cm-244 를 더했다. 그 쪽 손글이 「사용후핵연료 중성자 방출을 지배하고 용기 · 핫셀의 중성자 차폐가 이것으로 정해진다」고
+ *    하는데 제목은 「Limits — intake, not external dose」였다. Cm-244: 같은 Live Chart ground_states 「SF 0.000137(2)%」
+ *    (ENSDF 평가 C.D. Nesaraja, 2017-08-31 마감) — 2026-10-29 확인.
+ *  ★ 판정에만 쓴다(자료는 바꾸지 않는다). 쪽이 「limits」 제목 · 알파 문장 · 단서 한 줄 · 광자 차폐 판정의 주어를 이 목록으로 가른다. */
+export const SPONTANEOUS_FISSION: Readonly<Record<string, number>> = { "Cf-252": 3.102, "Cm-244": 1.37e-4 };
 export const ATTEN = attenuation as unknown as Record<Material, Row[]>;
 
 /** ★ 원소 이름은 **미국 철자**로 쓴다 — 엔진의 물질 이름이 이미 `aluminum` 이다.
@@ -167,13 +171,11 @@ export const fmtTime = (s: number): string => {
  *  (가장 센 베타를 막아야 한다 — 차폐를 보수적으로 잡는다). **제동복사 몫**과 「가장 센 베타」 목록은 그렇게 하면 안 된다:
  *  Co-60 의 1.49 MeV 는 0.12% 가지이고, Au-198 의 1.37 MeV 는 0.025% 가지다 — 그 끝점으로 계산한 제동복사 몫은
  *  거의 모든 붕괴가 내는 베타보다 수십 % ~ 몇 배 크다. 그래서 둘은 **세기 1% 이상 가지의 최대 끝점**으로 계산한다.
- *  1% 이상 가지가 없으면(지금 자료에는 없다) 최대 끝점으로 돌아간다. */
-export const BETA_BRANCH_FLOOR_PCT = 1;
+ *  ★ T13 — 규칙은 엔진(`bremsEndpointKeV`) 한 곳에 있다. 베타 계산기 · 검증 보고서 B-D-03 이 같은 것을 읽는다. */
+export { BETA_BRANCH_FLOOR_PCT };
 export function betaBremsMeV(key: string): number | null {
-  const b = NUCLIDES[key].beta?.filter((x) => x.max != null) as { max: number; i: number }[] | undefined;
-  if (!b?.length) return null;
-  const sig = b.filter((x) => x.i >= BETA_BRANCH_FLOOR_PCT);
-  return Math.max(...(sig.length ? sig : b).map((x) => x.max)) / 1000;
+  const e = bremsEndpointKeV(NUCLIDES[key].beta);
+  return e == null ? null : e / 1000;
 }
 
 export function nuclidePage(key: string): NuclidePage {

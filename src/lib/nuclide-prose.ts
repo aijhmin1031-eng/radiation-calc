@@ -1,6 +1,6 @@
 import type { NuclidePage } from "./nuclides";
 import { NUCLIDES, nuclidePage } from "./nuclides";
-import { dominantProgeny, daughterLabel, CHAIN_TRUNCATED } from "./decay-chain";
+import { dominantProgeny, daughterOf, daughterLabel, CHAIN_TRUNCATED, chainLeavesDataset } from "./decay-chain";
 import { decayProse, SPONTANEOUS_FISSION, halfLifeText, gammaRank, gammaVs, leadForTarget, horizons,
          betaEndpointBranch, betaDominantBranch, lineSpan, alphaSpread,
          tenHalfLives, meanLife, remainingAfterYears, fmtTime } from "./nuclides";
@@ -36,6 +36,13 @@ const ratioText = (r: number) => {
 const fixed2 = (v: number) => { const t = v.toPrecision(2); return Number(t) >= 100 ? Number(t).toLocaleString("en-US") : t; };
 const times = (r: number) => (r < 1.05 && r > 1 / 1.05 ? "about the same as"
   : r >= 1 ? `${fixed2(r)}×` : `${fixed2(1 / r)}× less than`);
+/* ★ T13 — Γ 순위 판정을 순위 값과 맞춘다. 그전에는 Γ < 0.005 띠 전부가 「near the bottom」이었다 — 96위 중 96위인 Pm-147 도,
+ *   76위인 Cr-51 도. 맨 끝은 맨 끝이라고 쓰고, 「near」는 아래 10분의 1 안에만 쓴다(`check-progeny` 가 이 낱말들을 함께 잰다). */
+const bottomOf = (rank: number, of: number) =>
+  rank === of ? "the lowest of the photon emitters"
+  : of - rank < of / 10 ? "near the bottom of the photon emitters"
+  : rank > 0.75 * of ? "in the bottom quarter of the photon emitters"
+  : `with ${of - rank} photon emitters below it`;
 /** ★ 질량은 자리수가 24자리를 넘나든다(Tc-99m 의 5 pg 대 Ca-41 의 0.3 g) — 고정 소수점으로
  *  쓰면 `0.0000239 g`, 단위 고르기를 잘못하면 `2.39e+4 ng` 가 된다. **눈금마다 위 경계를 준다.** */
 const mass = (g: number) => {
@@ -105,6 +112,17 @@ export function paragraphs(p: NuclidePage): string[] {
     );
   }
 
+  /** ★★ T13 — 광자 차폐 판정(「Shielding barely arises」 · 「already under 20 µSv/h with nothing in the way」)의 **주어를 한정하는**
+   *  자리다. 판정은 이 쪽 광자선의 것인데, 실제 선원에서 그것이 장 전체가 아닌 쪽이 있다.
+   *  · 딸이 더 센 베타를 내는 쪽(Pb-210 → Bi-210, T12) · 연쇄가 이 자료 밖으로 이어지는 쪽(Th-232 → … → Ac-228 · Tl-208,
+   *    `chainLeavesDataset`) — 「${key}'s own photons」(딸 · 자손의 광자와 가른다).
+   *  · 자발 핵분열 가지가 있는 쪽(Cm-244) — 중성자 · 핵분열 감마가 어떤 수치에도 없다(그 쪽 손글: 용기의 중성자 차폐가 이것으로
+   *    정해진다). 「own photons」는 핵분열 감마도 그 핵종의 것이라 맞지 않다 — 「the photons in these figures」로 쓰고, 빠진 것은
+   *    limits 절의 SF 줄이 든다.
+   *  ★ 연쇄가 잘린 쪽(`CHAIN_TRUNCATED`)은 이보다 앞서 판정 자체를 거둔다 — 아래 `truncated` 갈래. */
+  const ownOnly = Boolean(dominantProgeny(p.key)?.betaHotter) || chainLeavesDataset(p.key);
+  const sf = Boolean(SPONTANEOUS_FISSION[p.key]);
+
   if (p.gamma > 0) {
     const top = p.shares[0];
     const r = gammaRank(p.key);
@@ -137,10 +155,11 @@ export function paragraphs(p: NuclidePage): string[] {
           `for most of them the constant is the whole field, and for ${p.key} it is not.`
         : p.gamma < 0.005
         ? `The air kerma rate constant is small — ${sig(p.gamma)} mGy·m²/(GBq·h), ${cmp}, ` +
-          `ranking ${r.rank} of ${r.of} by Γ — near the bottom of the photon emitters, but above the ` +
+          `ranking ${r.rank} of ${r.of} by Γ — ${bottomOf(r.rank, r.of)}, but above the ` +
           `cutoff, which ${Object.keys(NUCLIDES).length - r.of} nuclides in this dataset are not. ` +
-          `It takes ${act((0.02 / p.doseAt1mPerGBq) * 1e9)} at a metre to reach 20 µSv/h from the ` +
-          `photons alone.`
+          `It takes ${act((0.02 / p.doseAt1mPerGBq) * 1e9)} at a metre to reach 20 µSv/h from ` +
+          /* ★ T13 검토 — 이 문장도 같은 판정이다(Th-232 의 763 GBq 는 토륨 약 190 t). 주어를 아래 두 문장과 같게 한정한다. */
+          `${ownOnly ? `${p.key}'s own photons` : sf ? `the photons in these figures` : `the photons alone`}.`
         : p.gamma < 0.05
         ? `At ${sig(p.gamma)} mGy·m²/(GBq·h) the air kerma rate constant is ${cmp}, placing it ${r.rank} of ` +
           `${r.of} photon emitters in this dataset.`
@@ -188,10 +207,12 @@ export function paragraphs(p: NuclidePage): string[] {
     const target = truncated
       ? ``
       : t20 === 0
-      /* ★ T12 검토 — 딸이 차폐를 정하는 쪽(Pb-210 → Bi-210)에서는 이 판정이 이 핵종 자신의 광자 이야기임을 밝힌다. */
-      ? (dominantProgeny(p.key)?.betaHotter
-          ? `At 1 GBq and a metre the dose rate from ${p.key}'s own photons is already under 20 µSv/h with nothing in the way.`
-          : `At 1 GBq and a metre it is already under 20 µSv/h with nothing in the way.`)
+      /* ★ T12 검토 — 딸이 차폐를 정하는 쪽(Pb-210 → Bi-210)에서는 이 판정이 이 핵종 자신의 광자 이야기임을 밝힌다.
+         ★ T13 — 연쇄가 이 자료 밖으로 이어지는 쪽(Th-232) · 자발 핵분열 쪽(Cm-244)도 같다(위 `ownOnly` · `sf`). 자발 핵분열 쪽은
+           「photon dose rate」로 중성자와 가른다. */
+      ? (ownOnly ? `At 1 GBq and a metre the dose rate from ${p.key}'s own photons is already under 20 µSv/h with nothing in the way.`
+        : sf ? `At 1 GBq and a metre the photon dose rate is already under 20 µSv/h with nothing in the way.`
+        : `At 1 GBq and a metre it is already under 20 µSv/h with nothing in the way.`)
       : `Reaching 20 µSv/h from 1 GBq at a metre takes ${mm(t20)} of lead.`;
     out.push(
       (truncated
@@ -202,9 +223,15 @@ export function paragraphs(p: NuclidePage): string[] {
              없고(캡슐은 강 · 알루미늄이다) 같은 쪽 강 행과 맞지 않았다(Co-57 · Ce-139). ★ 「barely arises」는 **납 TVL 도
              1 mm 아래**일 때만 쓴다 — Pu-239 는 HVL 0.120 mm 지만 TVL 2.57 mm(TVL/HVL 21)라 1/10 에는 얇지 않다. */
         : hvlMm < 0.2 && pb.tvlCm * 10 < 1
-        ? `${dominantProgeny(p.key)?.betaHotter ? `For ${p.key}'s own photons, shielding barely arises` : `Shielding barely arises`}: ` +
+        /* ★ T13 검토 — 주어 「X's own photons」가 한 문단에 세 번 서지 않게, 바로 앞 문장(Γ < 0.005 띠)이 주어를 세웠으면
+             「those photons」로, 목표 문장은 「their dose rate」로 받는다. */
+        ? (ownOnly || sf
+            ? `For ${p.gamma < 0.005 ? `those photons` : ownOnly ? `${p.key}'s own photons` : `the photons in these figures`}, ` +
+              `shielding barely arises: `
+            : `Shielding barely arises: `) +
           `${mm(pb.hvlCm)} of lead halves the air kerma rate and ${mm(pb.tvlCm)} ` +
-          `takes it to a tenth. Steel does the halving in ${mm(fe.hvlCm)}. ${target}`
+          `takes it to a tenth. Steel does the halving in ${mm(fe.hvlCm)}. ` +
+          (t20 === 0 && (ownOnly || sf) ? `At 1 GBq and a metre their dose rate is already under 20 µSv/h with nothing in the way.` : target)
         : hvlMm < 1
         ? `A half-value layer of ${mm(pb.hvlCm)} in lead puts this in foil and thin sheet, with ${mm(fe.hvlCm)} ` +
           `needed if the material is steel; ten-fold attenuation comes at ${mm(pb.tvlCm)} of lead. ${target}`
@@ -277,7 +304,8 @@ export function paragraphs(p: NuclidePage): string[] {
        *  「납에서 1.57%」라고 적는데 실제 선원에서 그 X선을 내는 것은 **Y-90 의 2.28 MeV** 다 —
        *  **베타를 납으로 막으면 안 되는 이유가 정확히 이것**이라 값이 낮게 나가면 결론이 뒤집힌다.
        *  ★ 여기서는 **누구의 에너지인지 밝히고**, 딸의 값은 아래 연쇄 문단이 든다. */
-      `acrylic or ${mm(glass.cm)} of glass. Of ${dominantProgeny(p.key)?.betaHotter ? `${p.key}'s own` : `the`} ` +
+      /* ★ T13 검토 — 연쇄가 이 자료 밖으로 이어지는 쪽(Ra-228 → Ac-228)도 「X's own」으로 한정한다(`ownOnly`). */
+      `acrylic or ${mm(glass.cm)} of glass. Of ${ownOnly ? `${p.key}'s own` : `the`} ` +
       `beta energy, ${frac(p.bremsLow)} turns into X-rays in acrylic and ${frac(p.bremsLead)} in lead` +
       /* ★ 흔적 가지 관례(T12) — 제동복사 몫은 세기 1% 이상 가지의 최대 끝점으로 계산한다(`betaBremsMeV`). 그 끝점이
          사정거리의 끝점과 다르면(Co-60 · I-131 · Cs-134 · Au-198) 어느 끝점으로 계산했는지 밝힌다. */
@@ -392,13 +420,27 @@ export function paragraphs(p: NuclidePage): string[] {
        그것을 그대로 쓰면 **타입 검사는 통과하고 빌드가 죽는다**(`h is not defined`) —
        실제로 그렇게 죽였다. Astro 의 쪽 생성은 죽은 쪽에서 멈추므로 **dist 가 반쯤 남고**,
        그 반쪽을 재던 게이트가 「색인 0쪽 · 통과」를 찍었다(그 구멍은 게이트에서 막았다). */
-    const hz = (key: string) => {
+    /* ★★ T13 — 「Decay is the only handle」은 **이 쪽이 막을 것을 하나도 말하지 않을 때만** 판정으로 선다(25쪽 중 6쪽 — Fe-55 · Ni-59 · Po-210 · Th-230 · U-233 · U-236).
+         그전에는 광자선이 없으면 늘 섰는데, 같은 쪽이 차폐를 말하는 경우와 부딪쳤다(T12 2차 검토) —
+         · 베타 사정거리 표가 있다(Sr-90 · Y-90 · P-32 · Ho-166 … 손글도 「acrylic first」라고 쓴다)
+         · 딸이 차폐를 정한다(Ge-68: 바로 앞 문장이 「Shield for Ga-68.」)
+         · 자발 핵분열(Cf-252: 중성자 차폐 — T12 는 「Within the figures on this page」로 한정했었다)
+         · 연쇄가 이 자료 밖으로 이어진다(Ra-224 · Am-243 · Np-237: 손글이 「외부선량은 딸의 이야기」라고 쓴다)
+         그 쪽에서는 판정을 빼고, 문장의 값이 이미 쪽에 있으면(시평 둘은 첫 문단, 열 반감기 · 평균수명은 붕괴 캡션) **문장째 뺀다**
+         (T13 검토 — 판정이 빠진 문장은 첫 문단을 글자 그대로 되풀이했다). 첫 문단에 시평이 없는 띠(비방사능 1e9 Bq/g 아래 —
+         Cs-135 · I-129 · Se-79 · Tc-99 · Np-237)만 숫자를 남긴다.
+       ★ T13 검토 — 이 자료에 딸이 실린 쪽(Th-230 · U-233 · U-236)은 판정을 「For X itself」로 한정한다 — U-233 손글이 늘 따라오는
+         U-232(Tl-208)를 감마선원으로 말한다. 붕괴 캡션의 「for X itself」와 같은 꼴이다. */
+    const nothingToShield =
+      !p.betaRanges.length && !dominantProgeny(p.key) && !SPONTANEOUS_FISSION[p.key] && !chainLeavesDataset(p.key);
+    const hz = (key: string): string | null => {
       const g2 = horizons(key);
-      /* ★ T12 검토 — 자발 핵분열 가지가 있으면(Cf-252) 「Decay is the only handle」이 중성자 차폐를 부정한다. 이 쪽의 수치 안으로 한정한다. */
-      return `${SPONTANEOUS_FISSION[key] ? "Within the figures on this page, decay is the only handle" : "Decay is the only handle"}: ` +
-             `${g2[0].label} leaves ${frac(g2[0].frac)} of today's activity ` +
-             `and ${g2[1].label} leaves ${frac(g2[1].frac)}, with ten half-lives at ` +
-             `${tenHalfLives(key)} and a mean life of ${meanLife(key)} per atom.`;
+      const lead = `${g2[0].label} leaves ${frac(g2[0].frac)} of today's activity ` +
+                   `and ${g2[1].label} leaves ${frac(g2[1].frac)}, with ten half-lives at ` +
+                   `${tenHalfLives(key)} and a mean life of ${meanLife(key)} per atom.`;
+      if (nothingToShield)
+        return `${daughterOf(key) ? `For ${key} itself, decay is the only handle` : `Decay is the only handle`}: ${lead}`;
+      return n.sa_bq_g < 1e9 ? lead.charAt(0).toUpperCase() + lead.slice(1) : null;
     };
     /* 「선이 하나도 없다」는 말은 **정말 하나도 없을 때만** 한다 — 알파만 있는 낱장은
        위에서 알파를 이미 말했다. */
@@ -415,7 +457,8 @@ export function paragraphs(p: NuclidePage): string[] {
     /* ★ 광자선이 없는 낱장은 **쓸 것이 적어 얇아진다**(실측 232~264어, 하한 250). 분량을
        채우려고 일반론을 더하면 그 낱장들끼리 다시 겹친다 — 더하는 것은 **이 핵종에서만
        다른 수**다. 시평 둘·열 반감기·평균 수명은 핵종마다 자릿수가 갈린다. */
-    out.push(hz(p.key));
+    const last = hz(p.key);
+    if (last) out.push(last);
   }
   return out;
 }
@@ -521,9 +564,12 @@ export function sectionHeads(p: NuclidePage) {
        ★ 그래서 알파가 있고 Γ 가 약한 띠(0.005, 산문에서 쓰는 것과 같은 문턱)이면
          섭취 쪽을 든다. */
     /* ★ T12 1-41 — 연쇄가 이 자료에서 끊기는 알파 핵종(Ra-226 · U-238)은 Γ 가 작아도 자손의 광자장이 빠진 값이라 「intake, not
-         external」로 결론짓지 않는다. ★ T12 h — 자발 핵분열 가지(SPONTANEOUS_FISSION, Cf-252)도 외부 위험이 이 자료 밖에 있다. */
+         external」로 결론짓지 않는다. ★ T12 h — 자발 핵분열 가지(SPONTANEOUS_FISSION, Cf-252 · T13 Cm-244)도 외부 위험이 이 자료 밖에 있다.
+       ★ T13 — 연쇄가 이 자료 밖으로 이어지는 쪽(`chainLeavesDataset`, Th-232)도 같다. Γ 가 0 인 쪽(Am-243 · Np-237 · Ra-224)은
+         「dose rates」 제목을 세울 수치가 없어 아래 `a` 갈래로 그대로 간다(Am-243 손글이 그 제목을 가리킨다). */
     limits:
-      a && p.gamma < 0.005 && !CHAIN_TRUNCATED.includes(p.key) && !SPONTANEOUS_FISSION[p.key] ? "Limits — intake, not external dose"
+      a && p.gamma < 0.005 && !CHAIN_TRUNCATED.includes(p.key) && !SPONTANEOUS_FISSION[p.key] && !chainLeavesDataset(p.key)
+        ? "Limits — intake, not external dose"
       : g ? "Limits of these dose rates"
       : SPONTANEOUS_FISSION[p.key] ? "Limits of these figures"
       : a ? "Limits — intake, not external dose"
