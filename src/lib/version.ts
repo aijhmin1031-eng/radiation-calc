@@ -9,6 +9,7 @@ export interface Release { version: string; date: string }
 
 /** 최신이 위. 변경 기록 쪽의 절 머리가 이 목록에서 나온다. */
 export const RELEASES: readonly Release[] = [
+  { version: "1.1.3", date: "2026-10-30" },
   { version: "1.1.2", date: "2026-10-30" },
   { version: "1.1.1", date: "2026-10-29" },
   { version: "1.1.0", date: "2026-10-29" },
