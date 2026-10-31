@@ -9,6 +9,7 @@ import {
   BETA_BRANCH_FLOOR_PCT, bremsEndpointKeV,
 } from "../engine";
 import { TIME_S } from "../engine/constants";
+import { ACRYLIC } from "./beta-absorbers";
 import { lineShares, meanPhotonEnergyKeV, spectrumHVL, spectrumTVL, spectrumLayer, type LineShare } from "../engine/spectrum";
 
 export const NUCLIDES = nuclides as unknown as NuclideMap;
@@ -183,7 +184,7 @@ export interface NuclidePage {
   betaRanges: { material: string; cm: number }[];
   /** 제동복사 몫을 계산한 끝점 [MeV] — 세기 1% 이상 가지의 최대 끝점(아래 `betaBremsMeV`). 사정거리의 `betaMaxMeV` 와 다를 수 있다 */
   bremsMeV: number | null;
-  bremsLow: number; bremsLead: number;    // 제동복사 수율 (아크릴 Z≈6 대 납 Z=82)
+  bremsLow: number; bremsLead: number;    // 제동복사 수율 (아크릴 Z = ACRYLIC.z 대 납 Z=82)
   decayPoints: { label: string; frac: number }[];
   timeTo: { label: string; text: string }[];
   saCiPerG: number;
@@ -242,7 +243,7 @@ export function nuclidePage(key: string): NuclidePage {
   const betaMaxMeV = n.beta_max_keV ? n.beta_max_keV / 1000 : null;
   const bremsMeV = betaBremsMeV(key);
   const betaRanges = betaMaxMeV
-    ? [["acrylic", 1.18], ["aluminum", DENSITY_G_CM3.aluminum], ["water", 1.0], ["glass", 2.5]]
+    ? [["acrylic", ACRYLIC.rho], ["aluminum", DENSITY_G_CM3.aluminum], ["water", 1.0], ["glass", 2.5]]
         .map(([material, rho]) => ({ material: material as string, cm: betaRangeCm(betaMaxMeV, rho as number) }))
     : [];
 
@@ -257,7 +258,7 @@ export function nuclidePage(key: string): NuclidePage {
     doseAt1mPerCi: pointSourceDoseRate(gamma, BQ_PER_CI / 1e9, 1),
     shares, meanPhotonKeV: shares.length ? meanPhotonEnergyKeV(n.lines, ATTEN.air, DELTA_DEFAULT_KEV) : NaN,
     linesFor90, shields, hardens, betaMaxMeV, betaRanges, bremsMeV,
-    bremsLow: bremsMeV ? bremsstrahlungYield(6, bremsMeV) : NaN,
+    bremsLow: bremsMeV ? bremsstrahlungYield(ACRYLIC.z, bremsMeV) : NaN,
     bremsLead: bremsMeV ? bremsstrahlungYield(82, bremsMeV) : NaN,
     decayPoints,
     timeTo: [
@@ -360,7 +361,7 @@ export function belowCutoff(key: string): { count: number; iPct: number; topKeV:
  *  자기 자료**로 채운다. 아래 값은 전부 산술이고 핵종마다 자릿수가 다르다.
  *  ★ 자릿수가 모든 핵종에서 **같은 값**은 쓰지 않는다 — 평균수명/반감기 = 1.44 처럼
  *    147장에서 똑같은 비를 찍는 것이 정확히 「틀에 값만 갈아 끼우는」 짓이다
- *    (`nuclide-prose.ts` 가 82/6 에서 이미 세운 규칙). */
+ *    (`nuclide-prose.ts` 가 납/아크릴 Z 비에서 이미 세운 규칙). */
 export const tenHalfLives = (key: string) => fmtTime(10 * NUCLIDES[key].t_half_s);
 export const meanLife = (key: string) => fmtTime(NUCLIDES[key].t_half_s / Math.LN2);
 

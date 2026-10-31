@@ -10,11 +10,18 @@
 
 우산 정본은 `radiation-lab`(우산 저장소), 절차는 `radiation-meter-tester/docs/umbrella-setup.md`.
 
-**판: v1.1.5 · 2026-11-01** — 정본은 `src/lib/version.ts`. 쪽마다 꼬리말 위에 판 줄이 서고 `/changelog/`(「Changes to the calculators and
+**판: v1.2.0 · 2026-11-01** — 정본은 `src/lib/version.ts`. 쪽마다 꼬리말 위에 판 줄이 서고 `/changelog/`(「Changes to the calculators and
 data」)가 판마다 바뀐 것을 든다. 번호 규칙: 계산값 · 자료가 바뀌면 가운데 자리, 글만 고치면 끝자리. 판을 올리면 `version.ts` ·
 `CITATION.cff`(version · date-released) · `.zenodo.json`(version · publication_date) · 이 줄을 함께 고친다 — `version.test.ts` 가 잰다.
 v1.1.0 은 Zenodo 새 판과 같은 번호이고, 태그 · 릴리스는 소유주 확인 뒤에 만든다. ★ 태그를 만드는 날이 `version.ts` 의 날짜와 다르면
 그날로 고친 뒤 태그한다(넷이 함께 따라와야 테스트가 통과한다) — 그래야 쪽의 판 줄 · CITATION 의 date-released · Zenodo 기록의 날짜가 같다.
+
+## ★★ 아크릴 값 정합 — 판 1.2.0 (2026-11-01)
+
+영상 작업(W4)이 라이브에서 Y-90 값이 쪽마다 다른 것을 잡았다(`/beta/` 9.198 mm · 0.518% ↔ `/beta-shield-materials/` 9.28 mm · 0.48%). 엔진 식에는 잘못이 없었고, 부르는 쪽이 아크릴을 다르게 넘겼다 —
+`lib/nuclides.ts` 와 재료 쪽이 1.18 g/cm³ · Z 6, 계산기(`lib/beta-absorbers.ts`)와 검증 보고서가 1.19 · Z 6.5. 감독 결정(선택지 A): 정본을 `ACRYLIC`(`lib/beta-absorbers.ts`) 하나로 둔다.
+- 움직인 값: 쪽 묶음의 아크릴 두께 −0.84% · 아크릴 제동복사 +8.33% · 납/아크릴 13.7 → 12.6. 계산기 · 엔진 · 검증 보고서 · 납 값은 그대로다. 전후 표는 `/changelog/#v1-2-0`.
+- 지키는 것: `beta-absorbers.test.ts`(베타 핵종 전수 낱장 = 계산기) · `check-output` ⑩(구워진 글자). Zenodo 태그는 만들지 않았다(소유주 확인 뒤).
 
 ## ★★ `/notes/` — 날짜가 있는 풀이 글 구역 (2026-11-01, 판 1.1.5)
 

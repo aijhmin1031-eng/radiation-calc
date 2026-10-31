@@ -3,6 +3,7 @@ import Base from "../layouts/Base.astro";
 import NuclideRef from "../components/NuclideRef.astro";
 import { NUCLIDES, nuclidePage, BETA_BRANCH_FLOOR_PCT, gammaOf } from "../lib/nuclides";
 import { betaRangeCm, DENSITY_G_CM3 } from "../engine";
+import { ACRYLIC } from "../lib/beta-absorbers";
 import { dominantProgeny } from "../lib/decay-chain";
 import { u } from "../lib/site";
 
@@ -16,7 +17,7 @@ const all: Row[] = Object.keys(NUCLIDES)
   .map((key) => {
     const p = nuclidePage(key), n = NUCLIDES[key], eMeV = p.bremsMeV ?? 0;
     const at = (rho: number) => (eMeV ? betaRangeCm(eMeV, rho) : NaN);
-    return { key, e: eMeV * 1000, acr: at(1.18), al: at(DENSITY_G_CM3.aluminum),
+    return { key, e: eMeV * 1000, acr: at(ACRYLIC.rho), al: at(DENSITY_G_CM3.aluminum),
              wat: at(1.0), low: p.bremsLow, pb: p.bremsLead, g: gammaOf(key) };
   })
   .filter((r) => r.e > 0)
@@ -149,7 +150,7 @@ const gammaLed = top.filter((r) => r.g >= GAMMA_FLOOR).sort((a, b) => b.g - a.g)
       {sameRatio && (
         <>The ratio between the two columns is {ZR.toFixed(1)} on every row, and it is the same on
         every beta emitter in this dataset. That is not a measurement: the yield used here is
-        proportional to atomic number, so the ratio is fixed at 82/6 by the formula itself. What
+        proportional to atomic number, so the ratio is fixed at 82/{ACRYLIC.z} by the formula itself. What
         actually varies from nuclide to nuclide is the size of the fractions, which follows the
         endpoint — from {pct(Math.min(...all.map((r) => r.low)), 3)} to {pct(Math.max(...all.map((r) => r.low)))}
         {" "}in acrylic across the {all.length} beta emitters here.</>

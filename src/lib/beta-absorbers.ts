@@ -12,6 +12,9 @@ export const ABSORBERS = [
   { value: "lead", label: "Lead", z: 82, rho: DENSITY_G_CM3.lead },
 ] as const;
 export type AbsKey = typeof ABSORBERS[number]["value"];
+/** 아크릴의 Z · 밀도 정본 — 계산기 · 낱장 · 읽을 글이 모두 여기서 읽는다.
+ *  ★ 판 1.2.0(2026-11-01)까지 `lib/nuclides.ts` 와 `/beta-shield-materials/` 가 1.18 g/cm³ · Z 6 을 글자로 들고 있어 계산기(1.19 · 6.5)와 갈렸다. */
+export const ACRYLIC = ABSORBERS[0];
 
 /** 계산기 흡수체 표의 줄 — 멈추는 두께는 **최대 끝점**, 제동복사는 **세기 1% 이상 가지의 최대 끝점**(`bremsEndpointKeV`).
  *  ★ T13 — 계산기만 제동복사를 최대 끝점으로 내고 있었다(Co-60 납 4.28%, 낱장 0.91%). 표를 이 함수로 빼서 테스트가

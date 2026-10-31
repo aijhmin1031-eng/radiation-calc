@@ -249,7 +249,15 @@ console.log("\n⑩ 검색 문구");
   const guideText = text(guide);
   if (!/One millicurie is exactly 37\s*MBq/.test(guideText.replace(/&nbsp;/g, " "))) fail.push("검색 문구: 붕괴 보정 쪽의 「1 mCi = 37 MBq」 문장이 틀렸다");
   if (!/a 20\s*mCi dose is 740\s*MBq/.test(guideText.replace(/&nbsp;/g, " "))) fail.push("검색 문구: 붕괴 보정 쪽의 「20 mCi = 740 MBq」 문장이 틀렸다");
-  note(`고친 쪽 ${Object.keys(SEARCH).length}장의 제목 · 설명 · 큰 제목, Lu-177 표 · 계산기 링크 · 낱장 링크 · mCi 환산 문장`);
+  /* ★ 2026-11-01(판 1.2.0) — 아크릴 값이 계산기(1.19 · Z 6.5)와 읽을 쪽(1.18 · Z 6)으로 갈려 Y-90 이 쪽마다 달랐다. 구워진 글자로 잰다. */
+  const betaPage = (pages.find((x) => x.path === "/beta-shield-materials/")?.s ?? "").replace(/<!--[\s\S]*?-->/g, "");
+  const y90Row = [...betaPage.matchAll(/<tr>[\s\S]*?<\/tr>/g)].map((m) => m[0]).find((r) => r.includes("Y-90") && !r.includes("%")) ?? "";
+  if (!/82\/6\.5/.test(text(betaPage))) fail.push("아크릴: 베타 재료 쪽의 Z 비가 82/6.5 가 아니다");
+  if (!y90Row.includes("9.20")) fail.push(`아크릴: 베타 재료 쪽 Y-90 줄에 9.20 mm 가 없다 — ${text(y90Row).slice(0, 80)}`);
+  const y90Sheet = pages.find((x) => x.path === "/nuclides/y-90/")?.s ?? "";
+  if (!text(y90Sheet).includes("acrylic (Z ≈ 6.5)")) fail.push("아크릴: Y-90 낱장의 표기가 Z ≈ 6.5 가 아니다");
+  if (!/0\.52%/.test(text(y90Sheet))) fail.push("아크릴: Y-90 낱장에 0.52% 가 없다");
+  note(`고친 쪽 ${Object.keys(SEARCH).length}장의 제목 · 설명 · 큰 제목, Lu-177 표 · 계산기 링크 · 낱장 링크 · mCi 환산 문장 · 아크릴 값`);
 }
 
 console.log(fail.length ? `\n❌ ${fail.length}건\n` + fail.map((x) => "   " + x).join("\n")

@@ -7,6 +7,7 @@ import { paragraphs, decayCaption, sectionHeads } from "../../lib/nuclide-prose"
 import { nuclideSeo } from "../../lib/nuclide-seo";
 import { PAGE_KEYS, isNoindex } from "../../lib/nuclide-pages";
 import { NUCLIDE_NOTES, noteFirstSentence } from "../../data/nuclide-notes";
+import { ACRYLIC } from "../../lib/beta-absorbers";
 import NuclideRef from "../../components/NuclideRef.astro";
 import { FIELD_PRO } from "../../lib/tools";
 import { prefillPath as prefill } from "../../lib/restore";
@@ -220,7 +221,7 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
       <table class="mt-4">
         <thead><tr><th>Shield material</th><th>Fraction of beta energy converted to X-rays</th></tr></thead>
         <tbody>
-          <tr><td>acrylic (Z ≈ 6)</td><td>{(p.bremsLow * 100).toFixed(2)}%</td></tr>
+          <tr><td>acrylic (Z ≈ {ACRYLIC.z})</td><td>{(p.bremsLow * 100).toFixed(2)}%</td></tr>
           <tr><td>lead (Z = 82)</td><td>{(p.bremsLead * 100).toFixed(2)}%</td></tr>
         </tbody>
       </table>
@@ -259,7 +260,7 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
     <h2 class="text-[20px] font-semibold text-ink">{H.decay}</h2>
     {/* ★ 표에 **없는** 값만 든다 — 표는 반감기 배수와 남는 비율을 주고, 여기서는 그 배수의
         **경과 시간**과 평균수명을 준다. 표와 같은 것을 산문으로 되풀이하지 않는다.
-        ★ 평균수명 / 반감기 = 1.44 는 **모든 핵종에서 같으므로 찍지 않는다**(82/6 과 같은 규칙). */}
+        ★ 평균수명 / 반감기 = 1.44 는 **모든 핵종에서 같으므로 찍지 않는다**(납/아크릴 Z 비와 같은 규칙). */}
     <p class="mt-2 text-[14px] leading-relaxed text-ink-muted">{decayCaption(key)}</p>
     <table class="mt-3">
       <thead><tr><th>Elapsed</th><th>Fraction remaining</th></tr></thead>
