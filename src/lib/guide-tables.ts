@@ -4,6 +4,7 @@ import type { Material } from "../engine/types";
 import type { Row } from "../engine/interp";
 import { spectrumLayer } from "../engine/spectrum";
 import { decayActivity, elapsedFromRatio } from "../engine";
+import { convert } from "../engine/units";
 
 /** ★★ 가이드 글 두 편의 표 — 정본이다(2026-10-25 D5-2).
  *  쪽(`/hvl-tvl-gamma/`·`/radiopharmaceutical-decay/`)과 고정 시험(`guide-tables.test.ts`)이 **같은 함수**를
@@ -62,6 +63,10 @@ export function clockPlus(hhmm: string, min: number, round: "floor" | "ceil" = "
   const t = (((h * 60 + m + Math[round](min)) % 1440) + 1440) % 1440;
   return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 }
+
+/** 1 mCi 의 MBq — 단위 표(`engine/units.ts`)에서 읽는다.
+ *  ★ 2026-11-01 쪽에서 `BQ_PER_CI / 1e9 / 1000`(= 0.037, GBq/mCi)으로 직접 나누어 「1 mCi = 0 MBq」가 라이브에 나갔다. */
+export const MBQ_PER_MCI = convert(1, "mCi", "MBq", "activity");
 
 /** 표기 — 쪽과 시험이 같은 글자를 본다. */
 export const mm3 = (cm: number) => (cm * 10).toPrecision(3);

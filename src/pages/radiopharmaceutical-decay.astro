@@ -2,8 +2,7 @@
 import Base from "../layouts/Base.astro";
 import NuclideRef from "../components/NuclideRef.astro";
 import { NUCLIDES, halfLifeText } from "../lib/nuclides";
-import { BQ_PER_CI } from "../engine";
-import { decayGrid, decayGridDays, dosingExamples, fractionAfter, minutesTo, pct1, hMin } from "../lib/guide-tables";
+import { decayGrid, decayGridDays, dosingExamples, fractionAfter, minutesTo, pct1, hMin, MBQ_PER_MCI } from "../lib/guide-tables";
 import { prefillPath } from "../lib/restore";
 import { u } from "../lib/site";
 
@@ -19,7 +18,6 @@ const X = dosingExamples();
 const tcT = halfLifeText(NUCLIDES["Tc-99m"]);
 const fT = halfLifeText(NUCLIDES["F-18"]);
 const fMin = NUCLIDES["F-18"].t_half_s / 60;
-const MBQ_PER_MCI = BQ_PER_CI / 1e9 / 1000;
 /* 흔한 실수의 크기 — 분과 시간을 섞으면, 그리고 방향을 거꾸로 하면. */
 const tc90 = fractionAfter("Tc-99m", 90);
 const f90 = fractionAfter("F-18", 90);

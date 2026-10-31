@@ -244,7 +244,12 @@ console.log("\n⑩ 검색 문구");
   if (prefilled?.nuclide !== "Lu-177") fail.push(`검색 문구: 붕괴 보정 쪽의 계산기 링크가 Lu-177 을 채우지 않는다 — ${JSON.stringify(prefilled)}`);
   const sheet = pages.find((x) => x.path === "/nuclides/lu-177/")?.s ?? "";
   if (!sheet.includes("/radiopharmaceutical-decay/#lu-177")) fail.push("검색 문구: Lu-177 낱장에서 표로 가는 링크가 없다");
-  note(`고친 쪽 ${Object.keys(SEARCH).length}장의 제목 · 설명 · 큰 제목, Lu-177 표 · 계산기 링크 · 낱장 링크`);
+  /* ★ 2026-11-01 — 단위 상수 나눗셈이 틀려 이 쪽이 「One millicurie is exactly 0 MBq; a 20 mCi dose is 1 MBq」로 나갔다(PR #77 부터 라이브).
+     식은 빌드를 통과하고 toFixed(0) 이 0.037 을 0 으로 감춘다 — 그래서 **구워진 글자**를 잰다. */
+  const guideText = text(guide);
+  if (!/One millicurie is exactly 37\s*MBq/.test(guideText.replace(/&nbsp;/g, " "))) fail.push("검색 문구: 붕괴 보정 쪽의 「1 mCi = 37 MBq」 문장이 틀렸다");
+  if (!/a 20\s*mCi dose is 740\s*MBq/.test(guideText.replace(/&nbsp;/g, " "))) fail.push("검색 문구: 붕괴 보정 쪽의 「20 mCi = 740 MBq」 문장이 틀렸다");
+  note(`고친 쪽 ${Object.keys(SEARCH).length}장의 제목 · 설명 · 큰 제목, Lu-177 표 · 계산기 링크 · 낱장 링크 · mCi 환산 문장`);
 }
 
 console.log(fail.length ? `\n❌ ${fail.length}건\n` + fail.map((x) => "   " + x).join("\n")
