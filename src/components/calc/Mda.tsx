@@ -16,6 +16,8 @@ const CONF = [
   { value: "2.326", label: "99%",       hint: "k = 2.326" },
 ];
 const OUT = ["Bq", "dpm", "Bq/cm²", "dpm/100cm²", "pCi"] as const;
+/** L_D 가 L_C 를 넘을 확률 — k 의 단측 정규 확률이고 위 보기 글자와 같다. 결과 줄이 읽는다. */
+const DETECT_PCT: Record<string, string> = { "1.645": "95", "1.96": "97.5", "2.326": "99" };
 
 export default function Mda() {
   const restored = initialState();
@@ -129,7 +131,7 @@ export default function Mda() {
       {c.mode === "scaler" ? (
         <>
           <Headline stale={dirty} label="Minimum detectable activity" value={asUnit(fixed.mda)} unit={c.unit}
-            note={`Anything below this cannot be reliably distinguished from background in a ${fmt(c.timeS)} s count.`} />
+            note={`In a ${fmt(c.timeS)} s count, activity at this level is detected with ${DETECT_PCT[c.k]}% probability. A smaller true activity can still exceed the decision threshold but will often be missed.`} />
           <Rows rows={[
             { k: "Background counts collected", v: fmt(fixed.bgCounts, 5), hint: `${fmt(c.bgCpm)} cpm × ${fmt(c.timeS)} s` },
             { k: "Critical level L_C", v: `${fmt(fixed.lc, 4)} counts`, hint: "the decision threshold — above it you report a detection" },

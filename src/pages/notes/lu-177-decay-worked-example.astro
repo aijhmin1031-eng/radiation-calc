@@ -126,7 +126,7 @@ const d14 = X.days.find((r) => r.d === 14)!;
     label, your protocol and the treating team, not by this arithmetic.
   </p>
   <p>
-    Clocks deserve a separate check. European labelling prints these times in UTC. Read as local time, a UTC time
+    Clocks deserve a separate check. The European labelling for lutetium oxodotreotide prints these times in UTC. Read as local time, a UTC time
     is nine hours out at UTC+9: calibration really happened later than you assumed, so the vial holds
     {" "}{X.utc9AbovePct.toFixed(1)}% more than the calculation says. At UTC−5 the error runs the other way, five
     hours and {X.utc5BelowPct.toFixed(1)}% less. The larger of those would use {(X.utc9AbovePct * 10).toFixed(0)}% of

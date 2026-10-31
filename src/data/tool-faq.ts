@@ -98,7 +98,7 @@ export const TOOL_FAQ: Record<string, readonly FaqItem[]> = {
     },
     {
       q: "Should results below the MDA be reported as zero?",
-      a: "No. The MDA describes the measurement, not the sample, so a result below it is still a measured value with an uncertainty. ISO 11929 recommends reporting the measured value and its uncertainty together with the decision threshold and detection limit, which keeps averages and trends unbiased; replacing low results with zero or with the MDA distorts them.",
+      a: "No. The MDA describes the measurement, not the sample, so a result below it is still a measured value with an uncertainty. MARLAP asks laboratories to report each result and its uncertainty as obtained, even if it is below zero, and never as less than the MDC; replacing low results with zero or with the MDA distorts averages and trends. ISO 11929 is the international standard on decision thresholds and detection limits for measurements of ionizing radiation.",
     },
   ],
   beta: [
