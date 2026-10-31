@@ -1,0 +1,176 @@
+---
+import ArticlePage from "../../components/ArticlePage.astro";
+import NuclideRef from "../../components/NuclideRef.astro";
+import { luExamples, LU_DOSE_GBQ } from "../../lib/note-examples";
+import { pct1 } from "../../lib/guide-tables";
+import { prefillPath } from "../../lib/restore";
+import { u } from "../../lib/site";
+
+/** ★ Lu-177 풀이 — 노리는 검색어: lu 177 decay calculator(노출 22 · 순위 60, 맞는 쪽이 없었다).
+ *  ★ 표의 % 는 `/radiopharmaceutical-decay/#lu-177` 표와 **같은 함수**(`decayGridDays`)의 칸이다. 시험이 그 일치를 잰다.
+ *  ★ ±10% 는 미국 라벨(16절)의 공급 규격이고 EMA 정보에는 없다(2026-11-01 원문 대조). 이 사이트의 규정도 투여 허용 범위도 아니다 — 글은 예시로만 쓴다.
+ *  ★ 활성도 창은 사용 가능 시간이 아니다 — 유효기간 72시간(두 라벨 모두)을 글이 함께 말한다.
+ *  ★ 투약 지시로 읽히지 않게 쓴다 — 예제의 값은 산수의 예시다. */
+const X = luExamples();
+const gbq2 = (x: number) => x.toFixed(2);
+const thursday = prefillPath("decay", { nuclide: "Lu-177", a0: X.ordered, unit: "GBq", t: 3, tu: "d" });
+const reach = prefillPath("decay", { mode: "when", nuclide: "Lu-177", a0: X.ordered, unit: "GBq", target: LU_DOSE_GBQ });
+const week = prefillPath("decay", { nuclide: "Lu-177", a0: LU_DOSE_GBQ, unit: "GBq", t: 7, tu: "d" });
+const fortnight = prefillPath("decay", { nuclide: "Lu-177", a0: LU_DOSE_GBQ, unit: "GBq", t: 14, tu: "d" });
+const d7 = X.days.find((r) => r.d === 7)!;
+const d14 = X.days.find((r) => r.d === 14)!;
+---
+<ArticlePage slug="lu-177-decay-worked-example">
+  <p>
+    A <NuclideRef k="Lu-177" /> therapy dose is prescribed for the moment of infusion, but it is calibrated
+    days earlier and may sit in a vial for days afterwards. This note follows one dose of
+    {" "}{LU_DOSE_GBQ}&nbsp;GBq ({X.mCi.toFixed(0)}&nbsp;mCi) from calibration to storage: how much activity has
+    to be there at the start, what is in the vial on the day, what a delay costs, and what is left a week or
+    two later. The percentages in the two tables below are entries of the
+    {" "}<a href={u("/radiopharmaceutical-decay/#lu-177")} class="underline">Lu-177 remaining-activity table</a>,
+    and any other interval can be run in the <a href={u("/decay/")} class="underline">decay calculator</a>.
+  </p>
+
+  <h2>Which half-life, and what it means per day</h2>
+  <p>
+    This site uses {X.tDays} days ({X.tHours.toFixed(2)} hours), the evaluated value in the IAEA Livechart.
+    European product information prints 6.647 days. Over 14 days the two differ by
+    {" "}{X.labelGap14Pct.toFixed(2)}%, so the choice does not matter for planning, as long as one value is used
+    throughout.
+  </p>
+  <p>
+    The shortcut to avoid is “a half-life is about a week”. After 7 days, {pct1(d7.f)}% is left, not 50%.
+    A more useful pair of figures for checking arithmetic in your head: Lu-177 loses
+    {" "}{X.perDayPct.toFixed(1)}% in the first day and {X.perHourPct.toFixed(2)}% in the first hour.
+  </p>
+
+  <h2>How much activity is needed at calibration</h2>
+  <p>
+    Going back in time means dividing. If {LU_DOSE_GBQ}&nbsp;GBq is wanted at infusion and t is the time from
+    calibration to infusion, the calibrated activity is {LU_DOSE_GBQ} / 2<sup>−t/T½</sup>:
+  </p>
+  <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+    <table>
+      <thead>
+        <tr><th>Calibration to infusion</th><th class="text-right">Remaining</th><th class="text-right">Needed at calibration</th></tr>
+      </thead>
+      <tbody>
+        {X.dispatch.map((r) => (
+          <tr><td class="num">{r.h}&nbsp;h</td><td class="num text-right">{pct1(r.f)}%</td><td class="num text-right">{gbq2(r.gbq)}&nbsp;GBq</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p>
+    A ready-to-use product may already be labelled for the infusion time: the European information for
+    lutetium oxodotreotide states 7&nbsp;400&nbsp;MBq at the date and time of infusion, from a fixed
+    370&nbsp;MBq/mL at calibration with the volume set to suit. In that case the correction runs from the time on
+    that label. The table is for a pharmacy working from a bulk calibration or checking a supplier's figure,
+    and it is decay arithmetic only: the same information limits that product to 72 hours from calibration,
+    so a row in this table is not a statement that a preparation can still be used that late.
+  </p>
+
+  <h2>Monday's calibration, Thursday's infusion</h2>
+  <p>
+    A vial is labelled {X.ordered}&nbsp;GBq at 10:00 on Monday. The infusion is booked for 10:00 on Thursday,
+    with {LU_DOSE_GBQ}&nbsp;GBq prescribed. What should the vial hold?
+  </p>
+  <ol class="my-3 list-decimal space-y-1 pl-5">
+    <li>Elapsed time: 3 days exactly.</li>
+    <li>Half-lives: 3 / {X.tDays} = {X.n3.toFixed(4)}.</li>
+    <li>Remaining fraction: 2<sup>−{X.n3.toFixed(4)}</sup> = {X.dispatch[2].f.toFixed(4)}, the {pct1(X.dispatch[2].f)}% of the table's 3&nbsp;d row.</li>
+    <li>Activity: {X.ordered} × {X.dispatch[2].f.toFixed(4)} = <strong>{gbq2(X.atThursday)}&nbsp;GBq</strong>, which is {X.atThursdayPct.toFixed(1)}% of the prescription.</li>
+  </ol>
+  <p>
+    <a href={u(thursday)} class="underline">Open the calculator with these inputs</a> to see the same result.
+    Treat that figure as what the dose calibrator ought to show before administration. The calibrator
+    reading is the measurement; the calculation tells you whether it looks right.
+  </p>
+  <p>
+    The same vial answers the opposite question. <a href={u(reach)} class="underline">The “When does it reach”
+    mode</a>, with {X.ordered}&nbsp;GBq as the start and {LU_DOSE_GBQ}&nbsp;GBq as the target, gives
+    {" "}{(X.reachH / 24).toFixed(3)} days, or {X.reachH.toFixed(2)} hours, which is about {X.reachClock} on Thursday. Before that moment the vial
+    holds more than the prescription, and afterwards less.
+  </p>
+
+  <h2>Drawing from a bulk vial</h2>
+  <p>
+    Decay lowers the concentration while the volume stays where it was, so a dose drawn from bulk solution
+    needs more millilitres as the days go by. Suppose the bulk is {X.bulk.conc0.toFixed(1)}&nbsp;GBq/mL at
+    Monday's calibration. On Thursday the concentration is {X.bulk.conc0.toFixed(1)} × {X.dispatch[2].f.toFixed(4)}
+    {" "}= {X.bulk.concNow.toFixed(3)}&nbsp;GBq/mL, and {LU_DOSE_GBQ}&nbsp;GBq takes
+    {" "}<strong>{X.bulk.volNow.toFixed(2)}&nbsp;mL</strong>. Drawing the {X.bulk.vol0.toFixed(2)}&nbsp;mL that
+    Monday's concentration suggests would deliver {X.bulk.wrongGBq.toFixed(2)}&nbsp;GBq, {X.bulk.wrongPct.toFixed(1)}%
+    short. A calculated volume is only a starting point; the syringe still goes in the calibrator.
+  </p>
+
+  <h2>What a delay costs</h2>
+  <p>
+    Take a vial holding exactly {LU_DOSE_GBQ}&nbsp;GBq at the planned time. If the patient is two hours late it
+    holds {gbq2(X.twoHoursLate)}&nbsp;GBq, {X.twoHoursLatePct.toFixed(2)}% less. If treatment moves to the next day
+    it holds {gbq2(X.dayLate)}&nbsp;GBq, {X.dayLatePct.toFixed(1)}% less.
+  </p>
+  <p>
+    To see how far that goes, borrow a tolerance. The US label for lutetium Lu 177 dotatate supplies the vial at
+    {" "}{LU_DOSE_GBQ}&nbsp;GBq ±&nbsp;10% at the time of injection, which makes the limits {gbq2(X.low)} and
+    {" "}{gbq2(X.high)}&nbsp;GBq for this example. Solving t&nbsp;=&nbsp;T½·log₂(A₀/A) for each one, the activity
+    falls through the upper limit {X.earlyH.toFixed(1)} hours before the planned time and through the lower
+    limit {X.lateH.toFixed(1)} hours after it, a span of about {(X.earlyH + X.lateH).toFixed(0)} hours, and the
+    next-day case above only just stays inside.
+  </p>
+  <p>
+    That span describes activity and nothing more. It does not mean a dose can be moved by that much. A supply
+    specification is not a dosing tolerance, and that same label limits its product to a shelf life of 72 hours
+    from calibration. The Monday vial in this note is a generic arithmetic example rather than that product, but
+    whatever you are using will have its own limit. Whether to delay or reschedule is decided by the product
+    label, your protocol and the treating team, not by this arithmetic.
+  </p>
+  <p>
+    Clocks deserve a separate check. The European labelling for lutetium oxodotreotide prints these times in UTC. Read as local time, a UTC time
+    is nine hours out at UTC+9: calibration really happened later than you assumed, so the vial holds
+    {" "}{X.utc9AbovePct.toFixed(1)}% more than the calculation says. At UTC−5 the error runs the other way, five
+    hours and {X.utc5BelowPct.toFixed(1)}% less. The larger of those would use {(X.utc9AbovePct * 10).toFixed(0)}% of
+    the upper side of a ±10% band before anything else has gone wrong.
+  </p>
+
+  <h2>The vial after 7 and 14 days</h2>
+  <p>
+    A cancelled dose stays radioactive for a long time. These are the same table rows applied to
+    {" "}{LU_DOSE_GBQ}&nbsp;GBq:
+  </p>
+  <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+    <table>
+      <thead>
+        <tr><th>Days after the {LU_DOSE_GBQ}&nbsp;GBq time</th><th class="text-right">Remaining</th><th class="text-right">Activity</th></tr>
+      </thead>
+      <tbody>
+        {X.days.map((r) => (
+          <tr><td class="num">{r.d}</td><td class="num text-right">{pct1(r.f)}%</td><td class="num text-right">{gbq2(r.gbq)}&nbsp;GBq</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p>
+    So <a href={u(week)} class="underline">one week leaves {gbq2(d7.gbq)}&nbsp;GBq</a> and
+    {" "}<a href={u(fortnight)} class="underline">two weeks leave {gbq2(d14.gbq)}&nbsp;GBq</a>. These figures
+    describe a vial and nothing else. Activity in a patient also falls through excretion, so it drops faster
+    than physical decay alone, and this calculation does not model that.
+  </p>
+
+  <h2>When Lu-177m decides storage</h2>
+  <p>
+    Ten half-lives of Lu-177 take {X.tenDays.toFixed(1)} days and reduce {LU_DOSE_GBQ}&nbsp;GBq to
+    {" "}{X.tenLeftMBq.toFixed(2)}&nbsp;MBq. Whether that ends the matter depends on how the Lu-177 was made. Product
+    information names two starting materials, lutetium-176 and ytterbium-176, with different waste management.
+    Material made directly from Lu-176 can carry the isomer <NuclideRef k="Lu-177m" />, half-life
+    {" "}{X.isoHalfLifeD} days. Over those same {X.tenDays.toFixed(1)} days the isomer only falls to
+    {" "}{X.isoLeftPct.toFixed(1)}%, while Lu-177 on its own has fallen below 0.1%. Waste that looks finished by
+    the Lu-177 arithmetic may not be.
+  </p>
+  <p>
+    The decay calculator follows one nuclide at a time, so it will not show you this mix, nor the part of the
+    isomer's decay that feeds back into Lu-177 by isomeric transition. Run Lu-177m as its own calculation, starting
+    from the content your supplier states, read the supplier's documentation on waste, and apply the clearance
+    rules that hold where you work. The <NuclideRef k="Lu-177" /> sheet describes the two production routes.
+  </p>
+</ArticlePage>

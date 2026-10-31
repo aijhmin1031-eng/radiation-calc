@@ -10,11 +10,22 @@
 
 우산 정본은 `radiation-lab`(우산 저장소), 절차는 `radiation-meter-tester/docs/umbrella-setup.md`.
 
-**판: v1.1.4 · 2026-10-31** — 정본은 `src/lib/version.ts`. 쪽마다 꼬리말 위에 판 줄이 서고 `/changelog/`(「Changes to the calculators and
+**판: v1.1.5 · 2026-11-01** — 정본은 `src/lib/version.ts`. 쪽마다 꼬리말 위에 판 줄이 서고 `/changelog/`(「Changes to the calculators and
 data」)가 판마다 바뀐 것을 든다. 번호 규칙: 계산값 · 자료가 바뀌면 가운데 자리, 글만 고치면 끝자리. 판을 올리면 `version.ts` ·
 `CITATION.cff`(version · date-released) · `.zenodo.json`(version · publication_date) · 이 줄을 함께 고친다 — `version.test.ts` 가 잰다.
 v1.1.0 은 Zenodo 새 판과 같은 번호이고, 태그 · 릴리스는 소유주 확인 뒤에 만든다. ★ 태그를 만드는 날이 `version.ts` 의 날짜와 다르면
 그날로 고친 뒤 태그한다(넷이 함께 따라와야 테스트가 통과한다) — 그래야 쪽의 판 줄 · CITATION 의 date-released · Zenodo 기록의 날짜가 같다.
+
+## ★★ `/notes/` — 날짜가 있는 풀이 글 구역 (2026-11-01, 판 1.1.5)
+
+소유주 지시(11/01) 「이메일 홍보 말고 블로그나 하자」. Medium 글 4편은 유입 0 이었고 검색만 늘고 있어 글을 **우리 사이트 안에** 영어로 둔다.
+- **정본** `src/lib/articles.ts`(주소 · 제목 · 날짜 · 출처 · 계산기 링크 · 영상 주소 칸) → 목록 `src/pages/notes/index.astro`(새 글이 위) · 틀 `src/components/ArticlePage.astro` ·
+  글 `src/pages/notes/<slug>.astro`. 수치는 `src/lib/note-examples.ts`(엔진을 부르기만 한다), 고정은 `note-examples.test.ts`. Lu-177 글의 % 는 `/radiopharmaceutical-decay/#lu-177` 표와 같은 함수다.
+- **구조화 데이터** `Base.astro` 의 `schema="Article"` — datePublished · dateModified · author(Radiation Lab) · image · `citation` 은 화면의 출처 목록만.
+- **길** 머리글 메뉴는 공통 셸이라 고치지 않았다. 사이트맵 · 계산기 세 쪽의 `data-worked-example` 줄 · Methods 「Longer notes」 카드(`lib/notes.ts` 에 입구 한 줄).
+- **게이트** `check-notes` ⑥~⑧ — 목록 → 글 클릭 1회(두 뷰포트) · 등록부 ↔ 파일 양방향 · 목록 순서 · 본문 900~1500어 · 제목 · 설명 길이 · canonical · 사이트맵 · Article 노드와 화면 날짜 일치 · 출처 · 계산기 링크 · 쓰지 않기로 한 문구 · 계산기 쪽 줄.
+  **못 보는 것**: 글이 좋은지 · 사실이 맞는지. 「Reviewed」 날짜는 수치 시험과 자동 대조(Methods `#writing`)를 뜻하고, 소유주 통독 수(40편)에는 들지 않는다.
+- **글을 더할 때**: 등록부 한 줄 → 쪽 → 수치 · 시험 → `npm run build` → `make-og --only=/notes/<slug>/,/notes/` → 커밋 → `check-lastmod`.
 
 ## ★★★ 공통 셸 v3 — 머리글 · 꼬리말을 `radiation-lab/public/shell` 정본으로 (2026-10-28, T2)
 

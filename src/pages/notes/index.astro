@@ -1,0 +1,54 @@
+---
+import Base from "../../layouts/Base.astro";
+import { ARTICLES_NEWEST, articlePath } from "../../lib/articles";
+import { dateText } from "../../lib/version";
+import { u } from "../../lib/site";
+
+/** ★★ `/notes/` 목록 — 새 글이 위(2026-11-01, 판 1.1.5). 정본은 `lib/articles.ts`.
+ *  ★ 머리글 메뉴는 공통 셸(6개 저장소)이라 고치지 않는다. 여기로 오는 길은 사이트맵 · 계산기 쪽 「Worked example」 줄 · Methods 카드다. */
+---
+<Base title="Notes: worked radiation calculations"
+      description="Worked radiation calculations with real numbers: radioactive decay, Lu-177 decay correction and minimum detectable activity, from the site's calculators."
+      schema="CollectionPage">
+  <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">Notes: worked radiation calculations</h1>
+
+  <section class="mt-4 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
+    <p>
+      Each note starts from a question people working with radiation actually ask, then solves it with
+      real numbers, one line of arithmetic at a time. The figures come from the same engine and nuclide
+      data as the calculators on this site, so you can type the inputs into a calculator and get the
+      answer shown. Where a calculator cannot do a step, the note says so and shows how to do it by hand.
+    </p>
+    <p class="mt-3">
+      Every note gives the date it was published, the date its figures were last reviewed, the sources it
+      relies on and the calculators it uses. New notes appear at the top. The numbers in the examples are
+      illustrations, not advice for a particular source, patient or laboratory: a prescription, a tolerance
+      or a reporting limit comes from your own procedure and regulator, and a calibrated measurement is
+      always what counts.
+    </p>
+  </section>
+
+  <ul class="mt-8 max-w-3xl space-y-5">
+    {ARTICLES_NEWEST.map((a) => (
+      <li class="card p-4" data-article-card>
+        <h2 class="text-[17px] font-semibold leading-snug text-ink">
+          <a href={u(articlePath(a))} class="no-underline hover:underline">{a.h1}</a>
+        </h2>
+        <p class="mt-1 text-[13px] text-ink-faint">
+          <time datetime={a.published}>{dateText(a.published)}</time>
+        </p>
+        <p class="mt-2 text-[14px] font-medium leading-relaxed text-ink">{a.question}</p>
+        <p class="mt-1 text-[14px] leading-relaxed text-ink-muted">{a.summary}</p>
+      </li>
+    ))}
+  </ul>
+
+  <section class="mt-8 max-w-3xl text-[14px] leading-relaxed text-ink-muted">
+    <p>
+      Longer notes on shielding materials, check sources, natural series and the limits of the dataset
+      are listed on the <a href={u("/methods/#notes")} class="underline">Methods page</a>, along with where
+      the data comes from and how the pages are written. Values that have changed between versions are in
+      the <a href={u("/changelog/")} class="underline">change record</a>.
+    </p>
+  </section>
+</Base>

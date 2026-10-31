@@ -1,0 +1,162 @@
+---
+import ArticlePage from "../../components/ArticlePage.astro";
+import NuclideRef from "../../components/NuclideRef.astro";
+import { mdaExamples, MDA_INPUT } from "../../lib/note-examples";
+import { prefillPath } from "../../lib/restore";
+import { u } from "../../lib/site";
+
+/** ★ MDA 풀이 — 노리는 검색어: minimum detectable activity · mda calculation · mda calculator(순위 5~30).
+ *  ★ 식과 가정은 계산기(`engine/mda.ts` · `Mda.tsx`)와 **같다**: L_C = k√(2B), L_D = k² + 2L_C, 짝 블랭크.
+ *    화면에는 방출률 · 시료 질량 칸이 없고 효율 칸 하나(「Counts per emission」)뿐이다 — 글이 그대로 말한다.
+ *  ★ 짝 블랭크 밖의 식(잘 아는 블랭크 · 블랭크를 더 오래 잰 경우)은 계산기가 하지 않는다. 글이 그렇다고 적고 손으로 보인다.
+ *    출처: Currie 1968 표 I(NIST SP 958 해설에서 읽음) · MARLAP 식 20.8~20.11 · 20.26(2026-11-01 원문 대조). ISO 11929 는 유료라 대조하지 못해 글에서 뺐다. */
+const X = mdaExamples();
+const I = MDA_INPUT;
+const calc = prefillPath("mda", { mode: "scaler", bgCpm: I.bgCpm, timeS: X.t, eff: X.formEffPct, k: "1.645", unit: "Bq" });
+const c1 = (x: number) => x.toFixed(1);
+/* 블랭크 표의 L_C 는 두 자리 — 적힌 L_C 로 k² + 2L_C 를 해도 적힌 L_D 가 나오게(`note-examples.test.ts`). */
+const c2 = (x: number) => x.toFixed(2);
+const bq3 = (x: number) => x.toPrecision(3);
+const [shorter, paired, longer, known] = X.blanks;
+const WORD = ["Not detected. Below L_C.", "Detected, though below L_D.", "Detected, and above L_D."];
+---
+<ArticlePage slug="mda-worked-example">
+  <p>
+    You counted a sample and no peak stood out. What is the smallest activity that count could reliably have
+    seen? That figure is the minimum detectable activity, and this note works it through for
+    {" "}<NuclideRef k="Cs-137" /> on a gamma spectrometer, line by line, using the equations and the assumptions of the
+    {" "}<a href={u("/mda/")} class="underline">MDA calculator</a>: Currie's detection limits with a paired blank.
+    Then it reads three possible results against the limits, since that is where most confusion starts.
+  </p>
+
+  <h2>The measurement</h2>
+  <p>The inputs below are illustrative but typical of a shielded detector and a one-hour count.</p>
+  <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+    <table>
+      <thead>
+        <tr><th>Input</th><th class="text-right">Value</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Blank count rate in the {X.eKeV.toFixed(0)}&nbsp;keV peak region</td><td class="num text-right">{I.bgCpm}&nbsp;cpm</td></tr>
+        <tr><td>Count time t, same for sample and blank</td><td class="num text-right">{X.t}&nbsp;s</td></tr>
+        <tr><td>Full-energy peak efficiency ε</td><td class="num text-right">{I.effPct.toFixed(1)}%</td></tr>
+        <tr><td>Emission probability Y, IAEA Livechart</td><td class="num text-right">{X.yPct}%</td></tr>
+        <tr><td>Sample mass</td><td class="num text-right">{X.massKg}&nbsp;kg</td></tr>
+        <tr><td>Coverage k, for 5% false positives and 5% false negatives</td><td class="num text-right">{I.k}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Step 1: the critical level L<sub>C</sub></h2>
+  <p>
+    The expected blank count is B = {I.bgCpm} × {I.minutes} = {X.B} counts. A net count is the difference of two
+    counts that each carry a variance of about B, which is where the 2 under the root comes from:
+  </p>
+  <p>
+    L<sub>C</sub> = k√(2B) = {I.k} × √{2 * X.B} = {I.k} × {X.sqrt2B.toFixed(2)} = <strong>{c1(X.lc)} counts</strong>.
+  </p>
+  <p>
+    This is the decision threshold, applied after the count. A sample with no Cs-137 in it would exceed it in
+    only 5% of counts.
+  </p>
+
+  <h2>Step 2: the detection limit L<sub>D</sub></h2>
+  <p>
+    L<sub>D</sub> = k² + 2L<sub>C</sub> = {X.k2.toFixed(3)} + 2 × {c1(X.lc)} = <strong>{c1(X.ld)} counts</strong>.
+  </p>
+  <p>
+    That is the true net signal that would clear L<sub>C</sub> in 95% of counts. It describes the method, so it is
+    worked out from the blank and needs no sample result. At k = {I.k} the expression is the familiar
+    2.71 + 4.65√B.
+  </p>
+
+  <h2>Step 3: from counts to becquerels</h2>
+  <p>
+    Each becquerel gives ε·Y·t counts: Y photons per decay, ε counts per photon, t seconds. Here that is
+    0.030 × {(X.yPct / 100).toFixed(3)} × {X.t} = {c1(X.denom)} counts per becquerel, so
+  </p>
+  <p>
+    MDA = L<sub>D</sub> / (ε·Y·t) = {c1(X.ld)} / {c1(X.denom)} = <strong>{bq3(X.mda)}&nbsp;Bq</strong>.
+  </p>
+  <p>
+    For the {X.massKg}&nbsp;kg sample that is {bq3(X.perKg)}&nbsp;Bq/kg. To reproduce this on the calculator, note
+    that a fixed count has one efficiency field, “Detector efficiency”, described as counts per emission from
+    the source, and no field for emission probability or sample mass. Enter the product of ε and Y,
+    {" "}{X.formEffPct}%, as that efficiency, with
+    {" "}{I.bgCpm}&nbsp;cpm, {X.t}&nbsp;s and the 95% / 95% option, and
+    {" "}<a href={u(calc)} class="underline">it returns the same L<sub>C</sub>, L<sub>D</sub> and {bq3(X.mdaForm)}&nbsp;Bq</a>.
+    Divide by the mass yourself.
+  </p>
+
+  <h2>Reading a result</h2>
+  <p>
+    L<sub>C</sub> is what a result is compared with. The MDA is not a reporting threshold, and treating it as one
+    is a frequent error. Three possible net counts from this measurement:
+  </p>
+  <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+    <table>
+      <thead>
+        <tr><th>Net counts</th><th class="text-right">Activity</th><th>Conclusion</th></tr>
+      </thead>
+      <tbody>
+        {X.results.map((r, i) => (
+          <tr><td class="num">{r.net}</td><td class="num text-right">{bq3(r.bq)}&nbsp;Bq</td><td>{WORD[i]}</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p>
+    The middle row surprises people. A net count of {X.results[1].net} is a detection even though its
+    {" "}{bq3(X.results[1].bq)}&nbsp;Bq is below the {bq3(X.mda)}&nbsp;Bq MDA, because the MDA describes what the method
+    reliably catches, not what it is allowed to report. In the first row, keep the measured value and its
+    uncertainty alongside the words “not detected” instead of writing zero. MARLAP asks laboratories to report
+    each result and its uncertainty as obtained, even a negative one, and never to report a result as “less than
+    MDC”. That also keeps later averages honest.
+  </p>
+
+  <h2>Paired blank or well-known blank</h2>
+  <p>
+    The 2 in √(2B) assumes a paired blank: one blank counted for the same time as the sample, carrying as much
+    counting noise as the sample does. Count the blank for longer and its share of the noise shrinks. With
+    B still scaled to the sample's count time, MARLAP gives the variance of a net count on an empty sample as
+    B(1 + t<sub>S</sub>/t<sub>B</sub>), and then L<sub>C</sub> = k√(B(1 + t<sub>S</sub>/t<sub>B</sub>)) and
+    L<sub>D</sub> = k² + 2L<sub>C</sub>. A blank known so well that it adds nothing is Currie's “well-known” case. His
+    table gives 3.29σ<sub>B</sub> for it, and with the k² term kept that is about 2.71 + 3.29√B. A blank shorter
+    than the sample pushes the other way.
+  </p>
+  <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+    <table>
+      <thead>
+        <tr><th>Blank</th><th class="text-right">L<sub>C</sub></th><th class="text-right">L<sub>D</sub></th><th class="text-right">MDA</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Shorter, t<sub>B</sub> = t<sub>S</sub>/4</td><td class="num text-right">{c2(shorter.lc)}</td><td class="num text-right">{c1(shorter.ld)}</td><td class="num text-right">{bq3(shorter.mda)}&nbsp;Bq</td></tr>
+        <tr><td>Paired, t<sub>B</sub> = t<sub>S</sub></td><td class="num text-right">{c2(paired.lc)}</td><td class="num text-right">{c1(paired.ld)}</td><td class="num text-right">{bq3(paired.mda)}&nbsp;Bq</td></tr>
+        <tr><td>Longer, t<sub>B</sub> = 4t<sub>S</sub></td><td class="num text-right">{c2(longer.lc)}</td><td class="num text-right">{c1(longer.ld)}</td><td class="num text-right">{bq3(longer.mda)}&nbsp;Bq</td></tr>
+        <tr><td>Well-known</td><td class="num text-right">{c2(known.lc)}</td><td class="num text-right">{c1(known.ld)}</td><td class="num text-right">{bq3(known.mda)}&nbsp;Bq</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    The MDA calculator implements only the paired row. If your blank is longer, its figure errs high and you can
+    work the lower one from the expressions above. If your blank is shorter than the sample, its figure errs low,
+    here by about {X.shortLowPct.toFixed(0)}%, and the unsafe direction is the one to watch. That row is only a guide,
+    since its blank collects about {X.shortBlankCounts} counts, below the range noted further down, where these
+    expressions start to give too many false positives. Be careful about claiming the
+    well-known row too. A background that drifts, or a blank from a different day, adds variation these Poisson
+    expressions do not contain, and the lower figure is then not earned.
+  </p>
+
+  <h2>Where MDA figures go wrong</h2>
+  <ul class="my-3 list-disc space-y-2 pl-5">
+    <li><strong>Quoting L<sub>C</sub> as the limit.</strong> That gives {bq3(X.lcAsMda)}&nbsp;Bq here, too low by a factor of {X.lcRatio.toFixed(1)}.</li>
+    <li><strong>Leaving out the emission probability.</strong> Y omitted, the answer reads {bq3(X.noYield)}&nbsp;Bq, {X.noYieldPct.toFixed(0)}% low.</li>
+    <li><strong>Using the whole spectrum as background.</strong> Only counts in the peak region compete with the peak. At 200&nbsp;cpm of total background the figure becomes {bq3(X.wholeSpectrum)}&nbsp;Bq, nearly ten times too high.</li>
+    <li><strong>Trusting an empty-shield blank for a real sample.</strong> A sample's own gamma lines, such as K-40 or the uranium and thorium series, can raise the continuum under the peak above the blank, and then the blank-based figure is too low for that count. Estimating the background from channels beside the peak also changes the 2 in √(2B).</li>
+    <li><strong>Expecting time to do what it cannot.</strong> Four hours instead of one gives {bq3(X.four)}&nbsp;Bq, better by {X.fourRatio.toFixed(2)} times rather than four.</li>
+    <li><strong>Forgetting decay.</strong> The equations assume the activity holds steady during the count, and they refer to the time of counting. For <NuclideRef k="I-131" /> counted {X.i131Days} days after sampling, the MDA at the sampling date is {X.i131Factor.toFixed(2)} times larger. A count lasting a full half-life sees on average {X.oneHalfAvgPct.toFixed(1)}% of the starting activity. The MDA calculator applies neither correction. The <a href={u("/decay/")} class="underline">decay calculator</a> gives the first factor, which you divide by; the second is (1 − e<sup>−λt</sup>)/(λt), worked by hand.</li>
+    <li><strong>Very low blanks.</strong> MARLAP notes that the critical-level expression works well from about 100 blank counts, and can produce too many false positives below that. At B = 0 it gives L<sub>C</sub> = 0, so a single count would be called a detection.</li>
+    <li><strong>Not saying which convention was used.</strong> MARSSIM writes L<sub>D</sub> with 3 in place of k². With L<sub>C</sub> kept as above, that gives {c1(X.marssimLd)} counts, {X.marssimPct.toFixed(2)}% higher; the <a href={u("/validation/mda/")} class="underline">validation report</a> measures that difference. The form's 99% option, k = 2.326, gives {bq3(X.k99.mda)}&nbsp;Bq. State the method beside the number.</li>
+    <li><strong>Treating the efficiency as exact.</strong> These equations, and the calculator, carry no uncertainty for ε or Y. MARLAP warns that the MDC comes out too low if the factor converting activity to counts is overestimated, so an optimistic efficiency flatters the result directly.</li>
+  </ul>
+</ArticlePage>

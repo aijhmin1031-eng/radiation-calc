@@ -31,6 +31,15 @@ export interface Note {
 }
 
 export const NOTES: Note[] = [
+  /* ★ 2026-11-01 — 날짜가 있는 풀이 글의 **목록 쪽**이다. 글 하나하나는 `lib/articles.ts` 가 들고, 여기에는 입구 한 줄만 둔다. */
+  {
+    path: "/notes/",
+    name: "Worked notes",
+    question: "How is this calculated, line by line, with real numbers?",
+    blurb:
+      "Dated worked examples that start from a practical question: radioactive decay and check sources, " +
+      "a Lu-177 dose from calibration to storage, and a minimum detectable activity calculation.",
+  },
   {
     path: "/daughter-shielding/",
     name: "When the thing to shield is the daughter",

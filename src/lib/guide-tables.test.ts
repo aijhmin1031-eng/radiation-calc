@@ -1,10 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { layerTable, decayGrid, decayGridDays, dosingExamples, mm3, cm3, pct1, hMin, minutesTo } from "./guide-tables.ts";
+import { layerTable, decayGrid, decayGridDays, dosingExamples, mm3, cm3, pct1, hMin, minutesTo, MBQ_PER_MCI } from "./guide-tables.ts";
 
 /* ★ 가이드 글 두 편(/half-value-layers/, /radiopharmaceutical-decay/)의 숫자를 화면 문자열로 고정한다.
  *   글은 숫자를 글자로 적지 않고 이 함수들에서 읽으므로, 엔진·자료가 바뀌면 여기가 먼저 깨진다 —
  *   그때는 값을 고치기 전에 글의 산문(「첫 층이 다음 층보다 얇다」 등)이 아직 맞는지 다시 읽는다. */
+
+test("mCi 환산 — 1 mCi = 37 MBq, 20 mCi = 740 MBq(정의값 1 Ci = 37 GBq)", () => {
+  assert.equal(MBQ_PER_MCI.toFixed(0), "37");
+  assert.equal((20 * MBQ_PER_MCI).toFixed(0), "740");
+});
 
 test("반가층·십가층 표 — 납·철 mm, 콘크리트 cm (HVL/TVL/둘째 TVL)", () => {
   const want: Record<string, string> = {
