@@ -18,6 +18,11 @@ import { halfLifeText, betaEndpointBranch, gammaVs } from "./nuclides";
  *    는 그 설명을 들고 다니지 못한다. 그래서 제목은 **무엇을 답하는 쪽인가**만 말한다.
  *    (덤으로, 값이 바뀌어도 OG 33장 + 147장이 낡지 않는다.)
  *
+ *  ★★ **앞머리는 반감기다**(2026-10-31, Search Console 9/9~10/30 실측). 위 판단은 「비어 있는 질의」를
+ *    짐작으로 골랐고, 실제 노출은 **반감기 질의**에서 왔다 — U-236 「half life of u236」 외 변형 7개 ·
+ *    Co-60 「cobalt 60 half life」 · 「ra-224 half life」 · 「ba-133 half life」, 순위 5~10 에 클릭 0.
+ *    차폐 질의는 거의 없었다. 그래서 각은 그대로 두고 **`<핵종> half-life,` 를 맨 앞에** 둔다.
+ *    값은 여전히 넣지 않는다 — 설명 첫머리가 반감기 값을 든다.
  *  ★ **새 주장을 만들지 않는다** — 제목이 말하는 것은 전부 그 쪽이 이미 그리는 것이다.
  *    감마가 없는 핵종에 「half-value layer」를 달면 찾아온 사람이 없는 것을 찾게 된다.
  *  ★ **없는 것을 「없다」고 쓰지 않는다**(`nuclide-prose.ts` 와 같은 규칙) — 임계 아래
@@ -66,7 +71,7 @@ export function nuclideSeo(p: NuclidePage): NuclideSeo {
   if (p.gamma > 0 && gammaLeadsFor(key)) {
     return {
       angle: "gamma",
-      title: `${key} shielding — lead half-value layer and dose rate`,
+      title: `${key} half-life, lead half-value layer and dose rate`,
       description:
         `${name} (${key}): half-life ${hl}, Γ = ${sig(p.gamma)} mGy·m²/(GBq·h). ` +
         `Half-value layers in lead, tungsten, iron and concrete, from the full spectrum.`,
@@ -78,7 +83,7 @@ export function nuclideSeo(p: NuclidePage): NuclideSeo {
     const end = betaEndpointBranch(key);
     return {
       angle: "beta",
-      title: `${key} beta shielding — range and bremsstrahlung`,
+      title: `${key} half-life, beta range and bremsstrahlung`,
       description:
         `${name} (${key}): half-life ${hl}` +
         (end ? `, beta endpoint ${sig(end.maxKeV, 4)} keV` : "") +
@@ -90,7 +95,7 @@ export function nuclideSeo(p: NuclidePage): NuclideSeo {
   if (n.alpha?.length) {
     return {
       angle: "alpha",
-      title: `${key} specific activity and alpha line energies`,
+      title: `${key} half-life, specific activity and alpha energies`,
       description:
         `${name} (${key}): half-life ${hl}, specific activity ${sig(n.sa_bq_g)} Bq/g. ` +
         `Alpha line energies and emission probabilities from IAEA decay data.`,
@@ -100,7 +105,7 @@ export function nuclideSeo(p: NuclidePage): NuclideSeo {
   /* 나머지 6종 — 주장할 방출이 없다. 확실한 것만 든다. */
   return {
     angle: "plain",
-    title: `${key} half-life, decay mode and specific activity`,
+    title: `${key} half-life, decay mode and specific activity`, // ★ 이 각은 처음부터 반감기가 앞이었다
     description:
       /* ★ 붕괴형식을 설명에서 뺐다 — 제목이 이미 들고, 문구가 길다(「electron capture with
          beta-plus」가 30자다). Ni-59·Ta-182m1 이 175·173자로 예산을 넘겼고 테스트가 잡았다. */

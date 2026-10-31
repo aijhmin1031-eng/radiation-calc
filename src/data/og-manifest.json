@@ -65,79 +65,79 @@
   },
   "/nuclides/am-241/": {
     "slug": "nuclides-am-241",
-    "title": "Am-241 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Am-241 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/am-243/": {
     "slug": "nuclides-am-243",
-    "title": "Am-243 specific activity and alpha line energies · Radiation Lab"
+    "title": "Am-243 half-life, specific activity and alpha energies · Radiation Lab"
   },
   "/nuclides/au-198/": {
     "slug": "nuclides-au-198",
-    "title": "Au-198 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Au-198 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/ba-133/": {
     "slug": "nuclides-ba-133",
-    "title": "Ba-133 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Ba-133 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/c-14/": {
     "slug": "nuclides-c-14",
-    "title": "C-14 beta shielding — range and bremsstrahlung · Radiation Lab"
+    "title": "C-14 half-life, beta range and bremsstrahlung · Radiation Lab"
   },
   "/nuclides/cd-109/": {
     "slug": "nuclides-cd-109",
-    "title": "Cd-109 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Cd-109 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/ce-139/": {
     "slug": "nuclides-ce-139",
-    "title": "Ce-139 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Ce-139 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/cf-252/": {
     "slug": "nuclides-cf-252",
-    "title": "Cf-252 specific activity and alpha line energies · Radiation Lab"
+    "title": "Cf-252 half-life, specific activity and alpha energies · Radiation Lab"
   },
   "/nuclides/cl-36/": {
     "slug": "nuclides-cl-36",
-    "title": "Cl-36 beta shielding — range and bremsstrahlung · Radiation Lab"
+    "title": "Cl-36 half-life, beta range and bremsstrahlung · Radiation Lab"
   },
   "/nuclides/cm-244/": {
     "slug": "nuclides-cm-244",
-    "title": "Cm-244 specific activity and alpha line energies · Radiation Lab"
+    "title": "Cm-244 half-life, specific activity and alpha energies · Radiation Lab"
   },
   "/nuclides/co-57/": {
     "slug": "nuclides-co-57",
-    "title": "Co-57 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Co-57 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/co-60/": {
     "slug": "nuclides-co-60",
-    "title": "Co-60 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Co-60 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/cr-51/": {
     "slug": "nuclides-cr-51",
-    "title": "Cr-51 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Cr-51 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/cs-134/": {
     "slug": "nuclides-cs-134",
-    "title": "Cs-134 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Cs-134 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/cs-135/": {
     "slug": "nuclides-cs-135",
-    "title": "Cs-135 beta shielding — range and bremsstrahlung · Radiation Lab"
+    "title": "Cs-135 half-life, beta range and bremsstrahlung · Radiation Lab"
   },
   "/nuclides/cs-137/": {
     "slug": "nuclides-cs-137",
-    "title": "Cs-137 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Cs-137 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/eu-152/": {
     "slug": "nuclides-eu-152",
-    "title": "Eu-152 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Eu-152 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/eu-154/": {
     "slug": "nuclides-eu-154",
-    "title": "Eu-154 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Eu-154 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/f-18/": {
     "slug": "nuclides-f-18",
-    "title": "F-18 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "F-18 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/fe-55/": {
     "slug": "nuclides-fe-55",
@@ -145,11 +145,11 @@
   },
   "/nuclides/ga-67/": {
     "slug": "nuclides-ga-67",
-    "title": "Ga-67 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Ga-67 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/ga-68/": {
     "slug": "nuclides-ga-68",
-    "title": "Ga-68 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Ga-68 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/ge-68/": {
     "slug": "nuclides-ge-68",
@@ -157,55 +157,55 @@
   },
   "/nuclides/h-3/": {
     "slug": "nuclides-h-3",
-    "title": "H-3 beta shielding — range and bremsstrahlung · Radiation Lab"
+    "title": "H-3 half-life, beta range and bremsstrahlung · Radiation Lab"
   },
   "/nuclides/ho-166/": {
     "slug": "nuclides-ho-166",
-    "title": "Ho-166 beta shielding — range and bremsstrahlung · Radiation Lab"
+    "title": "Ho-166 half-life, beta range and bremsstrahlung · Radiation Lab"
   },
   "/nuclides/i-125/": {
     "slug": "nuclides-i-125",
-    "title": "I-125 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "I-125 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/i-129/": {
     "slug": "nuclides-i-129",
-    "title": "I-129 beta shielding — range and bremsstrahlung · Radiation Lab"
+    "title": "I-129 half-life, beta range and bremsstrahlung · Radiation Lab"
   },
   "/nuclides/i-131/": {
     "slug": "nuclides-i-131",
-    "title": "I-131 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "I-131 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/in-111/": {
     "slug": "nuclides-in-111",
-    "title": "In-111 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "In-111 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/ir-192/": {
     "slug": "nuclides-ir-192",
-    "title": "Ir-192 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Ir-192 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/k-40/": {
     "slug": "nuclides-k-40",
-    "title": "K-40 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "K-40 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/kr-85/": {
     "slug": "nuclides-kr-85",
-    "title": "Kr-85 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Kr-85 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/lu-177/": {
     "slug": "nuclides-lu-177",
-    "title": "Lu-177 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Lu-177 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/mn-54/": {
     "slug": "nuclides-mn-54",
-    "title": "Mn-54 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Mn-54 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/mo-99/": {
     "slug": "nuclides-mo-99",
-    "title": "Mo-99 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Mo-99 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/na-22/": {
     "slug": "nuclides-na-22",
-    "title": "Na-22 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Na-22 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/ni-59/": {
     "slug": "nuclides-ni-59",
@@ -213,135 +213,135 @@
   },
   "/nuclides/ni-63/": {
     "slug": "nuclides-ni-63",
-    "title": "Ni-63 beta shielding — range and bremsstrahlung · Radiation Lab"
+    "title": "Ni-63 half-life, beta range and bremsstrahlung · Radiation Lab"
   },
   "/nuclides/np-237/": {
     "slug": "nuclides-np-237",
-    "title": "Np-237 specific activity and alpha line energies · Radiation Lab"
+    "title": "Np-237 half-life, specific activity and alpha energies · Radiation Lab"
   },
   "/nuclides/p-32/": {
     "slug": "nuclides-p-32",
-    "title": "P-32 beta shielding — range and bremsstrahlung · Radiation Lab"
+    "title": "P-32 half-life, beta range and bremsstrahlung · Radiation Lab"
   },
   "/nuclides/pb-210/": {
     "slug": "nuclides-pb-210",
-    "title": "Pb-210 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Pb-210 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/pm-147/": {
     "slug": "nuclides-pm-147",
-    "title": "Pm-147 beta shielding — range and bremsstrahlung · Radiation Lab"
+    "title": "Pm-147 half-life, beta range and bremsstrahlung · Radiation Lab"
   },
   "/nuclides/po-210/": {
     "slug": "nuclides-po-210",
-    "title": "Po-210 specific activity and alpha line energies · Radiation Lab"
+    "title": "Po-210 half-life, specific activity and alpha energies · Radiation Lab"
   },
   "/nuclides/pu-238/": {
     "slug": "nuclides-pu-238",
-    "title": "Pu-238 specific activity and alpha line energies · Radiation Lab"
+    "title": "Pu-238 half-life, specific activity and alpha energies · Radiation Lab"
   },
   "/nuclides/pu-239/": {
     "slug": "nuclides-pu-239",
-    "title": "Pu-239 specific activity and alpha line energies · Radiation Lab"
+    "title": "Pu-239 half-life, specific activity and alpha energies · Radiation Lab"
   },
   "/nuclides/pu-240/": {
     "slug": "nuclides-pu-240",
-    "title": "Pu-240 specific activity and alpha line energies · Radiation Lab"
+    "title": "Pu-240 half-life, specific activity and alpha energies · Radiation Lab"
   },
   "/nuclides/pu-241/": {
     "slug": "nuclides-pu-241",
-    "title": "Pu-241 beta shielding — range and bremsstrahlung · Radiation Lab"
+    "title": "Pu-241 half-life, beta range and bremsstrahlung · Radiation Lab"
   },
   "/nuclides/ra-223/": {
     "slug": "nuclides-ra-223",
-    "title": "Ra-223 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Ra-223 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/ra-226/": {
     "slug": "nuclides-ra-226",
-    "title": "Ra-226 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Ra-226 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/ra-228/": {
     "slug": "nuclides-ra-228",
-    "title": "Ra-228 beta shielding — range and bremsstrahlung · Radiation Lab"
+    "title": "Ra-228 half-life, beta range and bremsstrahlung · Radiation Lab"
   },
   "/nuclides/re-188/": {
     "slug": "nuclides-re-188",
-    "title": "Re-188 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Re-188 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/sb-124/": {
     "slug": "nuclides-sb-124",
-    "title": "Sb-124 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Sb-124 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/se-75/": {
     "slug": "nuclides-se-75",
-    "title": "Se-75 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Se-75 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/se-79/": {
     "slug": "nuclides-se-79",
-    "title": "Se-79 beta shielding — range and bremsstrahlung · Radiation Lab"
+    "title": "Se-79 half-life, beta range and bremsstrahlung · Radiation Lab"
   },
   "/nuclides/sm-153/": {
     "slug": "nuclides-sm-153",
-    "title": "Sm-153 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Sm-153 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/sr-89/": {
     "slug": "nuclides-sr-89",
-    "title": "Sr-89 beta shielding — range and bremsstrahlung · Radiation Lab"
+    "title": "Sr-89 half-life, beta range and bremsstrahlung · Radiation Lab"
   },
   "/nuclides/sr-90/": {
     "slug": "nuclides-sr-90",
-    "title": "Sr-90 beta shielding — range and bremsstrahlung · Radiation Lab"
+    "title": "Sr-90 half-life, beta range and bremsstrahlung · Radiation Lab"
   },
   "/nuclides/tc-99/": {
     "slug": "nuclides-tc-99",
-    "title": "Tc-99 beta shielding — range and bremsstrahlung · Radiation Lab"
+    "title": "Tc-99 half-life, beta range and bremsstrahlung · Radiation Lab"
   },
   "/nuclides/tc-99m/": {
     "slug": "nuclides-tc-99m",
-    "title": "Tc-99m shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Tc-99m half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/th-230/": {
     "slug": "nuclides-th-230",
-    "title": "Th-230 specific activity and alpha line energies · Radiation Lab"
+    "title": "Th-230 half-life, specific activity and alpha energies · Radiation Lab"
   },
   "/nuclides/th-232/": {
     "slug": "nuclides-th-232",
-    "title": "Th-232 specific activity and alpha line energies · Radiation Lab"
+    "title": "Th-232 half-life, specific activity and alpha energies · Radiation Lab"
   },
   "/nuclides/tl-201/": {
     "slug": "nuclides-tl-201",
-    "title": "Tl-201 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Tl-201 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/tl-204/": {
     "slug": "nuclides-tl-204",
-    "title": "Tl-204 beta shielding — range and bremsstrahlung · Radiation Lab"
+    "title": "Tl-204 half-life, beta range and bremsstrahlung · Radiation Lab"
   },
   "/nuclides/u-233/": {
     "slug": "nuclides-u-233",
-    "title": "U-233 specific activity and alpha line energies · Radiation Lab"
+    "title": "U-233 half-life, specific activity and alpha energies · Radiation Lab"
   },
   "/nuclides/u-234/": {
     "slug": "nuclides-u-234",
-    "title": "U-234 specific activity and alpha line energies · Radiation Lab"
+    "title": "U-234 half-life, specific activity and alpha energies · Radiation Lab"
   },
   "/nuclides/u-235/": {
     "slug": "nuclides-u-235",
-    "title": "U-235 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "U-235 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/u-238/": {
     "slug": "nuclides-u-238",
-    "title": "U-238 specific activity and alpha line energies · Radiation Lab"
+    "title": "U-238 half-life, specific activity and alpha energies · Radiation Lab"
   },
   "/nuclides/xe-133/": {
     "slug": "nuclides-xe-133",
-    "title": "Xe-133 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Xe-133 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/y-88/": {
     "slug": "nuclides-y-88",
-    "title": "Y-88 shielding — lead half-value layer and dose rate · Radiation Lab"
+    "title": "Y-88 half-life, lead half-value layer and dose rate · Radiation Lab"
   },
   "/nuclides/y-90/": {
     "slug": "nuclides-y-90",
-    "title": "Y-90 beta shielding — range and bremsstrahlung · Radiation Lab"
+    "title": "Y-90 half-life, beta range and bremsstrahlung · Radiation Lab"
   },
   "/positron-emitters/": {
     "slug": "positron-emitters",
@@ -401,11 +401,11 @@
   },
   "/nuclides/u-236/": {
     "slug": "nuclides-u-236",
-    "title": "U-236 specific activity and alpha line energies · Radiation Lab"
+    "title": "U-236 half-life, specific activity and alpha energies · Radiation Lab"
   },
   "/nuclides/ra-224/": {
     "slug": "nuclides-ra-224",
-    "title": "Ra-224 specific activity and alpha line energies · Radiation Lab"
+    "title": "Ra-224 half-life, specific activity and alpha energies · Radiation Lab"
   },
   "/changelog/": {
     "slug": "changelog",
