@@ -66,11 +66,13 @@ export const ARTICLES: Article[] = [
     reviewed: "2026-11-01",
     question: "How much Lu-177 has to be labelled days ahead, what does a delay cost, and what is left a week or two later?",
     summary:
-      "One therapy dose from calibration to storage: the activity needed for each transit time, a Monday calibration carried to a Thursday infusion, the window around a ±10% tolerance, a time-zone slip, the vial at 7 and 14 days, and why Lu-177m decides storage.",
+      "One therapy dose from calibration to storage: the activity needed for each transit time, a Monday calibration carried to a Thursday infusion, the window around a ±10% tolerance, a time-zone slip, the vial at 7 and 14 days, and when Lu-177m decides storage.",
     sources: [
       IAEA,
-      { label: "European Medicines Agency, Lutathera (lutetium (177Lu) oxodotreotide): EPAR product information, for the 7.4 GBq ± 10% vial activity and the 6.647-day half-life it prints.",
+      { label: "European Medicines Agency, Lutathera (lutetium (177Lu) oxodotreotide): EPAR product information, sections 2, 6.3 and 6.6 and the labelling, for the 7 400 MBq at infusion, 370 MBq/mL at calibration, 72-hour shelf life, 6.647-day half-life, production routes and UTC times.",
         href: "https://www.ema.europa.eu/en/documents/product-information/lutathera-epar-product-information_en.pdf" },
+      { label: "Lutathera (lutetium Lu 177 dotatate) US prescribing information, section 16, for the 7.4 GBq (200 mCi) ± 10% at the time of injection and the 72-hour shelf life.",
+        href: "https://www.novartis.com/us-en/sites/novartis_us/files/lutathera.pdf" },
     ],
     calculators: [
       { path: "/decay/", label: "Radioactive decay calculator", note: "any other interval, with Lu-177 or Lu-177m selected" },
@@ -86,22 +88,22 @@ export const ARTICLES: Article[] = [
       "An MDA calculation worked step by step with Currie's equations: L_C, L_D, turning counts into Bq, paired and well-known blanks, and where results go wrong.",
     published: "2026-11-01",
     reviewed: "2026-11-01",
-    question: "What is the smallest activity a given count could reliably have seen, and how is a real result read against it?",
+    question: "What is the smallest activity a given count could reliably have seen, and how is a result read against it?",
     summary:
-      "A one-hour Cs-137 gamma count taken from background to critical level, detection limit and becquerels with the equations the MDA calculator uses, three real results read against those limits, paired against well-known blanks, and the errors that move the answer most.",
+      "A one-hour Cs-137 gamma count taken from background to critical level, detection limit and becquerels with the equations the MDA calculator uses, three possible results read against those limits, paired against well-known blanks, and the errors that move the answer most.",
     sources: [
       cite("currie"),
       { label: "Lindstrom, R. M., commentary on Currie (1968) with its Table I of paired and well-known blank expressions, in A Century of Excellence in Measurements, Standards, and Technology, NIST Special Publication 958 (2001), 164-166.",
         href: "https://nvlpubs.nist.gov/nistpubs/sp958-lide/html/164-166.html" },
       cite("marssim"),
-      { label: "Multi-Agency Radiological Laboratory Analytical Protocols Manual (MARLAP), NUREG-1576 / EPA 402-B-04-001C, July 2004. Chapter 20, Detection and Quantification Capabilities, Equations 20.8 to 20.11.",
+      { label: "Multi-Agency Radiological Laboratory Analytical Protocols Manual (MARLAP), NUREG-1576 / EPA 402-B-04-001C, July 2004. Chapter 20, Detection and Quantification Capabilities: Equations 20.8 to 20.11 and 20.26, the blank-count range on page 20-16 and the reporting rule on page 20-12.",
         href: "https://www.epa.gov/radiation/marlap-manual-and-supporting-documents" },
       IAEA,
     ],
     calculators: [
       { path: "/mda/", label: "MDA calculator", note: "L_C, L_D and MDA for a fixed count with a paired blank, and scan MDC" },
       { path: "/validation/mda/", label: "MDA validation report", note: "MARSSIM's printed examples reproduced, and the difference in its constant" },
-      { path: "/decay/", label: "Radioactive decay calculator", note: "carrying an MDA back to the sampling date" },
+      { path: "/decay/", label: "Radioactive decay calculator", note: "the decay factor for taking an MDA back to the sampling date" },
     ],
   },
 ];

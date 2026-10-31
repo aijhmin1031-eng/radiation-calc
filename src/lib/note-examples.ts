@@ -51,7 +51,9 @@ export function decayExamples() {
   return {
     ladder,
     ra: { givenPct: given * 100, n: raN, pct: raF * 100, gap: (given - raF) * 100,
-          onePctY: raOnePctY, thY, ratioFromGiven: 2 ** (-17.4 / 5.75) * 100 },
+          onePctY: raOnePctY, thY, ratioFromGiven: 2 ** (-17.4 / 5.75) * 100,
+          /* Livechart 의 5.75(3) y — 평가값의 불확도가 답을 얼마나 벌리는가. 자료에는 불확도가 없어 글자로 둔다(2026-11-01 Livechart 확인). */
+          lowPct: decayActivity(100, 5.72, 17.4), highPct: decayActivity(100, 5.78, 17.4) },
     cs: { days: csDays, years: (csDays * DAY) / YEAR, halfLifeY: csY, f: csF,
           kBq: 370 * csF, lostPct: (1 - csF) * 100,
           perYearPct: (1 - frac("Cs-137", YEAR)) * 100,
@@ -101,13 +103,14 @@ export function luExamples() {
     dayLate: LU_DOSE_GBQ * delay(24), dayLatePct: (1 - delay(24)) * 100,
     low: LU_DOSE_GBQ * 0.9, high: LU_DOSE_GBQ * 1.1,
     lateH, earlyH,
-    utc9Pct: (1 - delay(9)) * 100,
-    utc5Pct: (1 - delay(5)) * 100,
+    /* UTC 로 적힌 교정 시각을 현지 시각으로 읽으면: UTC+9 는 실제 교정이 9시간 뒤라 계산보다 **많이** 들어 있고, UTC−5 는 5시간 앞이라 **적게** 들어 있다. */
+    utc9AbovePct: (1 / delay(9) - 1) * 100,
+    utc5BelowPct: (1 - delay(5)) * 100,
     /* 라벨 6.647 d 와 자료 6.6443 d — 14일 뒤 차이. 비교용일 뿐 계산은 자료 값을 쓴다. */
     labelGap14Pct: (decayActivity(1, 6.647 * DAY, 14 * DAY) / cell(14) - 1) * 100,
     weekIsNotHalf: cell(7) * 100,
     tenDays: tenS / DAY, tenLeftMBq: LU_DOSE_GBQ * 1000 * frac(k, tenS),
-    isoHalfLifeD: T("Lu-177m") / DAY, isoLeftPct: isoF * 100, isoGain: isoF / frac(k, tenS),
+    isoHalfLifeD: T("Lu-177m") / DAY, isoLeftPct: isoF * 100, luAloneLeftPct: frac(k, tenS) * 100,
   };
 }
 
@@ -132,7 +135,8 @@ export function mdaExamples() {
   const onForm = minimumDetectableActivity({ bgCps: bgCpm / 60, countTimeS: t, efficiency: eps * y, k });
   const at = (x: number) => x / denom;
 
-  const blanks = [1, 1 / 4, 0].map((ratio) => {
+  /* 짧은 블랭크 · 짝 · 긴 블랭크 · 잘 아는 블랭크. 계산기는 r = 1 만 한다 — 짧은 블랭크에서는 계산기 값이 낮게 나온다. */
+  const blanks = [4, 1, 1 / 4, 0].map((ratio) => {
     const lc = lcWithRatio(r.bgCounts, ratio, k), ld = ldWithRatio(r.bgCounts, ratio, k);
     return { ratio, lc, ld, mda: at(ld) };
   });
@@ -148,7 +152,7 @@ export function mdaExamples() {
     sqrt2B: Math.sqrt(2 * r.bgCounts), k2: k * k, marssimLd: 3 + 2 * r.lc,
     marssimPct: ((3 + 2 * r.lc) / r.ld - 1) * 100,
     results: [20, 40, 70].map((net) => ({ net, bq: at(net) })),
-    blanks,
+    blanks, shortLowPct: (1 - r.mda / blanks[0].mda) * 100,
     four: four.mda, fourRatio: r.mda / four.mda,
     k99: { lc: k99.lc, ld: k99.ld, mda: k99.mda },
     lcAsMda: at(r.lc), lcRatio: r.ld / r.lc,

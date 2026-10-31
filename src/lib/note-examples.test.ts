@@ -26,15 +26,17 @@ test("붕괴 — Ra-228: 문제의 5.8 y 는 1/8, 평가값 5.75 y 는 12.3%", (
   assert.equal(ra.gap.toFixed(2), "0.22");
   assert.equal(ra.onePctY.toFixed(1), "38.2");      // 5.75 × log₂100
   assert.equal(ra.thY.toFixed(2), "1.91");
+  assert.equal(ra.lowPct.toFixed(1), "12.1");       // 2^(−17.4/5.72)
+  assert.equal(ra.highPct.toFixed(1), "12.4");      // 2^(−17.4/5.78)
   near(ra.pct, ra.ratioFromGiven, 1e-5);             // 엔진(자료 초)과 2^(−17.4/5.75) 가 같은 답이다
 });
 
 test("붕괴 — Cs-137 370 kBq, 2016-06-01 → 2026-11-01", () => {
   const { cs } = decayExamples();
   assert.equal(cs.days, 3805);
-  assert.equal(cs.years.toFixed(2), "10.42");
+  assert.equal(cs.years.toFixed(3), "10.418");
   assert.equal(cs.halfLifeY.toFixed(2), "30.08");
-  assert.equal((cs.years / cs.halfLifeY).toFixed(3), "0.346");
+  assert.equal((cs.years / cs.halfLifeY).toFixed(4), "0.3463");
   assert.equal(cs.f.toFixed(4), "0.7866");
   assert.equal(cs.kBq.toFixed(0), "291");
   assert.equal(cs.lostPct.toFixed(1), "21.3");
@@ -49,8 +51,9 @@ test("붕괴 — Cs-137 370 kBq, 2016-06-01 → 2026-11-01", () => {
 test("붕괴 — Co-60 거꾸로: 52.4 kBq, 2019-03-15 인증서 140 kBq", () => {
   const { co } = decayExamples();
   assert.equal(co.days, 2788);
-  assert.equal(co.years.toFixed(2), "7.63");
-  assert.equal(co.halfLifeY.toFixed(2), "5.27");
+  assert.equal(co.years.toFixed(3), "7.633");
+  assert.equal(co.halfLifeY.toFixed(3), "5.271");
+  assert.equal((co.years / co.halfLifeY).toFixed(4), "1.4481");
   assert.equal(co.f.toFixed(4), "0.3665");
   assert.equal(co.back.toFixed(1), "143.0");
   assert.equal(co.certGapPct.toFixed(1), "2.1");
@@ -85,7 +88,7 @@ test("Lu-177 — 예제 · 지연 · 창 · 시계 · 동위 이성질체", () =
   assert.equal(X.reachH.toFixed(1), "71.6");
   assert.equal(X.reachClock, "09:33");
   /* 벌크 2.0 GBq/mL × 0.7313 = 1.463 GBq/mL · 7.4/1.463 = 5.06 mL · 3.70 mL 를 그대로 뽑으면 5.41 GBq(26.9% 적다) */
-  assert.equal(X.bulk.concNow.toFixed(2), "1.46");
+  assert.equal(X.bulk.concNow.toFixed(3), "1.463");
   assert.equal(X.bulk.volNow.toFixed(2), "5.06");
   assert.equal(X.bulk.vol0.toFixed(2), "3.70");
   assert.equal(X.bulk.wrongGBq.toFixed(2), "5.41");
@@ -100,14 +103,14 @@ test("Lu-177 — 예제 · 지연 · 창 · 시계 · 동위 이성질체", () =
   assert.equal(X.lateH.toFixed(1), "24.2");
   assert.equal((X.earlyH + X.lateH).toFixed(0), "46");
   assert.ok(X.dayLate > X.low, "「다음 날도 겨우 안에 든다」는 산문이 참이어야 한다");
-  assert.equal(X.utc9Pct.toFixed(1), "3.8");
-  assert.equal(X.utc5Pct.toFixed(1), "2.1");
-  assert.ok(X.utc9Pct > 10 / 3, "「허용 범위의 3분의 1 넘게」는 산문이 참이어야 한다");
+  assert.equal(X.utc9AbovePct.toFixed(1), "4.0");
+  assert.equal(X.utc5BelowPct.toFixed(1), "2.1");
+  assert.ok(X.utc9AbovePct > 10 / 3, "「허용 범위의 3분의 1 넘게」는 산문이 참이어야 한다");
   assert.equal(X.tenDays.toFixed(1), "66.4");
   assert.equal(X.tenLeftMBq.toFixed(2), "7.23");
   assert.equal(X.isoHalfLifeD, 160.4);
   assert.equal(X.isoLeftPct.toFixed(1), "75.0");
-  assert.equal(String(Math.round(X.isoGain)), "768");
+  assert.ok(X.luAloneLeftPct < 0.1, "「0.1% 아래」는 산문이 참이어야 한다");
 });
 
 test("MDA — 계산기의 식 그대로: L_C · L_D · MDA", () => {
@@ -140,7 +143,8 @@ test("MDA — 결과 읽기 · 블랭크 · 흔한 실수", () => {
   const [a, b, c] = X.results;
   assert.ok(a.net < X.lc && b.net > X.lc && b.net < X.ld && c.net > X.ld, "표의 세 결론이 참이어야 한다");
   assert.deepEqual(X.blanks.map((r) => [r.lc.toFixed(1), r.ld.toFixed(1), r.mda.toPrecision(3)]),
-    [["25.5", "53.7", "0.584"], ["20.1", "43.0", "0.468"], ["18.0", "38.7", "0.422"]]);
+    [["40.3", "83.3", "0.906"], ["25.5", "53.7", "0.584"], ["20.1", "43.0", "0.468"], ["18.0", "38.7", "0.422"]]);
+  assert.equal(X.shortLowPct.toFixed(0), "36");
   /* 짝 블랭크는 엔진 그대로, 잘 아는 블랭크는 Currie 표 I(1.64·√B, 2.71 + 3.29·√B) · MARLAP 식 20.11. */
   near(lcWithRatio(120, 1, 1.645), X.lc);
   near(ldWithRatio(120, 1, 1.645), X.ld);

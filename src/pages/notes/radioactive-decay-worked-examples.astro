@@ -67,8 +67,9 @@ const days = (n: number) => n.toLocaleString("en-US");
     selected. It answers <strong>{X.ra.pct.toFixed(1)}%</strong>. Nothing has gone wrong. The calculator
     takes its half-life from evaluated nuclear data, the IAEA Livechart value of 5.75 years, so
     n = 17.4 / 5.75 = {X.ra.n.toFixed(3)} and 2<sup>−{X.ra.n.toFixed(3)}</sup> = {(X.ra.pct / 100).toFixed(4)}.
-    The two answers differ by {X.ra.gap.toFixed(2)} of a percentage point, and that gap is entirely the
-    rounded half-life in the question.
+    The two answers differ by {X.ra.gap.toFixed(2)} of a percentage point, which comes from the rounded
+    half-life in the question. Keep that in proportion: the evaluated value is itself 5.75&nbsp;±&nbsp;0.03 years,
+    enough to spread the answer from {X.ra.lowPct.toFixed(1)}% to {X.ra.highPct.toFixed(1)}%.
   </p>
   <p>
     Which one to give depends on who is asking. On a problem set, use the half-life the problem gives you:
@@ -89,20 +90,20 @@ const days = (n: number) => n.toLocaleString("en-US");
     it hold on 1 November 2026?
   </p>
   <ol class="my-3 list-decimal space-y-1 pl-5">
-    <li>Elapsed time: {days(X.cs.days)} days, which is {X.cs.years.toFixed(2)} years.</li>
-    <li>Half-lives: n = {X.cs.years.toFixed(2)} / {X.cs.halfLifeY.toFixed(2)} = {(X.cs.years / X.cs.halfLifeY).toFixed(3)}.</li>
-    <li>Fraction: 2<sup>−{(X.cs.years / X.cs.halfLifeY).toFixed(3)}</sup> = {X.cs.f.toFixed(4)}.</li>
+    <li>Elapsed time: {days(X.cs.days)} days, which is {X.cs.years.toFixed(3)} years.</li>
+    <li>Half-lives: n = {X.cs.years.toFixed(3)} / {X.cs.halfLifeY.toFixed(2)} = {(X.cs.years / X.cs.halfLifeY).toFixed(4)}.</li>
+    <li>Fraction: 2<sup>−{(X.cs.years / X.cs.halfLifeY).toFixed(4)}</sup> = {X.cs.f.toFixed(4)}.</li>
     <li>Activity: 370 × {X.cs.f.toFixed(4)} = <strong>{X.cs.kBq.toFixed(0)}&nbsp;kBq</strong>.</li>
   </ol>
   <p>
     <a href={u(csCalc)} class="underline">The calculator with these inputs</a> gives the same figure. The
-    reason to do this is what you then compare it with. A meter that read 12,000&nbsp;cpm on this source on
-    the certificate date should read about {Math.round(X.cs.meterToday / 10) * 10}&nbsp;cpm now, in the same
-    geometry. That {X.cs.lostPct.toFixed(1)}% fall is decay and says nothing about the detector. Only a
-    difference from the corrected figure, beyond your tolerance, is a question about the instrument. The
-    {" "}662&nbsp;keV photon the meter counts comes from Ba-137m, half-life {X.cs.baM.toFixed(2)} minutes,
-    which stays in equilibrium inside a sealed source, so its rate follows the Cs-137 and the same factor
-    applies.
+    reason to do this is what you then compare it with. A meter with a net reading of 12,000&nbsp;cpm on this
+    source on the certificate date should give about {Math.round(X.cs.meterToday / 10) * 10}&nbsp;cpm net now, in
+    the same geometry and at a rate where dead time does not matter. That {X.cs.lostPct.toFixed(1)}% fall is decay
+    and says nothing about the detector. Only a difference from the corrected figure, beyond your tolerance,
+    raises a question about the instrument or the source. A gamma detector is counting the 662&nbsp;keV photon
+    from Ba-137m, half-life {X.cs.baM.toFixed(2)} minutes, which stays in equilibrium inside a sealed source, so
+    its rate follows the Cs-137 and the same factor applies.
   </p>
   <p>
     How exact does this need to be? Cs-137 loses {X.cs.perYearPct.toFixed(2)}% a year, so a date wrong by a
@@ -119,8 +120,8 @@ const days = (n: number) => n.toLocaleString("en-US");
     here you divide: A₀ = A / 2<sup>−t/T½</sup>.
   </p>
   <ol class="my-3 list-decimal space-y-1 pl-5">
-    <li>Elapsed time: {days(X.co.days)} days, which is {X.co.years.toFixed(2)} years against a half-life of {X.co.halfLifeY.toFixed(2)} years.</li>
-    <li>Fraction: 2<sup>−{(X.co.years / X.co.halfLifeY).toFixed(3)}</sup> = {X.co.f.toFixed(4)}.</li>
+    <li>Elapsed time: {days(X.co.days)} days, which is {X.co.years.toFixed(3)} years against a half-life of {X.co.halfLifeY.toFixed(3)} years.</li>
+    <li>Fraction: 2<sup>−{(X.co.years / X.co.halfLifeY).toFixed(4)}</sup> = {X.co.f.toFixed(4)}.</li>
     <li>Activity on the certificate date: 52.4 / {X.co.f.toFixed(4)} = <strong>{X.co.back.toFixed(1)}&nbsp;kBq</strong>.</li>
   </ol>
   <p>
