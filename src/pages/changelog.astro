@@ -2,9 +2,10 @@
 import Base from "../layouts/Base.astro";
 import NuclideRef from "../components/NuclideRef.astro";
 import { u, DOI, DOI_URL, UMBRELLA_NAME } from "../lib/site";
-import { NUCLIDES, gammaOf } from "../lib/nuclides";
+import { NUCLIDES, gammaOf, nuclidePage } from "../lib/nuclides";
+import { ACRYLIC } from "../lib/beta-absorbers";
 import { PAGE_KEYS } from "../lib/nuclide-pages";
-import { bremsEndpointKeV, bremsstrahlungYield } from "../engine/beta";
+import { betaRangeCm, bremsEndpointKeV, bremsstrahlungYield } from "../engine/beta";
 import { RELEASES, VERSION, dateText } from "../lib/version";
 import CHANGES from "../data/changes-1.1.0.json";
 
@@ -15,7 +16,7 @@ import CHANGES from "../data/changes-1.1.0.json";
  *  ★ 절 머리의 판 · 날짜는 `lib/version.ts` 의 `RELEASES` 에서 **번호로 찾는다**(T15 검토 — 자리로 받으면 1.1.1 을 위에 더하는
  *    날 1.1.0 의 글이 1.1.1 머리 아래로 조용히 밀린다). `check-output` ⑦-2 가 모든 판에 절이 하나씩 있는지 잰다. */
 const rel = (v: string) => RELEASES.find((r) => r.version === v)!;
-const v115 = rel("1.1.5"), v114 = rel("1.1.4"), v113 = rel("1.1.3"), v112 = rel("1.1.2"), v111 = rel("1.1.1"), v110 = rel("1.1.0"), v101 = rel("1.0.1");
+const v120 = rel("1.2.0"), v115 = rel("1.1.5"), v114 = rel("1.1.4"), v113 = rel("1.1.3"), v112 = rel("1.1.2"), v111 = rel("1.1.1"), v110 = rel("1.1.0"), v101 = rel("1.0.1");
 /* ★ T16 — 1.1.1 의 예: 저장 값과 낱장 값이 가장 크게 갈린 핵종. 글자로 박지 않고 자료에서 고른다. */
 const drift = Object.keys(NUCLIDES).filter((k) => NUCLIDES[k].gamma_const > 0)
   .map((k) => ({ k, stored: NUCLIDES[k].gamma_const, sheet: gammaOf(k) }))
@@ -63,6 +64,20 @@ const SMALL = ["None", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "E
  *   지금 자료의 수를 쓰면 자료가 늘 때 옛 판의 기록이 따라 바뀐다. 철회된 낱장 수는 그 147 에서 지금 낱장 수를 뺀다. */
 const V101_SHEETS = 147;
 const all = Object.keys(NUCLIDES).length;
+/* ★ 판 1.2.0 — 아크릴 전후. 「전」은 1.18 g/cm³ · Z 6 을 지금 엔진에 넣은 값, 「후」는 낱장이 지금 보이는 값이다. 시험은 `beta-absorbers.test.ts`. */
+const OLD_ACR_RHO = 1.18, OLD_ACR_Z = 6;
+const acrRows = PAGE_KEYS.map((k) => ({ k, p: nuclidePage(k) }))
+  .filter(({ p }) => p.betaMaxMeV && p.bremsMeV)
+  .map(({ k, p }) => ({
+    k,
+    mmBefore: betaRangeCm(p.betaMaxMeV!, OLD_ACR_RHO) * 10,
+    mmAfter: p.betaRanges.find((r) => r.material === "acrylic")!.cm * 10,
+    fBefore: bremsstrahlungYield(OLD_ACR_Z, p.bremsMeV!) * 100,
+    fAfter: p.bremsLow * 100,
+  }))
+  .sort((a, b) => a.k.localeCompare(b.k));
+const acrRangePct = (OLD_ACR_RHO / ACRYLIC.rho - 1) * 100;
+const acrBremsPct = (ACRYLIC.z / OLD_ACR_Z - 1) * 100;
 ---
 <Base title="Changes to the calculators and data"
       description="What changed between versions of RadCalc: corrected nuclide data, the gamma constants and half-value layers that moved, beta branches added, and the conventions now stated. Calculated changes first."
@@ -81,6 +96,36 @@ const all = Object.keys(NUCLIDES).length;
     </p>
 
     {/* ★ 2026-10-30 — 링크만 바뀐 판(끝자리). 저장소를 조직 radiation-lab-dev 로 옮겼다. */}
+    {/* ★ 2026-11-01 — 낱장 등에 찍힌 계산값이 움직이므로 가운데 자리다. 옛 값 1.18 · Z 6 은 **그 판의 사실**이라 글자로 둔다. */}
+    <h2 id={idOf(v120.version)}>{v120.version} — {dateText(v120.date)}</h2>
+    <p>
+      Calculated values change in this version, for acrylic only. If you kept a figure from an earlier version: the
+      nuclide sheets and the notes built on them used acrylic at {OLD_ACR_RHO}&nbsp;g/cm³ and Z&nbsp;≈&nbsp;{OLD_ACR_Z}, while the beta
+      calculator and its validation report used {ACRYLIC.rho}&nbsp;g/cm³ and Z&nbsp;≈&nbsp;{ACRYLIC.z}, so the same Y-90 beta gave two
+      answers depending on the page. Every page now uses the calculator's values. Acrylic ranges are
+      {" "}{Math.abs(acrRangePct).toFixed(2)}% smaller and bremsstrahlung fractions in acrylic {acrBremsPct.toFixed(2)}% larger on every row
+      below, and the ratio between lead and acrylic moves from {(82 / OLD_ACR_Z).toFixed(1)} to {(82 / ACRYLIC.z).toFixed(1)}. The calculators,
+      their formulas, the validation reports and the figures for lead do not change. The pages affected are the
+      nuclide sheets, Shield materials for beta emitters, When the thing to shield is the daughter, Hard-to-measure nuclides and Nuclides for
+      check and calibration sources.
+    </p>
+    <div class="pin-first mt-3" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Nuclide</th><th>Acrylic range, before (mm)</th><th>After (mm)</th><th>Fraction in acrylic, before (%)</th><th>After (%)</th></tr>
+        </thead>
+        <tbody>
+          {acrRows.map((r) => (
+            <tr><td><NuclideRef k={r.k} /></td><td>{r.mmBefore.toPrecision(3)}</td><td>{r.mmAfter.toPrecision(3)}</td><td>{r.fBefore.toPrecision(3)}</td><td>{r.fAfter.toPrecision(3)}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-2 text-[13px]">
+      {acrRows.length} nuclides with a sheet and a beta branch. The range is for the endpoint each sheet shows; the fraction
+      is for the highest endpoint with an intensity of at least 1%.
+    </p>
+
     {/* ★ 2026-11-01 — 새 글 구역. 엔진 · 자료 · 기존 값은 그대로라 끝자리다. */}
     <h2 id={idOf(v115.version)}>{v115.version} — {dateText(v115.date)}</h2>
     <p>

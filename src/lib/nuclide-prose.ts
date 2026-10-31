@@ -300,7 +300,7 @@ export function paragraphs(p: NuclidePage): string[] {
       (rare ? `; that endpoint comes from a branch of only ${end!.iPct}%, while ${dom!.iPct}% of decays take the ` +
               `${(dom!.maxKeV! / 1000).toPrecision(3)} MeV branch. Shielding is sized on the endpoint, dose on the mean` : ``) +
       `. That endpoint stops in ${mm(acrylic.cm)} of ` +
-      /* ★ 「몇 배」를 쓰지 않는다 — 수율이 Z 에 비례하므로 그 비는 82/6 으로 **모든 핵종에서
+      /* ★ 「몇 배」를 쓰지 않는다 — 수율이 Z 에 비례하므로 그 비는 82/6.5 로 **모든 핵종에서
          같다.** 쪽마다 다른 척하는 숫자를 147번 찍는 것이 정확히 틀에 값만 갈아 끼우는 짓이다. */
       /** ★★★ **제동복사도 모핵종의 종점으로 계산된다**(2026-09-23). Sr-90 쪽이 0.546 MeV 로
        *  「납에서 1.57%」라고 적는데 실제 선원에서 그 X선을 내는 것은 **Y-90 의 2.28 MeV** 다 —
@@ -477,7 +477,7 @@ export function paragraphs(p: NuclidePage): string[] {
  *    (실측 36·48·34·29장, 절반은 74장).
  *  ★ 숫자를 피하려고 띠를 나눈 것이 아니다 — **6시간짜리와 10억년짜리에 같은 말을 하는 것이
  *    애초에 틀린 글**이다. 띠마다 그 눈금에서 실제로 문제가 되는 것을 말한다.
- *  ★ 평균수명/반감기 = 1.44 는 모든 핵종에서 같으므로 **찍지 않는다**(82/6 과 같은 규칙). */
+ *  ★ 평균수명/반감기 = 1.44 는 모든 핵종에서 같으므로 **찍지 않는다**(납/아크릴 Z 비와 같은 규칙). */
 export function decayCaption(key: string): string {
   const T = NUCLIDES[key].t_half_s, D = 86400, Y = 31557600;
   const ten = tenHalfLives(key), tau = meanLife(key);
