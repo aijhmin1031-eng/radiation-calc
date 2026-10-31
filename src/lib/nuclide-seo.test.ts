@@ -49,6 +49,16 @@ test("★ Γ > 0 을 제목의 자로 쓰지 않는다 — Pu-239 가 드러낸 
   }
 });
 
+test("★ 제목이 반감기를 맨 앞에 든다 — 사람들이 묻는 것이 그것이다", () => {
+  /* ★★ 2026-10-31 Search Console(9/9~10/30) 실측. 핵종 쪽의 노출은 **반감기 질의**에서 왔다 —
+     U-236 「half life of u236」 외 변형 7개 · Co-60 「cobalt 60 half life」 · 「ra-224 half life」 ·
+     「ba-133 half life」 · 「mn-54 half life」, 순위 5~10 에 클릭 0. 제목이 겨냥한 차폐 질의는
+     거의 없었다. 각(gamma·beta·alpha)은 그대로 두고 앞머리만 질의에 맞춘다. */
+  for (const { key, seo } of ROWS) {
+    assert.ok(seo.title.startsWith(`${key} half-life`), `${key}: 제목이 반감기로 시작하지 않는다 — ${seo.title}`);
+  }
+});
+
 test("제목이 핵종 이름으로 시작하고 147장이 서로 다르다", () => {
   const seen = new Map<string, string>();
   for (const { key, seo } of ROWS) {
