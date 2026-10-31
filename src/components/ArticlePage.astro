@@ -1,0 +1,47 @@
+---
+import Base from "../layouts/Base.astro";
+import { articleBySlug, ARTICLES } from "../lib/articles";
+import { dateText } from "../lib/version";
+import { u, UMBRELLA_NAME } from "../lib/site";
+interface Props { slug: string }
+const { slug } = Astro.props;
+/* ★ 등록부에 없는 글은 빌드에서 멈춘다 — 목록에 안 서고 게이트도 못 보는 쪽이 조용히 나가지 않게. */
+const a = articleBySlug(slug);
+if (!a) throw new Error(`articles.ts 에 없는 글이다: ${slug} (등록된 것: ${ARTICLES.map((x) => x.slug).join(", ")})`);
+/* ★ 게시 · 검토 날짜는 등록부 한 곳이다. 구조화 데이터와 화면이 같은 값을 읽는다. */
+---
+<Base title={a.title} description={a.description} schema="Article" schemaDescription={a.summary}
+      article={{ published: a.published, modified: a.reviewed }} citations={a.sources.map((s) => s.label)}>
+  <nav aria-label="Breadcrumb" class="text-[13px] text-ink-faint">
+    <a href={u("/notes/")} class="underline underline-offset-2 hover:text-ink">Notes</a>
+  </nav>
+  <h1 class="mt-2 max-w-3xl text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">{a.h1}</h1>
+  <p class="mt-3 text-[13.5px] text-ink-muted" data-article-meta>
+    By <span data-article-author>{UMBRELLA_NAME}</span> ·
+    Published <time datetime={a.published} data-article-published>{dateText(a.published)}</time> ·
+    Reviewed <time datetime={a.reviewed} data-article-reviewed>{dateText(a.reviewed)}</time>
+    {a.video && <> · <a href={a.video} rel="noopener" class="underline underline-offset-2 hover:text-ink">Short video version</a></>}
+  </p>
+
+  <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted" data-article-body>
+    <slot />
+  </section>
+
+  {/* ★ 글 아래 두 묶음은 본문 어수에 넣지 않는다(`data-article-body` 밖) — 틀이 어수를 채우는 것으로 읽히면 안 된다. */}
+  <section class="mt-10 max-w-3xl" data-article-calculators>
+    <h2 class="text-[18px] font-semibold text-ink">Check it yourself</h2>
+    <ul class="tap-list mt-2 list-disc space-y-1 pl-5 text-[14px] leading-relaxed text-ink-muted">
+      {a.calculators.map((c) => <li><a href={u(c.path)} class="underline underline-offset-2 hover:text-ink">{c.label}</a>: {c.note}.</li>)}
+    </ul>
+  </section>
+
+  {/* ★ 문단이 아니라 목록이다 — 핵종 낱장의 출처 목록(`nuclides/[slug].astro`)과 같은 모양 · 같은 링크 글귀다. */}
+  <section class="mt-8 max-w-3xl">
+    <h2 class="text-[18px] font-semibold text-ink">Sources</h2>
+    <ul class="mt-2 list-disc space-y-1 pl-5 text-[13.5px] leading-relaxed text-ink-muted" data-article-sources>
+      {a.sources.map((s) => <li><a href={s.href} rel="noopener" class="underline underline-offset-2 hover:text-ink">{s.label}</a></li>)}
+    </ul>
+    <div class="mt-2 text-[13px] text-ink-muted"><a href={u("/methods/#writing")} class="underline underline-offset-2 hover:text-ink">How this note was written</a></div>
+    <div class="mt-1 text-[13px] text-ink-muted"><a href={u("/notes/")} class="underline underline-offset-2 hover:text-ink">All notes</a></div>
+  </section>
+</Base>

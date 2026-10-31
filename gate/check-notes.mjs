@@ -123,8 +123,93 @@ for (const v of [{ n: "데스크톱", w: 1280, h: 900 }, { n: "폰", w: 390, h: 
   await page.close();
 }
 
+/* ⑥ `/notes/` 목록에서 글로 — 클릭 1회, 두 뷰포트(2026-11-01). 등록부는 `lib/articles.ts` 다. */
+const articleSrc = readFileSync(join(ROOT, "src", "lib", "articles.ts"), "utf8");
+const ARTICLE_SLUGS = [...articleSrc.matchAll(/^\s*slug:\s*"([^"]+)"/gm)].map((m) => m[1]);
+if (!ARTICLE_SLUGS.length) issues.push("articles.ts 에서 slug 를 하나도 못 읽었다");
+const LIST = `${BASE_PATH}/notes/`;
+for (const v of [{ n: "데스크톱", w: 1280, h: 900 }, { n: "폰", w: 390, h: 800 }]) {
+  const page = await browser.newPage({ viewport: { width: v.w, height: v.h } });
+  for (const slug of ARTICLE_SLUGS) {
+    await page.goto(`${ORIGIN}${LIST}`, { waitUntil: "load" });
+    const href = `${LIST}${slug}/`;
+    const link = page.locator(`main [data-article-card] a[href="${href}"]`).first();
+    if (!(await link.isVisible().catch(() => false))) { issues.push(`목록 ${v.n} — ${slug} 로 가는 링크가 안 보인다`); continue; }
+    await link.click();
+    await page.waitForLoadState("load");
+    const at = new URL(page.url()).pathname;
+    if (at !== href) issues.push(`목록 ${v.n} — ${slug} 를 눌렀더니 ${at} 에 갔다`);
+    else notes.push(`${v.n} /notes/ → ${slug} 클릭 1회`);
+  }
+  await page.close();
+}
+
 await browser.close();
 server.close();
+
+/* ⑦⑧ `/notes/` 글 — 산출물을 읽는다(브라우저 없음).
+ *  ★ 새 구역이라 「틀이 약속한 것」이 글마다 실제로 섰는지 잰다: 등록부 ↔ 파일 양방향 · 목록 순서 · 어수 900~1500 ·
+ *    Article 구조화 데이터 · 보이는 날짜와 같은 값 · canonical · 사이트맵 · 출처 · 계산기 링크 · 계산기 쪽에서 오는 「Worked example」 줄.
+ *  ★ 못 보는 것: 글이 좋은지 · 수치가 맞는지(`note-examples.test.ts` 가 잰다) · OG 그림(`check-og`). */
+const pagesNotesDir = join(ROOT, "src", "pages", "notes");
+const articleFiles = existsSync(pagesNotesDir)
+  ? readdirSync(pagesNotesDir).filter((f) => f.endsWith(".astro") && f !== "index.astro").map((f) => f.replace(/\.astro$/, ""))
+  : [];
+for (const f of articleFiles) if (!ARTICLE_SLUGS.includes(f)) issues.push(`src/pages/notes/${f}.astro 가 articles.ts 에 없다 — 목록에 안 선다`);
+for (const s of ARTICLE_SLUGS) if (!articleFiles.includes(s)) issues.push(`articles.ts 의 ${s} 에 쪽 파일이 없다`);
+
+const listHtml = existsSync(join(DIST, "notes", "index.html")) ? readFileSync(join(DIST, "notes", "index.html"), "utf8") : "";
+const listed = [...listHtml.matchAll(/data-article-card[\s\S]*?href="\/calc\/notes\/([a-z0-9-]+)\/"[\s\S]*?<time datetime="([\d-]+)"/g)];
+if (listed.length !== ARTICLE_SLUGS.length) issues.push(`목록의 글 ${listed.length}편 ≠ 등록부 ${ARTICLE_SLUGS.length}편`);
+for (let i = 1; i < listed.length; i++)
+  if (listed[i - 1][2] < listed[i][2]) issues.push(`목록 순서 — ${listed[i][1]} 가 더 새 글인데 아래에 있다`);
+
+const htmlWords = (s) => s.replace(/<(script|style|svg)\b[\s\S]*?<\/\1>/gi, " ").replace(/<[^>]+>/g, " ")
+  .replace(/&[a-z#0-9]+;/gi, " ").split(/\s+/).filter((w) => /[A-Za-z0-9]/.test(w)).length;
+const siteMap = readFileSync(join(DIST, "sitemap-0.xml"), "utf8");
+const articleLine = [];
+for (const slug of ARTICLE_SLUGS) {
+  const f = join(DIST, "notes", slug, "index.html");
+  if (!existsSync(f)) { issues.push(`${slug} — 산출물에 없다`); continue; }
+  const h = readFileSync(f, "utf8");
+  const bodyHtml = (h.match(/data-article-body[^>]*>([\s\S]*?)<\/section>/) || [, ""])[1];
+  const w = htmlWords(bodyHtml);
+  if (w < 900 || w > 1500) issues.push(`${slug} — 본문 ${w}어(900~1500)`);
+  const title = (h.match(/<title>([^<]*)<\/title>/) || [, ""])[1].replace(/&#39;/g, "'").replace(/&amp;/g, "&");
+  if (title.length > 60) issues.push(`${slug} — 제목 ${title.length}자 > 60`);
+  const desc = (h.match(/<meta name="description" content="([^"]*)"/) || [, ""])[1];
+  if (desc.length < 90 || desc.length > 155) issues.push(`${slug} — 설명 ${desc.length}자(90~155)`);
+  if (!h.includes(`rel="canonical" href="https://radiation-lab.com/calc/notes/${slug}/"`)) issues.push(`${slug} — canonical 이 자기 주소가 아니다`);
+  if (!siteMap.includes(`/calc/notes/${slug}/`)) issues.push(`${slug} — 사이트맵에 없다`);
+  const ld = JSON.parse((h.match(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/) || [, "{}"])[1]);
+  const node = (ld["@graph"] || []).find((n) => n["@type"] === "Article");
+  if (!node) issues.push(`${slug} — Article 구조화 데이터가 없다`);
+  else {
+    if (node.author?.name !== "Radiation Lab") issues.push(`${slug} — 저자가 Radiation Lab 이 아니다(${node.author?.name})`);
+    const pub = (h.match(/datetime="([\d-]+)" data-article-published/) || [])[1];
+    const rev = (h.match(/datetime="([\d-]+)" data-article-reviewed/) || [])[1];
+    if (!pub || node.datePublished !== pub) issues.push(`${slug} — 게시일: 화면 ${pub} · 구조화 ${node.datePublished}`);
+    if (!rev || node.dateModified !== rev) issues.push(`${slug} — 검토일: 화면 ${rev} · 구조화 ${node.dateModified}`);
+    if (!node.image?.includes(`/og/notes-${slug}.png`)) issues.push(`${slug} — 구조화 데이터의 그림이 자기 OG 가 아니다(${node.image})`);
+  }
+  if (!/property="og:type" content="article"/.test(h)) issues.push(`${slug} — og:type 이 article 이 아니다`);
+  const srcCount = ((h.match(/data-article-sources[^>]*>([\s\S]*?)<\/ul>/) || [, ""])[1].match(/<li/g) || []).length;
+  if (srcCount < 2) issues.push(`${slug} — 출처 ${srcCount}개`);
+  const calcHtml = (h.match(/data-article-calculators[^>]*>([\s\S]*?)<\/section>/) || [, ""])[1];
+  if (!/href="\/calc\/[a-z0-9-]+\//.test(calcHtml)) issues.push(`${slug} — 계산기 링크가 없다`);
+  /* ★ 소유주 규칙: 빈말 · 과장 · 「광고 없음」을 쓰지 않는다(About 쪽에 광고 계획이 있다). */
+  const banned = bodyHtml.match(/\b(no ads|ad[- ]free|without ads|most accurate|the best|world[- ]class|cutting[- ]edge)\b/i);
+  if (banned) issues.push(`${slug} — 쓰지 않기로 한 문구 「${banned[0]}」`);
+  articleLine.push(`${slug} ${w}어 · 출처 ${srcCount}`);
+}
+const WORKED = { "/decay/": "radioactive-decay-worked-examples", "/radiopharmaceutical-decay/": "lu-177-decay-worked-example", "/mda/": "mda-worked-example" };
+for (const [from, slug] of Object.entries(WORKED)) {
+  const h = readFileSync(join(DIST, from.replace(/^\//, ""), "index.html"), "utf8");
+  const line = (h.match(/<p data-worked-example[^>]*>([\s\S]*?)<\/p>/) || [, ""])[1];
+  if (!line.includes(`/calc/notes/${slug}/`)) issues.push(`${from} — 「Worked example」 줄이 ${slug} 로 가지 않는다`);
+  if (!line.includes(`href="/calc/notes/"`)) issues.push(`${from} — 「Worked example」 줄에 목록 링크가 없다`);
+}
+notes.push(`/notes/ ${ARTICLE_SLUGS.length}편 — ${articleLine.join(" · ")}`);
 
 /* ④ 양방향 — 등록부에 없는 읽을 글이 산출물에 있는가 */
 const TOOL_SLUGS = new Set(

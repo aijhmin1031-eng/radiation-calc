@@ -1,0 +1,153 @@
+---
+import ArticlePage from "../../components/ArticlePage.astro";
+import NuclideRef from "../../components/NuclideRef.astro";
+import { decayExamples } from "../../lib/note-examples";
+import { prefillPath } from "../../lib/restore";
+import { u } from "../../lib/site";
+
+/** ★ 방사성 붕괴 풀이 — 노리는 검색어: decay calculator · radioactive decay calculator · nuclear decay calculator · 「n 반감기 뒤 남는 비율」.
+ *  Search Console 실제 질의 「ra-228 has a half life of 5.8 years … after 17.4 years」에서 시작한다.
+ *  ★ 숫자를 글자로 적지 않는다 — `lib/note-examples.ts`, 고정은 `note-examples.test.ts`.
+ *  ★ 계산기가 못 하는 것을 한다고 쓰지 않는다: 반감기 칸이 없다 · 시간 칸은 음수를 받지 않는다 · 연쇄를 따르지 않는다(`Decay.tsx`). */
+const X = decayExamples();
+const raCalc = prefillPath("decay", { nuclide: "Ra-228", a0: 100, unit: "Bq", t: 17.4, tu: "y" });
+const csCalc = prefillPath("decay", { nuclide: "Cs-137", a0: 370, unit: "kBq", t: X.cs.days, tu: "d" });
+const coCalc = prefillPath("decay", { nuclide: "Co-60", a0: 140, unit: "kBq", t: X.co.days, tu: "d" });
+const coWhen = prefillPath("decay", { mode: "when", nuclide: "Co-60", a0: 52.4, unit: "kBq", target: 10 });
+const pct3 = (x: number) => x.toPrecision(3);
+const days = (n: number) => n.toLocaleString("en-US");
+---
+<ArticlePage slug="radioactive-decay-worked-examples">
+  <p>
+    Most decay questions are one question: you have a known amount of one nuclide, some time passes, and
+    you want to know how much is left. This note works it four ways. First a textbook problem with the
+    half-life printed in it, then the same problem with an evaluated half-life, then a check source
+    brought from its certificate date to today, and last the reverse step from a present reading back
+    to a certificate. Each answer can be reproduced in the
+    {" "}<a href={u("/decay/")} class="underline">radioactive decay calculator</a>; where the calculator
+    cannot do a step, the note says so.
+  </p>
+
+  <h2>The rule: count half-lives</h2>
+  <p>
+    Divide the elapsed time by the half-life to get n, the number of half-lives that have gone by. The
+    fraction left is 2<sup>−n</sup>, or written out, fraction remaining = 2<sup>−t/T½</sup>.
+  </p>
+  <p>
+    Time and half-life must be in the same unit, and the result is a pure ratio. It applies equally to the
+    activity, the number of atoms and the mass of that nuclide, since all three are proportional to one
+    another. Nothing requires n to be a whole number.
+  </p>
+  <div class="not-prose my-3 pin-first table-fit" tabindex="0">
+    <table>
+      <thead>
+        <tr><th>Half-lives elapsed, n</th><th class="text-right">Fraction</th><th class="text-right">Percent left</th></tr>
+      </thead>
+      <tbody>
+        {X.ladder.map((r) => (
+          <tr><td class="num">{r.n}</td><td class="num text-right">{r.exact}</td><td class="num text-right">{pct3(r.pct)}</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p>
+    To ask how long instead of how much, turn the rule around: t = T½·log₂(A₀/A). Falling to 1% takes
+    log₂(100), about 6.64 half-lives whatever the nuclide, which for <NuclideRef k="Ra-228" /> is
+    {" "}{X.ra.onePctY.toFixed(1)} years.
+  </p>
+
+  <h2>Ra-228 after 17.4 years: 1/8 or {X.ra.pct.toFixed(1)}%?</h2>
+  <p>
+    A typical homework version reads: “The radioisotope Ra-228 has a half-life of 5.8 years. What fraction
+    remains after 17.4 years?” Here n = 17.4 / 5.8 = 3, so the fraction is 2<sup>−3</sup> = <strong>1/8</strong>,
+    or {X.ra.givenPct.toFixed(1)}%. The numbers were chosen to come out clean.
+  </p>
+  <p>
+    Now <a href={u(raCalc)} class="underline">run the same 17.4 years through the calculator</a> with Ra-228
+    selected. It answers <strong>{X.ra.pct.toFixed(1)}%</strong>. Nothing has gone wrong. The calculator
+    takes its half-life from evaluated nuclear data, the IAEA Livechart value of 5.75 years, so
+    n = 17.4 / 5.75 = {X.ra.n.toFixed(3)} and 2<sup>−{X.ra.n.toFixed(3)}</sup> = {(X.ra.pct / 100).toFixed(4)}.
+    The two answers differ by {X.ra.gap.toFixed(2)} of a percentage point, and that gap is entirely the
+    rounded half-life in the question.
+  </p>
+  <p>
+    Which one to give depends on who is asking. On a problem set, use the half-life the problem gives you:
+    the expected answer is 1/8. For a real sample, use the evaluated value and say which one you used.
+    The calculator has no field for typing your own half-life, so a textbook figure such as 5.8 years has
+    to go through the rule above by hand.
+  </p>
+  <p>
+    The fraction also describes Ra-228 alone. Its daughter Ac-228 and then <NuclideRef k="Th-228" />, half-life
+    {" "}{X.ra.thY.toFixed(2)} years, grow in behind it, so the total activity of an old radium sample does
+    not follow this curve. The calculator follows one nuclide and does not build decay chains; the note on
+    {" "}<a href={u("/natural-series/")} class="underline">natural decay series</a> shows the ingrowth.
+  </p>
+
+  <h2>A Cs-137 check source, from certificate to today</h2>
+  <p>
+    A <NuclideRef k="Cs-137" /> check source has a certificate reading 370&nbsp;kBq on 1 June 2016. What does
+    it hold on 1 November 2026?
+  </p>
+  <ol class="my-3 list-decimal space-y-1 pl-5">
+    <li>Elapsed time: {days(X.cs.days)} days, which is {X.cs.years.toFixed(2)} years.</li>
+    <li>Half-lives: n = {X.cs.years.toFixed(2)} / {X.cs.halfLifeY.toFixed(2)} = {(X.cs.years / X.cs.halfLifeY).toFixed(3)}.</li>
+    <li>Fraction: 2<sup>−{(X.cs.years / X.cs.halfLifeY).toFixed(3)}</sup> = {X.cs.f.toFixed(4)}.</li>
+    <li>Activity: 370 × {X.cs.f.toFixed(4)} = <strong>{X.cs.kBq.toFixed(0)}&nbsp;kBq</strong>.</li>
+  </ol>
+  <p>
+    <a href={u(csCalc)} class="underline">The calculator with these inputs</a> gives the same figure. The
+    reason to do this is what you then compare it with. A meter that read 12,000&nbsp;cpm on this source on
+    the certificate date should read about {Math.round(X.cs.meterToday / 10) * 10}&nbsp;cpm now, in the same
+    geometry. That {X.cs.lostPct.toFixed(1)}% fall is decay and says nothing about the detector. Only a
+    difference from the corrected figure, beyond your tolerance, is a question about the instrument. The
+    {" "}662&nbsp;keV photon the meter counts comes from Ba-137m, half-life {X.cs.baM.toFixed(2)} minutes,
+    which stays in equilibrium inside a sealed source, so its rate follows the Cs-137 and the same factor
+    applies.
+  </p>
+  <p>
+    How exact does this need to be? Cs-137 loses {X.cs.perYearPct.toFixed(2)}% a year, so a date wrong by a
+    month moves the answer by {X.cs.monthSlipPct.toFixed(2)}%. Replacing the {X.cs.halfLifeY.toFixed(2)}-year
+    half-life used here with the {X.cs.ddepY}-year value from the Decay Data Evaluation Project moves it by
+    {" "}{X.cs.ddepGapPct.toFixed(2)}%. Set both against the uncertainty printed on your certificate before
+    spending time on them.
+  </p>
+
+  <h2>Going backwards: from a reading to the certificate date</h2>
+  <p>
+    Suppose a <NuclideRef k="Co-60" /> source is assayed at 52.4&nbsp;kBq on 1 November 2026, and its
+    certificate, dated 15 March 2019, says 140&nbsp;kBq. Do the two agree? The past activity was larger, so
+    here you divide: A₀ = A / 2<sup>−t/T½</sup>.
+  </p>
+  <ol class="my-3 list-decimal space-y-1 pl-5">
+    <li>Elapsed time: {days(X.co.days)} days, which is {X.co.years.toFixed(2)} years against a half-life of {X.co.halfLifeY.toFixed(2)} years.</li>
+    <li>Fraction: 2<sup>−{(X.co.years / X.co.halfLifeY).toFixed(3)}</sup> = {X.co.f.toFixed(4)}.</li>
+    <li>Activity on the certificate date: 52.4 / {X.co.f.toFixed(4)} = <strong>{X.co.back.toFixed(1)}&nbsp;kBq</strong>.</li>
+  </ol>
+  <p>
+    That is {X.co.certGapPct.toFixed(1)}% above the certificate. Whether it counts as agreement depends on the
+    two uncertainties combined; against a certificate stated at ±5% and a comparable assay, it does.
+  </p>
+  <p>
+    The elapsed-time field in the calculator does not accept negative values, so it will not run decay
+    backwards directly. There are two ways round that. <a href={u(coCalc)} class="underline">Run the certificate
+    forward</a> from 140&nbsp;kBq for {days(X.co.days)} days and compare its {X.co.forward.toFixed(1)}&nbsp;kBq
+    with your reading, or enter a starting activity of 1, read the fraction, and divide your reading by it.
+  </p>
+  <p>
+    The usual slip is to multiply: 52.4 × {X.co.f.toFixed(4)} gives {X.co.wrong.toFixed(1)}&nbsp;kBq, which is
+    less than the source holds today. A past activity below the present one cannot come from decay, so that
+    check catches the error at once. For planning ahead, count from today's value:
+    {" "}<a href={u(coWhen)} class="underline">the “When does it reach” mode</a> says this source falls from
+    52.4 to 10&nbsp;kBq in {X.co.to10kBqY.toFixed(1)} years.
+  </p>
+
+  <h2>What these answers leave out</h2>
+  <ul class="my-3 list-disc space-y-1 pl-5">
+    <li><strong>Anything that is not decay.</strong> A leaking capsule, activity sticking to a container wall
+      or a diluted solution all lower a reading, and the rule assigns none of that to its proper cause.</li>
+    <li><strong>A different reference date.</strong> The correction starts at the date on the certificate, not
+      the date the source was bought, delivered or first used.</li>
+    <li><strong>The measurement itself.</strong> A corrected activity is what you should expect to find. If
+      a calibrated measurement disagrees, investigate the disagreement rather than trusting the arithmetic.</li>
+  </ul>
+</ArticlePage>

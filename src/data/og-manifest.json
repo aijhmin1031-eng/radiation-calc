@@ -410,5 +410,21 @@
   "/changelog/": {
     "slug": "changelog",
     "title": "Changes to the calculators and data · Radiation Lab"
+  },
+  "/notes/": {
+    "slug": "notes",
+    "title": "Notes: worked radiation calculations · Radiation Lab"
+  },
+  "/notes/radioactive-decay-worked-examples/": {
+    "slug": "notes-radioactive-decay-worked-examples",
+    "title": "Radioactive decay examples: how much is left · Radiation Lab"
+  },
+  "/notes/lu-177-decay-worked-example/": {
+    "slug": "notes-lu-177-decay-worked-example",
+    "title": "Lu-177 decay calculator: a worked example · Radiation Lab"
+  },
+  "/notes/mda-worked-example/": {
+    "slug": "notes-mda-worked-example",
+    "title": "Minimum detectable activity: worked example · Radiation Lab"
   }
 }

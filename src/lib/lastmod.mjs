@@ -109,6 +109,12 @@ export function lastmodFor(path) {
   if (seg[0] === "validation")
     return newest([page("validation", `${seg[1] ?? "index"}.astro`)]);
 
+  /* `/notes/` — 목록은 쪽 + 등록부(제목 · 날짜가 거기서 온다), 글은 쪽 + 수치 모듈. */
+  if (seg[0] === "notes")
+    return seg.length === 1
+      ? newest([page("notes/index.astro"), join(ROOT, "src/lib/articles.ts")])
+      : newest([page("notes", `${seg[1]}.astro`), join(ROOT, "src/lib/note-examples.ts")]);
+
   if (seg.length === 1) return newest([page(`${seg[0]}.astro`)]);
 
   return null;
