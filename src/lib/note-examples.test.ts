@@ -84,9 +84,9 @@ test("Lu-177 — 예제 · 지연 · 창 · 시계 · 동위 이성질체", () =
   assert.equal(X.dispatch[2].f.toFixed(4), "0.7313");
   assert.equal(X.atThursday.toFixed(2), "7.39");
   assert.equal(X.atThursdayPct.toFixed(1), "99.8");
-  /* 6.6443 × log₂(10.1/7.4) = 2.9818 d = 71.56 h = 4293.7 min → 월 10:00 에서 목 09:33:44, 온전한 분으로 내림 09:33 */
-  assert.equal(X.reachH.toFixed(1), "71.6");
-  assert.equal(X.reachClock, "09:33");
+  /* 6.6443 × log₂(10.1/7.4) = 2.9818 d = 71.56 h → 월 10:00 에서 목 09:33:38, 가까운 분으로 09:34(글이 「about」이라 쓴다) */
+  assert.equal(X.reachH.toFixed(2), "71.56");
+  assert.equal(X.reachClock, "09:34");
   /* 벌크 2.0 GBq/mL × 0.7313 = 1.463 GBq/mL · 7.4/1.463 = 5.06 mL · 3.70 mL 를 그대로 뽑으면 5.41 GBq(26.9% 적다) */
   assert.equal(X.bulk.concNow.toFixed(3), "1.463");
   assert.equal(X.bulk.volNow.toFixed(2), "5.06");
@@ -105,7 +105,7 @@ test("Lu-177 — 예제 · 지연 · 창 · 시계 · 동위 이성질체", () =
   assert.ok(X.dayLate > X.low, "「다음 날도 겨우 안에 든다」는 산문이 참이어야 한다");
   assert.equal(X.utc9AbovePct.toFixed(1), "4.0");
   assert.equal(X.utc5BelowPct.toFixed(1), "2.1");
-  assert.ok(X.utc9AbovePct > 10 / 3, "「허용 범위의 3분의 1 넘게」는 산문이 참이어야 한다");
+  assert.equal((X.utc9AbovePct * 10).toFixed(0), "40");
   assert.equal(X.tenDays.toFixed(1), "66.4");
   assert.equal(X.tenLeftMBq.toFixed(2), "7.23");
   assert.equal(X.isoHalfLifeD, 160.4);
@@ -142,8 +142,11 @@ test("MDA — 결과 읽기 · 블랭크 · 흔한 실수", () => {
   assert.deepEqual(X.results.map((r) => r.bq.toPrecision(3)), ["0.218", "0.435", "0.762"]);
   const [a, b, c] = X.results;
   assert.ok(a.net < X.lc && b.net > X.lc && b.net < X.ld && c.net > X.ld, "표의 세 결론이 참이어야 한다");
-  assert.deepEqual(X.blanks.map((r) => [r.lc.toFixed(1), r.ld.toFixed(1), r.mda.toPrecision(3)]),
-    [["40.3", "83.3", "0.906"], ["25.5", "53.7", "0.584"], ["20.1", "43.0", "0.468"], ["18.0", "38.7", "0.422"]]);
+  /* L_C 는 두 자리로 적는다 — 표의 L_D 가 적힌 L_C 에서 다시 나와야 한다(k² + 2L_C). */
+  assert.deepEqual(X.blanks.map((r) => [r.lc.toFixed(2), r.ld.toFixed(1), r.mda.toPrecision(3)]),
+    [["40.29", "83.3", "0.906"], ["25.48", "53.7", "0.584"], ["20.15", "43.0", "0.468"], ["18.02", "38.7", "0.422"]]);
+  for (const r of X.blanks) assert.equal((2.706 + 2 * Number(r.lc.toFixed(2))).toFixed(1), r.ld.toFixed(1));
+  assert.equal(X.shortBlankCounts, 30);
   assert.equal(X.shortLowPct.toFixed(0), "36");
   /* 짝 블랭크는 엔진 그대로, 잘 아는 블랭크는 Currie 표 I(1.64·√B, 2.71 + 3.29·√B) · MARLAP 식 20.11. */
   near(lcWithRatio(120, 1, 1.645), X.lc);

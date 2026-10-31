@@ -14,6 +14,8 @@ const X = mdaExamples();
 const I = MDA_INPUT;
 const calc = prefillPath("mda", { mode: "scaler", bgCpm: I.bgCpm, timeS: X.t, eff: X.formEffPct, k: "1.645", unit: "Bq" });
 const c1 = (x: number) => x.toFixed(1);
+/* 블랭크 표의 L_C 는 두 자리 — 적힌 L_C 로 k² + 2L_C 를 해도 적힌 L_D 가 나오게(`note-examples.test.ts`). */
+const c2 = (x: number) => x.toFixed(2);
 const bq3 = (x: number) => x.toPrecision(3);
 const [shorter, paired, longer, known] = X.blanks;
 const WORD = ["Not detected. Below L_C.", "Detected, though below L_D.", "Detected, and above L_D."];
@@ -118,8 +120,9 @@ const WORD = ["Not detected. Below L_C.", "Detected, though below L_D.", "Detect
     counting noise as the sample does. Count the blank for longer and its share of the noise shrinks. With
     B still scaled to the sample's count time, MARLAP gives the variance of a net count on an empty sample as
     B(1 + t<sub>S</sub>/t<sub>B</sub>), and then L<sub>C</sub> = k√(B(1 + t<sub>S</sub>/t<sub>B</sub>)) and
-    L<sub>D</sub> = k² + 2L<sub>C</sub>. A blank known so well that it adds nothing is Currie's “well-known” case, with
-    the expression of about 2.71 + 3.29√B. A blank shorter than the sample pushes the other way.
+    L<sub>D</sub> = k² + 2L<sub>C</sub>. A blank known so well that it adds nothing is Currie's “well-known” case. His
+    table gives 3.29σ<sub>B</sub> for it, and with the k² term kept that is about 2.71 + 3.29√B. A blank shorter
+    than the sample pushes the other way.
   </p>
   <div class="not-prose my-3 pin-first table-fit" tabindex="0">
     <table>
@@ -127,17 +130,19 @@ const WORD = ["Not detected. Below L_C.", "Detected, though below L_D.", "Detect
         <tr><th>Blank</th><th class="text-right">L<sub>C</sub></th><th class="text-right">L<sub>D</sub></th><th class="text-right">MDA</th></tr>
       </thead>
       <tbody>
-        <tr><td>Shorter, t<sub>B</sub> = t<sub>S</sub>/4</td><td class="num text-right">{c1(shorter.lc)}</td><td class="num text-right">{c1(shorter.ld)}</td><td class="num text-right">{bq3(shorter.mda)}&nbsp;Bq</td></tr>
-        <tr><td>Paired, t<sub>B</sub> = t<sub>S</sub></td><td class="num text-right">{c1(paired.lc)}</td><td class="num text-right">{c1(paired.ld)}</td><td class="num text-right">{bq3(paired.mda)}&nbsp;Bq</td></tr>
-        <tr><td>Longer, t<sub>B</sub> = 4t<sub>S</sub></td><td class="num text-right">{c1(longer.lc)}</td><td class="num text-right">{c1(longer.ld)}</td><td class="num text-right">{bq3(longer.mda)}&nbsp;Bq</td></tr>
-        <tr><td>Well-known</td><td class="num text-right">{c1(known.lc)}</td><td class="num text-right">{c1(known.ld)}</td><td class="num text-right">{bq3(known.mda)}&nbsp;Bq</td></tr>
+        <tr><td>Shorter, t<sub>B</sub> = t<sub>S</sub>/4</td><td class="num text-right">{c2(shorter.lc)}</td><td class="num text-right">{c1(shorter.ld)}</td><td class="num text-right">{bq3(shorter.mda)}&nbsp;Bq</td></tr>
+        <tr><td>Paired, t<sub>B</sub> = t<sub>S</sub></td><td class="num text-right">{c2(paired.lc)}</td><td class="num text-right">{c1(paired.ld)}</td><td class="num text-right">{bq3(paired.mda)}&nbsp;Bq</td></tr>
+        <tr><td>Longer, t<sub>B</sub> = 4t<sub>S</sub></td><td class="num text-right">{c2(longer.lc)}</td><td class="num text-right">{c1(longer.ld)}</td><td class="num text-right">{bq3(longer.mda)}&nbsp;Bq</td></tr>
+        <tr><td>Well-known</td><td class="num text-right">{c2(known.lc)}</td><td class="num text-right">{c1(known.ld)}</td><td class="num text-right">{bq3(known.mda)}&nbsp;Bq</td></tr>
       </tbody>
     </table>
   </div>
   <p>
     The MDA calculator implements only the paired row. If your blank is longer, its figure errs high and you can
     work the lower one from the expressions above. If your blank is shorter than the sample, its figure errs low,
-    here by {X.shortLowPct.toFixed(0)}%, and the unsafe direction is the one to watch. Be careful about claiming the
+    here by about {X.shortLowPct.toFixed(0)}%, and the unsafe direction is the one to watch. That row is only a guide,
+    since its blank collects about {X.shortBlankCounts} counts, below the range noted further down, where these
+    expressions start to give too many false positives. Be careful about claiming the
     well-known row too. A background that drifts, or a blank from a different day, adds variation these Poisson
     expressions do not contain, and the lower figure is then not earned.
   </p>
@@ -151,7 +156,7 @@ const WORD = ["Not detected. Below L_C.", "Detected, though below L_D.", "Detect
     <li><strong>Expecting time to do what it cannot.</strong> Four hours instead of one gives {bq3(X.four)}&nbsp;Bq, better by {X.fourRatio.toFixed(2)} times rather than four.</li>
     <li><strong>Forgetting decay.</strong> The equations assume the activity holds steady during the count, and they refer to the time of counting. For <NuclideRef k="I-131" /> counted {X.i131Days} days after sampling, the MDA at the sampling date is {X.i131Factor.toFixed(2)} times larger. A count lasting a full half-life sees on average {X.oneHalfAvgPct.toFixed(1)}% of the starting activity. The MDA calculator applies neither correction. The <a href={u("/decay/")} class="underline">decay calculator</a> gives the first factor, which you divide by; the second is (1 − e<sup>−λt</sup>)/(λt), worked by hand.</li>
     <li><strong>Very low blanks.</strong> MARLAP notes that the critical-level expression works well from about 100 blank counts, and can produce too many false positives below that. At B = 0 it gives L<sub>C</sub> = 0, so a single count would be called a detection.</li>
-    <li><strong>Not saying which convention was used.</strong> MARSSIM writes L<sub>D</sub> with 3 in place of k², which here gives {c1(X.marssimLd)} counts, {X.marssimPct.toFixed(2)}% higher; the <a href={u("/validation/mda/")} class="underline">validation report</a> measures that difference. The form's 99% option, k = 2.326, gives {bq3(X.k99.mda)}&nbsp;Bq. State the method beside the number.</li>
+    <li><strong>Not saying which convention was used.</strong> MARSSIM writes L<sub>D</sub> with 3 in place of k². With L<sub>C</sub> kept as above, that gives {c1(X.marssimLd)} counts, {X.marssimPct.toFixed(2)}% higher; the <a href={u("/validation/mda/")} class="underline">validation report</a> measures that difference. The form's 99% option, k = 2.326, gives {bq3(X.k99.mda)}&nbsp;Bq. State the method beside the number.</li>
     <li><strong>Treating the efficiency as exact.</strong> These equations, and the calculator, carry no uncertainty for ε or Y. MARLAP warns that the MDC comes out too low if the factor converting activity to counts is overestimated, so an optimistic efficiency flatters the result directly.</li>
   </ul>
 </ArticlePage>

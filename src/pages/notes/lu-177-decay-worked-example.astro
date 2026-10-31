@@ -89,7 +89,7 @@ const d14 = X.days.find((r) => r.d === 14)!;
   <p>
     The same vial answers the opposite question. <a href={u(reach)} class="underline">The “When does it reach”
     mode</a>, with {X.ordered}&nbsp;GBq as the start and {LU_DOSE_GBQ}&nbsp;GBq as the target, gives
-    {" "}{(X.reachH / 24).toFixed(3)} days, or {X.reachH.toFixed(1)} hours, which is about {X.reachClock} on Thursday. Before that moment the vial
+    {" "}{(X.reachH / 24).toFixed(3)} days, or {X.reachH.toFixed(2)} hours, which is about {X.reachClock} on Thursday. Before that moment the vial
     holds more than the prescription, and afterwards less.
   </p>
 
@@ -119,17 +119,18 @@ const d14 = X.days.find((r) => r.d === 14)!;
     next-day case above only just stays inside.
   </p>
   <p>
-    That span describes activity and nothing more. It does not mean a dose can be moved by that much: the same
-    label gives a shelf life of 72 hours from calibration, which the Monday-to-Thursday example above reaches
-    exactly, and a supply specification is not a dosing tolerance. Whether to delay or reschedule is decided by
-    the product label, your protocol and the treating team, not by this arithmetic.
+    That span describes activity and nothing more. It does not mean a dose can be moved by that much. A supply
+    specification is not a dosing tolerance, and that same label limits its product to a shelf life of 72 hours
+    from calibration. The Monday vial in this note is a generic arithmetic example rather than that product, but
+    whatever you are using will have its own limit. Whether to delay or reschedule is decided by the product
+    label, your protocol and the treating team, not by this arithmetic.
   </p>
   <p>
     Clocks deserve a separate check. European labelling prints these times in UTC. Read as local time, a UTC time
     is nine hours out at UTC+9: calibration really happened later than you assumed, so the vial holds
     {" "}{X.utc9AbovePct.toFixed(1)}% more than the calculation says. At UTC−5 the error runs the other way, five
-    hours and {X.utc5BelowPct.toFixed(1)}% less. The larger of those would use more than a third of a ±10% band
-    before anything else has gone wrong.
+    hours and {X.utc5BelowPct.toFixed(1)}% less. The larger of those would use {(X.utc9AbovePct * 10).toFixed(0)}% of
+    the upper side of a ±10% band before anything else has gone wrong.
   </p>
 
   <h2>The vial after 7 and 14 days</h2>

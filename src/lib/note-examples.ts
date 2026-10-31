@@ -95,7 +95,7 @@ export function luExamples() {
     ordered: 10.1, atThursday: 10.1 * cell(3), atThursdayPct: (10.1 * cell(3)) / LU_DOSE_GBQ * 100,
     /* 10.1 GBq 가 처방값까지 떨어지는 때 — 「When does it reach」 모드가 내는 값. 시각은 월요일 10:00 에 더한다. */
     reachH: elapsedFromRatio(LU_DOSE_GBQ / 10.1, lu) / 3600,
-    reachClock: clockPlus("10:00", (elapsedFromRatio(LU_DOSE_GBQ / 10.1, lu) / 60)),
+    reachClock: clockPlus("10:00", Math.round(elapsedFromRatio(LU_DOSE_GBQ / 10.1, lu) / 60)),
     /* 벌크 바이알 2.0 GBq/mL(월요일 교정)에서 목요일에 7.4 GBq 분주 — 농도만 줄고 부피는 그대로다. */
     bulk: { conc0: 2.0, concNow: 2.0 * cell(3), volNow: LU_DOSE_GBQ / (2.0 * cell(3)), vol0: LU_DOSE_GBQ / 2.0,
             wrongGBq: (LU_DOSE_GBQ / 2.0) * 2.0 * cell(3), wrongPct: (1 - cell(3)) * 100 },
@@ -152,7 +152,7 @@ export function mdaExamples() {
     sqrt2B: Math.sqrt(2 * r.bgCounts), k2: k * k, marssimLd: 3 + 2 * r.lc,
     marssimPct: ((3 + 2 * r.lc) / r.ld - 1) * 100,
     results: [20, 40, 70].map((net) => ({ net, bq: at(net) })),
-    blanks, shortLowPct: (1 - r.mda / blanks[0].mda) * 100,
+    blanks, shortLowPct: (1 - r.mda / blanks[0].mda) * 100, shortBlankCounts: r.bgCounts / 4,
     four: four.mda, fourRatio: r.mda / four.mda,
     k99: { lc: k99.lc, ld: k99.ld, mda: k99.mda },
     lcAsMda: at(r.lc), lcRatio: r.ld / r.lc,
