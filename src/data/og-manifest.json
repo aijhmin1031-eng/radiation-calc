@@ -1,15 +1,15 @@
 {
   "/alara/": {
     "slug": "alara",
-    "title": "ALARA calculator — stay time and collective dose · Radiation Lab"
+    "title": "ALARA calculator: stay time, collective dose · Radiation Lab"
   },
   "/beta-shield-materials/": {
     "slug": "beta-shield-materials",
-    "title": "Shield materials for beta emitters · Radiation Lab"
+    "title": "Beta shielding materials and thickness · Radiation Lab"
   },
   "/beta/": {
     "slug": "beta",
-    "title": "Beta dose rate calculator and shielding · Radiation Lab"
+    "title": "Beta shielding and dose rate calculator · Radiation Lab"
   },
   "/check-sources/": {
     "slug": "check-sources",
@@ -25,7 +25,7 @@
   },
   "/decay/": {
     "slug": "decay",
-    "title": "Radioactive decay calculator — half-life and activity · Radiation Lab"
+    "title": "Radioactive decay calculator and half-life · Radiation Lab"
   },
   "/disclaimer/": {
     "slug": "disclaimer",
@@ -33,11 +33,11 @@
   },
   "/gamma-shielding/": {
     "slug": "gamma-shielding",
-    "title": "Gamma dose rate calculator and shielding · Radiation Lab"
+    "title": "Gamma shielding and dose rate calculator · Radiation Lab"
   },
   "/half-value-layers/": {
     "slug": "half-value-layers",
-    "title": "Half-value and tenth-value layers for common gamma emitters · Radiation Lab"
+    "title": "Half-value and tenth-value layers (HVL, TVL) · Radiation Lab"
   },
   "/hard-to-measure/": {
     "slug": "hard-to-measure",
@@ -49,7 +49,7 @@
   },
   "/mda/": {
     "slug": "mda",
-    "title": "MDA calculator — detection limits and scan MDC · Radiation Lab"
+    "title": "MDA calculator: minimum detectable activity · Radiation Lab"
   },
   "/methods/": {
     "slug": "methods",
@@ -349,15 +349,15 @@
   },
   "/radiopharmaceutical-decay/": {
     "slug": "radiopharmaceutical-decay",
-    "title": "Decay correction for radiopharmaceuticals: Tc-99m and F-18 dosing time tables · Radiation Lab"
+    "title": "Lu-177, Tc-99m, F-18 decay correction tables · Radiation Lab"
   },
   "/specific-activity/": {
     "slug": "specific-activity",
-    "title": "Specific activity calculator — mass and activity · Radiation Lab"
+    "title": "Specific activity calculator (Bq/g, Ci/g) · Radiation Lab"
   },
   "/units/": {
     "slug": "units",
-    "title": "Radiation unit converter — activity, dose, exposure · Radiation Lab"
+    "title": "Radiation unit converter: Bq, Ci, Gy, Sv, R · Radiation Lab"
   },
   "/validation/": {
     "slug": "validation",

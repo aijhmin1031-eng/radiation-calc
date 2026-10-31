@@ -212,6 +212,41 @@ console.log("\n⑨ 내부 링크가 실재하는 파일에 닿는가");
   note(`내부 링크·자원 ${seen}개 · 죽은 주소 ${dead.size}개`);
 }
 
+/* ── 검색 문구 ──────────────────────────────────────────────
+   ★ 2026-10-31 Search Console(9/9~10/30) 로 고친 쪽의 제목 · 설명 · 큰 제목을 **산출물에서** 잰다. 길이가 넘으면 검색 결과에서
+     문장이 잘려 나가고, 검색어가 빠지면 고친 뜻이 사라진다. 도구 쪽의 문구는 `tools.test.ts` 도 재지만, 읽을 글은 `.astro` 에 있어 여기서만 잰다. */
+console.log("\n⑩ 검색 문구");
+{
+  const SEARCH = {
+    "/specific-activity/": "Specific activity calculator", "/mda/": "MDA calculator", "/gamma-shielding/": "Gamma shielding",
+    "/decay/": "Radioactive decay calculator", "/beta/": "Beta shielding", "/alara/": "ALARA calculator",
+    "/units/": "Radiation unit converter", "/half-value-layers/": "Half-value and tenth-value layers",
+    "/beta-shield-materials/": "Beta shielding materials", "/positron-emitters/": "Positron emitters",
+    "/radiopharmaceutical-decay/": "Decay correction for radiopharmaceuticals",
+  };
+  const text = (x) => x.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/\s+/g, " ").trim();
+  for (const [path, words] of Object.entries(SEARCH)) {
+    const pg = pages.find((x) => x.path === path);
+    if (!pg) { fail.push(`검색 문구: ${path} 쪽이 없다`); continue; }
+    const title = text(pg.s.match(/<title>([^<]*)<\/title>/)?.[1] ?? "");
+    const desc = text(pg.s.match(/<meta name="description" content="([^"]*)"/)?.[1] ?? "");
+    const h1 = text(pg.s.match(/<h1[^>]*>([\s\S]*?)<\/h1>/)?.[1] ?? "");
+    if (title.length > 60) fail.push(`검색 문구: ${path} 제목 ${title.length}자 > 60 — ${title}`);
+    if (!title.endsWith(` · ${SITE_NAME}`)) fail.push(`검색 문구: ${path} 제목 꼬리가 다르다 — ${title}`);
+    if (desc.length > 155 || desc.length < 90) fail.push(`검색 문구: ${path} 설명 ${desc.length}자(90~155) — ${desc}`);
+    if (!h1.startsWith(words)) fail.push(`검색 문구: ${path} 큰 제목이 「${words}」로 시작하지 않는다 — ${h1}`);
+  }
+  /* Lu-177 — 표가 쪽에 서고, 계산기 링크가 Lu-177 을 채운 채 열리고, 낱장에서 표로 갈 수 있는가. */
+  const guide = pages.find((x) => x.path === "/radiopharmaceutical-decay/")?.s ?? "";
+  if (!/<h2 id="lu-177"/.test(guide)) fail.push("검색 문구: 붕괴 보정 쪽에 Lu-177 표 절이 없다");
+  const lnk = guide.match(/href="[^"]*\/decay\/\?s=([^"]+)"/)?.[1];
+  const prefilled = lnk ? JSON.parse(Buffer.from(decodeURIComponent(lnk), "base64").toString("utf8")) : null;
+  if (prefilled?.nuclide !== "Lu-177") fail.push(`검색 문구: 붕괴 보정 쪽의 계산기 링크가 Lu-177 을 채우지 않는다 — ${JSON.stringify(prefilled)}`);
+  const sheet = pages.find((x) => x.path === "/nuclides/lu-177/")?.s ?? "";
+  if (!sheet.includes("/radiopharmaceutical-decay/#lu-177")) fail.push("검색 문구: Lu-177 낱장에서 표로 가는 링크가 없다");
+  note(`고친 쪽 ${Object.keys(SEARCH).length}장의 제목 · 설명 · 큰 제목, Lu-177 표 · 계산기 링크 · 낱장 링크`);
+}
+
 console.log(fail.length ? `\n❌ ${fail.length}건\n` + fail.map((x) => "   " + x).join("\n")
                         : "\n✅ 산출물 점검 통과");
 process.exit(fail.length ? 1 : 0);

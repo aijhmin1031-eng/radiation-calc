@@ -1,5 +1,5 @@
 import type { NuclidePage } from "./nuclides";
-import { halfLifeText, betaEndpointBranch, gammaVs } from "./nuclides";
+import { halfLifeForSearch, sciText, betaEndpointBranch, gammaVs } from "./nuclides";
 
 /** 낱장 147장의 **검색 제목·설명**을 데이터에서 만든다 — 쪽마다 손으로 적지 않는다.
  *
@@ -44,6 +44,9 @@ export const TITLE_MAX = 58;
 /** 설명 길이 예산. 155자를 넘으면 뒤가 잘린다. */
 export const DESC_MAX = 165;
 export const DESC_MIN = 90;
+/** 쪽이 실제로 있는 핵종(`PAGE_KEYS`)의 설명 예산 — 검색 결과에 나가는 것은 이쪽이다.
+ *  `DESC_MAX` 는 쪽이 없는 나머지까지 포함해 자료 전체에 거는 상한이다. */
+export const DESC_PAGE_MAX = 155;
 
 /** ★★ **`Γ > 0` 은 제목을 고르는 자로 쓸 수 없다**(2026-09-17, Pu-239 가 드러냈다).
  *  Pu-239 의 Γ 는 8.23e-6 로 기술적으로 0 보다 크지만 **아무도 Pu-239 를 감마로 막지 않는다** —
@@ -65,7 +68,11 @@ const sig = (x: number, d = 3) => (Number.isFinite(x) ? x.toPrecision(d) : "—"
 
 export function nuclideSeo(p: NuclidePage): NuclideSeo {
   const { n, key, name } = p;
-  const hl = halfLifeText(n);
+  /* ★ 설명 첫머리가 **사람이 찾는 값 둘**을 든다(2026-10-31) — 반감기는 아는 단위로, 비방사능은 지수 표기 없이.
+     「specific activity of pu-239」(순위 8.7, 클릭 0)가 알파 쪽만의 질의가 아니라서 네 각 모두에 넣는다.
+     ★ 메타 설명만 바꾼다 — 본문에 틀 문장을 더하지 않는다(애드센스 T10-2). */
+  const hl = halfLifeForSearch(n);
+  const sa = `specific activity ${sciText(n.sa_bq_g)} Bq/g`;
 
   /* 감마가 **앞설 만한** 것 — **핵종별 차폐 두께**가 비어 있는 자리에서 답하는 것이다. */
   if (p.gamma > 0 && gammaLeadsFor(key)) {
@@ -73,8 +80,8 @@ export function nuclideSeo(p: NuclidePage): NuclideSeo {
       angle: "gamma",
       title: `${key} half-life, lead half-value layer and dose rate`,
       description:
-        `${name} (${key}): half-life ${hl}, Γ = ${sig(p.gamma)} mGy·m²/(GBq·h). ` +
-        `Half-value layers in lead, tungsten, iron and concrete, from the full spectrum.`,
+        `${name} (${key}): half-life ${hl}, ${sa}, Γ = ${sig(p.gamma)} mGy·m²/(GBq·h). ` +
+        `Lead and concrete half-value layers.`,
     };
   }
 
@@ -85,9 +92,9 @@ export function nuclideSeo(p: NuclidePage): NuclideSeo {
       angle: "beta",
       title: `${key} half-life, beta range and bremsstrahlung`,
       description:
-        `${name} (${key}): half-life ${hl}` +
+        `${name} (${key}): half-life ${hl}, ${sa}` +
         (end ? `, beta endpoint ${sig(end.maxKeV, 4)} keV` : "") +
-        `. Range in acrylic, aluminium, water and glass, and why lead makes bremsstrahlung worse.`,
+        `. Range in acrylic; lead adds bremsstrahlung.`,
     };
   }
 
@@ -97,8 +104,8 @@ export function nuclideSeo(p: NuclidePage): NuclideSeo {
       angle: "alpha",
       title: `${key} half-life, specific activity and alpha energies`,
       description:
-        `${name} (${key}): half-life ${hl}, specific activity ${sig(n.sa_bq_g)} Bq/g. ` +
-        `Alpha line energies and emission probabilities from IAEA decay data.`,
+        `${name} (${key}): half-life ${hl}, ${sa}. ` +
+        `Alpha line energies and emission probabilities from IAEA data.`,
     };
   }
 
@@ -109,7 +116,7 @@ export function nuclideSeo(p: NuclidePage): NuclideSeo {
     description:
       /* ★ 붕괴형식을 설명에서 뺐다 — 제목이 이미 들고, 문구가 길다(「electron capture with
          beta-plus」가 30자다). Ni-59·Ta-182m1 이 175·173자로 예산을 넘겼고 테스트가 잡았다. */
-      `${name} (${key}): half-life ${hl}, specific activity ${sig(n.sa_bq_g)} Bq/g. ` +
-      `Decay mode, mass-to-activity conversion and the decay curve, from IAEA data.`,
+      `${name} (${key}): half-life ${hl}, ${sa}. ` +
+      `Decay mode, mass-to-activity conversion and decay curve, from IAEA data.`,
   };
 }

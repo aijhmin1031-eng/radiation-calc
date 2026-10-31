@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ALL_KEYS, NUCLIDES, nuclidePage } from "./nuclides.ts";
-import { nuclideSeo, gammaLeadsFor, TITLE_MAX, DESC_MAX, DESC_MIN } from "./nuclide-seo.ts";
+import { nuclideSeo, gammaLeadsFor, TITLE_MAX, DESC_MAX, DESC_MIN, DESC_PAGE_MAX } from "./nuclide-seo.ts";
+import { PAGE_KEYS } from "./nuclide-pages.ts";
 
 const ROWS = ALL_KEYS.map((key) => ({ key, p: nuclidePage(key), seo: nuclideSeo(nuclidePage(key)) }));
 
@@ -80,4 +81,41 @@ test("★ 네 각이 전부 쓰인다 — 하나로 뭉개지면 겨냥이 사�
     assert.ok((count.get(a) ?? 0) > 0, `${a} 각을 쓰는 쪽이 하나도 없다`);
   const biggest = Math.max(...count.values());
   assert.ok(biggest < ALL_KEYS.length, "한 각이 147장을 전부 먹었다");
+});
+
+test("★ 설명문의 반감기는 사람이 찾는 단위다 — 값은 손으로 환산해 맞춘 글자", () => {
+  /* ★ 2026-10-31 — 「half-life 1925.28 days」로는 Co-60 을 찾는 사람이 아는 5.27 년을 못 본다.
+     자료의 값은 괄호에 그대로 둔다(평가값이 어느 것인지 흐리지 않는다). 해는 자료와 같은 365.2425 d.
+       Co-60  1925.28 d / 365.2425 = 5.271 y   Cd-109  461.9 d / 365.2425 = 1.265 y
+       Mo-99  65.924 h / 24 = 2.747 d          Y-90    64.05 h / 24 = 2.669 d */
+  const want: Record<string, string> = {
+    "Co-60": "half-life 5.27 years (1925.28 d)",
+    "Cd-109": "half-life 1.26 years (461.9 d)",
+    "Mo-99": "half-life 2.75 days (65.924 h)",
+    "Y-90": "half-life 2.67 days (64.05 h)",
+    /* 자료의 단위가 이미 알맞으면 그대로 — 괄호를 달지 않는다. */
+    "Sr-90": "half-life 28.91 years,",
+    "Lu-177": "half-life 6.6443 days,",
+    "Mn-54": "half-life 312.20 days,",
+    "Tc-99m": "half-life 6.0072 hours,",
+    "F-18": "half-life 109.77 minutes,",
+    "U-236": "half-life 2.342 × 10⁷ years,",
+  };
+  for (const [key, text] of Object.entries(want)) {
+    const d = nuclideSeo(nuclidePage(key)).description;
+    assert.ok(d.includes(text), `${key}: 「${text}」 가 없다 — ${d}`);
+  }
+});
+
+test("★ 쪽이 있는 핵종의 설명문 — 155자 안쪽, 큰 단위를 작은 단위로 말하지 않고, 비방사능을 든다", () => {
+  for (const key of PAGE_KEYS) {
+    const d = nuclideSeo(nuclidePage(key)).description;
+    assert.ok(d.length <= DESC_PAGE_MAX, `${key} 설명 ${d.length}자 > ${DESC_PAGE_MAX}: ${d}`);
+    assert.match(d, /specific activity [\d.]+( × 10[⁰¹²³⁴⁵⁶⁷⁸⁹]+)? Bq\/g/, `${key}: 비방사능이 없다 — ${d}`);
+    assert.ok(!/e\+/.test(d), `${key}: 설명에 지수 표기가 남았다 — ${d}`);
+    const sec = NUCLIDES[key].t_half_s;
+    const lead = /half-life [\d.]+(?: × 10\S+)? (\w+)/.exec(d)?.[1];
+    if (sec >= 365.2425 * 86400) assert.equal(lead, "years", `${key}: 1년이 넘는데 ${lead} — ${d}`);
+    else if (sec >= 2 * 86400) assert.equal(lead, "days", `${key}: 2일이 넘는데 ${lead} — ${d}`);
+  }
 });

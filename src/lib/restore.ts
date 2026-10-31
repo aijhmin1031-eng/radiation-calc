@@ -9,6 +9,11 @@ export function encodeState(inputs: Record<string, unknown>): string {
   return btoa(String.fromCharCode(...new TextEncoder().encode(json)));
 }
 
+/** 계산기를 조건을 채운 채 여는 주소 — 쪽 글에서 계산기로 보낼 때 쓴다.
+ *  ★ `encodeURIComponent` 를 반드시 건다 — base64 의 `+` 가 질의문자열에서 공백이 되면 복원이 조용히 실패한다. */
+export const prefillPath = (tool: string, inputs: Record<string, unknown>) =>
+  `/${tool}/?s=${encodeURIComponent(encodeState(inputs))}`;
+
 export function decodeState(s: string): Record<string, unknown> | null {
   try {
     const bin = atob(s);

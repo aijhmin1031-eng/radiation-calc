@@ -35,3 +35,40 @@ test("등록부가 온전하다", () => {
     assert.equal(toolBySlug(t.slug), t);
   }
 });
+
+/* ★ 2026-10-31 Search Console(9/9~10/30) — 사람이 실제로 친 말이 제목 앞머리와 큰 제목에 있어야 한다. */
+const SEARCHED: Record<string, { title: string; h1: string; blurb?: string }> = {
+  "specific-activity": { title: "Specific activity calculator", h1: "Specific activity calculator", blurb: "Specific activity of Pu-239" },
+  mda: { title: "MDA calculator: minimum detectable activity", h1: "MDA calculator", blurb: "Minimum detectable activity" },
+  "gamma-shielding": { title: "Gamma shielding", h1: "Gamma shielding" },
+  decay: { title: "Radioactive decay calculator", h1: "Radioactive decay calculator", blurb: "Nuclear decay calculator" },
+  beta: { title: "Beta shielding", h1: "Beta shielding" },
+  alara: { title: "ALARA calculator", h1: "ALARA calculator" },
+  units: { title: "Radiation unit converter", h1: "Radiation unit converter" },
+};
+
+test("★ 검색 제목·큰 제목이 실제 검색어로 시작한다", () => {
+  for (const [slug, want] of Object.entries(SEARCHED)) {
+    const t = toolBySlug(slug)!;
+    assert.ok(t.seoTitle.startsWith(want.title), `${slug} 제목: ${t.seoTitle}`);
+    assert.ok(t.heading.startsWith(want.h1), `${slug} 큰 제목: ${t.heading}`);
+    if (want.blurb) assert.ok(t.blurb.startsWith(want.blurb), `${slug} 설명: ${t.blurb}`);
+  }
+});
+
+test("★ 고친 도구 쪽의 제목·설명이 검색 결과에서 잘리지 않는다", () => {
+  for (const slug of Object.keys(SEARCHED)) {
+    const t = toolBySlug(slug)!;
+    const full = `${t.seoTitle} · Radiation Lab`;
+    assert.ok(full.length <= 60, `${slug} 제목 ${full.length}자 — ${full}`);
+    assert.ok(t.blurb.length <= 155 && t.blurb.length >= 90, `${slug} 설명 ${t.blurb.length}자 — ${t.blurb}`);
+  }
+});
+
+test("★ 내비 이름은 그대로다 — 큰 제목만 검색어를 든다(메뉴 글자는 공통 셸 명세와 맞물려 있다)", () => {
+  const names = Object.fromEntries(TOOLS.map((t) => [t.slug, t.name]));
+  assert.equal(names.decay, "Decay and half-life");
+  assert.equal(names["specific-activity"], "Mass and activity");
+  assert.equal(names.mda, "Detection limits (MDA / MDC)");
+  assert.equal(names.units, "Unit converter");
+});

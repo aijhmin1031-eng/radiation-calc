@@ -42,11 +42,11 @@ const withProgeny = all.filter((r) => dominantProgeny(r.key)?.betaHotter);
 const GAMMA_FLOOR = 0.01;
 const gammaLed = top.filter((r) => r.g >= GAMMA_FLOOR).sort((a, b) => b.g - a.g);
 ---
-<Base title="Shield materials for beta emitters"
-      description="A beta shield is two decisions: how thick, and what of. The thickness follows from the endpoint energy. The material follows from bremsstrahlung, which rises with atomic number — which is why lead is the wrong thing to put first."
+<Base title="Beta shielding materials and thickness"
+      description="Beta shield thickness follows the endpoint energy; the material follows bremsstrahlung, which rises with atomic number, so lead does not go first."
       schema="TechArticle">
   <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
-    Shield materials for beta emitters
+    Beta shielding materials: how thick, and what to use
   </h1>
 
   <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
