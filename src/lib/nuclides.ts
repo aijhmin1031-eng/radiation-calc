@@ -8,6 +8,7 @@ import {
   betaRange, betaRangeCm, bremsstrahlungYield, DENSITY_G_CM3, elapsedFromRatio, decayActivity,
   BETA_BRANCH_FLOOR_PCT, bremsEndpointKeV,
 } from "../engine";
+import { TIME_S } from "../engine/constants";
 import { lineShares, meanPhotonEnergyKeV, spectrumHVL, spectrumTVL, spectrumLayer, type LineShare } from "../engine/spectrum";
 
 export const NUCLIDES = nuclides as unknown as NuclideMap;
@@ -118,13 +119,46 @@ const UNIT_WORD: Record<string, string> = {
 };
 /** ★ 자료의 `hl` 은 IAEA 표기 그대로라 `9.94E+4` 같은 꼴이 섞여 있다 — 화면에 그대로 내면
  *  「9.94E+4 years」가 된다. 지수는 사람이 읽는 꼴로 바꾼다. */
+const SUPERSCRIPT = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+const pow10Text = (exp: number) =>
+  `10${String(exp).replace(/-/g, "−").replace(/\d/g, (d) => SUPERSCRIPT[Number(d)])}`;
 export function halfLifeText(n: Nuclide): string {
   const unit = UNIT_WORD[n.hl_unit] ?? n.hl_unit;
   const m = /^([\d.]+)[eE]\+?(-?\d+)$/.exec(n.hl);
   if (!m) return `${n.hl} ${unit}`;
-  const exp = Number(m[2]);
-  const sup = String(exp).replace(/-/g, "\u2212").replace(/\d/g, (d) => "\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079"[Number(d)]);
-  return `${m[1]} \u00d7 10${sup} ${unit}`;
+  return `${m[1]} × ${pow10Text(Number(m[2]))} ${unit}`;
+}
+
+/** 「4.19 × 10¹³」 — 검색 설명처럼 지수 표기(`4.19e+13`)를 그대로 내보이고 싶지 않은 자리에 쓴다. */
+export function sciText(x: number, digits = 3): string {
+  const [mantissa, exp] = x.toExponential(digits - 1).split("e");
+  return Number(exp) === 0 ? mantissa : `${mantissa} × ${pow10Text(Number(exp))}`;
+}
+
+/** ★ 자료 단위보다 **찾는 사람이 아는 단위**(2026-10-31, Search Console). IAEA 표기는 Co-60 을 「1925.28 days」로 싣는데
+ *  사람들이 아는 값은 5.27 년이다. 1년 넘는 일 · 2일 넘는 시간 · 2시간 넘는 분 · 2분 넘는 초만 **위 단위로** 옮긴다 —
+ *  F-18 109.77 분 · Tc-99m 6.0072 시간처럼 현장에서 그 단위로 부르는 값은 그대로 둔다.
+ *  옮길 일이 없으면 `null`. 값은 자료의 `t_half_s` 에서 유효숫자 3자리로 계산한다(자료는 그대로다). */
+const LADDER = [
+  { unit: "s", word: "seconds", short: "s", sec: 1, min: 0 },
+  { unit: "m", word: "minutes", short: "min", sec: TIME_S.min, min: 2 * TIME_S.min },
+  { unit: "h", word: "hours", short: "h", sec: TIME_S.h, min: 2 * TIME_S.h },
+  { unit: "d", word: "days", short: "d", sec: TIME_S.d, min: 2 * TIME_S.d },
+  { unit: "Y", word: "years", short: "y", sec: TIME_S.y, min: TIME_S.y },
+] as const;
+export function usualHalfLife(n: Nuclide): string | null {
+  const from = LADDER.findIndex((r) => r.unit === n.hl_unit);
+  if (from < 0) return null;                                 // ms · µs · ns — 옮길 까닭이 없다
+  const to = LADDER.reduce((best, r, i) => (n.t_half_s >= r.min ? i : best), 0);
+  if (to <= from) return null;
+  return `${(n.t_half_s / LADDER[to].sec).toPrecision(3)} ${LADDER[to].word}`;
+}
+/** 「5.27 years (1925.28 d)」 — 옮길 일이 없으면 `halfLifeText` 그대로다. 괄호 안이 자료의 평가값이다. */
+export function halfLifeForSearch(n: Nuclide): string {
+  const usual = usualHalfLife(n);
+  if (!usual) return halfLifeText(n);
+  const source = LADDER.find((r) => r.unit === n.hl_unit)!;
+  return `${usual} (${halfLifeText(n).replace(source.word, source.short)})`;
 }
 
 export const MATERIALS: Material[] = ["lead", "tungsten", "iron", "copper", "concrete", "water", "aluminum"];

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { layerTable, decayGrid, dosingExamples, mm3, cm3, pct1, hMin, minutesTo } from "./guide-tables.ts";
+import { layerTable, decayGrid, decayGridDays, dosingExamples, mm3, cm3, pct1, hMin, minutesTo } from "./guide-tables.ts";
 
 /* ★ 가이드 글 두 편(/half-value-layers/, /radiopharmaceutical-decay/)의 숫자를 화면 문자열로 고정한다.
  *   글은 숫자를 글자로 적지 않고 이 함수들에서 읽으므로, 엔진·자료가 바뀌면 여기가 먼저 깨진다 —
@@ -47,6 +47,21 @@ test("F-18 잔존 비율 표 — 0~6 h, 15분 간격", () => {
   assert.deepEqual(g[0].f.map(pct1), ["100.0", "91.0", "82.7", "75.3"]);
   assert.deepEqual(g[1].f.map(pct1), ["68.5", "62.3", "56.6", "51.5"]);
   assert.deepEqual(g[6].f.map(pct1), ["10.3"]);
+});
+
+test("Lu-177 잔존 비율 표 — 0~14일, 6시간 간격 (2^(-t/6.6443 d) 를 따로 계산한 값)", () => {
+  /* 1 d → 90.09% · 3 d 12 h → 69.41% · 6 d 18 h → 49.45% · 7 d → 48.18% · 14 d → 23.21% */
+  const g = decayGridDays("Lu-177", 14);
+  assert.equal(g.length, 15);
+  assert.equal(g[0].d, 0);
+  assert.equal(pct1(g[0].f[0]), "100.0");
+  assert.equal(pct1(g[1].f[0]), "90.1");
+  assert.equal(pct1(g[3].f[2]), "69.4");
+  assert.equal(pct1(g[6].f[3]), "49.5");
+  assert.equal(pct1(g[7].f[0]), "48.2");
+  assert.deepEqual(g[14].f.map(pct1), ["23.2"]);
+  /* 9.0 GBq 가 7.4 GBq 로 — T½·log₂(9.0/7.4) = 1.8763 d = 2701.9 min. 「언제까지」라 분은 내림이다(`hMin`) */
+  assert.equal(hMin(minutesTo("Lu-177", 7.4 / 9.0)), "45 h 1 min");
 });
 
 test("투여 시각 역산 예제 두 개", () => {

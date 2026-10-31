@@ -19,6 +19,10 @@ export interface Tool {
   slug: string;
   /** 내비·카드에 그리는 **짧은** 이름. 화면에서 줄이 바뀌면 안 되므로 길게 쓰지 않는다. */
   name: string;
+  /** 쪽의 큰 제목(H1) · 공유 그림의 글자. ★ 2026-10-31(Search Console) — `name` 이 H1 이던 동안 specific-activity 의 큰 제목은
+   *  「Mass and activity」, decay 는 「Decay and half-life」였다. 사람들이 치는 말은 「specific activity calculator」·
+   *  「decay calculator」다. 메뉴 글자는 공통 셸 명세에 묶여 있어(`check-platform`) `name` 은 두고 H1 만 가른다. */
+  heading: string;
   /** ★★ 검색 결과에 나가는 제목(2026-09-16 소유주 지시 「제목 고치자. 사람이 유입이
    *  될 수 있도록」). **`name` 과 갈라 둔다** — 내비는 짧아야 하고 검색 제목은 사람이
    *  실제로 치는 낱말을 담아야 한다. 한 값으로 묶으면 둘 중 하나가 반드시 나빠진다.
@@ -70,17 +74,17 @@ export const TOOL_GROUPS: { key: ToolGroup; label: string }[] = [
   { key: "activity", label: "Activity & counting" },
   { key: "spectrum", label: "X-ray spectra" },
 ];
-/** 메뉴·목록에 그리는 이름 — `name` 의 「and」를 「&」로(명세 §4). h1 은 `name` 그대로다. */
+/** 메뉴·목록에 그리는 이름 — `name` 의 「and」를 「&」로(명세 §4). h1 은 `heading` 이다. */
 export const menuName = (t: Tool) => t.name.replace(/ and /, " & ");
 export const toolsIn = (g: ToolGroup) => TOOLS.filter((t) => t.group === g);
 
 export const TOOLS: Tool[] = [
   /* ★ 2026-10-06 ⑥ — 명세 순서: 선량·차폐 셋(감마 · 베타 · ALARA), 방사능·계측 넷(환산 · 붕괴 · 질량 · MDA). */
-  { slug: "gamma-shielding", name: "Gamma dose rate and shielding",
+  { slug: "gamma-shielding", name: "Gamma dose rate and shielding", heading: "Gamma shielding and dose rate calculator",
     group: "dose", icon: "shield", line: "Dose rate from the emission spectrum; shield thickness solved backwards.",
-    seoTitle: "Gamma dose rate calculator and shielding", needs: ["nuclide", "shielding"], login: false,
+    seoTitle: "Gamma shielding and dose rate calculator", needs: ["nuclide", "shielding"], login: false,
     question: "What is the dose rate at 2 m from 37 GBq of Ir-192, and how much lead brings it under 20 µSv/h?",
-    blurb: "Point-source dose rate from the emission spectrum, with attenuation and buildup, and the shield thickness solved backwards.",
+    blurb: "Gamma dose rate from the emission spectrum, with attenuation and buildup in lead, steel, concrete or tungsten, and the shield thickness solved backwards.",
     assumes: [
       "A point source radiating isotropically in air, with no capsule and no self-absorption in the source.",
       "Narrow-beam attenuation, unless you enter buildup coefficients yourself.",
@@ -93,11 +97,11 @@ export const TOOLS: Tool[] = [
     ],
     checked: "The formula, the NIST tables and a sample of emission lines are checked separately; the constant itself is not compared with published values, which describe a different quantity and often leave the cutoff unstated. 1 Ci of Co-60 at 1 m gives 11.31 mGy/h.",
   },
-  { slug: "beta", name: "Beta dose rate and shielding",
+  { slug: "beta", name: "Beta dose rate and shielding", heading: "Beta shielding and dose rate calculator",
     group: "dose", icon: "shield-half", line: "Range, transmission and bremsstrahlung by absorber.",
-    seoTitle: "Beta dose rate calculator and shielding", needs: ["nuclide", "shielding"], login: false,
+    seoTitle: "Beta shielding and dose rate calculator", needs: ["nuclide", "shielding"], login: false,
     question: "How thick must acrylic be to stop Y-90 beta, and how much bremsstrahlung does lead make instead?",
-    blurb: "Infinite-medium dose rate, Katz–Penfold range, transmission through absorbers, and bremsstrahlung yield by atomic number.",
+    blurb: "Beta shield thickness from the Katz–Penfold range in acrylic and other absorbers, transmission, infinite-medium dose rate and bremsstrahlung yield.",
     assumes: [
       "Katz–Penfold range, an empirical fit to absorption measurements, which depends on mass thickness rather than the material.",
       "The infinite-medium dose rate is exact by energy conservation — every beta deposits its energy locally.",
@@ -109,11 +113,11 @@ export const TOOLS: Tool[] = [
     ],
     checked: "Y-90 in acrylic gives a 9.2 mm range; the validation report sets the fit against NIST ESTAR path lengths.",
   },
-  { slug: "alara", name: "ALARA and job planning",
+  { slug: "alara", name: "ALARA and job planning", heading: "ALARA calculator: stay time and collective dose",
     group: "dose", icon: "timer", line: "Stay time, dose budget and collective dose across tasks.",
-    seoTitle: "ALARA calculator — stay time and collective dose", needs: ["none"], login: false,
+    seoTitle: "ALARA calculator: stay time, collective dose", needs: ["none"], login: false,
     question: "How long can two workers stay? How far back must the barrier go?",
-    blurb: "Inverse square, stay time against a dose budget, collective dose across tasks, and half- and tenth-value layers.",
+    blurb: "Plan a radiation job: inverse-square distance, stay time against a dose budget, collective dose across tasks, and half- and tenth-value layers.",
     assumes: [
       "Inverse square for a point source in open geometry.",
       "The dose rate stays constant for the whole stay.",
@@ -125,11 +129,11 @@ export const TOOLS: Tool[] = [
     ],
     checked: "Stay time answers \"unknown\" rather than \"unlimited\" when the dose rate is missing.",
   },
-  { slug: "units", name: "Unit converter",
+  { slug: "units", name: "Unit converter", heading: "Radiation unit converter",
     group: "activity", icon: "arrow-left-right", line: "Activity, dose, exposure and contamination units.",
-    seoTitle: "Radiation unit converter — activity, dose, exposure", needs: ["none"], login: false,
+    seoTitle: "Radiation unit converter: Bq, Ci, Gy, Sv, R", needs: ["none"], login: false,
     question: "How many becquerels is 5 µCi? How many Bq/cm² is 6000 dpm/100 cm²?",
-    blurb: "Activity, dose, dose equivalent, exposure, surface contamination and concentration — converted within each quantity, never across.",
+    blurb: "Bq and Ci, Gy and rad, Sv and rem, roentgen, dpm/100 cm² and Bq/L: activity, dose, exposure and contamination, converted within each quantity.",
     assumes: [
       "Conversions stay inside one quantity, using the exact SI definitions rather than rounded factors.",
       "Exposure to air kerma multiplies by W/e = 33.97 J/C, the average energy to make one ion pair in dry air.",
@@ -141,11 +145,11 @@ export const TOOLS: Tool[] = [
     ],
     checked: "Factors are defined constants, not measurements — 1 Ci = 3.7×10¹⁰ Bq exactly.",
   },
-  { slug: "decay", name: "Decay and half-life",
+  { slug: "decay", name: "Decay and half-life", heading: "Radioactive decay calculator",
     group: "activity", icon: "hourglass", line: "Activity after time, time to target, decay chains.",
-    seoTitle: "Radioactive decay calculator — half-life and activity", needs: ["nuclide"], login: false,
+    seoTitle: "Radioactive decay calculator and half-life", needs: ["nuclide"], login: false,
     question: "How much is left after 18 months? When does this source drop below the limit?",
-    blurb: "Activity after elapsed time, the time to reach a target, half-life from two measurements, and decay chains.",
+    blurb: "Nuclear decay calculator for 147 nuclides: activity after any elapsed time, time to reach a target activity, and half-life from two measurements.",
     assumes: [
       "Pure exponential decay of one nuclide, with half-lives from the IAEA evaluated nuclear data.",
       "Nothing but decay removes activity between the two times.",
@@ -156,11 +160,11 @@ export const TOOLS: Tool[] = [
     ],
     checked: "One half-life returns 50.00% of the starting activity.",
   },
-  { slug: "specific-activity", name: "Mass and activity",
+  { slug: "specific-activity", name: "Mass and activity", heading: "Specific activity calculator",
     group: "activity", icon: "atom", line: "Grams to becquerels and back for 147 nuclides.",
-    seoTitle: "Specific activity calculator — mass and activity", needs: ["nuclide"], login: false,
+    seoTitle: "Specific activity calculator (Bq/g, Ci/g)", needs: ["nuclide"], login: false,
     question: "How many grams of Pu-239 is 1 GBq? What is the specific activity of Sr-90?",
-    blurb: "Grams to becquerels and back for 147 nuclides, from half-life and evaluated molar mass.",
+    blurb: "Specific activity of Pu-239, Sr-90 or any of 147 nuclides in Bq/g and Ci/g, and grams to becquerels and back, from half-life and evaluated molar mass.",
     assumes: [
       "The pure isotope, using the evaluated atomic mass as the molar mass.",
       "Specific activity derived from the half-life, not taken from a table.",
@@ -171,11 +175,11 @@ export const TOOLS: Tool[] = [
     ],
     checked: "Molar masses are the AME2020 evaluated atomic masses, not mass numbers; the difference reaches 0.53%.",
   },
-  { slug: "mda", name: "Detection limits (MDA / MDC)",
+  { slug: "mda", name: "Detection limits (MDA / MDC)", heading: "MDA calculator: minimum detectable activity",
     group: "activity", icon: "scan-search", line: "Critical level, detection limit and scan MDC.",
-    seoTitle: "MDA calculator — detection limits and scan MDC", needs: ["counting"], login: false,
+    seoTitle: "MDA calculator: minimum detectable activity", needs: ["counting"], login: false,
     question: "What can this counter actually detect in a 10-minute count? How slowly must I scan?",
-    blurb: "Critical level, detection limit and minimum detectable activity for fixed counting, plus scan MDC with observer efficiency.",
+    blurb: "Minimum detectable activity (MDA) from background, efficiency and count time: critical level, detection limit, and scan MDC with observer efficiency.",
     assumes: [
       "Poisson counting statistics with a background measured for the same duration (the Currie formulation).",
       "The efficiency you enter already accounts for geometry and, where used, the fraction leaving the surface.",
@@ -187,7 +191,7 @@ export const TOOLS: Tool[] = [
     ],
     checked: "The critical level L_C and the detection limit L_D are reported separately — reporting L_C alone understates what the instrument finds.",
   },
-  { slug: "xray-spectrum", name: "X-ray tube spectrum",
+  { slug: "xray-spectrum", name: "X-ray tube spectrum", heading: "X-ray tube spectrum",
     group: "spectrum", icon: "activity", line: "Raw tungsten bremsstrahlung spectrum and mean photon energy for a chosen tube voltage.",
     seoTitle: "X-ray tube spectrum calculator — bremsstrahlung", needs: ["none"], login: false,
     question: "What does a tungsten X-ray tube spectrum look like at 100 kVp before filtration?",

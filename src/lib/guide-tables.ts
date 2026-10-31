@@ -40,6 +40,15 @@ export function decayGrid(k: string, hours: number): { h: number; f: number[] }[
   }));
 }
 
+/** 잔존 비율 표 — 6시간 간격, `days` 일까지. 행은 날, 열은 +0 h · +6 h · +12 h · +18 h(Lu-177 처럼 날로 세는 핵종). */
+export function decayGridDays(k: string, days: number): { d: number; f: number[] }[] {
+  const T = NUCLIDES[k].t_half_s;
+  return Array.from({ length: days + 1 }, (_, d) => ({
+    d,
+    f: (d === days ? [0] : [0, 6, 12, 18]).map((h) => decayActivity(1, T, d * 86400 + h * 3600)),
+  }));
+}
+
 /** 남은 비율이 `ratio` 가 되는 데 걸리는 분. */
 export const minutesTo = (k: string, ratio: number) => elapsedFromRatio(ratio, NUCLIDES[k].t_half_s) / 60;
 /** `min` 분 뒤 남는 비율. */

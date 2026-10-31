@@ -100,10 +100,10 @@ export const NOTES: Note[] = [
   },
   {
     path: "/radiopharmaceutical-decay/",
-    name: "Decay correction for Tc-99m and F-18",
+    name: "Decay correction for Lu-177, Tc-99m and F-18",
     question: "When can a dose still be given, and how much must be drawn ahead?",
     blurb:
-      "Remaining-fraction tables at 15-minute steps, two worked examples of the dosing window, and " +
+      "Remaining-fraction tables for three nuclides, two worked examples of the dosing window, and " +
       "the reference-time and unit mistakes that put an administered activity out of range.",
   },
   {

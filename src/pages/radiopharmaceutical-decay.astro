@@ -3,10 +3,13 @@ import Base from "../layouts/Base.astro";
 import NuclideRef from "../components/NuclideRef.astro";
 import { NUCLIDES, halfLifeText } from "../lib/nuclides";
 import { BQ_PER_CI } from "../engine";
-import { decayGrid, dosingExamples, fractionAfter, minutesTo, pct1, hMin } from "../lib/guide-tables";
+import { decayGrid, decayGridDays, dosingExamples, fractionAfter, minutesTo, pct1, hMin } from "../lib/guide-tables";
+import { prefillPath } from "../lib/restore";
 import { u } from "../lib/site";
 
 /** ★★ 가이드 글 — 방사성의약품의 붕괴 보정, Tc-99m·F-18 투여 시각표(2026-10-25 D5-2, 감독 지시 12 ②).
+ *  ★ 2026-10-31 Lu-177 표를 더했다 — 「lu 177 decay calculator」 노출 22회 · 순위 60 인데 맞는 쪽이 없었다. 반감기가 날 단위라
+ *    15분 간격은 뜻이 없어 6시간 간격 · 14일(반감기 약 2번)까지로 한다.
  *  **숫자를 글자로 적지 않는다** — 표·예제·산문의 비율과 시각은 `lib/guide-tables.ts` 에서 나오고,
  *  같은 함수를 `guide-tables.test.ts` 가 고정한다. 반감기는 자료(IAEA Livechart)의 값이다.
  *  ★ 투여 허용 범위(±10%)는 **예제의 가정**으로만 쓴다 — 규정값이라고 말하지 않는다(기관·국가마다 다르다). */
@@ -26,12 +29,20 @@ const f10 = fractionAfter("F-18", 10);
 const tcTenth = minutesTo("Tc-99m", 0.1);
 const winRatio = NUCLIDES["Tc-99m"].t_half_s / NUCLIDES["F-18"].t_half_s;
 const COLS = [":00", ":15", ":30", ":45"];
+const LU = decayGridDays("Lu-177", 14);
+const luT = halfLifeText(NUCLIDES["Lu-177"]);
+const luMT = halfLifeText(NUCLIDES["Lu-177m"]);
+const LU_COLS = ["+0 h", "+6 h", "+12 h", "+18 h"];
+const luPerDay = 1 - fractionAfter("Lu-177", 1440);
+const luPerHour = 1 - fractionAfter("Lu-177", 60);
+const luDelay = hMin(minutesTo("Lu-177", 7.4 / 9.0));
+const luCalc = prefillPath("decay", { nuclide: "Lu-177", a0: 7.4, unit: "GBq", t: 7, tu: "d" });
 ---
-<Base title="Decay correction for radiopharmaceuticals: Tc-99m and F-18 dosing time tables"
-      description="Remaining-activity tables at 15-minute steps for Tc-99m (0 to 12 hours) and F-18 (0 to 6 hours), two worked examples of working back to the injection time, and the reference-time and unit mistakes that most often put a dose out of range. Computed from the evaluated half-lives."
+<Base title="Lu-177, Tc-99m, F-18 decay correction tables"
+      description="Remaining-activity tables for Lu-177 (0 to 14 days), Tc-99m and F-18, two dosing examples, common mistakes, and a decay calculator set up for Lu-177."
       schema="TechArticle">
   <h1 class="text-[26px] font-semibold tracking-tight text-ink sm:text-[32px]">
-    Decay correction for radiopharmaceuticals: Tc-99m and F-18 dosing time tables
+    Decay correction for radiopharmaceuticals: Lu-177, Tc-99m and F-18 tables
   </h1>
 
   <section class="prose-doc mt-6 max-w-3xl text-[15px] leading-relaxed text-ink-muted">
@@ -39,9 +50,10 @@ const COLS = [":00", ":15", ":30", ":45"];
       A radiopharmaceutical dose is prescribed as an activity at the time of administration, but it is
       measured, labelled and shipped at some other time. Between the two the activity falls, and with
       half-lives of {tcT} for Tc-99m and {fT} for F-18 the change is large enough to matter within a
-      morning. This note gives the remaining fraction at 15-minute steps for both nuclides, works two
-      examples of finding when a dose can be given, and lists the mistakes that most often put an
-      administered activity outside its range. The dose calibrator reading before administration is
+      morning. This note gives the remaining fraction at 15-minute steps for both nuclides and at 6-hour
+      steps for Lu-177, whose half-life of {luT} is counted in days, works two examples of finding when a
+      dose can be given, and lists the mistakes that most often put an administered activity outside its
+      range. The dose calibrator reading before administration is
       always the measurement that counts; these tables tell you what that reading should be.
     </p>
 
@@ -60,12 +72,12 @@ const COLS = [":00", ":15", ":30", ":45"];
     <p>
       To find the time at which a given fraction is reached, invert the law:
       t&nbsp;=&nbsp;T½·log₂(A₀/A). The half-lives used here are the evaluated values in the IAEA Livechart
-      decay data: {tcT} for Tc-99m and {fMin.toFixed(2)} minutes for F-18. The
+      decay data: {tcT} for Tc-99m, {fMin.toFixed(2)} minutes for F-18 and {luT} for Lu-177. The
       <a href={u("/decay/")} class="underline"> decay calculator</a> uses the same values and gives the
       factor for any interval to more figures than the tables.
     </p>
 
-    <h2>Tc-99m remaining fraction, 0 to 12 hours</h2>
+    <h2 id="tc-99m">Tc-99m remaining fraction, 0 to 12 hours</h2>
     <p>
       Read the row for the whole hours elapsed and the column for the extra minutes. The figure is the
       percentage of the reference activity that remains.
@@ -92,7 +104,7 @@ const COLS = [":00", ":15", ":30", ":45"];
       and falls to a tenth after {hMin(tcTenth)}.
     </p>
 
-    <h2>F-18 remaining fraction, 0 to 6 hours</h2>
+    <h2 id="f-18">F-18 remaining fraction, 0 to 6 hours</h2>
     <div class="pin-first mt-3" tabindex="0">
       <table>
         <thead>
@@ -113,6 +125,40 @@ const COLS = [":00", ":15", ":30", ":45"];
       {" "}{pct1(F[1].f[0])}%. Because the loss is so fast, F-18 doses are usually ordered from the
       supplier with a calibration time and an activity at that time, and the site works out the activity
       at injection from that pair, not from the time the dose arrives.
+    </p>
+
+    <h2 id="lu-177">Lu-177 remaining fraction, 0 to 14 days</h2>
+    <p>
+      A therapy dose of Lu-177 is planned over days, so here the row is the whole days elapsed and the
+      column the extra hours.
+    </p>
+    <div class="pin-first mt-3" tabindex="0">
+      <table>
+        <thead>
+          <tr><th>Elapsed</th>{LU_COLS.map((c) => <th>{c}</th>)}</tr>
+        </thead>
+        <tbody>
+          {LU.map((r) => (
+            <tr><td>{r.d} d</td>{LU_COLS.map((_, i) => <td>{r.f[i] === undefined ? "" : pct1(r.f[i])}</td>)}</tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-2 text-[13px]">
+      Remaining activity in percent of the reference activity, Lu-177, T½ = {luT}.
+    </p>
+    <p>
+      Lu-177 loses about {pct1(luPerHour)}% per hour and {pct1(luPerDay)}% per day, so an hour's delay
+      hardly shows and a day's delay does. A vial holding 9.0&nbsp;GBq at its calibration time reaches a
+      prescribed 7.4&nbsp;GBq after t&nbsp;=&nbsp;T½·log₂(9.0/7.4)&nbsp;=&nbsp;{luDelay}, between the
+      {" "}1&nbsp;d&nbsp;+18&nbsp;h entry of {pct1(LU[1].f[3])}% and the 2&nbsp;d entry of {pct1(LU[2].f[0])}%.
+      For any other interval, the <a href={u(luCalc)} class="underline">decay calculator opens with
+      Lu-177 selected</a>.
+    </p>
+    <p>
+      The table follows Lu-177 alone. Material made directly from Lu-176 also carries the isomer Lu-177m,
+      half-life {luMT}, which outlasts it by far and governs the disposal of that waste; the
+      {" "}<NuclideRef k="Lu-177" /> sheet describes the two production routes.
     </p>
 
     <h2>Worked example: the latest time a Tc-99m dose can be given</h2>
@@ -214,7 +260,7 @@ const COLS = [":00", ":15", ":30", ":45"];
         F-18 and its decay through a working day.</li>
       <li><a href={u("/half-value-layers/")} class="underline">Half-value and tenth-value layers</a> —
         how much lead a Tc-99m syringe needs.</li>
-      <li><NuclideRef k="Tc-99m" /> and <NuclideRef k="F-18" /> — the full data pages.</li>
+      <li><NuclideRef k="Lu-177" />, <NuclideRef k="Tc-99m" /> and <NuclideRef k="F-18" /> — the full data pages.</li>
     </ul>
   </section>
 </Base>

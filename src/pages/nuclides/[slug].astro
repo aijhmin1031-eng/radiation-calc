@@ -1,7 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { u, DATA_SOURCES } from "../../lib/site";
-import { ALL_KEYS, NUCLIDES, nuclidePage, slugOf, longName, decayWordOf, SPONTANEOUS_FISSION, sfPctText, halfLifeText, elementName,
+import { ALL_KEYS, NUCLIDES, nuclidePage, slugOf, longName, decayWordOf, SPONTANEOUS_FISSION, sfPctText, halfLifeText, usualHalfLife, elementName,
          belowCutoff, alphaSpread } from "../../lib/nuclides";
 import { paragraphs, decayCaption, sectionHeads } from "../../lib/nuclide-prose";
 import { nuclideSeo } from "../../lib/nuclide-seo";
@@ -9,6 +9,7 @@ import { PAGE_KEYS, isNoindex } from "../../lib/nuclide-pages";
 import { NUCLIDE_NOTES, noteFirstSentence } from "../../data/nuclide-notes";
 import NuclideRef from "../../components/NuclideRef.astro";
 import { FIELD_PRO } from "../../lib/tools";
+import { prefillPath as prefill } from "../../lib/restore";
 
 /** ★★★ 쪽은 **실무에서 만나는 핵종에만** 세운다(2026-10-06 ④ — 검색 제외 77장을 지웠다).
  *  자료·계산기는 147종을 그대로 든다. 목록과 그 까닭은 `lib/nuclide-pages.ts` 가 든다.
@@ -60,8 +61,6 @@ const plural = (k: number, one: string, many: string) => (k === 1 ? one : many);
  *  기본 핵종이 뜬다. 「없는 기능을 광고하지 않는다」(이 lab 이 `Saved` 에서 이미 밟았다).
  *  `encodeURIComponent` 를 반드시 건다 — base64 의 `+` 가 질의문자열에서 공백이 되면
  *  복원이 조용히 실패한다(형이 안 맞으면 `pick()` 이 기본값으로 떨어져 티도 안 난다). */
-const prefill = (tool: string, inputs: Record<string, unknown>) =>
-  `/${tool}/?s=${encodeURIComponent(Buffer.from(JSON.stringify(inputs), "utf8").toString("base64"))}`;
 
 /** ★ 2026-10-27(감독 지시 31 ③) — Cs-137 · Co-60 은 ISO 4037 의 방사성 핵종 감마 기준장(S-Cs · S-Co)이다. 그 장을 다루는 것은
  *  워크벤치 Field Pro 라서, 이 두 낱장에만 도구 목록 아래 그쪽으로 가는 한 문장을 단다(계산기 목록 안에 섞지 않는다)(손글 단락이 이미 「calibration fields」를 말한다). 억지 연결은 없다. */
@@ -72,7 +71,11 @@ const TOOLS_FOR: { href: string; label: string; when: boolean; prefill?: boolean
   { prefill: true, href: prefill("decay", { nuclide: p.key }),            label: "Decay and half-life",           when: true },
   { prefill: true, href: prefill("specific-activity", { nuclide: p.key }), label: "Mass and activity",            when: true },
   { href: "/mda/", label: "Detection limits (MDA / MDC)", when: true },
+  /* ★ 2026-10-31 — 잔존 비율 표가 있는 핵종 셋만. 없는 표로 보내지 않는다. */
+  { href: `/radiopharmaceutical-decay/#${p.slug}`, label: "Remaining-activity table", when: ["Lu-177", "Tc-99m", "F-18"].includes(p.key) },
 ];
+/** ★ 검색 설명이 「5.27 years」를 말하면 찾아온 쪽에도 그 값이 있어야 한다 — 표 한 칸에만 더한다(틀 문장을 늘리지 않는다). */
+const usualHl = usualHalfLife(n);
 const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).slice(0, 8);
 ---
 <Base schema="TechArticle" title={seo.title} description={seo.description} noindex={isNoindex(key)}
@@ -119,7 +122,7 @@ const related = ALL_KEYS.filter((k) => k !== key && NUCLIDES[k].sym === n.sym).s
     <h2 class="text-[20px] font-semibold text-ink">{H.figures}</h2>
     <table class="mt-3">
       <tbody>
-        <tr><td>Half-life</td><td>{halfLifeText(n)} ({sig(n.t_half_s, 4)} s)</td></tr>
+        <tr><td>Half-life</td><td>{halfLifeText(n)} ({usualHl ? `${usualHl}; ` : ""}{sig(n.t_half_s, 4)} s)</td></tr>
         <tr><td>Decay mode</td><td>{decayWordOf(n)}</td></tr>
         <tr><td>Specific activity</td><td>{sig(n.sa_bq_g)} Bq/g ({sig(p.saCiPerG)} Ci/g)</td></tr>
         {p.gamma > 0 && <tr><td>Air kerma rate constant Γ (δ = 20 keV)</td><td>{sig(p.gamma)} mGy·m²/(GBq·h)</td></tr>}
